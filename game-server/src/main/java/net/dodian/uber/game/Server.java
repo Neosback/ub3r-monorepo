@@ -8,8 +8,9 @@ import net.dodian.cache.region.Region;
 import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.*;
 import net.dodian.uber.comm.LoginManager;
-import net.dodian.uber.comm.SocketHandler;
+// import net.dodian.uber.comm.SocketHandler; // Removed as createNewConnection is removed
 import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.network.NettyServer; // Added NettyServer import
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
@@ -42,6 +43,7 @@ import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class Server {
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
+    private static NettyServer nettyServer; // Added NettyServer field
 
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
     public static int TICK = 600;
@@ -70,7 +72,7 @@ public class Server {
     public static ShopHandler shopHandler = null;
     public static boolean antiddos = false;
 
-    private static ServerConnectionHandler connectionHandler;
+    // private static ServerConnectionHandler connectionHandler; // Removed old connection handler field
 
     public static void main(String[] args) throws Exception {
         logger.info("Info log!");
@@ -112,14 +114,24 @@ public class Server {
         new DoorHandler();
         new Thread(EventManager.getInstance()).start();
 
+        // Start Netty server
         try {
-            connectionHandler = new ServerConnectionHandler(DotEnvKt.getServerPort(), playerHandler);
-            new Thread(connectionHandler).start();
-            System.out.println("Server connection handler started on port " + DotEnvKt.getServerPort());
-        } catch (IOException e) {
-            System.out.println("Failed to start server connection handler: " + e.getMessage());
-            System.exit(1);
+            nettyServer = new NettyServer(DotEnvKt.getServerPort());
+            nettyServer.start(); // This will log its own startup message
+        } catch (InterruptedException e) {
+            logger.error("Failed to start Netty server", e);
+            Thread.currentThread().interrupt(); // Preserve interrupt status
+            System.exit(1); // Exit if server cannot start
         }
+        // Old connection handler removed
+        // try {
+        //     connectionHandler = new ServerConnectionHandler(DotEnvKt.getServerPort(), playerHandler);
+        //     new Thread(connectionHandler).start();
+        //     System.out.println("Server connection handler started on port " + DotEnvKt.getServerPort());
+        // } catch (IOException e) {
+        //     System.out.println("Failed to start server connection handler: " + e.getMessage());
+        //     System.exit(1);
+        // }
 
         new Thread(login).start();
         /* Processor for various stuff */
@@ -135,9 +147,10 @@ public class Server {
         System.out.println("Server is now running on world " + getGameWorldId() + "!");
     }
 
-    public static Thread createNewConnection(SocketHandler socketHandler) {
-        return new Thread(socketHandler);
-    }
+    // Removed createNewConnection method
+    // public static Thread createNewConnection(SocketHandler socketHandler) {
+    //     return new Thread(socketHandler);
+    // }
 
     public static void logError(String message) {
         Utils.println(message);
@@ -172,9 +185,16 @@ public class Server {
     }
 
     public static void shutdown() {
-        if (connectionHandler != null) {
-            connectionHandler.shutdown();
+        logger.info("Server shutdown initiated...");
+        if (nettyServer != null) {
+            nettyServer.stop();
         }
-        // Add any other shutdown logic here
+        // Old connection handler shutdown removed
+        // if (connectionHandler != null) {
+        //     connectionHandler.shutdown();
+        // }
+        // Add any other shutdown logic here (e.g., saving player data, stopping JobScheduler)
+        JobScheduler.shutdown(); // Assuming JobScheduler has a shutdown method
+        logger.info("Server shutdown complete.");
     }
 }

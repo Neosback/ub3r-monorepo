@@ -47,6 +47,11 @@ dependencies {
     implementation("org.mybatis:mybatis:3.5.10")
 
     implementation("com.google.code.gson:gson:2.7")
+
+    implementation("io.netty:netty-all:4.1.100.Final")
+
+    testImplementation(platform("org.junit:junit-bom:5.9.1"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
 tasks.withType<KotlinCompile> {
