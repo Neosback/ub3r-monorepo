@@ -2,6 +2,8 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.comm.Memory;
 import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.Server; // Needed for Server.login
+import net.dodian.uber.comm.LoginManager; // Might be needed if login logic is further centralized
 import net.dodian.utilities.Utils;
 
 import java.nio.channels.SocketChannel;
@@ -151,5 +153,52 @@ public class PlayerHandler {
     public static Player getPlayer(String name) {
         long playerId = Utils.playerNameToLong(name);
         return playersOnline.get(playerId);
+    }
+
+    public void initializeNettyPlayer(Client authenticatedClient) {
+        if (authenticatedClient == null) {
+            logger.warning("Attempted to initialize a null authenticatedClient.");
+            return;
+        }
+
+        int slot;
+        synchronized (SLOT_LOCK) {
+            slot = findFreeSlot();
+        }
+
+        if (slot == -1) {
+            logger.warning("Server is full. Cannot initialize Netty player: " + authenticatedClient.getPlayerName());
+            // Consider sending a "server full" message to the client via its Netty channel
+            // and then closing the channel if a custom message type exists for this.
+            // For now, just log and the client will eventually time out or be closed by NettyLoginHandler.
+            if(authenticatedClient.getChannel() != null && authenticatedClient.getChannel().isOpen()) {
+                // authenticatedClient.getChannel().writeAndFlush(new SomeServerFullMessage()).addListener(ChannelFutureListener.CLOSE);
+                authenticatedClient.getChannel().close();
+            }
+            return;
+        }
+
+        logger.info("Initializing Netty player " + authenticatedClient.getPlayerName() + " in slot " + slot);
+
+        authenticatedClient.setSlot(slot);
+        players[slot] = authenticatedClient;
+        authenticatedClient.handler = this; // 'this' is the PlayerHandler instance
+        authenticatedClient.isActive = true;
+        // Player.localId = slot; // This static variable usage is problematic for multiple players.
+                              // It should ideally be an instance variable or passed around.
+                              // For now, setting it as it was, but this is a known issue.
+                              // A better approach would be for client instances to know their own slot ID.
+
+        playersOnline.put(Utils.playerNameToLong(authenticatedClient.getPlayerName()), authenticatedClient);
+        allOnline.put(Utils.playerNameToLong(authenticatedClient.getPlayerName()), authenticatedClient.getGameWorldId()); // Assuming getGameWorldId() is set or default
+
+        // Call the original initialize method.
+        // Note: This method sends packets using the old Stream-based system.
+        // These packets will not reach the Netty client correctly until Client.send() and packet encoding
+        // are fully adapted for Netty. This is a known limitation for this step.
+        authenticatedClient.initialize();
+
+        logger.info("Netty player " + authenticatedClient.getPlayerName() + " initialized and added to slot " + slot + ". Online: " + getPlayerCount());
+        Memory.getSingleton().process();
     }
 }

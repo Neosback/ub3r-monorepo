@@ -34,6 +34,9 @@ import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.security.*;
 import net.dodian.utilities.*;
+import io.netty.channel.Channel; // Netty Channel import
+import io.netty.util.AttributeKey; // Netty AttributeKey import
+import java.net.InetSocketAddress; // Required for Netty constructor
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -57,6 +60,13 @@ import static net.dodian.utilities.DotEnvKt.*;
 
 
 public class Client extends Player implements Runnable {
+
+    // Netty specific fields
+    private transient Channel channel; // transient to avoid serialization if Client is ever serialized
+    public static final AttributeKey<Client> CLIENT_KEY = AttributeKey.valueOf("client");
+    public static final AttributeKey<IsaacCipher> INBOUND_CIPHER_KEY = AttributeKey.valueOf("inboundCipher");
+    public static final AttributeKey<IsaacCipher> OUTBOUND_CIPHER_KEY = AttributeKey.valueOf("outboundCipher");
+
     public Farming farming = new Farming();
     public FarmingJson farmingJson = new FarmingJson();
     public Fletching fletching = new Fletching();
@@ -468,6 +478,7 @@ public class Client extends Player implements Runnable {
 
     public Client(SocketChannel socketChannel, int _playerId) throws IOException {
         super(_playerId);
+        this.channel = null; // Old constructor, Netty channel is not available here.
         mySocketHandler = new SocketHandler(this, socketChannel);
 
         /* Items enabled! */
@@ -482,80 +493,175 @@ public class Client extends Player implements Runnable {
         this.loginHandler = new ClientLoginHandler(this, socketChannel);//moved the login stuff
     }
 
+    /**
+     * Constructor for Netty-based client instances.
+     * @param channel The Netty channel associated with this client.
+     * @param slotId The player slot ID, can be -1 initially.
+     */
+    public Client(Channel channel, int slotId) {
+        super(slotId); // Assigns the slotId, initializes player-specific arrays/lists
+        this.channel = channel;
+        this.playerId = slotId; // Ensure playerId is set from slotId
+
+        // Nullify or use placeholder for old IO systems
+        this.inputStream = null; // Will not be used by Netty pipeline for raw input
+        // For initialize() to not NPE, but its output won't go anywhere correctly until send() is refactored.
+        this.outputStream = new Stream(new byte[Stream.BUFFER_SIZE]); // Initialize with a default size buffer
+        this.outputStream.currentOffset = 0;
+
+
+        this.inputBuffer = null; // Not used by Netty
+        this.outputBuffer = null; // Not used by Netty
+
+        this.loginHandler = null; // NettyLoginHandler handles login
+        this.mySocketHandler = null; // Not used for Netty
+
+        if (channel != null && channel.remoteAddress() != null) {
+            this.connectedFrom = ((InetSocketAddress) channel.remoteAddress()).getAddress().getHostAddress();
+        } else {
+            this.connectedFrom = "UNKNOWN"; // Should not happen in normal flow
+        }
+        this.session_start = System.currentTimeMillis();
+
+        // Initialize other necessary fields that might have been in the old constructor
+        // Most fields are initialized in Player or have default values.
+        // Ensure any critical initializations from the old constructor are replicated if needed.
+        // For example, setting up default values for skills, inventory, etc., is handled by Player constructor.
+        // prayers = new Prayers(this); // Already in Player constructor
+        // combatStyleHandler = new CombatStyleHandler(this); // Already in Player constructor
+        // farmingJson = new FarmingJson(this); // Player constructor sets this up
+        // farming = new Farming(this); // Player constructor sets this up
+        // fletching = new Fletching(this); // Player constructor sets this up
+    }
+
+    public Channel getChannel() {
+        return channel;
+    }
+
     @Override
     public void destruct() {
-        if (mySocketHandler == null) {
-            return;
-        }
-
-        try {
-            mySocketHandler.logout();
-            mySocketHandler.awaitCleanup();
-
-
-            PlayerHandler.playersOnline.remove(longName);
-            PlayerHandler.allOnline.remove(longName);
-            System.out.println("Destructed the playerSlot: " + getSlot());
-            isLoggingOut = false;
-
-            if (saveNeeded && !tradeSuccessful) {
-                saveStats(true, true);
+        if (this.channel != null && this.channel.isOpen()) {
+            this.channel.close(); // Close Netty channel
+            logger.info("Netty channel closed for playerSlot: {}", getSlot());
+        } else if (mySocketHandler != null) { // Old system
+            try {
+                mySocketHandler.logout();
+                mySocketHandler.awaitCleanup();
+            } catch (InterruptedException e) {
+                System.out.println("Interrupted while waiting for SocketHandler cleanup: " + e.getMessage());
             }
-
-            mySocketHandler = null;
-            inputStream = null;
-            outputStream = null;
-            inputBuffer = null;
-            outputBuffer = null;
-            inStreamDecryption = null;
-            outStreamDecryption = null;
-
-            System.gc();
-            super.destruct();
-        } catch (InterruptedException e) {
-            System.out.println("Interrupted while waiting for SocketHandler cleanup: " + e.getMessage());
         }
+
+        PlayerHandler.playersOnline.remove(longName);
+        PlayerHandler.allOnline.remove(longName);
+        System.out.println("Destructed the playerSlot: " + getSlot());
+        isLoggingOut = false;
+
+        if (saveNeeded && !tradeSuccessful) {
+            saveStats(true, true);
+        }
+
+        mySocketHandler = null;
+        inputStream = null;
+        outputStream = null;
+        inputBuffer = null;
+        outputBuffer = null;
+        inStreamDecryption = null;
+        outStreamDecryption = null;
+
+        System.gc();
+        super.destruct();
     }
 
     public Stream getInputStream() {
+        // This method is part of the old IO system.
+        // For Netty, data is received via ChannelInboundHandler.
+        // Returning null or a dummy stream if this client is Netty-based.
         return this.inputStream;
     }
 
     public Stream getOutputStream() {
+        // This method is part of the old IO system.
+        // For Netty, data is sent via Channel.writeAndFlush().
+        // The current outputStream is a placeholder for initialize() to not NPE.
         return this.outputStream;
     }
 
     public void send(OutgoingPacket packet) {
-        packet.send(this);
+        // TODO: This needs to be refactored for Netty.
+        // If this client is Netty-based, this should eventually use channel.writeAndFlush().
+        // For now, it will try to use the placeholder outputStream which won't actually send.
+        if (this.channel != null) {
+            // Ideal scenario:
+            // ByteBuf buffer = Unpooled.buffer(); // Or from a pool
+            // packet.write(this, buffer); // A new method in OutgoingPacket that writes to ByteBuf
+            // this.channel.writeAndFlush(buffer);
+            // logger.debug("Attempted to send packet via Netty (not fully implemented): {}", packet.getClass().getSimpleName());
+            // Fallback to old behavior for now, knowing it won't work for Netty clients yet:
+             packet.send(this);
+        } else if (this.outputStream != null) { // Old system
+            packet.send(this);
+        }
     }
 
     // writes any data in outStream to the relaying buffer
     public void flushOutStream() {
-        if (disconnected || getOutputStream().currentOffset == 0) {
+        if (this.channel != null) {
+            // For Netty, flushing is typically handled by writeAndFlush() on the channel.
+            // If direct outputStream usage was adapted for Netty, this would flush the Netty channel's buffer.
+            // For now, if outputStream is just a placeholder, this might do nothing or error.
+            // If getOutputStream().currentOffset > 0, it implies data was written to the placeholder.
+            if (getOutputStream() != null && getOutputStream().currentOffset > 0) {
+                 logger.warn("flushOutStream called for Netty client; data in placeholder outputStream will not be sent correctly yet.");
+                 // To actually send, this data needs to be wrapped in a ByteBuf and written to channel.
+                 // Example:
+                 // ByteBuf nettyBuffer = Unpooled.wrappedBuffer(getOutputStream().buffer, 0, getOutputStream().currentOffset);
+                 // this.channel.writeAndFlush(nettyBuffer);
+                 // getOutputStream().currentOffset = 0; // Reset placeholder
+            }
+            return;
+        }
+
+        // Old system logic:
+        if (disconnected || getOutputStream() == null || getOutputStream().currentOffset == 0) {
             return;
         }
 
         int length = getOutputStream().currentOffset;
-        mySocketHandler.queueOutput(getOutputStream().buffer, 0, length);
+        if (mySocketHandler != null) {
+            mySocketHandler.queueOutput(getOutputStream().buffer, 0, length);
+        }
         getOutputStream().currentOffset = 0;
     }
 
 
     private void fillInStream(PacketData pData) throws IOException {
+        // This is for the old SocketHandler system.
+        if (getInputStream() == null) return; // Should not happen for old system
         getInputStream().currentOffset = 0;
         getInputStream().buffer = pData.getData();
         currentPacket = pData;
     }
 
     public boolean packetProcess() {
+        // This method is tied to the old SocketHandler and its packet queue.
+        // For Netty, packet processing happens in ChannelInboundHandlers.
+        if (this.channel != null) {
+            // This client is Netty-managed; packetProcess() should not be called directly by PlayerHandler loop.
+            return false;
+        }
+
+        // Old system logic:
         if (disconnected) {
             return false;
         }
         if (isLoggingOut) {
-
             return false;
         }
 
+        if (mySocketHandler == null || mySocketHandler.getPackets() == null) { // mySocketHandler might be null if destructed
+             return false;
+        }
         Queue<PacketData> packets = mySocketHandler.getPackets();
         if (packets.isEmpty()) {
             return false;
@@ -572,7 +678,14 @@ public class Client extends Player implements Runnable {
             System.err.println("Packet process error: " + e.getMessage());
             disconnected = true;
             return false;
+        } catch (Exception e) {
+            // Catch any other unexpected errors during packet processing
+            System.err.println("Unexpected error in packetProcess: " + e.getMessage());
+            e.printStackTrace(); // Log stack trace for debugging
+            disconnected = true;
+            return false;
         }
+
 
         return true;
     }
@@ -581,6 +694,9 @@ public class Client extends Player implements Runnable {
     public PacketData currentPacket;
 
     public void parseIncomingPackets() {
+        // This is for the old SocketHandler system.
+        // For Netty, this logic would be in a game-specific ChannelInboundHandler.
+        if (currentPacket == null) return; // Should not happen if called from packetProcess()
         PacketHandler.process(this, currentPacket.getId(), currentPacket.getLength());
     }
 
@@ -589,7 +705,11 @@ public class Client extends Player implements Runnable {
 
     @Override
     public void run() {
-        loginHandler.handleLogin();
+        // This run method is for the old login system.
+        // For Netty, login is handled by NettyLoginHandler.
+        if (this.loginHandler != null) {
+            loginHandler.handleLogin();
+        }
     }
 
     public void setSidebarInterface(int menuId, int form) {

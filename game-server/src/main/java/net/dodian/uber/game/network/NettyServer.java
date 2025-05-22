@@ -8,8 +8,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import net.dodian.uber.game.network.decoders.LoginDecoder; // Added LoginDecoder import
-import net.dodian.uber.game.network.encoders.Encoder;       // Added Encoder import
+import net.dodian.uber.game.network.decoders.LoginDecoder;
+import net.dodian.uber.game.network.encoders.Encoder;
+import net.dodian.uber.game.network.handlers.NettyLoginHandler; // Added NettyLoginHandler import
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -37,11 +38,16 @@ public class NettyServer {
              .childHandler(new ChannelInitializer<SocketChannel>() {
                  @Override
                  public void initChannel(SocketChannel ch) throws Exception {
-                     logger.info("Initializing channel for " + ch.remoteAddress());
-                     ch.pipeline().addLast("loginDecoder", new LoginDecoder()); // Add LoginDecoder
-                     ch.pipeline().addLast("encoder", new Encoder());           // Add Encoder
-                     // In future steps, we might add a game packet decoder and a game specific handler.
-                     logger.info("Channel pipeline configured for " + ch.remoteAddress() + ": LoginDecoder, Encoder");
+                     logger.info("Initializing channel for login: {}", ch.remoteAddress());
+                     // Inbound handlers (processed head to tail)
+                     ch.pipeline().addLast("loginDecoder", new LoginDecoder());
+                     ch.pipeline().addLast("loginHandler", new NettyLoginHandler());
+
+                     // Outbound handlers (processed tail to head)
+                     // Encoder is placed last here, meaning it's first for outbound messages.
+                     ch.pipeline().addLast("encoder", new Encoder());
+
+                     logger.info("Login channel pipeline configured for {}: LoginDecoder -> NettyLoginHandler -> Encoder", ch.remoteAddress());
                  }
              })
              .option(ChannelOption.SO_BACKLOG, 128)          // Maximum queue length for incoming connections
