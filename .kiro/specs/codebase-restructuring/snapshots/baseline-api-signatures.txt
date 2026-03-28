@@ -1,0 +1,2514 @@
+=== game-server/src/main/kotlin/net/dodian/uber/game/config/DotEnv.kt ===
+package net.dodian.uber.game.config
+private val dotenv = dotenv()
+private fun requiredEnv(key: String): String =
+private fun requiredNonBlankEnv(key: String): String =
+val serverName = dotenv["SERVER_NAME"] ?: "Dodian"
+val serverPort = dotenv["SERVER_PORT"]?.toInt() ?: 43594
+val serverDebugMode = dotenv["SERVER_DEBUG_MODE"]?.toBoolean() ?: false
+val serverEnv = dotenv["SERVER_ENVIRONMENT"] ?: "prod"
+val nettyLeakDetection = dotenv["NETTY_LEAK_DETECTION"] ?: "disabled"
+val databaseHost = requiredNonBlankEnv("DATABASE_HOST")
+val databasePort = dotenv["DATABASE_PORT"]?.toInt() ?: 3306
+val databaseName = requiredNonBlankEnv("DATABASE_NAME")
+val databaseTablePrefix = dotenv["DATABASE_TABLE_PREFIX"] ?: ""
+val databaseUsername = requiredNonBlankEnv("DATABASE_USERNAME")
+val databasePassword = dotenv["DATABASE_PASSWORD"] ?: ""
+val databaseInitialize = dotenv["DATABASE_INITIALIZE"]?.toBoolean() ?: false
+val gameWorldId = dotenv["GAME_WORLD_ID"]?.toInt() ?: 1
+val gameConnectionsPerIp = dotenv["GAME_CONNECTIONS_PER_IP"]?.toInt() ?: 2
+val gameClientCustomVersion = dotenv["CLIENT_CUSTOM_VERSION"] ?: "dodian_client"
+val databasePoolMinSize = dotenv["DATABASE_POOL_MIN_SIZE"]?.toInt() ?: 5
+val databasePoolMaxSize = dotenv["DATABASE_POOL_MAX_SIZE"]?.toInt() ?: 20
+val databasePoolConnectionTimeout = dotenv["DATABASE_POOL_CONNECTION_TIMEOUT"]?.toLong() ?: 30000L
+val databasePoolIdleTimeout = dotenv["DATABASE_POOL_IDLE_TIMEOUT"]?.toLong() ?: 600000L
+val databasePoolMaxLifetime = dotenv["DATABASE_POOL_MAX_LIFETIME"]?.toLong() ?: 1800000L
+val runtimePhaseWarnMs = 300L
+val gameMultiplierGlobalXp = dotenv["GAME_MULTIPLIER_GLOBAL_XP"]?.toInt() ?: 1
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/ContentModuleIndex.kt ===
+package net.dodian.uber.game.content
+object ContentModuleIndex {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/HillGiant.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object HillGiant {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/NpcPluginModels.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+object NpcPluginStateStore {
+internal fun NpcPluginDefinition.toContentDefinition(
+private fun NpcOptionSlot.toOptionId(): Int =
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Diango.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Diango {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/NpcContentRegistry.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+object NpcContentRegistry {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/SlashBash.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object SlashBash {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Knight.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Knight {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Sedridor.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Sedridor {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/NpcPluginDsl.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+class NpcOptionsBuilder internal constructor(
+class NpcSpawnsBuilder internal constructor() {
+class NpcPluginBuilder internal constructor(
+fun npcPlugin(name: String, init: NpcPluginBuilder.() -> Unit): NpcPluginDefinition =
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/PostiePete.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object PostiePete {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Wolfman.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Wolfman {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Druid.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Druid {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/MountedTerrorbirdGnome.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object MountedTerrorbirdGnome {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/SigbertAdventurer.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object SigbertAdventurer {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/DesertWolf.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object DesertWolf {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/RockCrab.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object RockCrab {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/TzhaarXil.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object TzhaarXil {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Farmer.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Farmer {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Mazchna.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Mazchna {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Dwayne.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Dwayne {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/JalTokJad.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object JalTokJad {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Tanner.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Tanner {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Dad.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Dad {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Guard.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Guard {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/EscapingSlave.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object EscapingSlave {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/MakeoverMage.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object MakeoverMage {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/AbyssalGuardian.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object AbyssalGuardian {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/DeathSpawn.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object DeathSpawn {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/TztokJad.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object TztokJad {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/FinalBoss.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object FinalBoss {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BabyKraken.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BabyKraken {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/AliHag.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object AliHag {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/InfernalMage.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object InfernalMage {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Sheep.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Sheep {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BanditBoss.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BanditBoss {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BruiseBlamishSnail.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BruiseBlamishSnail {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/DagannothPrime.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object DagannothPrime {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/RugMerchant.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object RugMerchant {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/TzhaarMej.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object TzhaarMej {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/CustomsOfficer.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object CustomsOfficer {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Dagannoth.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Dagannoth {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Dori.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Dori {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/MyreBlamishSnail.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object MyreBlamishSnail {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Bandit.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Bandit {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/PollnivneachBanditBoss.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object PollnivneachBanditBoss {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/ChaosDruidWarrior.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object ChaosDruidWarrior {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Scorpion.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Scorpion {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/GnomeBaller.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object GnomeBaller {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/IceGiant.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object IceGiant {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/UnknownNpc3089.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object UnknownNpc3089 {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/PopulationAnnouncer.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object PopulationAnnouncer {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BowArrowSalesman.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BowArrowSalesman {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/NpcJsonSpawnOverlayLoader.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+object NpcJsonSpawnOverlayLoader {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/UnknownNpc2692.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object UnknownNpc2692 {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BlueDragon.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BlueDragon {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/PartyPete.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object PartyPete {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Aubury.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Aubury {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Chicken.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Chicken {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Vulture.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Vulture {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Turael.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Turael {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/NpcContentDispatcher.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+object NpcContentDispatcher {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/UnknownNpc6771.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object UnknownNpc6771 {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/UnknownNpc6990.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object UnknownNpc6990 {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/DesertLizard.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object DesertLizard {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Hero.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Hero {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Kolodion.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Kolodion {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Nechryael.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Nechryael {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/UnknownNpc8059.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object UnknownNpc8059 {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Wolf.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Wolf {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/DoorMan.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object DoorMan {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/GiantRat.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object GiantRat {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Peksa.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Peksa {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/SandSnakeHard.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object SandSnakeHard {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/KalphiteGuardian.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object KalphiteGuardian {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Mac.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Mac {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/PlaceholderNpc.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object PlaceholderNpc {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/AncestralGlyph.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object AncestralGlyph {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Ghoul.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Ghoul {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/YtMejkot.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object YtMejkot {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/NpcModuleDefinitionBuilder.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+object NpcModuleDefinitionBuilder {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/MithrilDragon.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object MithrilDragon {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Terrorbird.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Terrorbird {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/MossGiant.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object MossGiant {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/ElderWerewolf.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object ElderWerewolf {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Watchman.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Watchman {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/DwarfGangMember.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object DwarfGangMember {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Shantay.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Shantay {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Glough.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Glough {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/WatchtowerWizard.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object WatchtowerWizard {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Goat.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Goat {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/RiverTroll.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object RiverTroll {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/NpcContent.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal val NO_CLICK_HANDLER: NpcClickHandler = { _, _ -> false }
+fun npcIds(vararg ids: Int): IntArray = ids.distinct().toIntArray()
+fun npcIdsFromEntries(entries: List<NpcSpawnDef>): IntArray = entries
+fun npcIdsFromEntries(entries: List<NpcSpawnDef>, vararg additionalNpcIds: Int): IntArray = buildList {
+fun NpcContentDefinition.optionLabel(option: Int): String? = optionLabels[option]
+internal fun NpcContentDefinition.hasInteractionHandlers(): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Zombie.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Zombie {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/CaptainRovin.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object CaptainRovin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Watcher.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Watcher {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/LocustRiderRanged.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object LocustRiderRanged {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/UnknownNpc2745.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object UnknownNpc2745 {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Hellhound.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Hellhound {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Dwarf.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Dwarf {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/AbyssalLeech.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object AbyssalLeech {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Gerrant.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Gerrant {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/SkeletonHellhound.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object SkeletonHellhound {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/CrawlingHand.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object CrawlingHand {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/KalphiteKing.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object KalphiteKing {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Rufu.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Rufu {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BattleMage.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BattleMage {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Ghost.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Ghost {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Ian.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Ian {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Ungadulu.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Ungadulu {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/JungleHorror.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object JungleHorror {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BlackKnightTitan.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BlackKnightTitan {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/OgreChieftain.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object OgreChieftain {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BabaYaga.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BabaYaga {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/PartyAnnouncer.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object PartyAnnouncer {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/AgilityWerewolfMaster.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object AgilityWerewolfMaster {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/FishSpot.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object FishSpot {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/MountainTroll.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object MountainTroll {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Gargoyle.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Gargoyle {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Koftik.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Koftik {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BlackDragon.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BlackDragon {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/UnknownNpc6777.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object UnknownNpc6777 {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Pyrefiend.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Pyrefiend {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/OgreShaman.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object OgreShaman {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/TokXil.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object TokXil {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Highwayman.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Highwayman {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Duradel.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Duradel {
+internal object SlayerMasterDialogue {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/ShopAssistant.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object ShopAssistant {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/NpcInteractionActionService.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+object NpcInteractionActionService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BlackDemon.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BlackDemon {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BigSnake.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BigSnake {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/KingBlackDragon.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object KingBlackDragon {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/UnknownNpc683.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object UnknownNpc683 {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/PeeHat.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object PeeHat {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/LocustRiderMelee.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object LocustRiderMelee {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/UnknownNpc4637.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object UnknownNpc4637 {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/SanTojalon.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object SanTojalon {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/IceWarrior.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object IceWarrior {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/PiratePete.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object PiratePete {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Wydin.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Wydin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/KnightArdougne.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object KnightArdougne {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/GnomeTrainer.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object GnomeTrainer {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/AlbinoBat.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object AlbinoBat {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Jackal.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Jackal {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Zahur.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Zahur {
+internal object HerbloreNpcDialogue {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/RedDragon.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object RedDragon {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BeginnerStore.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BeginnerStore {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/TzhaarMejJal.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object TzhaarMejJal {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Banshee.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Banshee {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/CaptainTobias.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object CaptainTobias {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/AbyssalDemon.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object AbyssalDemon {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/KalphiteSoldier.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object KalphiteSoldier {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/LesserDemon.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object LesserDemon {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/CaveBugLarva.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object CaveBugLarva {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Horvik.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Horvik {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/ArmourSalesman.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object ArmourSalesman {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Lizard.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Lizard {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/NpcDataPreset.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/ChaosDruid.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object ChaosDruid {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/ShopKeeper.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object ShopKeeper {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Monk.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Monk {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/ScarabMage.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object ScarabMage {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/TzhaarKet.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object TzhaarKet {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/DeadlyRedSpider.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object DeadlyRedSpider {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/TowerAdvisor.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object TowerAdvisor {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/PlagueWarning.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object PlagueWarning {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/LegendsGuard.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object LegendsGuard {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/JungleDemon.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object JungleDemon {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/OchreBlamishSnail.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object OchreBlamishSnail {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/ShadowWarrior.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object ShadowWarrior {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/GreenDragon.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object GreenDragon {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Mummy.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Mummy {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/SandSnake.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object SandSnake {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/OgreTrader.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object OgreTrader {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/ThrowerTroll.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object ThrowerTroll {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/UnknownNpc4639.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object UnknownNpc4639 {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Vampyre.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Vampyre {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Jelly.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Jelly {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BloodBlamishSnail.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BloodBlamishSnail {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Venenati.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Venenati {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Mahogany.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Mahogany {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Zahra.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Zahra {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/MenaphiteThug.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object MenaphiteThug {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/KalphiteQueen.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object KalphiteQueen {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/NpcClickMetrics.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+object NpcClickMetrics {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/UnknownNpc5961.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object UnknownNpc5961 {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/GiantSpider.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object GiantSpider {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/SwordMummy.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object SwordMummy {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/ChaosDwarf.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object ChaosDwarf {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Chadwell.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Chadwell {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/NpcDialogueDsl.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+class NpcActionChainBuilder {
+class NpcConditionalActionBuilder {
+class NpcChoiceBuilder {
+class NpcDialogueFlowBuilder {
+class NpcDialogueFlow internal constructor(
+fun npcDialogue(init: NpcDialogueFlowBuilder.() -> Unit): NpcDialogueFlow =
+class NpcConditionContext internal constructor(
+class NpcSequentialChoiceBuilder {
+class NpcConditionalSequenceBuilder internal constructor(
+class NpcSequentialOptionBuilder {
+private fun containsDialogueSteps(steps: List<NpcSequentialStep>): Boolean {
+private fun hasExplicitFinish(steps: List<NpcSequentialStep>): Boolean {
+private fun executeImmediate(
+private fun resolveConditions(
+private fun DialogueFactory.emitSequential(
+internal fun buildSequentialHandler(
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/FireGiant.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object FireGiant {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/PremiumStore.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object PremiumStore {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Werewolf.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Werewolf {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Vannaka.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Vannaka {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/UnknownNpc1597.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object UnknownNpc1597 {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Zogre.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Zogre {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/MasterFarmer.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object MasterFarmer {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Jatix.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Jatix {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/CaveHorror.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object CaveHorror {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/KalphiteWorker.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object KalphiteWorker {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/NpcSpawnDef.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+fun point(x: Int, y: Int, z: Int = 0, face: Int = 0): NpcSpawnPoint = NpcSpawnPoint(x = x, y = y, z = z, face = face)
+fun spawnEntries(
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Man.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Man {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BillyGoat.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BillyGoat {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/ThievingSkillcapeShop.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object ThievingSkillcapeShop {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/DukeHoracio.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object DukeHoracio {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Banker.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Banker {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Bloodveld.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Bloodveld {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/WizardCromperty.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object WizardCromperty {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/IceQueen.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object IceQueen {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/HeadMourner.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object HeadMourner {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/SurvivalExpert.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object SurvivalExpert {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Crocodile.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Crocodile {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Saniboch.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Saniboch {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/WizardDistentor.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object WizardDistentor {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Skeleton.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Skeleton {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/MenaphiteThugBoss.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object MenaphiteThugBoss {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/PollnivneachBandit.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object PollnivneachBandit {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/PlaceHolderDrop.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object PlaceHolderDrop {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Nathifa.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Nathifa {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/Cow.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object Cow {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/TzhaarKetZuh.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object TzhaarKetZuh {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BerserkBarbarianSpirit.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BerserkBarbarianSpirit {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/SandCrab.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object SandCrab {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/SpawnGroups.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+object SpawnGroups {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/BankerGenerated.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object BankerGenerated {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/GreaterDemon.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object GreaterDemon {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/AberrantSpectre.kt ===
+package net.dodian.uber.game.content.npcs.spawns
+internal object AberrantSpectre {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/doors/DoorToggleObjects.kt ===
+package net.dodian.uber.game.content.objects.doors
+object DoorToggleObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/banking/BankBoothObjects.kt ===
+package net.dodian.uber.game.content.objects.banking
+object BankBoothObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/banking/BankChestObjects.kt ===
+package net.dodian.uber.game.content.objects.banking
+object BankChestObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/banking/BankingObjectComponents.kt ===
+package net.dodian.uber.game.content.objects.banking
+object BankingObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/ObjectContent.kt ===
+package net.dodian.uber.game.content.objects
+interface ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/ObjectInteractionService.kt ===
+package net.dodian.uber.game.content.objects
+object ObjectInteractionService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/ObjectClickLoggingService.kt ===
+package net.dodian.uber.game.content.objects
+object ObjectClickLoggingService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/ObjectBinding.kt ===
+package net.dodian.uber.game.content.objects
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/ObjectContentDsl.kt ===
+package net.dodian.uber.game.content.objects
+class ObjectContentBuilder {
+fun objectContent(init: ObjectContentBuilder.() -> Unit): ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/events/PartyRoomObjectBindings.kt ===
+package net.dodian.uber.game.content.objects.events
+object PartyRoomObjectBindings : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/events/PartyRoomObjectComponents.kt ===
+package net.dodian.uber.game.content.objects.events
+object PartyRoomObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/ObjectContentRegistry.kt ===
+package net.dodian.uber.game.content.objects
+object ObjectContentRegistry {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/travel/WebObstacleObjects.kt ===
+package net.dodian.uber.game.content.objects.travel
+object WebObstacleObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/travel/TeleportObjects.kt ===
+package net.dodian.uber.game.content.objects.travel
+object TeleportObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/travel/EssenceMineTravel.kt ===
+package net.dodian.uber.game.content.objects.travel
+object EssenceMineTravel {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/travel/TravelObjectComponents.kt ===
+package net.dodian.uber.game.content.objects.travel
+object TravelObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/travel/LadderObjects.kt ===
+package net.dodian.uber.game.content.objects.travel
+private fun Position.offset(dx: Int = 0, dy: Int = 0, dz: Int = 0): Position = Position(x + dx, y + dy, z + dz)
+object LadderObjects : VerticalTravelDslObjectContent(
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/travel/StaircaseObjects.kt ===
+package net.dodian.uber.game.content.objects.travel
+private fun Position.stairsOffset(dx: Int = 0, dy: Int = 0, dz: Int = 0): Position = Position(x + dx, y + dy, z + dz)
+object StaircaseObjects : VerticalTravelDslObjectContent(
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/travel/VerticalTravel.kt ===
+package net.dodian.uber.game.content.objects.travel
+object VerticalTravelStyles {
+object VerticalTravel {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/travel/VerticalTeleportObjects.kt ===
+package net.dodian.uber.game.content.objects.travel
+object VerticalTeleportObjects : VerticalTravelDslObjectContent(
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/travel/PassageObjects.kt ===
+package net.dodian.uber.game.content.objects.travel
+object PassageObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/dsl/VerticalTravelDsl.kt ===
+package net.dodian.uber.game.content.objects.dsl
+class VerticalTravelActionBuilder internal constructor() {
+fun verticalTravelActions(block: VerticalTravelActionBuilder.() -> Unit): List<VerticalTravelAction> {
+val DEFAULT_VERTICAL_POLICY =
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/dsl/ObjectContentDsl.kt ===
+package net.dodian.uber.game.content.objects.dsl
+class FirstClickObjectActionBuilder internal constructor() {
+fun firstClickObjectActions(block: FirstClickObjectActionBuilder.() -> Unit): List<FirstClickObjectAction> {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/services/ObjectInteractionContext.kt ===
+package net.dodian.uber.game.content.objects.services
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/services/PersonalObjectService.kt ===
+package net.dodian.uber.game.content.objects.services
+object PersonalObjectService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/services/ObjectSpawnService.kt ===
+package net.dodian.uber.game.content.objects.services
+object ObjectSpawnService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/objects/services/ObjectClipService.kt ===
+package net.dodian.uber.game.content.objects.services
+object ObjectClipService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/dialogue/modules/BrimhavenEntryDialogueModule.kt ===
+package net.dodian.uber.game.content.dialogue.modules
+object BrimhavenEntryDialogueModule : DialogueRenderModule {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/dialogue/modules/PyramidPlunderDialogueModule.kt ===
+package net.dodian.uber.game.content.dialogue.modules
+object PyramidPlunderDialogueModule : DialogueRenderModule {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/dialogue/modules/SettingsDialogueModule.kt ===
+package net.dodian.uber.game.content.dialogue.modules
+object SettingsDialogueModule : DialogueRenderModule {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/dialogue/modules/RockshellDialogueModule.kt ===
+package net.dodian.uber.game.content.dialogue.modules
+object RockshellDialogueModule : DialogueRenderModule {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/CommandParsing.kt ===
+package net.dodian.uber.game.content.commands
+internal val numericToken = Regex(".*\\d.*")
+internal fun CommandContext.tailFrom(index: Int): String = stringFrom(index)
+internal fun CommandContext.playerNameTail(index: Int = 1): String = stringFrom(index)
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/CommandLogging.kt ===
+package net.dodian.uber.game.content.commands
+internal val commandLogger = LoggerFactory.getLogger("CommandContent")
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/CommandDispatcher.kt ===
+package net.dodian.uber.game.content.commands
+object CommandDispatcher {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/CommandAccess.kt ===
+package net.dodian.uber.game.content.commands
+internal fun isSpecialRights(client: Client): Boolean =
+internal fun isBetaWorld(): Boolean = gameWorldId > 1
+internal fun canUseStaffTeleport(client: Client, specialRights: Boolean): Boolean =
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/boss/BossCommands.kt ===
+package net.dodian.uber.game.content.commands.boss
+object BossCommands : CommandContent {
+private fun handleBoss(context: CommandContext): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/social/SocialCommands.kt ===
+package net.dodian.uber.game.content.commands.social
+object SocialCommands : CommandContent {
+private fun handleSocial(context: CommandContext): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/CommandReply.kt ===
+package net.dodian.uber.game.content.commands
+internal fun recordStaffCommand(client: Client, rawCommand: String) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/CommandContentRegistry.kt ===
+package net.dodian.uber.game.content.commands
+object CommandContentRegistry {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/CommandContext.kt ===
+package net.dodian.uber.game.content.commands
+class CommandContext(
+private fun String.substringAfterNthSpace(index: Int): String {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/CommandContent.kt ===
+package net.dodian.uber.game.content.commands
+fun interface CommandHandler {
+interface CommandContent {
+class CommandDsl {
+fun commands(block: CommandDsl.() -> Unit): List<CommandDefinition> {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/dev/SkillTestSupport.kt ===
+package net.dodian.uber.game.content.commands.dev
+private val SKILLING_SKILLS =
+internal fun handleSkillBank(context: CommandContext, skillName: String? = null): Boolean {
+internal fun handleSkillTools(context: CommandContext): Boolean {
+internal fun handleSkillSet(context: CommandContext): Boolean {
+internal fun handleFarmTest(context: CommandContext): Boolean {
+internal fun handleSlayerTest(context: CommandContext): Boolean {
+private fun canUseSkillTestingCommands(client: Client): Boolean = client.playerRights > 1
+private fun clearInventory(client: Client) {
+private fun resolveSlayerTask(raw: String): net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition? {
+private fun resolveSlayerMasterId(raw: String?): Int? =
+private fun currentOrDefaultMaster(client: Client): Int {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/dev/DevSpawnAndNpcCommands.kt ===
+package net.dodian.uber.game.content.commands.dev
+object DevSpawnAndNpcCommands : CommandContent {
+private fun handleDevNpc(context: CommandContext): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/dev/BetaOnlyCommands.kt ===
+package net.dodian.uber.game.content.commands.dev
+object BetaOnlyCommands : CommandContent {
+private fun handleBeta(context: CommandContext): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/dev/DevNpcContentCommands.kt ===
+package net.dodian.uber.game.content.commands.dev
+object DevNpcContentCommands : CommandContent {
+private fun handleNpcMetrics(context: CommandContext): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/dev/DevAccountAndStateCommands.kt ===
+package net.dodian.uber.game.content.commands.dev
+object DevAccountAndStateCommands : CommandContent {
+private fun handleDevAccountState(context: CommandContext): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/dev/DevDebugCommands.kt ===
+package net.dodian.uber.game.content.commands.dev
+object DevDebugCommands : CommandContent {
+private fun handleDevDebug(context: CommandContext): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/dev/DevVisualCommands.kt ===
+package net.dodian.uber.game.content.commands.dev
+object DevVisualCommands : CommandContent {
+private fun handleDevVisual(context: CommandContext): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/dev/SkillTestItemCatalog.kt ===
+package net.dodian.uber.game.content.commands.dev
+object SkillTestItemCatalog {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/staff/StaffModerationCommands.kt ===
+package net.dodian.uber.game.content.commands.staff
+object StaffModerationCommands : CommandContent {
+private fun handleStaffModeration(context: CommandContext): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/staff/StaffWorldControlCommands.kt ===
+package net.dodian.uber.game.content.commands.staff
+object StaffWorldControlCommands : CommandContent {
+private fun handleWorldControl(context: CommandContext): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/travel/PositionCommands.kt ===
+package net.dodian.uber.game.content.commands.travel
+object PositionCommands : CommandContent {
+private fun handlePosition(context: CommandContext): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/commands/player/PlayerUtilityCommands.kt ===
+package net.dodian.uber.game.content.commands.player
+object PlayerUtilityCommands : CommandContent {
+private fun handlePlayerUtility(context: CommandContext): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/guide/SkillGuideDefinition.kt ===
+package net.dodian.uber.game.content.skills.guide
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/guide/SkillGuideLayout.kt ===
+package net.dodian.uber.game.content.skills.guide
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/guide/SkillGuideDefinitions.kt ===
+package net.dodian.uber.game.content.skills.guide
+object SkillGuideDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/guide/SkillGuidePlugin.kt ===
+package net.dodian.uber.game.content.skills.guide
+object SkillGuidePlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/guide/SkillGuideService.kt ===
+package net.dodian.uber.game.content.skills.guide
+object SkillGuideService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/guide/SkillGuideDsl.kt ===
+package net.dodian.uber.game.content.skills.guide
+class SkillGuideBuilder(
+fun skillGuide(skillId: Int, build: SkillGuideBuilder.() -> Unit): SkillGuideDefinition =
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/guide/SkillGuidePage.kt ===
+package net.dodian.uber.game.content.skills.guide
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/guide/SkillGuideBookService.kt ===
+package net.dodian.uber.game.content.skills.guide
+object SkillGuideBookService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/slayer/SlayerService.kt ===
+package net.dodian.uber.game.content.skills.slayer
+object SlayerService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/slayer/SlayerDefinitions.kt ===
+package net.dodian.uber.game.content.skills.slayer
+object SlayerDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/slayer/SlayerTaskDefinition.kt ===
+package net.dodian.uber.game.content.skills.slayer
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/slayer/SlayerPlugin.kt ===
+package net.dodian.uber.game.content.skills.slayer
+object SlayerPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/slayer/items/SlayerGemItems.kt ===
+package net.dodian.uber.game.content.skills.slayer.items
+object SlayerGemItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/slayer/items/SlayerMaskItems.kt ===
+package net.dodian.uber.game.content.skills.slayer.items
+object SlayerMaskItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/AgilityPlugin.kt ===
+package net.dodian.uber.game.content.skills.agility
+object AgilityPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/AgilityCourseService.kt ===
+package net.dodian.uber.game.content.skills.agility
+class AgilityCourseService(private val c: Client) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/objects/WildernessCourseObjectBindings.kt ===
+package net.dodian.uber.game.content.skills.agility.objects
+object WildernessCourseObjectBindings : FirstClickDslObjectContent(
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/objects/BarbarianCourseObjectComponents.kt ===
+package net.dodian.uber.game.content.skills.agility.objects
+object BarbarianCourseObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/objects/BarbarianCourseObjectBindings.kt ===
+package net.dodian.uber.game.content.skills.agility.objects
+object BarbarianCourseObjectBindings : FirstClickDslObjectContent(
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/objects/WerewolfCourseObjectComponents.kt ===
+package net.dodian.uber.game.content.skills.agility.objects
+object WerewolfCourseObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/objects/WerewolfCourseObjectBindings.kt ===
+package net.dodian.uber.game.content.skills.agility.objects
+object WerewolfCourseObjectBindings : FirstClickDslObjectContent(
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/objects/WildernessCourseObjectComponents.kt ===
+package net.dodian.uber.game.content.skills.agility.objects
+object WildernessCourseObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/objects/GnomeCourseObjectComponents.kt ===
+package net.dodian.uber.game.content.skills.agility.objects
+object GnomeCourseObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/objects/GnomeCourseObjectBindings.kt ===
+package net.dodian.uber.game.content.skills.agility.objects
+object GnomeCourseObjectBindings : FirstClickDslObjectContent(
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/DesertCarpetService.kt ===
+package net.dodian.uber.game.content.skills.agility
+class DesertCarpetService(private val c: Client) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/WerewolfCourseService.kt ===
+package net.dodian.uber.game.content.skills.agility
+class WerewolfCourseService(private val c: Client) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/agility/AgilityDefinitions.kt ===
+package net.dodian.uber.game.content.skills.agility
+object AgilityDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/cooking/CookingState.kt ===
+package net.dodian.uber.game.content.skills.cooking
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/cooking/CookingInputService.kt ===
+package net.dodian.uber.game.content.skills.cooking
+object CookingInputService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/cooking/CookingDefinitions.kt ===
+package net.dodian.uber.game.content.skills.cooking
+object CookingDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/cooking/objects/RangeObjects.kt ===
+package net.dodian.uber.game.content.skills.cooking.objects
+object RangeObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/cooking/CookingService.kt ===
+package net.dodian.uber.game.content.skills.cooking
+object CookingService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/cooking/CookingPlugin.kt ===
+package net.dodian.uber.game.content.skills.cooking
+object CookingPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/cooking/CookingRequest.kt ===
+package net.dodian.uber.game.content.skills.cooking
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/fishing/FishingState.kt ===
+package net.dodian.uber.game.content.skills.fishing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/fishing/FishingRequest.kt ===
+package net.dodian.uber.game.content.skills.fishing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/fishing/FishingDefinitions.kt ===
+package net.dodian.uber.game.content.skills.fishing
+object FishingDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/fishing/FishingPlugin.kt ===
+package net.dodian.uber.game.content.skills.fishing
+object FishingPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/fishing/FishingService.kt ===
+package net.dodian.uber.game.content.skills.fishing
+object FishingService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/fishing/FishingNpcInteractionService.kt ===
+package net.dodian.uber.game.content.skills.fishing
+object FishingNpcInteractionService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/runtime/RuneCostService.kt ===
+package net.dodian.uber.game.content.skills.core.runtime
+object RuneCostService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/runtime/ActionStopReasonMapper.kt ===
+package net.dodian.uber.game.content.skills.core.runtime
+object ActionStopReasonMapper {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/runtime/SkillingInterruptService.kt ===
+package net.dodian.uber.game.content.skills.core.runtime
+object SkillingInterruptService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/runtime/SkillActionState.kt ===
+package net.dodian.uber.game.content.skills.core.runtime
+interface SkillActionState
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/runtime/SkillActionRequest.kt ===
+package net.dodian.uber.game.content.skills.core.runtime
+interface SkillActionRequest
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/runtime/SkillingActionDsl.kt ===
+package net.dodian.uber.game.content.skills.core.runtime
+class GatheringActionBuilder internal constructor(
+fun gatheringAction(name: String, block: GatheringActionBuilder.() -> Unit): GatheringActionBuilder {
+class ProductionActionBuilder internal constructor(
+fun productionAction(name: String, block: ProductionActionBuilder.() -> Unit): ProductionActionBuilder {
+fun action(name: String, block: GatheringActionBuilder.() -> Unit): ActionSpec {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/runtime/GatheringTask.kt ===
+package net.dodian.uber.game.content.skills.core.runtime
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/runtime/ClientSkillingExtensions.kt ===
+package net.dodian.uber.game.content.skills.core.runtime
+fun Client.sendFilterMessage(message: String) {
+fun Client.addSkillExperience(skill: Skill, amount: Int) {
+fun Client.playAnimation(animationId: Int) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/runtime/ActionStopReason.kt ===
+package net.dodian.uber.game.content.skills.core.runtime
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/runtime/ProductionTask.kt ===
+package net.dodian.uber.game.content.skills.core.runtime
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/runtime/SkillingRandomEventService.kt ===
+package net.dodian.uber.game.content.skills.core.runtime
+object SkillingRandomEventService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/requirements/ValidationResult.kt ===
+package net.dodian.uber.game.content.skills.core.requirements
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/requirements/Requirement.kt ===
+package net.dodian.uber.game.content.skills.core.requirements
+fun interface Requirement {
+class RequirementBuilder {
+class HasLevelRequirement(
+class HasItemRequirement(
+class HasInventorySpaceRequirement(
+class NearPositionRequirement(
+class NearObjectRequirement(
+class ToolRequirement(
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/progression/SkillProgressionResult.kt ===
+package net.dodian.uber.game.content.skills.core.progression
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/progression/SkillReadService.kt ===
+package net.dodian.uber.game.content.skills.core.progression
+object SkillReadService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/progression/SkillAdminService.kt ===
+package net.dodian.uber.game.content.skills.core.progression
+object SkillAdminService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/progression/SkillProgressionRequest.kt ===
+package net.dodian.uber.game.content.skills.core.progression
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/progression/SkillProgressionService.kt ===
+package net.dodian.uber.game.content.skills.core.progression
+object SkillProgressionService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/events/SkillCoreEvents.kt ===
+package net.dodian.uber.game.content.skills.core.events
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/events/EventBusSkillingExtensions.kt ===
+package net.dodian.uber.game.content.skills.core.events
+fun onSkillStart(
+fun onSkillStop(
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/core/resource/ResourceSkillDsl.kt ===
+package net.dodian.uber.game.content.skills.core.resource
+class ResourceSkillContentBuilder {
+class ResourceFamilyBuilder internal constructor(
+class HarvestNodeBuilder internal constructor(
+class ToolBuilder internal constructor(
+fun resourceSkillContent(block: ResourceSkillContentBuilder.() -> Unit): ResourceSkillContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmithingTier.kt ===
+package net.dodian.uber.game.content.skills.smithing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SuperheatService.kt ===
+package net.dodian.uber.game.content.skills.smithing
+object SuperheatService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/OreRequirement.kt ===
+package net.dodian.uber.game.content.skills.smithing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmeltingInterfaceService.kt ===
+package net.dodian.uber.game.content.skills.smithing
+object SmeltingInterfaceService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmithingDisplayItem.kt ===
+package net.dodian.uber.game.content.skills.smithing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmithingRequest.kt ===
+package net.dodian.uber.game.content.skills.smithing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmithingFrameDefinitions.kt ===
+package net.dodian.uber.game.content.skills.smithing
+object SmithingFrameDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmeltingButtons.kt ===
+package net.dodian.uber.game.content.skills.smithing
+object SmeltingButtons {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmithingInterfaceService.kt ===
+package net.dodian.uber.game.content.skills.smithing
+object SmithingInterfaceService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmithingFrameEntry.kt ===
+package net.dodian.uber.game.content.skills.smithing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmithingDefinitions.kt ===
+package net.dodian.uber.game.content.skills.smithing
+object SmithingDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmeltingState.kt ===
+package net.dodian.uber.game.content.skills.smithing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/objects/FurnaceObjects.kt ===
+package net.dodian.uber.game.content.skills.smithing.objects
+object FurnaceObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/objects/AnvilObjects.kt ===
+package net.dodian.uber.game.content.skills.smithing.objects
+object AnvilObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/objects/SmithingObjectComponents.kt ===
+package net.dodian.uber.game.content.skills.smithing.objects
+object SmithingObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmeltingRecipe.kt ===
+package net.dodian.uber.game.content.skills.smithing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmithingState.kt ===
+package net.dodian.uber.game.content.skills.smithing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmeltingButtonSet.kt ===
+package net.dodian.uber.game.content.skills.smithing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/FurnaceButtonMapping.kt ===
+package net.dodian.uber.game.content.skills.smithing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmithingPlugin.kt ===
+package net.dodian.uber.game.content.skills.smithing
+object SmithingPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmeltingActionService.kt ===
+package net.dodian.uber.game.content.skills.smithing
+object SmeltingActionService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmithingDsl.kt ===
+package net.dodian.uber.game.content.skills.smithing
+class SmeltingRecipeBuilder internal constructor(
+class SmeltingRecipesBuilder {
+fun smeltingRecipes(block: SmeltingRecipesBuilder.() -> Unit): List<SmeltingRecipe> {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/smithing/SmeltingRequest.kt ===
+package net.dodian.uber.game.content.skills.smithing
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/prayer/PrayerOfferingRequest.kt ===
+package net.dodian.uber.game.content.skills.prayer
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/prayer/objects/AltarObjects.kt ===
+package net.dodian.uber.game.content.skills.prayer.objects
+object AltarObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/prayer/PrayerInteractionService.kt ===
+package net.dodian.uber.game.content.skills.prayer
+object PrayerInteractionService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/prayer/PrayerPlugin.kt ===
+package net.dodian.uber.game.content.skills.prayer
+object PrayerPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/prayer/PrayerOfferingState.kt ===
+package net.dodian.uber.game.content.skills.prayer
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/prayer/items/BuryBonesItems.kt ===
+package net.dodian.uber.game.content.skills.prayer.items
+object BuryBonesItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/thieving/ThievingDefinitions.kt ===
+package net.dodian.uber.game.content.skills.thieving
+object ThievingDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/thieving/ThievingDefinition.kt ===
+package net.dodian.uber.game.content.skills.thieving
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/thieving/plunder/PyramidPlunderGlobalState.kt ===
+package net.dodian.uber.game.content.skills.thieving.plunder
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/thieving/plunder/PyramidPlunderPlayerState.kt ===
+package net.dodian.uber.game.content.skills.thieving.plunder
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/thieving/plunder/PyramidPlunderService.kt ===
+package net.dodian.uber.game.content.skills.thieving.plunder
+object PyramidPlunderService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/thieving/objects/PlunderObjects.kt ===
+package net.dodian.uber.game.content.skills.thieving.objects
+object PlunderObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/thieving/objects/ChestObjects.kt ===
+package net.dodian.uber.game.content.skills.thieving.objects
+object ChestObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/thieving/objects/StallObjects.kt ===
+package net.dodian.uber.game.content.skills.thieving.objects
+object StallObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/thieving/objects/ThievingObjectComponents.kt ===
+package net.dodian.uber.game.content.skills.thieving.objects
+object ThievingObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/thieving/ThievingService.kt ===
+package net.dodian.uber.game.content.skills.thieving
+object ThievingService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/thieving/ThievingPlugin.kt ===
+package net.dodian.uber.game.content.skills.thieving
+object ThievingPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/runecrafting/RunecraftingRequest.kt ===
+package net.dodian.uber.game.content.skills.runecrafting
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/runecrafting/RunecraftingPlugin.kt ===
+package net.dodian.uber.game.content.skills.runecrafting
+object RunecraftingPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/runecrafting/objects/RunecraftingObjectComponents.kt ===
+package net.dodian.uber.game.content.skills.runecrafting.objects
+object RunecraftingObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/runecrafting/objects/RunecraftingObjectBindings.kt ===
+package net.dodian.uber.game.content.skills.runecrafting.objects
+object RunecraftingObjectBindings : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/runecrafting/RunecraftingService.kt ===
+package net.dodian.uber.game.content.skills.runecrafting
+object RunecraftingService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/runecrafting/RunecraftingPouchService.kt ===
+package net.dodian.uber.game.content.skills.runecrafting
+object RunecraftingPouchService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/runecrafting/RunecraftingState.kt ===
+package net.dodian.uber.game.content.skills.runecrafting
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/runecrafting/items/RunePouchItems.kt ===
+package net.dodian.uber.game.content.skills.runecrafting.items
+object RunePouchItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/runecrafting/RunecraftingDefinitions.kt ===
+package net.dodian.uber.game.content.skills.runecrafting
+object RunecraftingDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/mining/MiningService.kt ===
+package net.dodian.uber.game.content.skills.mining
+object MiningService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/mining/MiningState.kt ===
+package net.dodian.uber.game.content.skills.mining
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/mining/MiningDefinitions.kt ===
+package net.dodian.uber.game.content.skills.mining
+object MiningDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/mining/objects/SpecialMiningObjectBindings.kt ===
+package net.dodian.uber.game.content.skills.mining.objects
+object SpecialMiningObjectBindings : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/mining/objects/SpecialMiningObjectComponents.kt ===
+package net.dodian.uber.game.content.skills.mining.objects
+object SpecialMiningObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/mining/objects/GemRocksObjectComponents.kt ===
+package net.dodian.uber.game.content.skills.mining.objects
+object GemRocksObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/mining/objects/MiningRocksObjects.kt ===
+package net.dodian.uber.game.content.skills.mining.objects
+object MiningRocksObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/mining/objects/GemRocksObjectBindings.kt ===
+package net.dodian.uber.game.content.skills.mining.objects
+object GemRocksObjectBindings : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/mining/MiningPlugin.kt ===
+package net.dodian.uber.game.content.skills.mining
+object MiningPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/mining/MiningEvents.kt ===
+package net.dodian.uber.game.content.skills.mining
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/farming/FarmingPlugin.kt ===
+package net.dodian.uber.game.content.skills.farming
+object FarmingPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/farming/FarmingStatePersistence.kt ===
+package net.dodian.uber.game.content.skills.farming
+fun Client.markFarmingDirty() {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/farming/FarmingCatchUpService.kt ===
+package net.dodian.uber.game.content.skills.farming
+object FarmingCatchUpService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/farming/FarmingState.kt ===
+package net.dodian.uber.game.content.skills.farming
+class FarmingState {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/farming/objects/FarmingPatchObjects.kt ===
+package net.dodian.uber.game.content.skills.farming.objects
+object FarmingPatchObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/farming/objects/FarmingObjectComponents.kt ===
+package net.dodian.uber.game.content.skills.farming.objects
+object FarmingObjectComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/farming/objects/FarmingPatchGuideObjects.kt ===
+package net.dodian.uber.game.content.skills.farming.objects
+object FarmingPatchGuideObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/farming/objects/CompostBinObjects.kt ===
+package net.dodian.uber.game.content.skills.farming.objects
+object CompostBinObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/farming/FarmingDefinitions.kt ===
+package net.dodian.uber.game.content.skills.farming
+class FarmingDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/farming/FarmingService.kt ===
+package net.dodian.uber.game.content.skills.farming
+class FarmingService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/herblore/HerblorePlugin.kt ===
+package net.dodian.uber.game.content.skills.herblore
+object HerblorePlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/herblore/HerbloreDefinitions.kt ===
+package net.dodian.uber.game.content.skills.herblore
+object HerbloreDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/herblore/HerbloreRequest.kt ===
+package net.dodian.uber.game.content.skills.herblore
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/herblore/items/HerbloreSuppliesItems.kt ===
+package net.dodian.uber.game.content.skills.herblore.items
+object HerbloreSuppliesItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/herblore/items/GrimyHerbItems.kt ===
+package net.dodian.uber.game.content.skills.herblore.items
+object GrimyHerbItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/herblore/HerbloreService.kt ===
+package net.dodian.uber.game.content.skills.herblore
+object HerbloreService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/woodcutting/WoodcuttingService.kt ===
+package net.dodian.uber.game.content.skills.woodcutting
+object WoodcuttingService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/woodcutting/WoodcuttingPlugin.kt ===
+package net.dodian.uber.game.content.skills.woodcutting
+object WoodcuttingPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/woodcutting/WoodcuttingDefinitions.kt ===
+package net.dodian.uber.game.content.skills.woodcutting
+object WoodcuttingDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/woodcutting/WoodcuttingState.kt ===
+package net.dodian.uber.game.content.skills.woodcutting
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/woodcutting/objects/WoodcuttingTreesObjects.kt ===
+package net.dodian.uber.game.content.skills.woodcutting.objects
+object WoodcuttingTreesObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/CraftingRequest.kt ===
+package net.dodian.uber.game.content.skills.crafting
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/CraftingState.kt ===
+package net.dodian.uber.game.content.skills.crafting
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/CraftingDefinitions.kt ===
+package net.dodian.uber.game.content.skills.crafting
+object CraftingDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/GoldJewelryRequest.kt ===
+package net.dodian.uber.game.content.skills.crafting
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/CraftingPlugin.kt ===
+package net.dodian.uber.game.content.skills.crafting
+object CraftingPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/TanningDefinitions.kt ===
+package net.dodian.uber.game.content.skills.crafting
+object TanningDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/TanningRequest.kt ===
+package net.dodian.uber.game.content.skills.crafting
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/TanningService.kt ===
+package net.dodian.uber.game.content.skills.crafting
+object TanningService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/GoldJewelryDefinitions.kt ===
+package net.dodian.uber.game.content.skills.crafting
+object GoldJewelryDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/GoldJewelryService.kt ===
+package net.dodian.uber.game.content.skills.crafting
+object GoldJewelryService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/objects/ResourceFillingService.kt ===
+package net.dodian.uber.game.content.skills.crafting.objects
+object ResourceFillingService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/objects/SpinningWheelObjects.kt ===
+package net.dodian.uber.game.content.skills.crafting.objects
+object SpinningWheelObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/objects/ResourceFillingObjects.kt ===
+package net.dodian.uber.game.content.skills.crafting.objects
+object ResourceFillingObjects : ObjectContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/CraftingService.kt ===
+package net.dodian.uber.game.content.skills.crafting
+object CraftingService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/crafting/GoldJewelryState.kt ===
+package net.dodian.uber.game.content.skills.crafting
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/fletching/FletchingDefinitions.kt ===
+package net.dodian.uber.game.content.skills.fletching
+object FletchingDefinitions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/fletching/FletchingPlugin.kt ===
+package net.dodian.uber.game.content.skills.fletching
+object FletchingPlugin {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/fletching/FletchingRequest.kt ===
+package net.dodian.uber.game.content.skills.fletching
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/fletching/FletchingService.kt ===
+package net.dodian.uber.game.content.skills.fletching
+object FletchingService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/skills/fletching/FletchingState.kt ===
+package net.dodian.uber.game.content.skills.fletching
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/SaplingItemCombinationHandler.kt ===
+package net.dodian.uber.game.content.items
+object SaplingItemCombinationHandler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/PotatoInteractionState.kt ===
+package net.dodian.uber.game.content.items
+object PotatoInteractionState {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/ItemContent.kt ===
+package net.dodian.uber.game.content.items
+interface ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/combination/RepairPlaceholderItemCombinationHandler.kt ===
+package net.dodian.uber.game.content.items.combination
+object RepairPlaceholderItemCombinationHandler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/combination/EquipmentAssemblyItemCombinationHandler.kt ===
+package net.dodian.uber.game.content.items.combination
+object EquipmentAssemblyItemCombinationHandler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/combination/DialogueGateItemCombinationHandler.kt ===
+package net.dodian.uber.game.content.items.combination
+object DialogueGateItemCombinationHandler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/combination/FiremakingItemCombinationHandler.kt ===
+package net.dodian.uber.game.content.items.combination
+object FiremakingItemCombinationHandler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/combination/NoveltyItemCombinationHandler.kt ===
+package net.dodian.uber.game.content.items.combination
+object NoveltyItemCombinationHandler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/combination/FletchingItemCombinationHandler.kt ===
+package net.dodian.uber.game.content.items.combination
+object FletchingItemCombinationHandler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/combination/CraftingItemCombinationHandler.kt ===
+package net.dodian.uber.game.content.items.combination
+object CraftingItemCombinationHandler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/combination/HerbloreItemCombinationHandler.kt ===
+package net.dodian.uber.game.content.items.combination
+object HerbloreItemCombinationHandler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/rewards/LampRewardItems.kt ===
+package net.dodian.uber.game.content.items.rewards
+object LampRewardItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/admin/StaffToolItems.kt ===
+package net.dodian.uber.game.content.items.admin
+object StaffToolItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/cosmetics/ToyItems.kt ===
+package net.dodian.uber.game.content.items.cosmetics
+object ToyItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/ItemCombinationService.kt ===
+package net.dodian.uber.game.content.items
+object ItemCombinationService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/ItemContentRegistry.kt ===
+package net.dodian.uber.game.content.items
+object ItemContentRegistry {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/ItemOnNpcContentService.kt ===
+package net.dodian.uber.game.content.items
+object ItemOnNpcContentService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/events/EventInfoItems.kt ===
+package net.dodian.uber.game.content.items.events
+object EventInfoItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/events/EventPackageItems.kt ===
+package net.dodian.uber.game.content.items.events
+object EventPackageItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/ItemDispatcher.kt ===
+package net.dodian.uber.game.content.items
+object ItemDispatcher {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/equipment/RepairHintItems.kt ===
+package net.dodian.uber.game.content.items.equipment
+object RepairHintItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/spawn/GlobalGroundSpawnContent.kt ===
+package net.dodian.uber.game.content.items.spawn
+class GlobalGroundSpawnBuilder {
+class GlobalGroundSpawnGroupBuilder internal constructor(
+private fun globalGroundSpawns(block: GlobalGroundSpawnBuilder.() -> Unit): List<GlobalGroundSpawn> {
+object GlobalGroundSpawnContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/consumables/PotionItems.kt ===
+package net.dodian.uber.game.content.items.consumables
+object PotionItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/consumables/FoodItems.kt ===
+package net.dodian.uber.game.content.items.consumables
+object FoodItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/consumables/DrinkItems.kt ===
+package net.dodian.uber.game.content.items.consumables
+object DrinkItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/items/utility/GuideBookItems.kt ===
+package net.dodian.uber.game.content.items.utility
+object GuideBookItems : ItemContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/events/partyroom/RewardItem.kt ===
+package net.dodian.uber.game.content.events.partyroom
+class RewardItem {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/events/partyroom/Balloons.kt ===
+package net.dodian.uber.game.content.events.partyroom
+object Balloons {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/events/partyroom/DropParty.kt ===
+package net.dodian.uber.game.content.events.partyroom
+class DropParty(private var minutes: Int) : Runnable {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/quests/QuestComponents.kt ===
+package net.dodian.uber.game.content.interfaces.quests
+object QuestComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/quests/QuestInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.quests
+object QuestInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/skillguide/SkillGuideComponents.kt ===
+package net.dodian.uber.game.content.interfaces.skillguide
+object SkillGuideComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/skillguide/SkillGuideInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.skillguide
+object SkillGuideInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/ui/UiInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.ui
+object UiInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/ui/UiComponents.kt ===
+package net.dodian.uber.game.content.interfaces.ui
+object UiComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/settings/SettingsComponents.kt ===
+package net.dodian.uber.game.content.interfaces.settings
+object SettingsComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/settings/SettingsInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.settings
+object SettingsInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/partyroom/PartyRoomInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.partyroom
+object PartyRoomInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/partyroom/PartyRoomComponents.kt ===
+package net.dodian.uber.game.content.interfaces.partyroom
+object PartyRoomComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/smithing/SmithingInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.smithing
+object SmithingInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/combat/CombatInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.combat
+object CombatInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/combat/CombatInterfaceComponents.kt ===
+package net.dodian.uber.game.content.interfaces.combat
+object CombatInterfaceComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/magic/MagicInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.magic
+object MagicInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/magic/MagicComponents.kt ===
+package net.dodian.uber.game.content.interfaces.magic
+object MagicComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/prayer/PrayerComponents.kt ===
+package net.dodian.uber.game.content.interfaces.prayer
+object PrayerComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/prayer/PrayerInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.prayer
+object PrayerInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/trade/TradeInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.trade
+object TradeInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/trade/TradeComponents.kt ===
+package net.dodian.uber.game.content.interfaces.trade
+object TradeComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/bank/BankInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.bank
+object BankInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/bank/BankComponents.kt ===
+package net.dodian.uber.game.content.interfaces.bank
+object BankComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/appearance/AppearanceInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.appearance
+object AppearanceInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/appearance/AppearanceComponents.kt ===
+package net.dodian.uber.game.content.interfaces.appearance
+object AppearanceComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/rewards/RewardInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.rewards
+object RewardInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/rewards/RewardComponents.kt ===
+package net.dodian.uber.game.content.interfaces.rewards
+object RewardComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/dialogue/DialogueInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.dialogue
+object DialogueInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/dialogue/DialogueComponents.kt ===
+package net.dodian.uber.game.content.interfaces.dialogue
+object DialogueComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/duel/DuelInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.duel
+object DuelInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/duel/DuelComponents.kt ===
+package net.dodian.uber.game.content.interfaces.duel
+object DuelComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/crafting/CraftingInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.crafting
+object CraftingInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/crafting/CraftingInterfaceComponents.kt ===
+package net.dodian.uber.game.content.interfaces.crafting
+object CraftingInterfaceComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/fletching/FletchingInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.fletching
+object FletchingInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/fletching/FletchingInterfaceComponents.kt ===
+package net.dodian.uber.game.content.interfaces.fletching
+object FletchingInterfaceComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/slots/SlotsComponents.kt ===
+package net.dodian.uber.game.content.interfaces.slots
+object SlotsComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/slots/SlotsInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.slots
+object SlotsInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/emotes/EmoteComponents.kt ===
+package net.dodian.uber.game.content.interfaces.emotes
+object EmoteComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/emotes/EmoteInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.emotes
+object EmoteInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/travel/TravelComponents.kt ===
+package net.dodian.uber.game.content.interfaces.travel
+object TravelComponents {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/travel/TravelInterfaceButtons.kt ===
+package net.dodian.uber.game.content.interfaces.travel
+object TravelInterfaceButtons : InterfaceButtonContent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/content/interfaces/skilling/SkillingInterfaceItemService.kt ===
+package net.dodian.uber.game.content.interfaces.skilling
+object SkillingInterfaceItemService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/WorldPollResultStore.kt ===
+package net.dodian.uber.game.persistence
+object WorldPollResultStore {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/repository/DbResult.kt ===
+package net.dodian.uber.game.persistence.repository
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/repository/DbAsyncRepository.kt ===
+package net.dodian.uber.game.persistence.repository
+object DbAsyncRepository {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/repository/DbQueryHelpers.kt ===
+package net.dodian.uber.game.persistence.repository
+fun PreparedStatement.bindInt(index: Int, value: Int): PreparedStatement = apply { setInt(index, value) }
+fun PreparedStatement.bindLong(index: Int, value: Long): PreparedStatement = apply { setLong(index, value) }
+fun PreparedStatement.bindString(index: Int, value: String): PreparedStatement = apply { setString(index, value) }
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/repository/QueryRepository.kt ===
+package net.dodian.uber.game.persistence.repository
+interface QueryRepository<in TReq, TRes> {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/world/WorldPollInput.kt ===
+package net.dodian.uber.game.persistence.world
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/world/ObjectDefinitionRepository.kt ===
+package net.dodian.uber.game.persistence.world
+object ObjectDefinitionRepository {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/world/WorldDbPollService.kt ===
+package net.dodian.uber.game.persistence.world
+object WorldDbPollService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/world/npc/NpcDataRepository.kt ===
+package net.dodian.uber.game.persistence.world.npc
+object NpcDataRepository {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/world/WorldPollResult.kt ===
+package net.dodian.uber.game.persistence.world
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/WorldPollPublisher.kt ===
+package net.dodian.uber.game.persistence
+object WorldPollPublisher {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/WorldPollSnapshot.kt ===
+package net.dodian.uber.game.persistence
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/audit/CommandLog.kt ===
+package net.dodian.uber.game.persistence.audit
+object CommandLog {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/audit/DuelLog.kt ===
+package net.dodian.uber.game.persistence.audit
+object DuelLog {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/audit/AsyncSqlService.kt ===
+package net.dodian.uber.game.persistence.audit
+object AsyncSqlService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/audit/ItemLog.kt ===
+package net.dodian.uber.game.persistence.audit
+object ItemLog {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/audit/ChatLog.kt ===
+package net.dodian.uber.game.persistence.audit
+object ChatLog {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/audit/LogEntry.kt ===
+package net.dodian.uber.game.persistence.audit
+object LogEntry {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/audit/TradeLog.kt ===
+package net.dodian.uber.game.persistence.audit
+object TradeLog {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/db/DatabaseConfig.kt ===
+package net.dodian.uber.game.persistence.db
+internal fun buildDatabaseJdbcUrl(
+internal fun validateDatabaseConfig(
+internal fun sanitizedJdbcTarget(
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/db/DatabaseInitializer.kt ===
+package net.dodian.uber.game.persistence.db
+private val initializedFile = Path.of("./.initialized_database").toFile()
+fun initializeDatabase() {
+fun isDatabaseInitialized() = initializedFile.exists()
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/db/Database.kt ===
+package net.dodian.uber.game.persistence.db
+private val logger: Logger = LogManager.getLogger("Database")
+private val databaseJdbcUrl = buildDatabaseJdbcUrl(databaseHost, databasePort, databaseName)
+private val dataSourceLazy = lazy { createDataSource() }
+private val schedulerLazy = lazy { Executors.newScheduledThreadPool(1) }
+private val dataSource: HikariDataSource
+private fun createDataSource(): HikariDataSource {
+val dbConnection: Connection
+val dbStatement: Statement
+private fun startPoolMonitoring(hikariDataSource: HikariDataSource) {
+fun closeConnectionPool() {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/command/CommandDbService.kt ===
+package net.dodian.uber.game.persistence.command
+object CommandDbService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/account/AccountPersistenceService.kt ===
+package net.dodian.uber.game.persistence.account
+object AccountPersistenceService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/account/login/AccountLoginQueries.kt ===
+package net.dodian.uber.game.persistence.account.login
+internal object AccountLoginQueries {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/account/login/AccountLoginMapper.kt ===
+package net.dodian.uber.game.persistence.account.login
+internal object AccountLoginMapper {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/account/login/AccountLoginRepository.kt ===
+package net.dodian.uber.game.persistence.account.login
+internal object AccountLoginRepository {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/account/login/AccountLoginService.kt ===
+package net.dodian.uber.game.persistence.account.login
+object AccountLoginService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/DbDispatchers.kt ===
+package net.dodian.uber.game.persistence
+object DbDispatchers {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/player/PlayerSaveService.kt ===
+package net.dodian.uber.game.persistence.player
+object PlayerSaveService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/player/PlayerSaveRepository.kt ===
+package net.dodian.uber.game.persistence.player
+class PlayerSaveRepository(
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/player/PlayerSaveRequest.kt ===
+package net.dodian.uber.game.persistence.player
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/player/RefundRepository.kt ===
+package net.dodian.uber.game.persistence.player
+object RefundRepository {
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/player/PlayerSaveSqlRepository.kt ===
+package net.dodian.uber.game.persistence.player
+class PlayerSaveSqlRepository(
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/player/PlayerSaveSnapshot.kt ===
+package net.dodian.uber.game.persistence.player
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/player/PlayerSaveEnvelope.kt ===
+package net.dodian.uber.game.persistence.player
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/player/PlayerSaveReason.kt ===
+package net.dodian.uber.game.persistence.player
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/player/PlayerSaveSegmentSnapshot.kt ===
+package net.dodian.uber.game.persistence.player
+=== game-server/src/main/kotlin/net/dodian/uber/game/persistence/player/PlayerSaveSegment.kt ===
+package net.dodian.uber.game.persistence.player
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/music/RegionSong.kt ===
+package net.dodian.uber.game.model.music
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/Position.kt ===
+package net.dodian.uber.game.model
+class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 0) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/chunk/ChunkPlayerComparator.kt ===
+package net.dodian.uber.game.model.chunk
+class ChunkPlayerComparator(
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/chunk/ChunkManager.kt ===
+package net.dodian.uber.game.model.chunk
+class ChunkManager {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/chunk/Chunk.kt ===
+package net.dodian.uber.game.model.chunk
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/chunk/ChunkRepository.kt ===
+package net.dodian.uber.game.model.chunk
+class ChunkRepository(
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/entity/npc/NpcDropMath.kt ===
+package net.dodian.uber.game.model.entity.npc
+object NpcDropMath {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/entity/npc/NpcDataInterop.kt ===
+package net.dodian.uber.game.model.entity.npc
+object NpcDataInterop {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/entity/npc/NpcUpdateMaskService.kt ===
+package net.dodian.uber.game.model.entity.npc
+object NpcUpdateMaskService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/ShopManager.kt ===
+package net.dodian.uber.game.model
+class ShopManager {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/Login.kt ===
+package net.dodian.uber.game.model
+class Login {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/object/GlobalObject.kt ===
+package net.dodian.uber.game.model.`object`
+object GlobalObject {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/object/Object.kt ===
+package net.dodian.uber.game.model.`object`
+class Object @JvmOverloads constructor(
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/object/RS2Object.kt ===
+package net.dodian.uber.game.model.`object`
+class RS2Object @JvmOverloads constructor(
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/object/DoorRegistry.kt ===
+package net.dodian.uber.game.model.`object`
+class DoorRegistry @JvmOverloads constructor(
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/object/door/DoorDefinitions.kt ===
+package net.dodian.uber.game.model.`object`.door
+class DoorDefinitionSetBuilder {
+fun doorDefinitions(block: DoorDefinitionSetBuilder.() -> Unit): List<DoorDefinition> {
+fun interface DoorDefinitionLoader {
+object DoorDefinitionRepository : DoorDefinitionLoader {
+private fun ResultSet.toDoorDefinition(): DoorDefinition =
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/item/ItemManager.kt ===
+package net.dodian.uber.game.model.item
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/item/Item.kt ===
+package net.dodian.uber.game.model.item
+class Item(
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/item/ItemContainer.kt ===
+package net.dodian.uber.game.model.item
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/item/Ground.kt ===
+package net.dodian.uber.game.model.item
+object Ground {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/item/GameItem.kt ===
+package net.dodian.uber.game.model.item
+class GameItem(
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/item/Equipment.kt ===
+package net.dodian.uber.game.model.item
+class Equipment : ItemContainer(SIZE) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/item/GroundItem.kt ===
+package net.dodian.uber.game.model.item
+class GroundItem {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/UpdateFlag.kt ===
+package net.dodian.uber.game.model
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/EntityType.kt ===
+package net.dodian.uber.game.model
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/UpdateFlags.kt ===
+package net.dodian.uber.game.model
+class UpdateFlags {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/YellSystem.kt ===
+package net.dodian.uber.game.model
+object YellSystem {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/player/quests/QuestSend.kt ===
+package net.dodian.uber.game.model.player.quests
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/player/bank/PlayerBankService.kt ===
+package net.dodian.uber.game.model.player.bank
+object PlayerBankService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/player/casino/SlotMachine.kt ===
+package net.dodian.uber.game.model.player.casino
+class SlotMachine {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/player/casino/Spin.kt ===
+package net.dodian.uber.game.model.player.casino
+class Spin(
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/player/casino/Symbol.kt ===
+package net.dodian.uber.game.model.player.casino
+class Symbol(
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/player/content/Skillcape.kt ===
+package net.dodian.uber.game.model.player.content
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/player/skills/prayer/Bones.kt ===
+package net.dodian.uber.game.model.player.skills.prayer
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/player/skills/prayer/HeadIcon.kt ===
+package net.dodian.uber.game.model.player.skills.prayer
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/player/skills/prayer/Prayers.kt ===
+package net.dodian.uber.game.model.player.skills.prayer
+class Prayers(player: Player) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/player/skills/Skills.kt ===
+package net.dodian.uber.game.model.player.skills
+object Skills {
+=== game-server/src/main/kotlin/net/dodian/uber/game/model/player/skills/Skill.kt ===
+package net.dodian.uber.game.model.player.skills
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/buttons/InterfaceButtonService.kt ===
+package net.dodian.uber.game.systems.ui.buttons
+object InterfaceButtonService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/buttons/ButtonClickLoggingService.kt ===
+package net.dodian.uber.game.systems.ui.buttons
+object ButtonClickLoggingService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/buttons/InterfaceButtonBinding.kt ===
+package net.dodian.uber.game.systems.ui.buttons
+fun interface InterfaceButtonHandler {
+interface InterfaceButtonContent {
+fun buttonBinding(
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/buttons/ButtonClickRequest.kt ===
+package net.dodian.uber.game.systems.ui.buttons
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/buttons/InterfaceButtonRegistry.kt ===
+package net.dodian.uber.game.systems.ui.buttons
+object InterfaceButtonRegistry {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/PlayerUiDeltaProcessor.kt ===
+package net.dodian.uber.game.systems.ui
+object PlayerUiDeltaProcessor {
+class GlobalUiPublisher {
+private val Client.wildLevelForUi: Int
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/DialogueDisplayService.kt ===
+package net.dodian.uber.game.systems.ui.dialogue
+object DialogueDisplayService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/DialogueService.kt ===
+package net.dodian.uber.game.systems.ui.dialogue
+object DialogueService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/DialogueOptionService.kt ===
+package net.dodian.uber.game.systems.ui.dialogue
+object DialogueOptionService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/core/DialogueUi.kt ===
+package net.dodian.uber.game.systems.ui.dialogue.core
+object DialogueUi {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/core/DialogueIds.kt ===
+package net.dodian.uber.game.systems.ui.dialogue.core
+object DialogueIds {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/core/DialogueRenderHandler.kt ===
+package net.dodian.uber.game.systems.ui.dialogue.core
+fun interface DialogueRenderHandler {
+fun interface DialogueRenderModule {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/core/DialogueRenderRegistry.kt ===
+package net.dodian.uber.game.systems.ui.dialogue.core
+object DialogueRenderRegistry {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/core/DialogueRegistry.kt ===
+package net.dodian.uber.game.systems.ui.dialogue.core
+object DialogueRegistry {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/core/DialogueRenderCompatRegistry.kt ===
+package net.dodian.uber.game.systems.ui.dialogue.core
+object DialogueRenderCompatRegistry {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/DialogueFactory.kt ===
+package net.dodian.uber.game.systems.ui.dialogue
+class DialogueFactory {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/DialogueEmote.kt ===
+package net.dodian.uber.game.systems.ui.dialogue
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/text/DialogueTextPager.kt ===
+package net.dodian.uber.game.systems.ui.dialogue.text
+object DialogueTextPager {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/ui/dialogue/text/DialoguePagingService.kt ===
+package net.dodian.uber.game.systems.ui.dialogue.text
+object DialoguePagingService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/UnarmedAttackAnimationService.kt ===
+package net.dodian.uber.game.systems.combat
+object UnarmedAttackAnimationService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/CombatDefenderReaction.kt ===
+package net.dodian.uber.game.systems.combat
+object CombatDefenderReaction {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/CombatLogoutLockService.kt ===
+package net.dodian.uber.game.systems.combat
+object CombatLogoutLockService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/CombatAttackResult.kt ===
+package net.dodian.uber.game.systems.combat
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/RangedCombat.kt ===
+package net.dodian.uber.game.systems.combat
+fun Client.handleRangedAttack(): CombatAttackResult? {
+fun landHitRanged(p: Client, t: Entity): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/CombatRuntimeService.kt ===
+package net.dodian.uber.game.systems.combat
+object CombatRuntimeService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/CombatTargetResolver.kt ===
+package net.dodian.uber.game.systems.combat
+internal fun resolveCombatTargetPlayer(slot: Int): Client? = PlayerRegistry.getClient(slot)
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/style/WeaponCombatProfile.kt ===
+package net.dodian.uber.game.systems.combat.style
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/style/CombatStyleService.kt ===
+package net.dodian.uber.game.systems.combat.style
+object CombatStyleService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/style/CombatStyle.kt ===
+package net.dodian.uber.game.systems.combat.style
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/CombatStartPolicy.kt ===
+package net.dodian.uber.game.systems.combat
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/PlayerAttackCombat.kt ===
+package net.dodian.uber.game.systems.combat
+fun Client.canAttackNpc(npcId: Int): Boolean {
+fun Client.getAttackStyle() : Int {
+fun Client.attackTarget(): CombatAttackResult? {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/CombatTargetState.kt ===
+package net.dodian.uber.game.systems.combat
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/MagicCombat.kt ===
+package net.dodian.uber.game.systems.combat
+fun Client.handleMagicAttack(): CombatAttackResult? {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/CombatHitQueueService.kt ===
+package net.dodian.uber.game.systems.combat
+object CombatHitQueueService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/CombatPreemptionPolicy.kt ===
+package net.dodian.uber.game.systems.combat
+object CombatPreemptionPolicy {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/CombatStartService.kt ===
+package net.dodian.uber.game.systems.combat
+object CombatStartService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/PlayerBlockAnimationService.kt ===
+package net.dodian.uber.game.systems.combat
+object PlayerBlockAnimationService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/CombatCancellationReason.kt ===
+package net.dodian.uber.game.systems.combat
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/CombatIntent.kt ===
+package net.dodian.uber.game.systems.combat
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/ClientExtensions.kt ===
+package net.dodian.uber.game.systems.combat
+fun Client.distance(entity: Entity) = Utils.getDistance(position.x, position.y, entity.position.x, entity.position.y)
+fun Client.canReach(entity: Entity, distance: Int) = distance(entity) <= distance
+fun Client.requireKey(keyId: Int, vararg npcId: Int): Boolean {
+fun Client.slayerLevelRequired(npcId: Int): Boolean {
+fun Client.checkSlayerTask(npcId: Int): Boolean {
+fun Client.magicBonusDamage(): Double {
+fun Client.meleeMaxHit(): Int {
+fun Client.rangedMaxHit(): Int {
+fun Client.getRangedStr(): Int {
+fun Client.getSlayerDamage(npcId: Int, range: Boolean): Int {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/combat/MeleeCombat.kt ===
+package net.dodian.uber.game.systems.combat
+var hit = 0
+var hit2 = 0
+fun Client.handleMeleeAttack(): CombatAttackResult? {
+fun highestAttackBonus(p: Client): Int {
+fun landHit(p: Client, t: Entity): Boolean {
+fun Client.handleSpecial(crit: Boolean): Boolean {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/zone/ZoneDelta.kt ===
+package net.dodian.uber.game.systems.zone
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/zone/ChunkDeltaQueue.kt ===
+package net.dodian.uber.game.systems.zone
+internal class ChunkDeltaQueue {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/zone/ZoneUpdateBus.kt ===
+package net.dodian.uber.game.systems.zone
+object ZoneUpdateBus {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/zone/ZoneFlushService.kt ===
+package net.dodian.uber.game.systems.zone
+internal class ZoneFlushService(
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/zone/ZoneSubscriberIndex.kt ===
+package net.dodian.uber.game.systems.zone
+class ZoneSubscriberIndex {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/zone/ZoneFlushStats.kt ===
+package net.dodian.uber.game.systems.zone
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/animation/PlayerAnimationService.kt ===
+package net.dodian.uber.game.systems.animation
+object PlayerAnimationService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/animation/PlayerAnimationSource.kt ===
+package net.dodian.uber.game.systems.animation
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/pulse/GlobalPulseService.kt ===
+package net.dodian.uber.game.systems.world.pulse
+object GlobalPulseService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/WorldMaintenanceService.kt ===
+package net.dodian.uber.game.systems.world
+class WorldMaintenanceService(
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/WorldMaintenanceStage.kt ===
+package net.dodian.uber.game.systems.world
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/OnlinePlayerIndex.kt ===
+package net.dodian.uber.game.systems.world
+class OnlinePlayerIndex {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/farming/DuePlayerSet.kt ===
+package net.dodian.uber.game.systems.world.farming
+class DuePlayerSet {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/farming/FarmingTickBucket.kt ===
+package net.dodian.uber.game.systems.world.farming
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/farming/FarmingScheduler.kt ===
+package net.dodian.uber.game.systems.world.farming
+class FarmingScheduler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/npc/NpcManager.kt ===
+package net.dodian.uber.game.systems.world.npc
+class NpcManager {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/npc/NpcLifecycle.kt ===
+package net.dodian.uber.game.systems.world.npc
+object NpcLifecycle {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/npc/NpcTimerScheduler.kt ===
+package net.dodian.uber.game.systems.world.npc
+object NpcTimerScheduler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/npc/NpcSpawnLocator.kt ===
+package net.dodian.uber.game.systems.world.npc
+object NpcSpawnLocator {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/TargetedWorldPollApplier.kt ===
+package net.dodian.uber.game.systems.world
+class TargetedWorldPollApplier {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/world/player/PlayerRegistry.kt ===
+package net.dodian.uber.game.systems.world.player
+object PlayerRegistry {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/PlayerActionType.kt ===
+package net.dodian.uber.game.systems.action
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/TeleportActionService.kt ===
+package net.dodian.uber.game.systems.action
+object TeleportActionService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/SmithingActionService.kt ===
+package net.dodian.uber.game.systems.action
+object SmithingActionService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/ProductionModels.kt ===
+package net.dodian.uber.game.systems.action
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/PlayerActionStopResult.kt ===
+package net.dodian.uber.game.systems.action
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/PlayerActionCancellationService.kt ===
+package net.dodian.uber.game.systems.action
+object PlayerActionCancellationService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/PlayerActionCancelReason.kt ===
+package net.dodian.uber.game.systems.action
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/SkillingActionService.kt ===
+package net.dodian.uber.game.systems.action
+object SkillingActionService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/PlayerActionContext.kt ===
+package net.dodian.uber.game.systems.action
+class PlayerActionContext internal constructor(
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/PlayerActionInterruptPolicy.kt ===
+package net.dodian.uber.game.systems.action
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/PlayerActionController.kt ===
+package net.dodian.uber.game.systems.action
+object PlayerActionController {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/ProductionActionService.kt ===
+package net.dodian.uber.game.systems.action
+object ProductionActionService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/action/dsl/PlayerActionDsl.kt ===
+package net.dodian.uber.game.systems.action.dsl
+private class ActionScopeStopException(
+class ActionScope internal constructor(
+fun playerAction(
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/api/content/ContentSafety.kt ===
+package net.dodian.uber.game.systems.api.content
+object ContentSafety {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/api/content/ContentActions.kt ===
+package net.dodian.uber.game.systems.api.content
+object ContentActions {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/api/content/ContentRuntimeApi.kt ===
+package net.dodian.uber.game.systems.api.content
+object ContentRuntimeApi
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/api/content/ContentInteraction.kt ===
+package net.dodian.uber.game.systems.api.content
+object ContentInteraction {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/api/content/ContentTiming.kt ===
+package net.dodian.uber.game.systems.api.content
+object ContentTiming {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/api/content/ContentCoroutines.kt ===
+package net.dodian.uber.game.systems.api.content
+object ContentCoroutines {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/ObjectInteractionPolicy.kt ===
+package net.dodian.uber.game.systems.interaction
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/DispatchTiming.kt ===
+package net.dodian.uber.game.systems.interaction
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/MagicOnObjectIntent.kt ===
+package net.dodian.uber.game.systems.interaction
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/ActiveInteraction.kt ===
+package net.dodian.uber.game.systems.interaction
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/PlayerInteractionGuardService.kt ===
+package net.dodian.uber.game.systems.interaction
+object PlayerInteractionGuardService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/PlayerInteractionIntent.kt ===
+package net.dodian.uber.game.systems.interaction
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/ObjectClickIntent.kt ===
+package net.dodian.uber.game.systems.interaction
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/InteractionProcessor.kt ===
+package net.dodian.uber.game.systems.interaction
+object InteractionProcessor {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/ObjectInteractionIntent.kt ===
+package net.dodian.uber.game.systems.interaction
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/scheduler/NpcInteractionTask.kt ===
+package net.dodian.uber.game.systems.interaction.scheduler
+class NpcInteractionTask(
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/scheduler/InteractionQueueTask.kt ===
+package net.dodian.uber.game.systems.interaction.scheduler
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/scheduler/InteractionRoutePolicy.kt ===
+package net.dodian.uber.game.systems.interaction.scheduler
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/scheduler/InteractionExecutionResult.kt ===
+package net.dodian.uber.game.systems.interaction.scheduler
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/scheduler/InteractionTaskScheduler.kt ===
+package net.dodian.uber.game.systems.interaction.scheduler
+object InteractionTaskScheduler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/scheduler/ObjectInteractionTask.kt ===
+package net.dodian.uber.game.systems.interaction.scheduler
+class ObjectInteractionTask(
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/InteractionIntent.kt ===
+package net.dodian.uber.game.systems.interaction
+interface InteractionIntent {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/PlayerTickThrottleService.kt ===
+package net.dodian.uber.game.systems.interaction
+object PlayerTickThrottleService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/ItemOnObjectIntent.kt ===
+package net.dodian.uber.game.systems.interaction
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/NpcInteractionIntent.kt ===
+package net.dodian.uber.game.systems.interaction
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/GroundItemInteractionIntent.kt ===
+package net.dodian.uber.game.systems.interaction
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/ObjectInteractionDistance.kt ===
+package net.dodian.uber.game.systems.interaction
+object ObjectInteractionDistance {
+=== game-server/src/main/kotlin/net/dodian/uber/game/systems/interaction/InteractionAnchorState.kt ===
+package net.dodian.uber.game.systems.interaction
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/metrics/MemoryReporter.kt ===
+package net.dodian.uber.game.engine.metrics
+class MemoryReporter private constructor() {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/metrics/InboundOpcodeProfiler.kt ===
+package net.dodian.uber.game.engine.metrics
+object InboundOpcodeProfiler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/net/OutboundSessionQueue.kt ===
+package net.dodian.uber.game.engine.net
+class OutboundSessionQueue {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/net/InboundPacketMailbox.kt ===
+package net.dodian.uber.game.engine.net
+class InboundPacketMailbox(maxPendingPackets: Int) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/processing/EntityProcessor.kt ===
+package net.dodian.uber.game.engine.processing
+class EntityProcessor : Runnable {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/processing/FarmingProcessor.kt ===
+package net.dodian.uber.game.engine.processing
+class FarmingProcessor : Runnable {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/processing/ItemProcessor.kt ===
+package net.dodian.uber.game.engine.processing
+class ItemProcessor : Runnable {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/processing/ActionProcessor.kt ===
+package net.dodian.uber.game.engine.processing
+class ActionProcessor : Runnable {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/processing/ShopProcessor.kt ===
+package net.dodian.uber.game.engine.processing
+class ShopProcessor : Runnable {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/processing/ObjectProcessor.kt ===
+package net.dodian.uber.game.engine.processing
+class ObjectProcessor : Runnable {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/processing/PlunderDoorProcessor.kt ===
+package net.dodian.uber.game.engine.processing
+class PlunderDoorProcessor : Runnable {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/lifecycle/DeathTaskState.kt ===
+package net.dodian.uber.game.engine.lifecycle
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/lifecycle/PlayerPersistenceTickService.kt ===
+package net.dodian.uber.game.engine.lifecycle
+object PlayerPersistenceTickService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/lifecycle/PlayerRecoveryTickService.kt ===
+package net.dodian.uber.game.engine.lifecycle
+object PlayerRecoveryTickService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/lifecycle/PlayerDeathTickService.kt ===
+package net.dodian.uber.game.engine.lifecycle
+object PlayerDeathTickService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/lifecycle/PlayerDeferredLifecycleService.kt ===
+package net.dodian.uber.game.engine.lifecycle
+object PlayerDeferredLifecycleService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/lifecycle/PlayerLifecycleTickService.kt ===
+package net.dodian.uber.game.engine.lifecycle
+object PlayerLifecycleTickService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/scheduler/WorldQueueTask.kt ===
+package net.dodian.uber.game.engine.scheduler
+class WorldQueueTask(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/scheduler/QueueCancellationToken.kt ===
+package net.dodian.uber.game.engine.scheduler
+class QueueCancellationToken {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/scheduler/NpcQueueTask.kt ===
+package net.dodian.uber.game.engine.scheduler
+class NpcQueueTask(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/scheduler/QueueTaskService.kt ===
+package net.dodian.uber.game.engine.scheduler
+object QueueTaskService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/scheduler/QueueTask.kt ===
+package net.dodian.uber.game.engine.scheduler
+fun interface QueueTask {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/scheduler/PlayerQueueTask.kt ===
+package net.dodian.uber.game.engine.scheduler
+class PlayerQueueTask(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/scheduler/QueueTaskHandle.kt ===
+package net.dodian.uber.game.engine.scheduler
+class QueueTaskHandle internal constructor(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/viewport/ViewportSnapshot.kt ===
+package net.dodian.uber.game.engine.sync.viewport
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/viewport/ViewportIndex.kt ===
+package net.dodian.uber.game.engine.sync.viewport
+class ViewportIndex private constructor(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/RootPlayerInfoCycle.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/dispatch/PlayerPacketMode.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.dispatch
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/dispatch/PlayerInfoDispatchPlan.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.dispatch
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/dispatch/PlayerPacketBuildReason.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.dispatch
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/dispatch/PlayerSyncRecoveryReason.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.dispatch
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/dispatch/RootPlayerInfoPlan.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.dispatch
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/dispatch/PlayerPacketSkipReason.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.dispatch
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/admission/LocalAdmissionBatch.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.admission
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/admission/AdmissionProgressState.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.admission
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/admission/LocalAdmissionQueue.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.admission
+class LocalAdmissionQueue {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/admission/PendingLocalAdmission.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.admission
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/admission/DesiredLocalSet.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.admission
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/admission/DesiredLocalSetDiff.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.admission
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/admission/DesiredLocalSetPlanner.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.admission
+class DesiredLocalSetPlanner {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/RootPlayerInfoService.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo
+class RootPlayerInfoService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/state/ViewerPlayerInfoState.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.state
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/state/SubjectPlayerInfoState.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.state
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/state/PlayerInfoStateValidator.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.state
+class PlayerInfoStateValidator {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/state/ViewerDesiredLocalState.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.state
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/state/PlayerInfoLocalSetDiff.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.state
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/state/PlayerBuildAreaState.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.state
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/state/PlayerInfoFragmentCache.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo.state
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/PlayerSyncInvariantValidator.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo
+object PlayerSyncInvariantValidator {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/playerinfo/PlayerVisibilityRules.kt ===
+package net.dodian.uber.game.engine.sync.playerinfo
+object PlayerVisibilityRules {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/cache/SharedPlayerBlockCache.kt ===
+package net.dodian.uber.game.engine.sync.cache
+class SharedPlayerBlockCache {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/cache/SharedNpcBlockCache.kt ===
+package net.dodian.uber.game.engine.sync.cache
+class SharedNpcBlockCache {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/cache/RootSynchronizationCache.kt ===
+package net.dodian.uber.game.engine.sync.cache
+class RootSynchronizationCache(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/cache/RootPlayerSyncDelta.kt ===
+package net.dodian.uber.game.engine.sync.cache
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/cache/RootNpcSyncDelta.kt ===
+package net.dodian.uber.game.engine.sync.cache
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/util/IntHashSet.kt ===
+package net.dodian.uber.game.engine.sync.util
+class IntHashSet(initialCapacity: Int) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/util/LongLongStampMap.kt ===
+package net.dodian.uber.game.engine.sync.util
+class LongLongStampMap(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/util/LongHashSet.kt ===
+package net.dodian.uber.game.engine.sync.util
+class LongHashSet(initialCapacity: Int) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/util/LongObjectMap.kt ===
+package net.dodian.uber.game.engine.sync.util
+class LongObjectMap<V : Any>(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/SynchronizationContext.kt ===
+package net.dodian.uber.game.engine.sync
+object SynchronizationContext {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/SynchronizationCycle.kt ===
+package net.dodian.uber.game.engine.sync
+class SynchronizationCycle(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/template/PlayerSyncTemplateKey.kt ===
+package net.dodian.uber.game.engine.sync.template
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/template/PlayerSyncTemplateCache.kt ===
+package net.dodian.uber.game.engine.sync.template
+class PlayerSyncTemplateCache {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/template/PlayerSyncTemplate.kt ===
+package net.dodian.uber.game.engine.sync.template
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/WorldSynchronizationService.kt ===
+package net.dodian.uber.game.engine.sync
+class WorldSynchronizationService {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/SynchronizationStage.kt ===
+package net.dodian.uber.game.engine.sync
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/scratch/ThreadLocalSyncScratch.kt ===
+package net.dodian.uber.game.engine.sync.scratch
+object ThreadLocalSyncScratch {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/scratch/SyncScratchBuffers.kt ===
+package net.dodian.uber.game.engine.sync.scratch
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/scratch/ReusableByteMessage.kt ===
+package net.dodian.uber.game.engine.sync.scratch
+class ReusableByteMessage(private val backing: ByteMessage) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/ViewerSyncContext.kt ===
+package net.dodian.uber.game.engine.sync
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/npc/NpcSyncDecision.kt ===
+package net.dodian.uber.game.engine.sync.npc
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/npc/NpcChunkActivityIndex.kt ===
+package net.dodian.uber.game.engine.sync.npc
+class NpcChunkActivityIndex {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/npc/ViewerNpcSyncState.kt ===
+package net.dodian.uber.game.engine.sync.npc
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/npc/RootNpcDeltaIndex.kt ===
+package net.dodian.uber.game.engine.sync.npc
+class RootNpcDeltaIndex {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/player/viewport/PlayerInfoViewportIndex.kt ===
+package net.dodian.uber.game.engine.sync.player.viewport
+class PlayerInfoViewportIndex private constructor(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/player/fragments/PlayerBlockFragmentCache.kt ===
+package net.dodian.uber.game.engine.sync.player.fragments
+class PlayerBlockFragmentCache {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/player/fragments/PlayerLocalMovementFragment.kt ===
+package net.dodian.uber.game.engine.sync.player.fragments
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/player/fragments/PlayerAddLocalFragmentCache.kt ===
+package net.dodian.uber.game.engine.sync.player.fragments
+class PlayerAddLocalFragmentCache
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/player/fragments/PlayerSelfMovementFragment.kt ===
+package net.dodian.uber.game.engine.sync.player.fragments
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/player/fragments/PlayerMovementFragmentCache.kt ===
+package net.dodian.uber.game.engine.sync.player.fragments
+class PlayerMovementFragmentCache {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/player/ViewerPlayerSyncState.kt ===
+package net.dodian.uber.game.engine.sync.player
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/player/PlayerSyncDecision.kt ===
+package net.dodian.uber.game.engine.sync.player
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/player/PlayerChunkActivityIndex.kt ===
+package net.dodian.uber.game.engine.sync.player
+class PlayerChunkActivityIndex {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/player/PlayerSyncRevisionIndex.kt ===
+package net.dodian.uber.game.engine.sync.player
+class PlayerSyncRevisionIndex {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/player/PlayerSyncFastPathStats.kt ===
+package net.dodian.uber.game.engine.sync.player
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/sync/player/pool/PlayerSyncScratchPool.kt ===
+package net.dodian.uber.game.engine.sync.player.pool
+class PlayerSyncScratchPool(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/phases/OutboundPacketProcessor.kt ===
+package net.dodian.uber.game.engine.phases
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/phases/InboundPacketPhase.kt ===
+package net.dodian.uber.game.engine.phases
+class InboundPacketPhase(private val entityProcessor: EntityProcessor) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/phases/WorldMaintenancePhase.kt ===
+package net.dodian.uber.game.engine.phases
+class WorldMaintenancePhase(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/phases/MovementFinalizePhase.kt ===
+package net.dodian.uber.game.engine.phases
+class MovementFinalizePhase(private val entityProcessor: EntityProcessor) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/phases/NpcMainPhase.kt ===
+package net.dodian.uber.game.engine.phases
+class NpcMainPhase(private val entityProcessor: EntityProcessor) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/phases/PlayerMainPhase.kt ===
+package net.dodian.uber.game.engine.phases
+class PlayerMainPhase(private val entityProcessor: EntityProcessor) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/tasking/GameTaskRuntime.kt ===
+package net.dodian.uber.game.engine.tasking
+object GameTaskRuntime {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/tasking/coroutine/TaskCoroutineFacade.kt ===
+package net.dodian.uber.game.engine.tasking.coroutine
+class WorldTaskContext internal constructor(
+class PlayerTaskContext internal constructor(
+class NpcTaskContext internal constructor(
+fun gameClock(): Long = GameCycleClock.currentCycle()
+fun worldTaskCoroutine(
+fun playerTaskCoroutine(
+fun npcTaskCoroutine(
+fun runWorldTaskCoroutine(
+fun runPlayerTaskCoroutine(
+fun runNpcTaskCoroutine(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/tasking/GameTask.kt ===
+package net.dodian.uber.game.engine.tasking
+class StopControlScope internal constructor(
+class GameTask internal constructor(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/tasking/TaskRequestKey.kt ===
+package net.dodian.uber.game.engine.tasking
+class TaskRequestKey<T>(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/tasking/TaskPriority.kt ===
+package net.dodian.uber.game.engine.tasking
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/tasking/TaskHandle.kt ===
+package net.dodian.uber.game.engine.tasking
+internal class TaskControl {
+class TaskHandle internal constructor(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/tasking/set/WorldTaskSet.kt ===
+package net.dodian.uber.game.engine.tasking.set
+class WorldTaskSet : GameTaskSet<Any>(WORLD_OWNER) {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/tasking/set/PawnTaskSet.kt ===
+package net.dodian.uber.game.engine.tasking.set
+class PawnTaskSet<OWNER : Any>(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/tasking/GameTaskSet.kt ===
+package net.dodian.uber.game.engine.tasking
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/tasking/suspension/TaskCondition.kt ===
+package net.dodian.uber.game.engine.tasking.suspension
+class WaitCondition(cycles: Int) : TaskCondition() {
+class PredicateCondition(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/tasking/suspension/TaskStep.kt ===
+package net.dodian.uber.game.engine.tasking.suspension
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/loop/GameLoopService.kt ===
+package net.dodian.uber.game.engine.loop
+class GameLoopService(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/loop/GameTickScheduler.kt ===
+package net.dodian.uber.game.engine.loop
+class GameTickScheduler(
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/loop/GamePhase.kt ===
+package net.dodian.uber.game.engine.loop
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/loop/GameThreadTaskQueue.kt ===
+package net.dodian.uber.game.engine.loop
+object GameThreadTaskQueue {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/loop/GameThreadIngress.kt ===
+package net.dodian.uber.game.engine.loop
+object GameThreadIngress {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/loop/GameThreadContext.kt ===
+package net.dodian.uber.game.engine.loop
+object GameThreadContext {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/loop/GameCycleClock.kt ===
+package net.dodian.uber.game.engine.loop
+object GameCycleClock {
+=== game-server/src/main/kotlin/net/dodian/uber/game/engine/loop/GameThreadTimers.kt ===
+package net.dodian.uber.game.engine.loop
+object GameThreadTimers {
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/bootstrap/CoreEventBusBootstrap.kt ===
+package net.dodian.uber.game.event.bootstrap
+object CoreEventBusBootstrap {
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/bootstrap/EventBusProbeBootstrap.kt ===
+package net.dodian.uber.game.event.bootstrap
+object EventBusProbeBootstrap {
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/GameEvent.kt ===
+package net.dodian.uber.game.event
+interface GameEvent
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/GameEventScheduler.kt ===
+package net.dodian.uber.game.event
+object GameEventScheduler {
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/EventListener.kt ===
+package net.dodian.uber.game.event
+class EventListener<E : GameEvent>(
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/ReturnableEventListener.kt ===
+package net.dodian.uber.game.event
+class ReturnableEventListener<E : GameEvent, T>(
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/GameEventBus.kt ===
+package net.dodian.uber.game.event
+object GameEventBus {
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/events/ButtonClickEvent.kt ===
+package net.dodian.uber.game.event.events
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/events/WorldTickEvent.kt ===
+package net.dodian.uber.game.event.events
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/events/CommandEvent.kt ===
+package net.dodian.uber.game.event.events
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/events/DialogueOptionEvent.kt ===
+package net.dodian.uber.game.event.events
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/events/DialogueContinueEvent.kt ===
+package net.dodian.uber.game.event.events
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/events/ObjectClickEvent.kt ===
+package net.dodian.uber.game.event.events
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/events/PlayerTickEvent.kt ===
+package net.dodian.uber.game.event.events
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/events/NpcClickEvent.kt ===
+package net.dodian.uber.game.event.events
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/events/skilling/SkillingEvents.kt ===
+package net.dodian.uber.game.event.events.skilling
+=== game-server/src/main/kotlin/net/dodian/uber/game/event/EventFilter.kt ===
+package net.dodian.uber.game.event
+fun interface EventFilter<E : GameEvent> {
+=== game-server/src/main/kotlin/net/dodian/uber/webapi/WebApi.kt ===
+package net.dodian.uber.webapi
+private fun getOnlinePlayers() = PlayerRegistry.playersOnline.map { (_, player) ->
+private val mapper: ObjectMapper = ObjectMapper()
+fun launchWebApi() {
+=== game-server/src/main/kotlin/net/dodian/utilities/UtilityGeometry.kt ===
+package net.dodian.utilities
+object UtilityGeometry {
+=== game-server/src/main/kotlin/net/dodian/utilities/UtilityNames.kt ===
+package net.dodian.utilities
+object UtilityNames {
+=== game-server/src/main/kotlin/net/dodian/utilities/Utils.kt ===
+package net.dodian.utilities
+object Utils {
+=== game-server/src/main/kotlin/net/dodian/utilities/UtilityText.kt ===
+package net.dodian.utilities
+object UtilityText {
+=== game-server/src/main/kotlin/net/dodian/utilities/ISAACCipher.kt ===
+package net.dodian.utilities
+class ISAACCipher(
+=== game-server/src/main/kotlin/net/dodian/utilities/UtilityRandoms.kt ===
+package net.dodian.utilities
+object UtilityRandoms {
+=== game-server/src/main/kotlin/net/dodian/utilities/MD5.kt ===
+package net.dodian.utilities
+class MD5(
+=== game-server/src/main/kotlin/net/dodian/utilities/UtilityFormatting.kt ===
+package net.dodian.utilities
+object UtilityFormatting {
+=== game-server/src/main/kotlin/net/dodian/utilities/Misc.kt ===
+package net.dodian.utilities
+object Misc {
+=== game-server/src/main/kotlin/net/dodian/utilities/UtilityDirection.kt ===
+package net.dodian.utilities
+object UtilityDirection {
+=== game-server/src/main/kotlin/net/dodian/utilities/Range.kt ===
+package net.dodian.utilities
+class Range(
