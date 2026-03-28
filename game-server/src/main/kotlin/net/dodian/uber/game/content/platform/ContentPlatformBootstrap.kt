@@ -279,6 +279,36 @@ object ContentValidationService {
             thievingStallObjects + thievingChestObjects + thievingPlunderObjects + thievingSpecialChests.map { it.objectId },
             "thieving.objects",
         )
+
+        val craftingResourceFillObjects = SkillDataRegistry.craftingResourceFillObjects().toList()
+        val craftingSpinningWheelObjects = SkillDataRegistry.craftingSpinningWheelObjects().toList()
+        val cookingRangeObjects = SkillDataRegistry.cookingRangeObjects().toList()
+        val smithingAnvilObjects = SkillDataRegistry.smithingAnvilObjects().toList()
+        val smithingFurnaceObjects = SkillDataRegistry.smithingFurnaceObjects().toList()
+        val smithingSmeltingInterfaceFurnaces = SkillDataRegistry.smithingSmeltingInterfaceFurnaces().toList()
+        val farmingPatchGuideObjects = SkillDataRegistry.farmingPatchGuideObjects().toList()
+        val runecraftingAltarObjects = SkillDataRegistry.runecraftingAltarObjects().toList()
+
+        checkDuplicates(craftingResourceFillObjects, "skillObjects.craftingResourceFillObjects")
+        checkDuplicates(craftingSpinningWheelObjects, "skillObjects.craftingSpinningWheelObjects")
+        checkDuplicates(cookingRangeObjects, "skillObjects.cookingRangeObjects")
+        checkDuplicates(smithingAnvilObjects, "skillObjects.smithingAnvilObjects")
+        checkDuplicates(smithingFurnaceObjects, "skillObjects.smithingFurnaceObjects")
+        checkDuplicates(smithingSmeltingInterfaceFurnaces, "skillObjects.smithingSmeltingInterfaceFurnaces")
+        checkDuplicates(farmingPatchGuideObjects, "skillObjects.farmingPatchGuideObjects")
+        checkDuplicates(runecraftingAltarObjects, "skillObjects.runecraftingAltarObjects")
+
+        validateObjectIds(
+            craftingResourceFillObjects +
+                craftingSpinningWheelObjects +
+                cookingRangeObjects +
+                smithingAnvilObjects +
+                smithingFurnaceObjects +
+                smithingSmeltingInterfaceFurnaces +
+                farmingPatchGuideObjects +
+                runecraftingAltarObjects,
+            "skillObjects",
+        )
     }
 
     private fun checkDuplicates(values: List<Any>, label: String) {

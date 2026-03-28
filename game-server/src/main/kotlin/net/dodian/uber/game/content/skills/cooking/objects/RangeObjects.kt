@@ -2,13 +2,14 @@ package net.dodian.uber.game.content.skills.cooking.objects
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
+import net.dodian.uber.game.content.platform.SkillDataRegistry
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.content.skills.cooking.CookingPlugin
 
 object RangeObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(26181, 2728, 2781)
+    override val objectIds: IntArray = SkillDataRegistry.cookingRangeObjects()
 
     override fun onUseItem(
         client: Client,

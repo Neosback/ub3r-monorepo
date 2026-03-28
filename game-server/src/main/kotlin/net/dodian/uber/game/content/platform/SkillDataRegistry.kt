@@ -192,15 +192,27 @@ data class PyramidPlunderData(
     val tombConfig: List<Int> = emptyList(),
 )
 
-private data class SkillObjectComponentDataFile(
-    val craftingResourceFillObjects: List<Int> = emptyList(),
-    val craftingSpinningWheelObjects: List<Int> = emptyList(),
-    val cookingRangeObjects: List<Int> = emptyList(),
-    val smithingAnvilObjects: List<Int> = emptyList(),
-    val smithingFurnaceObjects: List<Int> = emptyList(),
-    val smithingSmeltingInterfaceFurnaces: List<Int> = emptyList(),
-    val farmingPatchGuideObjects: List<Int> = emptyList(),
-    val runecraftingAltarObjects: List<Int> = emptyList(),
+private data class CraftingObjectComponentsDataFile(
+    val resourceFillObjects: List<Int> = emptyList(),
+    val spinningWheelObjects: List<Int> = emptyList(),
+)
+
+private data class CookingObjectComponentsDataFile(
+    val rangeObjects: List<Int> = emptyList(),
+)
+
+private data class SmithingObjectComponentsDataFile(
+    val anvilObjects: List<Int> = emptyList(),
+    val furnaceObjects: List<Int> = emptyList(),
+    val smeltingInterfaceFurnaces: List<Int> = emptyList(),
+)
+
+private data class FarmingObjectComponentsDataFile(
+    val patchGuideObjects: List<Int> = emptyList(),
+)
+
+private data class RunecraftingObjectComponentsDataFile(
+    val altarObjects: List<Int> = emptyList(),
 )
 
 data class FarmingPatchDefinition(
@@ -351,7 +363,19 @@ object SkillDataRegistry {
     private var thievingOverride: ThievingDataFile? = null
 
     @Volatile
-    private var skillObjectComponentOverride: SkillObjectComponentDataFile? = null
+    private var craftingObjectComponentsOverride: CraftingObjectComponentsDataFile? = null
+
+    @Volatile
+    private var cookingObjectComponentsOverride: CookingObjectComponentsDataFile? = null
+
+    @Volatile
+    private var smithingObjectComponentsOverride: SmithingObjectComponentsDataFile? = null
+
+    @Volatile
+    private var farmingObjectComponentsOverride: FarmingObjectComponentsDataFile? = null
+
+    @Volatile
+    private var runecraftingObjectComponentsOverride: RunecraftingObjectComponentsDataFile? = null
 
     @JvmStatic
     fun cookingRecipes(): List<CookingDefinition> =
@@ -499,35 +523,35 @@ object SkillDataRegistry {
 
     @JvmStatic
     fun craftingResourceFillObjects(): IntArray =
-        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).craftingResourceFillObjects.toIntArray()
+        (craftingObjectComponentsOverride ?: ContentDataLoader.loadRequired<CraftingObjectComponentsDataFile>("content/skills/objects/crafting.toml").also { craftingObjectComponentsOverride = it }).resourceFillObjects.toIntArray()
 
     @JvmStatic
     fun craftingSpinningWheelObjects(): IntArray =
-        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).craftingSpinningWheelObjects.toIntArray()
+        (craftingObjectComponentsOverride ?: ContentDataLoader.loadRequired<CraftingObjectComponentsDataFile>("content/skills/objects/crafting.toml").also { craftingObjectComponentsOverride = it }).spinningWheelObjects.toIntArray()
 
     @JvmStatic
     fun cookingRangeObjects(): IntArray =
-        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).cookingRangeObjects.toIntArray()
+        (cookingObjectComponentsOverride ?: ContentDataLoader.loadRequired<CookingObjectComponentsDataFile>("content/skills/objects/cooking.toml").also { cookingObjectComponentsOverride = it }).rangeObjects.toIntArray()
 
     @JvmStatic
     fun smithingAnvilObjects(): IntArray =
-        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).smithingAnvilObjects.toIntArray()
+        (smithingObjectComponentsOverride ?: ContentDataLoader.loadRequired<SmithingObjectComponentsDataFile>("content/skills/objects/smithing.toml").also { smithingObjectComponentsOverride = it }).anvilObjects.toIntArray()
 
     @JvmStatic
     fun smithingFurnaceObjects(): IntArray =
-        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).smithingFurnaceObjects.toIntArray()
+        (smithingObjectComponentsOverride ?: ContentDataLoader.loadRequired<SmithingObjectComponentsDataFile>("content/skills/objects/smithing.toml").also { smithingObjectComponentsOverride = it }).furnaceObjects.toIntArray()
 
     @JvmStatic
     fun smithingSmeltingInterfaceFurnaces(): IntArray =
-        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).smithingSmeltingInterfaceFurnaces.toIntArray()
+        (smithingObjectComponentsOverride ?: ContentDataLoader.loadRequired<SmithingObjectComponentsDataFile>("content/skills/objects/smithing.toml").also { smithingObjectComponentsOverride = it }).smeltingInterfaceFurnaces.toIntArray()
 
     @JvmStatic
     fun farmingPatchGuideObjects(): IntArray =
-        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).farmingPatchGuideObjects.toIntArray()
+        (farmingObjectComponentsOverride ?: ContentDataLoader.loadRequired<FarmingObjectComponentsDataFile>("content/skills/objects/farming.toml").also { farmingObjectComponentsOverride = it }).patchGuideObjects.toIntArray()
 
     @JvmStatic
     fun runecraftingAltarObjects(): IntArray =
-        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).runecraftingAltarObjects.toIntArray()
+        (runecraftingObjectComponentsOverride ?: ContentDataLoader.loadRequired<RunecraftingObjectComponentsDataFile>("content/skills/objects/runecrafting.toml").also { runecraftingObjectComponentsOverride = it }).altarObjects.toIntArray()
 
     private fun resolveTasks(rawNames: List<String>): Array<SlayerTaskDefinition> =
         rawNames.map { SlayerTaskDefinition.valueOf(it) }.toTypedArray()

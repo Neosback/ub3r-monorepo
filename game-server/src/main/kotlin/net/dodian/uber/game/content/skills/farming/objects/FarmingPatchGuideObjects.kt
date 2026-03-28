@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.skills.farming.objects
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
+import net.dodian.uber.game.content.platform.SkillDataRegistry
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -9,17 +10,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.content.skills.guide.SkillGuidePlugin
 
 object FarmingPatchGuideObjects : ObjectContent {
-    private val guideObjects = intArrayOf(
-        7577, 7578, 7579, 7580,
-        7847, 7848, 7849, 7850,
-        7962, 7963, 7964, 7965, 26579,
-        8150, 8151, 8152, 8153, 27115,
-        8389, 8390, 8391, 19147,
-        8550, 8551, 8552, 8553, 8554, 8555, 8556, 8557, 27113, 27114,
-        27111,
-    )
-
-    override val objectIds: IntArray = guideObjects.distinct().sorted().toIntArray()
+    override val objectIds: IntArray = SkillDataRegistry.farmingPatchGuideObjects().distinct().sorted().toIntArray()
 
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (objectId == 7962) {
