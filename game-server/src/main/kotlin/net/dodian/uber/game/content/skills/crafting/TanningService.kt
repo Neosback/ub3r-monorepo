@@ -1,13 +1,8 @@
 package net.dodian.uber.game.content.skills.crafting
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.netty.listener.out.SendString
 
 object TanningService {
-    private val titleByType = mapOf(2 to "Green", 3 to "Blue", 4 to "Red", 5 to "Black")
-    private val costByType = mapOf(2 to "1,000gp", 3 to "2,000gp", 4 to "5,000gp", 5 to "10,000gp")
-
     @JvmStatic
     fun open(client: Client) {
         client.sendString("Regular Leather", 14777)
@@ -19,16 +14,15 @@ object TanningService {
         client.sendString("", 14782)
         client.sendString("", 14790)
 
-        val soon = intArrayOf(14779, 14787, 14783, 14791, 14780, 14788, 14784, 14792)
-        var type = 2
-        for (i in soon.indices) {
-            val label =
-                if (i % 2 == 0) {
-                    titleByType[type].orEmpty()
-                } else {
-                    costByType[type].orEmpty().also { type++ }
-                }
-            client.sendString(label, soon[i])
+        val labels = intArrayOf(14779, 14787, 14783, 14791, 14780, 14788, 14784, 14792)
+        val higherTier = TanningDefinitions.definitions.filter { it.hideType >= 2 }.sortedBy { it.hideType }
+        higherTier.forEachIndexed { index, definition ->
+            val base = index * 2
+            if (base + 1 >= labels.size) {
+                return@forEachIndexed
+            }
+            client.sendString(definition.displayName, labels[base])
+            client.sendString("${formatCoins(definition.coinCost)}gp", labels[base + 1])
         }
 
         client.sendInterfaceModel(14769, 250, 1741)
@@ -58,4 +52,6 @@ object TanningService {
         }
         return true
     }
+
+    private fun formatCoins(amount: Int): String = "%,d".format(amount)
 }

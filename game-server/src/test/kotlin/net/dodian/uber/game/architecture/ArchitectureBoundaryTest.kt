@@ -341,7 +341,9 @@ class ArchitectureBoundaryTest {
                                     trimmed.contains("enum class bushPatch") ||
                                     trimmed.contains("enum class fruitTreePatch") ||
                                     trimmed.contains("enum class treePatch")
-                                ))
+                                )) ||
+                        (normalized.endsWith("/content/skills/thieving/ThievingDefinition.kt") &&
+                            trimmed.contains("enum class ThievingDefinition("))
                 val isLegacyRef =
                     trimmed.contains("net.dodian.jobs.") ||
                         trimmed.contains("net.dodian.uber.game.skills.farming.FarmingProcessor") ||
@@ -438,6 +440,7 @@ class ArchitectureBoundaryTest {
             "game-server/src/main/resources/content/skills/prayer.toml",
             "game-server/src/main/resources/content/skills/smithing.toml",
             "game-server/src/main/resources/content/skills/farming.toml",
+            "game-server/src/main/resources/content/skills/thieving.toml",
             "game-server/src/main/resources/content/interfaces/magic.toml",
             "game-server/src/main/resources/content/interfaces/skillguide.toml",
             "game-server/src/main/resources/content/objects/travel.toml",
@@ -545,6 +548,7 @@ class ArchitectureBoundaryTest {
             sourceRoot.resolve("resources/content/skills/cooking.toml"),
             sourceRoot.resolve("resources/content/skills/fishing.toml"),
             sourceRoot.resolve("resources/content/skills/fletching.toml"),
+            sourceRoot.resolve("resources/content/skills/thieving.toml"),
             sourceRoot.resolve("resources/content/interfaces/magic.toml"),
             sourceRoot.resolve("resources/content/interfaces/skillguide.toml"),
             sourceRoot.resolve("resources/content/objects/travel.toml"),
@@ -564,6 +568,7 @@ class ArchitectureBoundaryTest {
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/fletching/FletchingDefinitions.kt") to "SkillDataRegistry.fletchingBowLogs",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/smithing/SmithingDefinitions.kt") to "SkillDataRegistry.smithingData",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/farming/FarmingDefinitions.kt") to "SkillDataRegistry.farmingData",
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/thieving/ThievingDefinitions.kt") to "SkillDataRegistry.thievingDefinitions",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/interfaces/magic/MagicComponents.kt") to "InterfaceMappingRegistry.magicData",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/interfaces/skillguide/SkillGuideComponents.kt") to "InterfaceMappingRegistry.skillGuideData",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/objects/travel/TravelObjectComponents.kt") to "InterfaceMappingRegistry.travelData",

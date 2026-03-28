@@ -9,14 +9,59 @@ object SmithingDefinitions {
     private val smithingPageSlots: Map<Int, IntArray>
         get() = smithingData.smithingPageSlots.associate { it.frameId to it.indices.toIntArray() }
 
+    private val smithingLayout
+        get() = smithingData.smithingLayout
+
     val smeltingRecipes: List<SmeltingRecipe>
-        get() = smithingData.smeltingRecipes
+        get() =
+            smithingData.smeltingRecipes.map {
+                SmeltingRecipe(
+                    barId = it.barId,
+                    levelRequired = it.levelRequired,
+                    experience = it.experience,
+                    oreRequirements = it.oreRequirements,
+                    successChancePercent = it.successChancePercent,
+                    failureMessage = it.failureMessage,
+                )
+            }
 
     val smeltingButtonMappings: List<FurnaceButtonMapping>
-        get() = smithingData.smeltingButtonMappings
+        get() =
+            smithingData.smeltingRecipes.flatMap { recipe ->
+                recipe.buttonGroups.flatMap { group ->
+                    group.rawButtonIds.map { buttonId ->
+                        FurnaceButtonMapping(
+                            buttonId = buttonId,
+                            barId = recipe.barId,
+                            amount = group.amount,
+                        )
+                    }
+                }
+            }
 
     val smithingTiers: List<SmithingTier>
-        get() = smithingData.smithingTiers
+        get() =
+            smithingData.smithingTiers.map { tier ->
+                val products =
+                    tier.products.mapIndexed { index, product ->
+                        val layout = smithingLayout.getOrNull(index)
+                            ?: throw IllegalStateException("smithing layout missing slot index=$index for tier=${tier.displayName}")
+                        SmithingProduct(
+                            itemId = product.itemId,
+                            outputAmount = product.outputAmount,
+                            levelRequired = product.levelRequired,
+                            barsRequired = layout.barsRequired,
+                            barCountLineId = layout.barCountLineId,
+                            itemNameLineId = layout.itemNameLineId,
+                        )
+                    }
+                SmithingTier(
+                    typeId = tier.typeId,
+                    displayName = tier.displayName,
+                    barId = tier.barId,
+                    products = products,
+                )
+            }
 
     @JvmStatic
     fun findSmeltingRecipe(barId: Int): SmeltingRecipe? = smeltingRecipes.firstOrNull { it.barId == barId }

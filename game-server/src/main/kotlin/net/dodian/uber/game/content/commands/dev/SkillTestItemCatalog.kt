@@ -256,7 +256,7 @@ object SkillTestItemCatalog {
     private fun thievingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         net.dodian.uber.game.content.skills.thieving.ThievingDefinitions.all.forEach { data ->
-            data.item.forEach { addIfValid(items, it) }
+            data.rewards.forEach { addIfValid(items, it.itemId) }
         }
         return items.toList()
     }

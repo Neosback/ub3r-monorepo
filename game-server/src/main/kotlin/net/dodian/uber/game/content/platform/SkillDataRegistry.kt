@@ -2,8 +2,12 @@ package net.dodian.uber.game.content.platform
 
 import net.dodian.uber.game.content.skills.cooking.CookingDefinition
 import net.dodian.uber.game.content.skills.crafting.GemDefinition
+import net.dodian.uber.game.content.skills.crafting.GoldJewelryDefinitionData
+import net.dodian.uber.game.content.skills.crafting.GoldJewelryGroupData
 import net.dodian.uber.game.content.skills.crafting.HideDefinition
 import net.dodian.uber.game.content.skills.crafting.OrbDefinition
+import net.dodian.uber.game.content.skills.crafting.StandardLeatherCraftDefinition
+import net.dodian.uber.game.content.skills.crafting.TanningDefinition
 import net.dodian.uber.game.content.skills.fishing.FishingSpotDefinition
 import net.dodian.uber.game.content.skills.fletching.ArrowRecipe
 import net.dodian.uber.game.content.skills.fletching.DartRecipe
@@ -16,9 +20,8 @@ import net.dodian.uber.game.content.skills.mining.PickaxeDef
 import net.dodian.uber.game.content.skills.prayer.PrayerBoneDefinition
 import net.dodian.uber.game.content.skills.runecrafting.RunecraftingAltarDefinition
 import net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition
-import net.dodian.uber.game.content.skills.smithing.FurnaceButtonMapping
-import net.dodian.uber.game.content.skills.smithing.SmeltingRecipe
-import net.dodian.uber.game.content.skills.smithing.SmithingTier
+import net.dodian.uber.game.content.skills.smithing.OreRequirement
+import net.dodian.uber.game.content.skills.thieving.ThievingDefinition
 import net.dodian.uber.game.content.skills.woodcutting.AxeDef
 import net.dodian.uber.game.content.skills.woodcutting.TreeDef
 
@@ -52,6 +55,10 @@ private data class CraftingDataFile(
     val hideDefinitions: List<HideDefinition> = emptyList(),
     val gemDefinitions: List<GemDefinition> = emptyList(),
     val orbDefinitions: List<OrbDefinition> = emptyList(),
+    val standardLeatherCrafts: List<StandardLeatherCraftDefinition> = emptyList(),
+    val tanningDefinitions: List<TanningDefinition> = emptyList(),
+    val goldJewelry: GoldJewelryDefinitionData = GoldJewelryDefinitionData(),
+    val resourceFillSources: List<ResourceFillSourceDefinition> = emptyList(),
 )
 
 private data class HerbloreDataFile(
@@ -81,12 +88,119 @@ data class SmithingPageSlot(
     val indices: List<Int> = emptyList(),
 )
 
+data class FillItemDefinition(
+    val emptyItemId: Int,
+    val filledItemId: Int,
+    val emote: Int,
+)
+
+data class ResourceFillSourceDefinition(
+    val sourceKey: String,
+    val objectIds: List<Int> = emptyList(),
+    val entries: List<FillItemDefinition> = emptyList(),
+)
+
+data class SmithingLayoutSlot(
+    val slotType: String,
+    val itemNameLineId: Int,
+    val barCountLineId: Int,
+    val barsRequired: Int,
+)
+
+data class SmeltingButtonGroup(
+    val amount: Int,
+    val rawButtonIds: List<Int> = emptyList(),
+)
+
+data class SmeltingRecipeV2(
+    val barId: Int,
+    val name: String,
+    val levelRequired: Int,
+    val experience: Int,
+    val oreRequirements: List<OreRequirement> = emptyList(),
+    val buttonGroups: List<SmeltingButtonGroup> = emptyList(),
+    val successChancePercent: Int = 100,
+    val failureMessage: String? = null,
+)
+
+data class SmithingTierItemData(
+    val itemId: Int,
+    val levelRequired: Int,
+    val outputAmount: Int = 1,
+)
+
+data class SmithingTierData(
+    val typeId: Int,
+    val displayName: String,
+    val barId: Int,
+    val products: List<SmithingTierItemData> = emptyList(),
+)
+
 data class SmithingDataFile(
     val smeltFrameIds: List<Int> = emptyList(),
     val smithingPageSlots: List<SmithingPageSlot> = emptyList(),
-    val smeltingRecipes: List<SmeltingRecipe> = emptyList(),
-    val smeltingButtonMappings: List<FurnaceButtonMapping> = emptyList(),
-    val smithingTiers: List<SmithingTier> = emptyList(),
+    val smithingLayout: List<SmithingLayoutSlot> = emptyList(),
+    val smeltingRecipes: List<SmeltingRecipeV2> = emptyList(),
+    val smithingTiers: List<SmithingTierData> = emptyList(),
+)
+
+private data class ThievingDataFile(
+    val definitions: List<ThievingDefinition> = emptyList(),
+    val stallObjects: List<Int> = emptyList(),
+    val chestObjects: List<Int> = emptyList(),
+    val plunderObjects: List<Int> = emptyList(),
+    val specialChests: List<ThievingSpecialChestDefinition> = emptyList(),
+    val plunder: PyramidPlunderData = PyramidPlunderData(),
+)
+
+data class PositionData(
+    val x: Int,
+    val y: Int,
+    val z: Int = 0,
+)
+
+data class ThievingSpecialChestReward(
+    val itemId: Int,
+)
+
+data class ThievingSpecialChestDefinition(
+    val chestKey: String,
+    val objectId: Int,
+    val location: PositionData,
+    val requiredLevel: Int,
+    val premiumOnly: Boolean = false,
+    val lockMs: Long = 1200L,
+    val replacementObjectId: Int = 378,
+    val replacementLifetimeMs: Int = 12000,
+    val replacementType: Int = 10,
+    val replacementFace: Int = 2,
+    val rareRewardChancePercent: Double = 0.3,
+    val rareRewards: List<ThievingSpecialChestReward> = emptyList(),
+    val coinsMin: Int,
+    val coinsMaxOffset: Int,
+    val baseXp: Int,
+    val randomEventXp: Int,
+)
+
+data class PyramidPlunderData(
+    val allDoors: List<PositionData> = emptyList(),
+    val roomEntrances: List<PositionData> = emptyList(),
+    val start: PositionData = PositionData(1927, 4477, 0),
+    val end: PositionData = PositionData(3289, 2801, 0),
+    val obstacles: List<Int> = emptyList(),
+    val urnConfig: List<Int> = emptyList(),
+    val tombConfig: List<Int> = emptyList(),
+)
+
+private data class SkillObjectComponentDataFile(
+    val craftingResourceFillObjects: List<Int> = emptyList(),
+    val craftingSpinningWheelObjects: List<Int> = emptyList(),
+    val cookingRangeObjects: List<Int> = emptyList(),
+    val smithingAnvilObjects: List<Int> = emptyList(),
+    val smithingFurnaceObjects: List<Int> = emptyList(),
+    val smithingSmeltingInterfaceFurnaces: List<Int> = emptyList(),
+    val farmingPatchGuideObjects: List<Int> = emptyList(),
+    val runecraftingAltarObjects: List<Int> = emptyList(),
 )
 
 data class FarmingPatchDefinition(
@@ -192,6 +306,7 @@ object SkillDataRegistry {
             "prayer",
             "smithing",
             "farming",
+            "thieving",
         )
         val pending: Set<String> = emptySet()
     }
@@ -231,6 +346,12 @@ object SkillDataRegistry {
 
     @Volatile
     private var farmingOverride: FarmingDataFile? = null
+
+    @Volatile
+    private var thievingOverride: ThievingDataFile? = null
+
+    @Volatile
+    private var skillObjectComponentOverride: SkillObjectComponentDataFile? = null
 
     @JvmStatic
     fun cookingRecipes(): List<CookingDefinition> =
@@ -289,6 +410,22 @@ object SkillDataRegistry {
         (craftingOverride ?: ContentDataLoader.loadRequired<CraftingDataFile>("content/skills/crafting.toml").also { craftingOverride = it }).orbDefinitions
 
     @JvmStatic
+    fun craftingStandardLeatherCrafts(): List<StandardLeatherCraftDefinition> =
+        (craftingOverride ?: ContentDataLoader.loadRequired<CraftingDataFile>("content/skills/crafting.toml").also { craftingOverride = it }).standardLeatherCrafts
+
+    @JvmStatic
+    fun craftingTanningDefinitions(): List<TanningDefinition> =
+        (craftingOverride ?: ContentDataLoader.loadRequired<CraftingDataFile>("content/skills/crafting.toml").also { craftingOverride = it }).tanningDefinitions
+
+    @JvmStatic
+    fun craftingGoldJewelryDefinition(): GoldJewelryDefinitionData =
+        (craftingOverride ?: ContentDataLoader.loadRequired<CraftingDataFile>("content/skills/crafting.toml").also { craftingOverride = it }).goldJewelry
+
+    @JvmStatic
+    fun craftingResourceFillSources(): List<ResourceFillSourceDefinition> =
+        (craftingOverride ?: ContentDataLoader.loadRequired<CraftingDataFile>("content/skills/crafting.toml").also { craftingOverride = it }).resourceFillSources
+
+    @JvmStatic
     fun herbloreHerbDefinitions(): List<HerbDefinition> =
         (herbloreOverride ?: ContentDataLoader.loadRequired<HerbloreDataFile>("content/skills/herblore.toml").also { herbloreOverride = it }).herbDefinitions
 
@@ -335,6 +472,62 @@ object SkillDataRegistry {
     @JvmStatic
     fun farmingData(): FarmingDataFile =
         farmingOverride ?: ContentDataLoader.loadRequired<FarmingDataFile>("content/skills/farming.toml").also { farmingOverride = it }
+
+    @JvmStatic
+    fun thievingDefinitions(): List<ThievingDefinition> =
+        (thievingOverride ?: ContentDataLoader.loadRequired<ThievingDataFile>("content/skills/thieving.toml").also { thievingOverride = it }).definitions
+
+    @JvmStatic
+    fun thievingStallObjects(): IntArray =
+        (thievingOverride ?: ContentDataLoader.loadRequired<ThievingDataFile>("content/skills/thieving.toml").also { thievingOverride = it }).stallObjects.toIntArray()
+
+    @JvmStatic
+    fun thievingChestObjects(): IntArray =
+        (thievingOverride ?: ContentDataLoader.loadRequired<ThievingDataFile>("content/skills/thieving.toml").also { thievingOverride = it }).chestObjects.toIntArray()
+
+    @JvmStatic
+    fun thievingPlunderObjects(): IntArray =
+        (thievingOverride ?: ContentDataLoader.loadRequired<ThievingDataFile>("content/skills/thieving.toml").also { thievingOverride = it }).plunderObjects.toIntArray()
+
+    @JvmStatic
+    fun thievingSpecialChests(): List<ThievingSpecialChestDefinition> =
+        (thievingOverride ?: ContentDataLoader.loadRequired<ThievingDataFile>("content/skills/thieving.toml").also { thievingOverride = it }).specialChests
+
+    @JvmStatic
+    fun thievingPlunderData(): PyramidPlunderData =
+        (thievingOverride ?: ContentDataLoader.loadRequired<ThievingDataFile>("content/skills/thieving.toml").also { thievingOverride = it }).plunder
+
+    @JvmStatic
+    fun craftingResourceFillObjects(): IntArray =
+        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).craftingResourceFillObjects.toIntArray()
+
+    @JvmStatic
+    fun craftingSpinningWheelObjects(): IntArray =
+        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).craftingSpinningWheelObjects.toIntArray()
+
+    @JvmStatic
+    fun cookingRangeObjects(): IntArray =
+        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).cookingRangeObjects.toIntArray()
+
+    @JvmStatic
+    fun smithingAnvilObjects(): IntArray =
+        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).smithingAnvilObjects.toIntArray()
+
+    @JvmStatic
+    fun smithingFurnaceObjects(): IntArray =
+        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).smithingFurnaceObjects.toIntArray()
+
+    @JvmStatic
+    fun smithingSmeltingInterfaceFurnaces(): IntArray =
+        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).smithingSmeltingInterfaceFurnaces.toIntArray()
+
+    @JvmStatic
+    fun farmingPatchGuideObjects(): IntArray =
+        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).farmingPatchGuideObjects.toIntArray()
+
+    @JvmStatic
+    fun runecraftingAltarObjects(): IntArray =
+        (skillObjectComponentOverride ?: ContentDataLoader.loadRequired<SkillObjectComponentDataFile>("content/skills/object-components.toml").also { skillObjectComponentOverride = it }).runecraftingAltarObjects.toIntArray()
 
     private fun resolveTasks(rawNames: List<String>): Array<SlayerTaskDefinition> =
         rawNames.map { SlayerTaskDefinition.valueOf(it) }.toTypedArray()

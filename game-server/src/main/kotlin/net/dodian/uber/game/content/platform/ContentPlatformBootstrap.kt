@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.platform
 
+import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.content.ContentModuleIndex
 
@@ -59,15 +60,67 @@ object ContentValidationService {
         val craftingHides = SkillDataRegistry.craftingHideDefinitions()
         val craftingGems = SkillDataRegistry.craftingGemDefinitions()
         val craftingOrbs = SkillDataRegistry.craftingOrbDefinitions()
+        val craftingStandardLeather = SkillDataRegistry.craftingStandardLeatherCrafts()
+        val craftingTanning = SkillDataRegistry.craftingTanningDefinitions()
+        val craftingGoldJewelry = SkillDataRegistry.craftingGoldJewelryDefinition()
+        val craftingFillSources = SkillDataRegistry.craftingResourceFillSources()
         checkDuplicates(craftingHides.map { it.itemId }, "crafting.hide.itemId")
         checkDuplicates(craftingGems.map { it.uncutId }, "crafting.gem.uncutId")
         checkDuplicates(craftingOrbs.map { it.orbId }, "crafting.orb.orbId")
+        checkDuplicates(craftingStandardLeather.map { it.productId }, "crafting.standardLeather.productId")
+        checkDuplicates(craftingTanning.map { it.hideType }, "crafting.tanning.hideType")
+        checkDuplicates(craftingGoldJewelry.groups.map { it.groupId }, "crafting.goldJewelry.groupId")
+        checkDuplicates(craftingGoldJewelry.groups.map { it.interfaceSlot }, "crafting.goldJewelry.interfaceSlot")
+        checkDuplicates(craftingFillSources.map { it.sourceKey }, "crafting.resourceFillSources.sourceKey")
+        checkDuplicates(craftingFillSources.flatMap { it.objectIds }, "crafting.resourceFillSources.objectIds")
+        checkDuplicates(
+            craftingGoldJewelry.groups.flatMap { it.requiredMouldId.let { mouldId -> listOf(mouldId) } },
+            "crafting.goldJewelry.requiredMouldId",
+        )
+        checkDuplicates(
+            craftingGoldJewelry.groups.flatMap { it.jewelryItemIds },
+            "crafting.goldJewelry.jewelryItemId",
+        )
+        check(craftingGoldJewelry.requiredGemItems.isNotEmpty()) { "crafting.goldJewelry.requiredGemItems must not be empty" }
+        check(craftingGoldJewelry.strungAmulets.isNotEmpty()) { "crafting.goldJewelry.strungAmulets must not be empty" }
+        craftingGoldJewelry.groups.forEach { group ->
+            val expectedWidth = craftingGoldJewelry.requiredGemItems.size
+            check(group.blankItemIds.size == expectedWidth) {
+                "crafting.goldJewelry group ${group.groupId} blankItemIds size must match requiredGemItems size"
+            }
+            check(group.jewelryItemIds.size == expectedWidth) {
+                "crafting.goldJewelry group ${group.groupId} jewelryItemIds size must match requiredGemItems size"
+            }
+            check(group.requiredLevels.size == expectedWidth) {
+                "crafting.goldJewelry group ${group.groupId} requiredLevels size must match requiredGemItems size"
+            }
+            check(group.experienceByTen.size == expectedWidth) {
+                "crafting.goldJewelry group ${group.groupId} experienceByTen size must match requiredGemItems size"
+            }
+        }
+        craftingFillSources.forEach { source ->
+            check(source.objectIds.isNotEmpty()) { "crafting resource fill source ${source.sourceKey} must define objectIds" }
+            check(source.entries.isNotEmpty()) { "crafting resource fill source ${source.sourceKey} must define entries" }
+        }
         validateItemIds(
             craftingHides.flatMap { listOf(it.itemId, it.glovesId, it.chapsId, it.bodyId) } +
                 craftingGems.flatMap { listOf(it.uncutId, it.cutId) } +
-                craftingOrbs.flatMap { listOf(it.orbId, it.staffId) },
+                craftingOrbs.flatMap { listOf(it.orbId, it.staffId) } +
+                craftingStandardLeather.map { it.productId } +
+                craftingTanning.flatMap { listOf(it.hideId, it.leatherId) } +
+                craftingGoldJewelry.requiredGemItems.filter { it > 0 } +
+                craftingGoldJewelry.strungAmulets +
+                craftingFillSources.flatMap { source ->
+                    source.entries.flatMap { listOf(it.emptyItemId, it.filledItemId) }
+                } +
+                craftingGoldJewelry.groups.flatMap { group ->
+                    group.blankItemIds.filter { it > 0 } +
+                        group.jewelryItemIds +
+                        listOf(group.requiredMouldId).filter { it > 0 }
+                },
             "crafting",
         )
+        validateObjectIds(craftingFillSources.flatMap { it.objectIds }, "crafting.resourceFillSources.objects")
 
         val herbloreHerbs = SkillDataRegistry.herbloreHerbDefinitions()
         val herbloreRecipes = SkillDataRegistry.herblorePotionRecipes()
@@ -121,10 +174,19 @@ object ContentValidationService {
         val smithing = SkillDataRegistry.smithingData()
         check(smithing.smeltingRecipes.isNotEmpty()) { "smithing.smeltingRecipes must not be empty" }
         check(smithing.smithingTiers.isNotEmpty()) { "smithing.smithingTiers must not be empty" }
-        checkDuplicates(smithing.smeltingButtonMappings.map { it.buttonId }, "smithing.buttonId")
+        check(smithing.smithingLayout.isNotEmpty()) { "smithing.smithingLayout must not be empty" }
+        checkDuplicates(
+            smithing.smeltingRecipes.flatMap { it.buttonGroups.flatMap { group -> group.rawButtonIds } },
+            "smithing.buttonId",
+        )
         checkDuplicates(smithing.smeltingRecipes.map { it.barId }, "smithing.smeltingRecipe.barId")
         checkDuplicates(smithing.smithingTiers.map { it.typeId }, "smithing.smithingTier.typeId")
         checkDuplicates(smithing.smithingTiers.map { it.barId }, "smithing.smithingTier.barId")
+        smithing.smithingTiers.forEach { tier ->
+            check(tier.products.size <= smithing.smithingLayout.size) {
+                "smithing tier ${tier.displayName} has ${tier.products.size} products but layout has ${smithing.smithingLayout.size} slots"
+            }
+        }
         validateItemIds(
             smithing.smeltingRecipes.flatMap { recipe ->
                 recipe.oreRequirements.map { it.itemId } + listOf(recipe.barId)
@@ -133,6 +195,12 @@ object ContentValidationService {
             },
             "smithing",
         )
+        smithing.smeltingRecipes.forEach { recipe ->
+            recipe.buttonGroups.forEach { group ->
+                check(group.amount > 0) { "smithing.buttonGroup.amount must be > 0 for barId=${recipe.barId}" }
+                check(group.rawButtonIds.isNotEmpty()) { "smithing.buttonGroup.rawButtonIds must not be empty for barId=${recipe.barId}" }
+            }
+        }
 
         val farming = SkillDataRegistry.farmingData()
         check(farming.patchDefinitions.isNotEmpty()) { "farming.patchDefinitions must not be empty" }
@@ -165,6 +233,52 @@ object ContentValidationService {
                 ),
             "farming",
         )
+
+        val thieving = SkillDataRegistry.thievingDefinitions()
+        val thievingSpecialChests = SkillDataRegistry.thievingSpecialChests()
+        val thievingPlunder = SkillDataRegistry.thievingPlunderData()
+        check(thieving.isNotEmpty()) { "thieving.definitions must not be empty" }
+        checkDuplicates(thieving.map { it.entityId }, "thieving.entityId")
+        val thievingStallObjects = SkillDataRegistry.thievingStallObjects().toList()
+        val thievingChestObjects = SkillDataRegistry.thievingChestObjects().toList()
+        val thievingPlunderObjects = SkillDataRegistry.thievingPlunderObjects().toList()
+        checkDuplicates(thievingStallObjects, "thieving.stallObjectId")
+        checkDuplicates(thievingChestObjects, "thieving.chestObjectId")
+        checkDuplicates(thievingPlunderObjects, "thieving.plunderObjectId")
+        checkDuplicates(thievingSpecialChests.map { "${it.objectId}:${it.location.x}:${it.location.y}:${it.location.z}" }, "thieving.specialChest.objectId+position")
+        check(thievingPlunder.allDoors.isNotEmpty()) { "thieving.plunder.allDoors must not be empty" }
+        check(thievingPlunder.roomEntrances.isNotEmpty()) { "thieving.plunder.roomEntrances must not be empty" }
+        check(thievingPlunder.obstacles.isNotEmpty()) { "thieving.plunder.obstacles must not be empty" }
+        check(thievingPlunder.urnConfig.isNotEmpty()) { "thieving.plunder.urnConfig must not be empty" }
+        check(thievingPlunder.tombConfig.isNotEmpty()) { "thieving.plunder.tombConfig must not be empty" }
+        thieving.forEach { definition ->
+            check(definition.rewards.isNotEmpty()) { "thieving ${definition.name} must define at least one reward" }
+            var previousChance = 0
+            definition.rewards.forEach { reward ->
+                check(reward.minAmount > 0) { "thieving ${definition.name} reward minAmount must be > 0" }
+                check(reward.maxAmount >= reward.minAmount) { "thieving ${definition.name} reward maxAmount must be >= minAmount" }
+                check(reward.chance in 1..100) { "thieving ${definition.name} reward chance must be within 1..100" }
+                check(reward.chance >= previousChance) { "thieving ${definition.name} reward chance values must be non-decreasing" }
+                previousChance = reward.chance
+            }
+        }
+        thievingSpecialChests.forEach { chest ->
+            check(chest.requiredLevel >= 1) { "thieving special chest ${chest.chestKey} requiredLevel must be >= 1" }
+            check(chest.rareRewardChancePercent in 0.0..100.0) { "thieving special chest ${chest.chestKey} rareRewardChancePercent must be in 0..100" }
+            check(chest.coinsMin >= 0) { "thieving special chest ${chest.chestKey} coinsMin must be >= 0" }
+            check(chest.coinsMaxOffset >= 0) { "thieving special chest ${chest.chestKey} coinsMaxOffset must be >= 0" }
+            check(chest.baseXp >= 0) { "thieving special chest ${chest.chestKey} baseXp must be >= 0" }
+            check(chest.randomEventXp >= 0) { "thieving special chest ${chest.chestKey} randomEventXp must be >= 0" }
+        }
+        validateItemIds(
+            thieving.flatMap { definition -> definition.rewards.map { it.itemId } } +
+                thievingSpecialChests.flatMap { chest -> chest.rareRewards.map { it.itemId } },
+            "thieving",
+        )
+        validateObjectIds(
+            thievingStallObjects + thievingChestObjects + thievingPlunderObjects + thievingSpecialChests.map { it.objectId },
+            "thieving.objects",
+        )
     }
 
     private fun checkDuplicates(values: List<Any>, label: String) {
@@ -179,6 +293,17 @@ object ContentValidationService {
         val missing = itemIds.filter { !itemManager.items.containsKey(it) }.distinct().sorted()
         if (missing.isNotEmpty()) {
             throw IllegalStateException("Unknown item ids in $label: ${missing.joinToString(",")}")
+        }
+    }
+
+    private fun validateObjectIds(objectIds: List<Int>, label: String) {
+        val invalid = objectIds.filter { it <= 0 }.distinct().sorted()
+        if (invalid.isNotEmpty()) {
+            throw IllegalStateException("Invalid object ids in $label: ${invalid.joinToString(",")}")
+        }
+        val missing = objectIds.filter { runCatching { GameObjectData.forId(it) }.getOrNull() == null }.distinct().sorted()
+        if (missing.isNotEmpty()) {
+            throw IllegalStateException("Unknown object ids in $label: ${missing.joinToString(",")}")
         }
     }
 }

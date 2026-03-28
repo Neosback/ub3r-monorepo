@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.skills.crafting
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.content.platform.SkillDataRegistry
 import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -10,12 +11,8 @@ import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.systems.action.SkillingActionService
 
 object CraftingService {
-    private val normalCraftIds = intArrayOf(
-        1129, 1129, 1129, 1059, 1059, 1059, 1061, 1061, 1061, 1063, 1063, 1063,
-        1095, 1095, 1095, 1169, 1169, 1169, 1167, 1167, 1167
-    )
-    private val normalCraftLevels = intArrayOf(14, 1, 7, 11, 18, 38, 9)
-    private val normalCraftExp = intArrayOf(33, 18, 21, 29, 38, 52, 20)
+    private val standardLeatherCrafts
+        get() = SkillDataRegistry.craftingStandardLeatherCrafts()
 
     @JvmStatic
     fun performShaft(client: Client) {
@@ -97,23 +94,24 @@ object CraftingService {
     @JvmStatic
     fun startStandardLeatherCraft(client: Client, productIndex: Int, amount: Int) {
         client.send(RemoveInterfaces())
-        if (productIndex < 0 || productIndex >= normalCraftLevels.size) {
+        val recipe = standardLeatherCrafts.getOrNull(productIndex)
+        if (recipe == null) {
             return
         }
-        val productId = normalCraftIds[productIndex * 3]
-        if (client.getLevel(Skill.CRAFTING) >= normalCraftLevels[productIndex]) {
+        val productId = recipe.productId
+        if (client.getLevel(Skill.CRAFTING) >= recipe.requiredLevel) {
             client.craftingState =
                 CraftingState(
                     mode = CraftingMode.LEATHER,
                     selectedItemId = 1741,
                     productId = productId,
                     remaining = if (amount == 10) client.getInvAmt(1741) else amount,
-                    requiredLevel = normalCraftLevels[productIndex],
-                    experience = normalCraftExp[productIndex] * 8,
+                    requiredLevel = recipe.requiredLevel,
+                    experience = recipe.experience,
                 )
             SkillingActionService.startCrafting(client)
         } else {
-            client.sendMessage("You need level ${normalCraftLevels[productIndex]} crafting to craft a ${client.getItemName(productId).lowercase()}")
+            client.sendMessage("You need level ${recipe.requiredLevel} crafting to craft a ${client.getItemName(productId).lowercase()}")
             client.send(RemoveInterfaces())
         }
     }

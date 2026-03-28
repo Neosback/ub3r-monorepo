@@ -19,7 +19,7 @@ object ThievingService {
 
     @JvmStatic
     fun attempt(player: Client, entityId: Int, position: Position) {
-        val data = ThievingDefinition.forId(entityId) ?: return
+        val data = ThievingDefinitions.forId(entityId) ?: return
         if (player.chestEventOccur) return
         val failChance = 0
         val face =
@@ -61,21 +61,16 @@ object ThievingService {
             }
             SkillProgressionService.gainXp(player, data.receivedExperience, Skill.THIEVING)
             player.canPreformAction = false
-            if (data.item.size > 1) {
-                val rollChance = (Math.random() * 100).toInt()
-                for (i in data.item.indices) {
-                    if (rollChance < data.itemChance[i]) {
-                        val id = data.item[i]
-                        val amount = data.itemAmount[i].value
-                        player.addItem(id, amount)
-                        ItemLog.playerGathering(player, id, amount, player.position.copy(), "Thieving")
-                        player.sendMessage("You receive ${article(player.getItemName(id))} ${player.getItemName(id).lowercase()}")
-                        break
-                    }
+            val reward =
+                if (data.rewards.size == 1) {
+                    data.rewards.first()
+                } else {
+                    val rollChance = (Math.random() * 100).toInt()
+                    data.rewards.firstOrNull { rollChance < it.chance }
                 }
-            } else {
-                val id = data.item[0]
-                val amount = data.itemAmount[0].value
+            if (reward != null) {
+                val id = reward.itemId
+                val amount = reward.amount()
                 player.addItem(id, amount)
                 ItemLog.playerGathering(player, id, amount, player.position.copy(), "Thieving")
                 player.sendMessage("You receive ${article(player.getItemName(id))} ${player.getItemName(id).lowercase()}")

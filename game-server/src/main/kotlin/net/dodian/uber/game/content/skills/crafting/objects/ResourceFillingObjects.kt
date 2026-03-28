@@ -2,19 +2,12 @@ package net.dodian.uber.game.content.skills.crafting.objects
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
+import net.dodian.uber.game.content.platform.SkillDataRegistry
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 
 object ResourceFillingObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(
-        873, 874, 878, 879, 884,
-        6232, 6249,
-        8689,
-        12279,
-        14868, 14890,
-        20358,
-        25929,
-    )
+    override val objectIds: IntArray = SkillDataRegistry.craftingResourceFillObjects()
 
     override fun onUseItem(
         client: Client,

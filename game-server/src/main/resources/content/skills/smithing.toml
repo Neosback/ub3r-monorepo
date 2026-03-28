@@ -20,8 +20,153 @@ indices = [3,10,12,16,6]
 frameId = 1123
 indices = [5,7,11,-1,-1]
 
+[[smithingLayout]]
+slotType = "dagger"
+itemNameLineId = 1094
+barCountLineId = 1125
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "axe"
+itemNameLineId = 1091
+barCountLineId = 1126
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "mace"
+itemNameLineId = 1093
+barCountLineId = 1129
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "med_helm"
+itemNameLineId = 1102
+barCountLineId = 1127
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "sword"
+itemNameLineId = 1085
+barCountLineId = 1128
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "nails"
+itemNameLineId = 1107
+barCountLineId = 1124
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "bolts"
+itemNameLineId = 13358
+barCountLineId = 13357
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "wire"
+itemNameLineId = 1108
+barCountLineId = 1130
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "scimitar"
+itemNameLineId = 1087
+barCountLineId = 1116
+barsRequired = 2
+
+[[smithingLayout]]
+slotType = "longsword"
+itemNameLineId = 1086
+barCountLineId = 1089
+barsRequired = 2
+
+[[smithingLayout]]
+slotType = "full_helm"
+itemNameLineId = 1103
+barCountLineId = 1113
+barsRequired = 2
+
+[[smithingLayout]]
+slotType = "knife"
+itemNameLineId = 1106
+barCountLineId = 1131
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "sq_shield"
+itemNameLineId = 1104
+barCountLineId = 1114
+barsRequired = 2
+
+[[smithingLayout]]
+slotType = "warhammer"
+itemNameLineId = 1083
+barCountLineId = 1118
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "battleaxe"
+itemNameLineId = 1092
+barCountLineId = 1095
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "chainbody"
+itemNameLineId = 1098
+barCountLineId = 1109
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "kiteshield"
+itemNameLineId = 1105
+barCountLineId = 1115
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "claws"
+itemNameLineId = 8429
+barCountLineId = 8428
+barsRequired = 2
+
+[[smithingLayout]]
+slotType = "2h_sword"
+itemNameLineId = 1088
+barCountLineId = 1090
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "platelegs"
+itemNameLineId = 1100
+barCountLineId = 1111
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "plateskirt"
+itemNameLineId = 1099
+barCountLineId = 1110
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "platebody"
+itemNameLineId = 1101
+barCountLineId = 1112
+barsRequired = 5
+
+[[smithingLayout]]
+slotType = "lantern"
+itemNameLineId = 1096
+barCountLineId = 1132
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "grapple_tip"
+itemNameLineId = 1134
+barCountLineId = 1135
+barsRequired = 1
+
 [[smeltingRecipes]]
 barId = 2349
+name = "Bronze"
 levelRequired = 1
 experience = 120
 [[smeltingRecipes.oreRequirements]]
@@ -30,9 +175,22 @@ amount = 1
 [[smeltingRecipes.oreRequirements]]
 itemId = 438
 amount = 1
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [3987,15147]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [3986,15146]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [2807,10247]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [2414,9110]
 
 [[smeltingRecipes]]
 barId = 2351
+name = "Iron"
 levelRequired = 15
 experience = 260
 successChancePercent = 54
@@ -40,17 +198,43 @@ failureMessage = "You fail to refine the iron"
 [[smeltingRecipes.oreRequirements]]
 itemId = 440
 amount = 1
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [3991,15151]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [3990,15150]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [3989,15149]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [3988,15148]
 
 [[smeltingRecipes]]
 barId = 2355
+name = "BAR_2355"
 levelRequired = 20
 experience = 280
 [[smeltingRecipes.oreRequirements]]
 itemId = 442
 amount = 1
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [3995,15155]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [3994,15154]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [3993,15153]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [3992,15152]
 
 [[smeltingRecipes]]
 barId = 2353
+name = "Steel"
 levelRequired = 30
 experience = 360
 [[smeltingRecipes.oreRequirements]]
@@ -59,17 +243,43 @@ amount = 1
 [[smeltingRecipes.oreRequirements]]
 itemId = 453
 amount = 2
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [3999,15159]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [3998,15158]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [3997,15157]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [3996,15156]
 
 [[smeltingRecipes]]
 barId = 2357
+name = "BAR_2357"
 levelRequired = 40
 experience = 460
 [[smeltingRecipes.oreRequirements]]
 itemId = 444
 amount = 1
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [4003,15163]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [4002,15162]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [4001,15161]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [4000,15160]
 
 [[smeltingRecipes]]
 barId = 2359
+name = "Mithril"
 levelRequired = 55
 experience = 600
 [[smeltingRecipes.oreRequirements]]
@@ -78,9 +288,22 @@ amount = 1
 [[smeltingRecipes.oreRequirements]]
 itemId = 453
 amount = 3
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [7441,29017]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [7440,29016]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [6397,24253]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [4158,16062]
 
 [[smeltingRecipes]]
 barId = 2361
+name = "Adamant"
 levelRequired = 70
 experience = 760
 [[smeltingRecipes.oreRequirements]]
@@ -89,9 +312,22 @@ amount = 1
 [[smeltingRecipes.oreRequirements]]
 itemId = 453
 amount = 4
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [7446,29022]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [7444,29020]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [7443,29019]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [7442,29018]
 
 [[smeltingRecipes]]
 barId = 2363
+name = "Rune"
 levelRequired = 85
 experience = 1000
 [[smeltingRecipes.oreRequirements]]
@@ -100,326 +336,18 @@ amount = 1
 [[smeltingRecipes.oreRequirements]]
 itemId = 453
 amount = 6
-
-[[smeltingButtonMappings]]
-buttonId = 15147
-barId = 2349
+[[smeltingRecipes.buttonGroups]]
 amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 15146
-barId = 2349
+rawButtonIds = [7450,29026]
+[[smeltingRecipes.buttonGroups]]
 amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 10247
-barId = 2349
+rawButtonIds = [7449,29025]
+[[smeltingRecipes.buttonGroups]]
 amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 9110
-barId = 2349
+rawButtonIds = [7448,29024]
+[[smeltingRecipes.buttonGroups]]
 amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 15151
-barId = 2351
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 15150
-barId = 2351
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 15149
-barId = 2351
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 15148
-barId = 2351
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 15155
-barId = 2355
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 15154
-barId = 2355
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 15153
-barId = 2355
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 15152
-barId = 2355
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 15159
-barId = 2353
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 15158
-barId = 2353
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 15157
-barId = 2353
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 15156
-barId = 2353
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 15163
-barId = 2357
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 15162
-barId = 2357
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 15161
-barId = 2357
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 15160
-barId = 2357
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 29017
-barId = 2359
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 29016
-barId = 2359
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 24253
-barId = 2359
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 16062
-barId = 2359
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 29022
-barId = 2361
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 29020
-barId = 2361
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 29019
-barId = 2361
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 29018
-barId = 2361
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 29026
-barId = 2363
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 29025
-barId = 2363
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 29024
-barId = 2363
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 29023
-barId = 2363
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 3987
-barId = 2349
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 3986
-barId = 2349
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 2807
-barId = 2349
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 2414
-barId = 2349
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 3991
-barId = 2351
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 3990
-barId = 2351
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 3989
-barId = 2351
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 3988
-barId = 2351
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 3995
-barId = 2355
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 3994
-barId = 2355
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 3993
-barId = 2355
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 3992
-barId = 2355
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 3999
-barId = 2353
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 3998
-barId = 2353
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 3997
-barId = 2353
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 3996
-barId = 2353
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 4003
-barId = 2357
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 4002
-barId = 2357
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 4001
-barId = 2357
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 4000
-barId = 2357
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 7441
-barId = 2359
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 7440
-barId = 2359
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 6397
-barId = 2359
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 4158
-barId = 2359
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 7446
-barId = 2361
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 7444
-barId = 2361
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 7443
-barId = 2361
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 7442
-barId = 2361
-amount = 28
-
-[[smeltingButtonMappings]]
-buttonId = 7450
-barId = 2363
-amount = 1
-
-[[smeltingButtonMappings]]
-buttonId = 7449
-barId = 2363
-amount = 5
-
-[[smeltingButtonMappings]]
-buttonId = 7448
-barId = 2363
-amount = 10
-
-[[smeltingButtonMappings]]
-buttonId = 7447
-barId = 2363
-amount = 28
+rawButtonIds = [7447,29023]
 
 [[smithingTiers]]
 typeId = 1
@@ -427,165 +355,77 @@ displayName = "Bronze"
 barId = 2349
 [[smithingTiers.products]]
 itemId = 1205
-outputAmount = 1
 levelRequired = 1
-barsRequired = 1
-barCountLineId = 1125
-itemNameLineId = 1094
 [[smithingTiers.products]]
 itemId = 1351
-outputAmount = 1
 levelRequired = 1
-barsRequired = 1
-barCountLineId = 1126
-itemNameLineId = 1091
 [[smithingTiers.products]]
 itemId = 1422
-outputAmount = 1
 levelRequired = 2
-barsRequired = 1
-barCountLineId = 1129
-itemNameLineId = 1093
 [[smithingTiers.products]]
 itemId = 1139
-outputAmount = 1
 levelRequired = 3
-barsRequired = 1
-barCountLineId = 1127
-itemNameLineId = 1102
 [[smithingTiers.products]]
 itemId = 1277
-outputAmount = 1
 levelRequired = 3
-barsRequired = 1
-barCountLineId = 1128
-itemNameLineId = 1085
 [[smithingTiers.products]]
 itemId = 819
-outputAmount = 10
 levelRequired = 4
-barsRequired = 1
-barCountLineId = 1124
-itemNameLineId = 1107
+outputAmount = 10
 [[smithingTiers.products]]
 itemId = 4819
-outputAmount = 15
 levelRequired = 4
-barsRequired = 1
-barCountLineId = 13357
-itemNameLineId = 13358
+outputAmount = 15
 [[smithingTiers.products]]
 itemId = 39
-outputAmount = 15
 levelRequired = 5
-barsRequired = 1
-barCountLineId = 1130
-itemNameLineId = 1108
+outputAmount = 15
 [[smithingTiers.products]]
 itemId = 1321
-outputAmount = 1
 levelRequired = 5
-barsRequired = 2
-barCountLineId = 1116
-itemNameLineId = 1087
 [[smithingTiers.products]]
 itemId = 1291
-outputAmount = 1
 levelRequired = 6
-barsRequired = 2
-barCountLineId = 1089
-itemNameLineId = 1086
 [[smithingTiers.products]]
 itemId = 1155
-outputAmount = 1
 levelRequired = 7
-barsRequired = 2
-barCountLineId = 1113
-itemNameLineId = 1103
 [[smithingTiers.products]]
 itemId = 864
-outputAmount = 5
 levelRequired = 7
-barsRequired = 1
-barCountLineId = 1131
-itemNameLineId = 1106
+outputAmount = 5
 [[smithingTiers.products]]
 itemId = 1173
-outputAmount = 1
 levelRequired = 8
-barsRequired = 2
-barCountLineId = 1114
-itemNameLineId = 1104
 [[smithingTiers.products]]
 itemId = 1337
-outputAmount = 1
 levelRequired = 9
-barsRequired = 3
-barCountLineId = 1118
-itemNameLineId = 1083
 [[smithingTiers.products]]
 itemId = 1375
-outputAmount = 1
 levelRequired = 10
-barsRequired = 3
-barCountLineId = 1095
-itemNameLineId = 1092
 [[smithingTiers.products]]
 itemId = 1103
-outputAmount = 1
 levelRequired = 11
-barsRequired = 3
-barCountLineId = 1109
-itemNameLineId = 1098
 [[smithingTiers.products]]
 itemId = 1189
-outputAmount = 1
 levelRequired = 12
-barsRequired = 3
-barCountLineId = 1115
-itemNameLineId = 1105
 [[smithingTiers.products]]
 itemId = 3095
-outputAmount = 1
 levelRequired = 13
-barsRequired = 2
-barCountLineId = 8428
-itemNameLineId = 8429
 [[smithingTiers.products]]
 itemId = 1307
-outputAmount = 1
 levelRequired = 14
-barsRequired = 3
-barCountLineId = 1090
-itemNameLineId = 1088
 [[smithingTiers.products]]
 itemId = 1087
-outputAmount = 1
 levelRequired = 16
-barsRequired = 3
-barCountLineId = 1111
-itemNameLineId = 1100
 [[smithingTiers.products]]
 itemId = 1075
-outputAmount = 1
 levelRequired = 16
-barsRequired = 3
-barCountLineId = 1110
-itemNameLineId = 1099
 [[smithingTiers.products]]
 itemId = 1117
-outputAmount = 1
 levelRequired = 18
-barsRequired = 5
-barCountLineId = 1112
-itemNameLineId = 1101
 [[smithingTiers.products]]
 itemId = 1794
-outputAmount = 1
 levelRequired = 4
-barsRequired = 1
-barCountLineId = 1132
-itemNameLineId = 1096
 
 [[smithingTiers]]
 typeId = 2
@@ -593,165 +433,77 @@ displayName = "Iron"
 barId = 2351
 [[smithingTiers.products]]
 itemId = 1203
-outputAmount = 1
 levelRequired = 15
-barsRequired = 1
-barCountLineId = 1125
-itemNameLineId = 1094
 [[smithingTiers.products]]
 itemId = 1349
-outputAmount = 1
 levelRequired = 16
-barsRequired = 1
-barCountLineId = 1126
-itemNameLineId = 1091
 [[smithingTiers.products]]
 itemId = 1420
-outputAmount = 1
 levelRequired = 17
-barsRequired = 1
-barCountLineId = 1129
-itemNameLineId = 1093
 [[smithingTiers.products]]
 itemId = 1137
-outputAmount = 1
 levelRequired = 18
-barsRequired = 1
-barCountLineId = 1127
-itemNameLineId = 1102
 [[smithingTiers.products]]
 itemId = 1279
-outputAmount = 1
 levelRequired = 19
-barsRequired = 1
-barCountLineId = 1128
-itemNameLineId = 1085
 [[smithingTiers.products]]
 itemId = 820
-outputAmount = 10
 levelRequired = 19
-barsRequired = 1
-barCountLineId = 1124
-itemNameLineId = 1107
+outputAmount = 10
 [[smithingTiers.products]]
 itemId = 4820
-outputAmount = 15
 levelRequired = 19
-barsRequired = 1
-barCountLineId = 13357
-itemNameLineId = 13358
+outputAmount = 15
 [[smithingTiers.products]]
 itemId = 40
-outputAmount = 15
 levelRequired = 20
-barsRequired = 1
-barCountLineId = 1130
-itemNameLineId = 1108
+outputAmount = 15
 [[smithingTiers.products]]
 itemId = 1323
-outputAmount = 1
 levelRequired = 20
-barsRequired = 2
-barCountLineId = 1116
-itemNameLineId = 1087
 [[smithingTiers.products]]
 itemId = 1293
-outputAmount = 1
 levelRequired = 21
-barsRequired = 2
-barCountLineId = 1089
-itemNameLineId = 1086
 [[smithingTiers.products]]
 itemId = 1153
-outputAmount = 1
 levelRequired = 22
-barsRequired = 2
-barCountLineId = 1113
-itemNameLineId = 1103
 [[smithingTiers.products]]
 itemId = 863
-outputAmount = 5
 levelRequired = 22
-barsRequired = 1
-barCountLineId = 1131
-itemNameLineId = 1106
+outputAmount = 5
 [[smithingTiers.products]]
 itemId = 1175
-outputAmount = 1
 levelRequired = 23
-barsRequired = 2
-barCountLineId = 1114
-itemNameLineId = 1104
 [[smithingTiers.products]]
 itemId = 1335
-outputAmount = 1
 levelRequired = 24
-barsRequired = 3
-barCountLineId = 1118
-itemNameLineId = 1083
 [[smithingTiers.products]]
 itemId = 1363
-outputAmount = 1
 levelRequired = 25
-barsRequired = 3
-barCountLineId = 1095
-itemNameLineId = 1092
 [[smithingTiers.products]]
 itemId = 1101
-outputAmount = 1
 levelRequired = 26
-barsRequired = 3
-barCountLineId = 1109
-itemNameLineId = 1098
 [[smithingTiers.products]]
 itemId = 1191
-outputAmount = 1
 levelRequired = 27
-barsRequired = 3
-barCountLineId = 1115
-itemNameLineId = 1105
 [[smithingTiers.products]]
 itemId = 3096
-outputAmount = 1
 levelRequired = 28
-barsRequired = 2
-barCountLineId = 8428
-itemNameLineId = 8429
 [[smithingTiers.products]]
 itemId = 1309
-outputAmount = 1
 levelRequired = 29
-barsRequired = 3
-barCountLineId = 1090
-itemNameLineId = 1088
 [[smithingTiers.products]]
 itemId = 1081
-outputAmount = 1
 levelRequired = 31
-barsRequired = 3
-barCountLineId = 1111
-itemNameLineId = 1100
 [[smithingTiers.products]]
 itemId = 1067
-outputAmount = 1
 levelRequired = 31
-barsRequired = 3
-barCountLineId = 1110
-itemNameLineId = 1099
 [[smithingTiers.products]]
 itemId = 1115
-outputAmount = 1
 levelRequired = 33
-barsRequired = 5
-barCountLineId = 1112
-itemNameLineId = 1101
 [[smithingTiers.products]]
 itemId = 4540
-outputAmount = 1
 levelRequired = 26
-barsRequired = 1
-barCountLineId = 11459
-itemNameLineId = 11461
 
 [[smithingTiers]]
 typeId = 3
@@ -759,172 +511,80 @@ displayName = "Steel"
 barId = 2353
 [[smithingTiers.products]]
 itemId = 1207
-outputAmount = 1
 levelRequired = 30
-barsRequired = 1
-barCountLineId = 1125
-itemNameLineId = 1094
 [[smithingTiers.products]]
 itemId = 1353
-outputAmount = 1
 levelRequired = 31
-barsRequired = 1
-barCountLineId = 1126
-itemNameLineId = 1091
 [[smithingTiers.products]]
 itemId = 1424
-outputAmount = 1
 levelRequired = 32
-barsRequired = 1
-barCountLineId = 1129
-itemNameLineId = 1093
 [[smithingTiers.products]]
 itemId = 1141
-outputAmount = 1
 levelRequired = 33
-barsRequired = 1
-barCountLineId = 1127
-itemNameLineId = 1102
 [[smithingTiers.products]]
 itemId = 1281
-outputAmount = 1
 levelRequired = 34
-barsRequired = 1
-barCountLineId = 1128
-itemNameLineId = 1085
 [[smithingTiers.products]]
 itemId = 821
-outputAmount = 10
 levelRequired = 34
-barsRequired = 1
-barCountLineId = 1124
-itemNameLineId = 1107
+outputAmount = 10
 [[smithingTiers.products]]
 itemId = 1539
-outputAmount = 15
 levelRequired = 34
-barsRequired = 1
-barCountLineId = 13357
-itemNameLineId = 13358
+outputAmount = 15
 [[smithingTiers.products]]
 itemId = 41
-outputAmount = 15
 levelRequired = 35
-barsRequired = 1
-barCountLineId = 1130
-itemNameLineId = 1108
+outputAmount = 15
 [[smithingTiers.products]]
 itemId = 1325
-outputAmount = 1
 levelRequired = 35
-barsRequired = 2
-barCountLineId = 1116
-itemNameLineId = 1087
 [[smithingTiers.products]]
 itemId = 1295
-outputAmount = 1
 levelRequired = 36
-barsRequired = 2
-barCountLineId = 1089
-itemNameLineId = 1086
 [[smithingTiers.products]]
 itemId = 1157
-outputAmount = 1
 levelRequired = 37
-barsRequired = 2
-barCountLineId = 1113
-itemNameLineId = 1103
 [[smithingTiers.products]]
 itemId = 865
-outputAmount = 5
 levelRequired = 37
-barsRequired = 1
-barCountLineId = 1131
-itemNameLineId = 1106
+outputAmount = 5
 [[smithingTiers.products]]
 itemId = 1177
-outputAmount = 1
 levelRequired = 38
-barsRequired = 2
-barCountLineId = 1114
-itemNameLineId = 1104
 [[smithingTiers.products]]
 itemId = 1339
-outputAmount = 1
 levelRequired = 39
-barsRequired = 3
-barCountLineId = 1118
-itemNameLineId = 1083
 [[smithingTiers.products]]
 itemId = 1365
-outputAmount = 1
 levelRequired = 40
-barsRequired = 3
-barCountLineId = 1095
-itemNameLineId = 1092
 [[smithingTiers.products]]
 itemId = 1105
-outputAmount = 1
 levelRequired = 41
-barsRequired = 3
-barCountLineId = 1109
-itemNameLineId = 1098
 [[smithingTiers.products]]
 itemId = 1193
-outputAmount = 1
 levelRequired = 42
-barsRequired = 3
-barCountLineId = 1115
-itemNameLineId = 1105
 [[smithingTiers.products]]
 itemId = 3097
-outputAmount = 1
 levelRequired = 43
-barsRequired = 2
-barCountLineId = 8428
-itemNameLineId = 8429
 [[smithingTiers.products]]
 itemId = 1311
-outputAmount = 1
 levelRequired = 44
-barsRequired = 3
-barCountLineId = 1090
-itemNameLineId = 1088
 [[smithingTiers.products]]
 itemId = 1083
-outputAmount = 1
 levelRequired = 46
-barsRequired = 3
-barCountLineId = 1111
-itemNameLineId = 1100
 [[smithingTiers.products]]
 itemId = 1069
-outputAmount = 1
 levelRequired = 46
-barsRequired = 3
-barCountLineId = 1110
-itemNameLineId = 1099
 [[smithingTiers.products]]
 itemId = 1119
-outputAmount = 1
 levelRequired = 48
-barsRequired = 5
-barCountLineId = 1112
-itemNameLineId = 1101
 [[smithingTiers.products]]
 itemId = 4544
-outputAmount = 1
 levelRequired = 49
-barsRequired = 1
-barCountLineId = 11459
-itemNameLineId = 11461
 [[smithingTiers.products]]
 itemId = 2370
-outputAmount = 1
 levelRequired = 36
-barsRequired = 1
-barCountLineId = 1135
-itemNameLineId = 1134
 
 [[smithingTiers]]
 typeId = 4
@@ -932,158 +592,74 @@ displayName = "Mithril"
 barId = 2359
 [[smithingTiers.products]]
 itemId = 1209
-outputAmount = 1
 levelRequired = 50
-barsRequired = 1
-barCountLineId = 1125
-itemNameLineId = 1094
 [[smithingTiers.products]]
 itemId = 1355
-outputAmount = 1
 levelRequired = 51
-barsRequired = 1
-barCountLineId = 1126
-itemNameLineId = 1091
 [[smithingTiers.products]]
 itemId = 1428
-outputAmount = 1
 levelRequired = 52
-barsRequired = 1
-barCountLineId = 1129
-itemNameLineId = 1093
 [[smithingTiers.products]]
 itemId = 1143
-outputAmount = 1
 levelRequired = 53
-barsRequired = 1
-barCountLineId = 1127
-itemNameLineId = 1102
 [[smithingTiers.products]]
 itemId = 1285
-outputAmount = 1
 levelRequired = 53
-barsRequired = 1
-barCountLineId = 1128
-itemNameLineId = 1085
 [[smithingTiers.products]]
 itemId = 822
-outputAmount = 10
 levelRequired = 54
-barsRequired = 1
-barCountLineId = 1124
-itemNameLineId = 1107
+outputAmount = 10
 [[smithingTiers.products]]
 itemId = 4822
-outputAmount = 15
 levelRequired = 54
-barsRequired = 1
-barCountLineId = 13357
-itemNameLineId = 13358
+outputAmount = 15
 [[smithingTiers.products]]
 itemId = 42
-outputAmount = 15
 levelRequired = 55
-barsRequired = 1
-barCountLineId = 1130
-itemNameLineId = 1108
+outputAmount = 15
 [[smithingTiers.products]]
 itemId = 1329
-outputAmount = 1
 levelRequired = 55
-barsRequired = 2
-barCountLineId = 1116
-itemNameLineId = 1087
 [[smithingTiers.products]]
 itemId = 1299
-outputAmount = 1
 levelRequired = 56
-barsRequired = 2
-barCountLineId = 1089
-itemNameLineId = 1086
 [[smithingTiers.products]]
 itemId = 1159
-outputAmount = 1
 levelRequired = 57
-barsRequired = 2
-barCountLineId = 1113
-itemNameLineId = 1103
 [[smithingTiers.products]]
 itemId = 866
-outputAmount = 5
 levelRequired = 57
-barsRequired = 1
-barCountLineId = 1131
-itemNameLineId = 1106
+outputAmount = 5
 [[smithingTiers.products]]
 itemId = 1181
-outputAmount = 1
 levelRequired = 58
-barsRequired = 2
-barCountLineId = 1114
-itemNameLineId = 1104
 [[smithingTiers.products]]
 itemId = 1343
-outputAmount = 1
 levelRequired = 59
-barsRequired = 3
-barCountLineId = 1118
-itemNameLineId = 1083
 [[smithingTiers.products]]
 itemId = 1369
-outputAmount = 1
 levelRequired = 60
-barsRequired = 3
-barCountLineId = 1095
-itemNameLineId = 1092
 [[smithingTiers.products]]
 itemId = 1109
-outputAmount = 1
 levelRequired = 61
-barsRequired = 3
-barCountLineId = 1109
-itemNameLineId = 1098
 [[smithingTiers.products]]
 itemId = 1197
-outputAmount = 1
 levelRequired = 62
-barsRequired = 3
-barCountLineId = 1115
-itemNameLineId = 1105
 [[smithingTiers.products]]
 itemId = 3099
-outputAmount = 1
 levelRequired = 63
-barsRequired = 2
-barCountLineId = 8428
-itemNameLineId = 8429
 [[smithingTiers.products]]
 itemId = 1315
-outputAmount = 1
 levelRequired = 64
-barsRequired = 3
-barCountLineId = 1090
-itemNameLineId = 1088
 [[smithingTiers.products]]
 itemId = 1085
-outputAmount = 1
 levelRequired = 66
-barsRequired = 3
-barCountLineId = 1111
-itemNameLineId = 1100
 [[smithingTiers.products]]
 itemId = 1071
-outputAmount = 1
 levelRequired = 66
-barsRequired = 3
-barCountLineId = 1110
-itemNameLineId = 1099
 [[smithingTiers.products]]
 itemId = 1121
-outputAmount = 1
 levelRequired = 68
-barsRequired = 5
-barCountLineId = 1112
-itemNameLineId = 1101
 
 [[smithingTiers]]
 typeId = 5
@@ -1091,158 +667,74 @@ displayName = "Adamant"
 barId = 2361
 [[smithingTiers.products]]
 itemId = 1211
-outputAmount = 1
 levelRequired = 70
-barsRequired = 1
-barCountLineId = 1125
-itemNameLineId = 1094
 [[smithingTiers.products]]
 itemId = 1357
-outputAmount = 1
 levelRequired = 71
-barsRequired = 1
-barCountLineId = 1126
-itemNameLineId = 1091
 [[smithingTiers.products]]
 itemId = 1430
-outputAmount = 1
 levelRequired = 72
-barsRequired = 1
-barCountLineId = 1129
-itemNameLineId = 1093
 [[smithingTiers.products]]
 itemId = 1145
-outputAmount = 1
 levelRequired = 73
-barsRequired = 1
-barCountLineId = 1127
-itemNameLineId = 1102
 [[smithingTiers.products]]
 itemId = 1287
-outputAmount = 1
 levelRequired = 74
-barsRequired = 1
-barCountLineId = 1128
-itemNameLineId = 1085
 [[smithingTiers.products]]
 itemId = 823
-outputAmount = 10
 levelRequired = 74
-barsRequired = 1
-barCountLineId = 1124
-itemNameLineId = 1107
+outputAmount = 10
 [[smithingTiers.products]]
 itemId = 4823
-outputAmount = 15
 levelRequired = 74
-barsRequired = 1
-barCountLineId = 13357
-itemNameLineId = 13358
+outputAmount = 15
 [[smithingTiers.products]]
 itemId = 43
-outputAmount = 15
 levelRequired = 75
-barsRequired = 1
-barCountLineId = 1130
-itemNameLineId = 1108
+outputAmount = 15
 [[smithingTiers.products]]
 itemId = 1331
-outputAmount = 1
 levelRequired = 75
-barsRequired = 2
-barCountLineId = 1116
-itemNameLineId = 1087
 [[smithingTiers.products]]
 itemId = 1301
-outputAmount = 1
 levelRequired = 76
-barsRequired = 2
-barCountLineId = 1089
-itemNameLineId = 1086
 [[smithingTiers.products]]
 itemId = 1161
-outputAmount = 1
 levelRequired = 77
-barsRequired = 2
-barCountLineId = 1113
-itemNameLineId = 1103
 [[smithingTiers.products]]
 itemId = 867
-outputAmount = 5
 levelRequired = 77
-barsRequired = 1
-barCountLineId = 1131
-itemNameLineId = 1106
+outputAmount = 5
 [[smithingTiers.products]]
 itemId = 1183
-outputAmount = 1
 levelRequired = 78
-barsRequired = 2
-barCountLineId = 1114
-itemNameLineId = 1104
 [[smithingTiers.products]]
 itemId = 1345
-outputAmount = 1
 levelRequired = 79
-barsRequired = 3
-barCountLineId = 1118
-itemNameLineId = 1083
 [[smithingTiers.products]]
 itemId = 1371
-outputAmount = 1
 levelRequired = 80
-barsRequired = 3
-barCountLineId = 1095
-itemNameLineId = 1092
 [[smithingTiers.products]]
 itemId = 1111
-outputAmount = 1
 levelRequired = 81
-barsRequired = 3
-barCountLineId = 1109
-itemNameLineId = 1098
 [[smithingTiers.products]]
 itemId = 1199
-outputAmount = 1
 levelRequired = 82
-barsRequired = 3
-barCountLineId = 1115
-itemNameLineId = 1105
 [[smithingTiers.products]]
 itemId = 3100
-outputAmount = 1
 levelRequired = 83
-barsRequired = 2
-barCountLineId = 8428
-itemNameLineId = 8429
 [[smithingTiers.products]]
 itemId = 1317
-outputAmount = 1
 levelRequired = 84
-barsRequired = 3
-barCountLineId = 1090
-itemNameLineId = 1088
 [[smithingTiers.products]]
 itemId = 1091
-outputAmount = 1
 levelRequired = 86
-barsRequired = 3
-barCountLineId = 1111
-itemNameLineId = 1100
 [[smithingTiers.products]]
 itemId = 1073
-outputAmount = 1
 levelRequired = 86
-barsRequired = 3
-barCountLineId = 1110
-itemNameLineId = 1099
 [[smithingTiers.products]]
 itemId = 1123
-outputAmount = 1
 levelRequired = 88
-barsRequired = 5
-barCountLineId = 1112
-itemNameLineId = 1101
 
 [[smithingTiers]]
 typeId = 6
@@ -1250,155 +742,71 @@ displayName = "Rune"
 barId = 2363
 [[smithingTiers.products]]
 itemId = 1213
-outputAmount = 1
 levelRequired = 85
-barsRequired = 1
-barCountLineId = 1125
-itemNameLineId = 1094
 [[smithingTiers.products]]
 itemId = 1359
-outputAmount = 1
 levelRequired = 86
-barsRequired = 1
-barCountLineId = 1126
-itemNameLineId = 1091
 [[smithingTiers.products]]
 itemId = 1432
-outputAmount = 1
 levelRequired = 87
-barsRequired = 1
-barCountLineId = 1129
-itemNameLineId = 1093
 [[smithingTiers.products]]
 itemId = 1147
-outputAmount = 1
 levelRequired = 88
-barsRequired = 1
-barCountLineId = 1127
-itemNameLineId = 1102
 [[smithingTiers.products]]
 itemId = 1289
-outputAmount = 1
 levelRequired = 89
-barsRequired = 1
-barCountLineId = 1128
-itemNameLineId = 1085
 [[smithingTiers.products]]
 itemId = 824
-outputAmount = 10
 levelRequired = 89
-barsRequired = 1
-barCountLineId = 1124
-itemNameLineId = 1107
+outputAmount = 10
 [[smithingTiers.products]]
 itemId = 4824
-outputAmount = 15
 levelRequired = 89
-barsRequired = 1
-barCountLineId = 13357
-itemNameLineId = 13358
+outputAmount = 15
 [[smithingTiers.products]]
 itemId = 44
-outputAmount = 15
 levelRequired = 90
-barsRequired = 1
-barCountLineId = 1130
-itemNameLineId = 1108
+outputAmount = 15
 [[smithingTiers.products]]
 itemId = 1333
-outputAmount = 1
 levelRequired = 90
-barsRequired = 2
-barCountLineId = 1116
-itemNameLineId = 1087
 [[smithingTiers.products]]
 itemId = 1303
-outputAmount = 1
 levelRequired = 91
-barsRequired = 2
-barCountLineId = 1089
-itemNameLineId = 1086
 [[smithingTiers.products]]
 itemId = 1163
-outputAmount = 1
 levelRequired = 92
-barsRequired = 2
-barCountLineId = 1113
-itemNameLineId = 1103
 [[smithingTiers.products]]
 itemId = 868
-outputAmount = 5
 levelRequired = 92
-barsRequired = 1
-barCountLineId = 1131
-itemNameLineId = 1106
+outputAmount = 5
 [[smithingTiers.products]]
 itemId = 1185
-outputAmount = 1
 levelRequired = 93
-barsRequired = 2
-barCountLineId = 1114
-itemNameLineId = 1104
 [[smithingTiers.products]]
 itemId = 1347
-outputAmount = 1
 levelRequired = 94
-barsRequired = 3
-barCountLineId = 1118
-itemNameLineId = 1083
 [[smithingTiers.products]]
 itemId = 1373
-outputAmount = 1
 levelRequired = 95
-barsRequired = 3
-barCountLineId = 1095
-itemNameLineId = 1092
 [[smithingTiers.products]]
 itemId = 1113
-outputAmount = 1
 levelRequired = 96
-barsRequired = 3
-barCountLineId = 1109
-itemNameLineId = 1098
 [[smithingTiers.products]]
 itemId = 1201
-outputAmount = 1
 levelRequired = 97
-barsRequired = 3
-barCountLineId = 1115
-itemNameLineId = 1105
 [[smithingTiers.products]]
 itemId = 3101
-outputAmount = 1
 levelRequired = 98
-barsRequired = 2
-barCountLineId = 8428
-itemNameLineId = 8429
 [[smithingTiers.products]]
 itemId = 1319
-outputAmount = 1
 levelRequired = 99
-barsRequired = 3
-barCountLineId = 1090
-itemNameLineId = 1088
 [[smithingTiers.products]]
 itemId = 1093
-outputAmount = 1
 levelRequired = 99
-barsRequired = 3
-barCountLineId = 1111
-itemNameLineId = 1100
 [[smithingTiers.products]]
 itemId = 1079
-outputAmount = 1
 levelRequired = 99
-barsRequired = 3
-barCountLineId = 1110
-itemNameLineId = 1099
 [[smithingTiers.products]]
 itemId = 1127
-outputAmount = 1
 levelRequired = 99
-barsRequired = 5
-barCountLineId = 1112
-itemNameLineId = 1101
