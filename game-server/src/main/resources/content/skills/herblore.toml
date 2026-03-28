@@ -1,0 +1,223 @@
+[[herbDefinitions]]
+grimyId = 199
+cleanId = 249
+unfinishedPotionId = 91
+requiredLevel = 1
+cleaningExperience = 24
+premiumOnly = false
+
+[[herbDefinitions]]
+grimyId = 203
+cleanId = 253
+unfinishedPotionId = 95
+requiredLevel = 10
+cleaningExperience = 40
+premiumOnly = false
+
+[[herbDefinitions]]
+grimyId = 207
+cleanId = 257
+unfinishedPotionId = 99
+requiredLevel = 25
+cleaningExperience = 56
+premiumOnly = false
+
+[[herbDefinitions]]
+grimyId = 209
+cleanId = 259
+unfinishedPotionId = 101
+requiredLevel = 40
+cleaningExperience = 72
+premiumOnly = true
+
+[[herbDefinitions]]
+grimyId = 213
+cleanId = 263
+unfinishedPotionId = 105
+requiredLevel = 54
+cleaningExperience = 88
+premiumOnly = true
+
+[[herbDefinitions]]
+grimyId = 3051
+cleanId = 3000
+unfinishedPotionId = 3004
+requiredLevel = 59
+cleaningExperience = 96
+premiumOnly = true
+
+[[herbDefinitions]]
+grimyId = 215
+cleanId = 265
+unfinishedPotionId = 107
+requiredLevel = 65
+cleaningExperience = 104
+premiumOnly = true
+
+[[herbDefinitions]]
+grimyId = 217
+cleanId = 267
+unfinishedPotionId = 109
+requiredLevel = 70
+cleaningExperience = 120
+premiumOnly = true
+
+[[herbDefinitions]]
+grimyId = 219
+cleanId = 269
+unfinishedPotionId = 111
+requiredLevel = 75
+cleaningExperience = 136
+premiumOnly = true
+
+[[potionRecipes]]
+unfinishedPotionId = 91
+secondaryId = 221
+finishedPotionId = 121
+requiredLevel = 3
+experience = 200
+premiumOnly = false
+
+[[potionRecipes]]
+unfinishedPotionId = 95
+secondaryId = 225
+finishedPotionId = 115
+requiredLevel = 14
+experience = 480
+premiumOnly = false
+
+[[potionRecipes]]
+unfinishedPotionId = 99
+secondaryId = 239
+finishedPotionId = 133
+requiredLevel = 25
+experience = 560
+premiumOnly = false
+
+[[potionRecipes]]
+unfinishedPotionId = 99
+secondaryId = 231
+finishedPotionId = 139
+requiredLevel = 38
+experience = 700
+premiumOnly = false
+
+[[potionRecipes]]
+unfinishedPotionId = 101
+secondaryId = 221
+finishedPotionId = 145
+requiredLevel = 46
+experience = 840
+premiumOnly = true
+
+[[potionRecipes]]
+unfinishedPotionId = 105
+secondaryId = 225
+finishedPotionId = 157
+requiredLevel = 55
+experience = 1000
+premiumOnly = true
+
+[[potionRecipes]]
+unfinishedPotionId = 3004
+secondaryId = 223
+finishedPotionId = 3026
+requiredLevel = 60
+experience = 1120
+premiumOnly = true
+
+[[potionRecipes]]
+unfinishedPotionId = 107
+secondaryId = 239
+finishedPotionId = 163
+requiredLevel = 65
+experience = 1200
+premiumOnly = true
+
+[[potionRecipes]]
+unfinishedPotionId = 109
+secondaryId = 245
+finishedPotionId = 169
+requiredLevel = 75
+experience = 1350
+premiumOnly = true
+
+[[potionRecipes]]
+unfinishedPotionId = 111
+secondaryId = 6045
+finishedPotionId = 2454
+requiredLevel = 79
+experience = 1425
+premiumOnly = true
+
+[[potionDoseDefinitions]]
+oneDoseId = 119
+twoDoseId = 117
+threeDoseId = 115
+fourDoseId = 113
+
+[[potionDoseDefinitions]]
+oneDoseId = 125
+twoDoseId = 123
+threeDoseId = 121
+fourDoseId = 2428
+
+[[potionDoseDefinitions]]
+oneDoseId = 137
+twoDoseId = 135
+threeDoseId = 133
+fourDoseId = 2432
+
+[[potionDoseDefinitions]]
+oneDoseId = 143
+twoDoseId = 141
+threeDoseId = 139
+fourDoseId = 2434
+
+[[potionDoseDefinitions]]
+oneDoseId = 149
+twoDoseId = 147
+threeDoseId = 145
+fourDoseId = 2436
+
+[[potionDoseDefinitions]]
+oneDoseId = 161
+twoDoseId = 159
+threeDoseId = 157
+fourDoseId = 2440
+
+[[potionDoseDefinitions]]
+oneDoseId = 167
+twoDoseId = 165
+threeDoseId = 163
+fourDoseId = 2442
+
+[[potionDoseDefinitions]]
+oneDoseId = 173
+twoDoseId = 171
+threeDoseId = 169
+fourDoseId = 2444
+
+[[potionDoseDefinitions]]
+oneDoseId = 3030
+twoDoseId = 3028
+threeDoseId = 3026
+fourDoseId = 3024
+
+[[potionDoseDefinitions]]
+oneDoseId = 2458
+twoDoseId = 2456
+threeDoseId = 2454
+fourDoseId = 2452
+
+[[potionDoseDefinitions]]
+oneDoseId = 12701
+twoDoseId = 12699
+threeDoseId = 12697
+fourDoseId = 12695
+
+[[potionDoseDefinitions]]
+oneDoseId = 11733
+twoDoseId = 11732
+threeDoseId = 11731
+fourDoseId = 11730

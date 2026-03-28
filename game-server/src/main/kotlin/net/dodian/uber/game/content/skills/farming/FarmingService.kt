@@ -7,12 +7,11 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.content.skills.farming.FarmingDefinitions.patches
 import net.dodian.uber.game.systems.world.farming.FarmingScheduler
 import net.dodian.utilities.Misc
 
 class FarmingService {
-    val farmData = FarmingDefinitions()
+    val farmData = FarmingDefinitions
 
     fun Client.updateFarming() {
         /* Saplings in inventory + bank! */
@@ -51,7 +50,7 @@ class FarmingService {
             }
         }
         /* Farming Patches */
-        for(patch in patches.values()) { /* Patches default values */
+        for(patch in FarmingDefinitions.patches.values()) { /* Patches default values */
             if (farmingJson.getPatchData().get(patch.name) != null) {
                 val farmPatches = farmingJson.getPatchData().get(patch.name).asJsonArray //Not sure if we need just yet!
                 (0 until patch.objectId.size).forEach { slot ->
@@ -225,7 +224,7 @@ class FarmingService {
             }
         }
         /* Item on object for patches */
-        for(patch in patches.values()) {
+        for(patch in FarmingDefinitions.patches.values()) {
             if (farmingJson.getPatchData().get(patch.name) != null) {
                 val farmPatches = farmingJson.getPatchData().get(patch.name).asJsonArray //Not sure if we need just yet!
                 (0 until patch.objectId.size).forEach { slot ->
@@ -409,7 +408,7 @@ class FarmingService {
     }
     fun Client.findPatch(objectId : Int, value : Int) : String {
         if(value >= 6) return "" //Cant have a value beyond 6!
-        for (patch in patches.values()) {
+        for (patch in FarmingDefinitions.patches.values()) {
             val slot = patch.objectId.indexOf(objectId)
             if(slot != -1) {
                 val farmPatch = farmingJson.getPatchData().get(patch.name).asJsonArray
@@ -424,7 +423,7 @@ class FarmingService {
         if(findPatch(objectId, 0).isEmpty()) //Not go through if object is not here :D!
             return false
         val objName = GameObjectData.forId(objectId).name.lowercase()
-        for(patch in patches.values()) {
+        for(patch in FarmingDefinitions.patches.values()) {
             if (farmingJson.getPatchData().get(patch.name) != null) {
                 val farmPatches = farmingJson.getPatchData().get(patch.name).asJsonArray //Not sure if we need just yet!
                 (0 until patch.objectId.size).forEach { slot ->
@@ -552,7 +551,7 @@ class FarmingService {
         var dead: Boolean
         var compost: String
         /* Patch check */
-        for (patch in patches.values()) {
+        for (patch in FarmingDefinitions.patches.values()) {
             val slot = patch.objectId.indexOf(objectId)
             if(slot != -1) {
                 val farmPatch = farmingJson.getPatchData().get(patch.name).asJsonArray
@@ -572,7 +571,7 @@ class FarmingService {
             }
         }
     }
-    fun Client.updateFarmPatch(patch : patches) {
+    fun Client.updateFarmPatch(patch: FarmingDefinitions.PatchGroup) {
         if (farmingJson.getPatchData().get(patch.name) != null) {
             (0 until patch.objectId.size).forEach { slot ->
                 val checkPos = slot * farmingJson.PATCHAMOUNT
@@ -625,7 +624,7 @@ class FarmingService {
         }
     }
     fun Client.updateFarmPatch() {
-        for(patch in patches.values()) {
+        for(patch in FarmingDefinitions.patches.values()) {
             if (farmingJson.getPatchData().get(patch.name) != null) {
                 if(distanceToPoint(patch.updatePos, position) <= 16)
                     updateFarmPatch(patch)

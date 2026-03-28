@@ -33,26 +33,26 @@ object InterfaceMappingRegistry {
     private var travelData: TravelObjectsDataFile? = null
 
     @JvmStatic
-    fun magicData(defaults: MagicDataFile): MagicDataFile {
-        val loaded = magicData ?: ContentDataLoader.loadOptional<MagicDataFile>("content/interfaces/magic.toml").also {
+    fun magicData(): MagicDataFile {
+        val loaded = magicData ?: ContentDataLoader.loadRequired<MagicDataFile>("content/interfaces/magic.toml").also {
             magicData = it
         }
-        return loaded ?: defaults
+        return loaded
     }
 
     @JvmStatic
-    fun skillGuideData(defaults: SkillGuideDataFile): SkillGuideDataFile {
-        val loaded = skillGuideData ?: ContentDataLoader.loadOptional<SkillGuideDataFile>("content/interfaces/skillguide.toml").also {
+    fun skillGuideData(): SkillGuideDataFile {
+        val loaded = skillGuideData ?: ContentDataLoader.loadRequired<SkillGuideDataFile>("content/interfaces/skillguide.toml").also {
             skillGuideData = it
         }
-        return loaded ?: defaults
+        return loaded
     }
 
     @JvmStatic
-    fun travelData(defaults: TravelObjectsDataFile): TravelObjectsDataFile {
-        val loaded = travelData ?: ContentDataLoader.loadOptional<TravelObjectsDataFile>("content/objects/travel.toml").also {
+    fun travelData(): TravelObjectsDataFile {
+        val loaded = travelData ?: ContentDataLoader.loadRequired<TravelObjectsDataFile>("content/objects/travel.toml").also {
             travelData = it
         }
-        return loaded ?: defaults
+        return loaded
     }
 }

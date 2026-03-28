@@ -1,0 +1,126 @@
+[[hideDefinitions]]
+itemId = 1745
+experience = 97
+glovesId = 1065
+glovesLevel = 50
+chapsId = 1099
+chapsLevel = 54
+bodyId = 1135
+bodyLevel = 58
+
+[[hideDefinitions]]
+itemId = 2505
+experience = 158
+glovesId = 2487
+glovesLevel = 62
+chapsId = 2493
+chapsLevel = 66
+bodyId = 2499
+bodyLevel = 70
+
+[[hideDefinitions]]
+itemId = 2507
+experience = 246
+glovesId = 2489
+glovesLevel = 73
+chapsId = 2495
+chapsLevel = 76
+bodyId = 2501
+bodyLevel = 79
+
+[[hideDefinitions]]
+itemId = 2509
+experience = 372
+glovesId = 2491
+glovesLevel = 82
+chapsId = 2497
+chapsLevel = 85
+bodyId = 2503
+bodyLevel = 88
+
+[[gemDefinitions]]
+uncutId = 1623
+cutId = 1607
+requiredLevel = 20
+experience = 50
+animationId = 888
+
+[[gemDefinitions]]
+uncutId = 1621
+cutId = 1605
+requiredLevel = 27
+experience = 68
+animationId = 889
+
+[[gemDefinitions]]
+uncutId = 1619
+cutId = 1603
+requiredLevel = 34
+experience = 85
+animationId = 887
+
+[[gemDefinitions]]
+uncutId = 1617
+cutId = 1601
+requiredLevel = 43
+experience = 108
+animationId = 886
+
+[[gemDefinitions]]
+uncutId = 1631
+cutId = 1615
+requiredLevel = 55
+experience = 137
+animationId = 885
+
+[[gemDefinitions]]
+uncutId = 6571
+cutId = 6573
+requiredLevel = 67
+experience = 168
+animationId = 2717
+
+[[gemDefinitions]]
+uncutId = 1625
+cutId = 1609
+requiredLevel = 1
+experience = 15
+animationId = 890
+
+[[gemDefinitions]]
+uncutId = 1627
+cutId = 1611
+requiredLevel = 13
+experience = 20
+animationId = 891
+
+[[gemDefinitions]]
+uncutId = 1629
+cutId = 1613
+requiredLevel = 16
+experience = 25
+animationId = 892
+
+[[orbDefinitions]]
+orbId = 571
+staffId = 1395
+requiredLevel = 51
+experience = 450
+
+[[orbDefinitions]]
+orbId = 575
+staffId = 1399
+requiredLevel = 56
+experience = 500
+
+[[orbDefinitions]]
+orbId = 569
+staffId = 1393
+requiredLevel = 61
+experience = 550
+
+[[orbDefinitions]]
+orbId = 573
+staffId = 1397
+requiredLevel = 66
+experience = 600

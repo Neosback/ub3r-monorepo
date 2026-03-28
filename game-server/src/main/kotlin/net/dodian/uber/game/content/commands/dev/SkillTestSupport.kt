@@ -114,10 +114,10 @@ internal fun handleFarmTest(context: CommandContext): Boolean {
 
     clearInventory(client)
     intArrayOf(
-        FarmingDefinitions().RAKE,
-        FarmingDefinitions().SPADE,
-        FarmingDefinitions().SEED_DIBBER,
-        FarmingDefinitions().SECATEURS,
+        FarmingDefinitions.RAKE,
+        FarmingDefinitions.SPADE,
+        FarmingDefinitions.SEED_DIBBER,
+        FarmingDefinitions.SECATEURS,
         6032,
         6034,
         6036,

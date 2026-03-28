@@ -1,0 +1,97 @@
+[[trees]]
+objectIds = [1276,1277,1278,1279,1280,1330,1332,2409,3033,3034,3035,3036,3879,3881,3882,3883,1315,1316,1318,1319,1282,1283,1284,1285,1286,1287,1289,1290,1291,1365,1383,1384,5902,5903,5904]
+logItemId = 1511
+requiredLevel = 1
+experience = 100
+baseDelayMs = 1800
+
+[[trees]]
+objectIds = [1281,3037]
+logItemId = 1521
+requiredLevel = 15
+experience = 165
+baseDelayMs = 2400
+
+[[trees]]
+objectIds = [1308,5551,5552]
+logItemId = 1519
+requiredLevel = 30
+experience = 285
+baseDelayMs = 3200
+
+[[trees]]
+objectIds = [1307,4674]
+logItemId = 1517
+requiredLevel = 45
+experience = 425
+baseDelayMs = 4600
+
+[[trees]]
+objectIds = [1309,1754]
+logItemId = 1515
+requiredLevel = 60
+experience = 735
+baseDelayMs = 5600
+
+[[trees]]
+objectIds = [1306,1762]
+logItemId = 1513
+requiredLevel = 75
+experience = 1075
+baseDelayMs = 8200
+
+[[axes]]
+itemId = 20011
+requiredLevel = 61
+speedBonus = 0.8
+animationId = 2846
+dragonTierBoostEligible = true
+
+[[axes]]
+itemId = 6739
+requiredLevel = 61
+speedBonus = 0.8
+animationId = 2846
+dragonTierBoostEligible = true
+
+[[axes]]
+itemId = 1359
+requiredLevel = 41
+speedBonus = 0.42
+animationId = 867
+
+[[axes]]
+itemId = 1357
+requiredLevel = 31
+speedBonus = 0.33
+animationId = 869
+
+[[axes]]
+itemId = 1355
+requiredLevel = 21
+speedBonus = 0.24
+animationId = 871
+
+[[axes]]
+itemId = 1361
+requiredLevel = 11
+speedBonus = 0.15
+animationId = 875
+
+[[axes]]
+itemId = 1353
+requiredLevel = 6
+speedBonus = 0.1
+animationId = 875
+
+[[axes]]
+itemId = 1349
+requiredLevel = 1
+speedBonus = 0.065
+animationId = 877
+
+[[axes]]
+itemId = 1351
+requiredLevel = 1
+speedBonus = 0.04
+animationId = 879

@@ -1,33 +1,10 @@
 package net.dodian.uber.game.content.interfaces.magic
 
 import net.dodian.uber.game.content.platform.InterfaceMappingRegistry
-import net.dodian.uber.game.content.platform.MagicDataFile
 
 object MagicComponents {
     const val NORMAL_INTERFACE_ID = 1151
     const val ANCIENT_INTERFACE_ID = 12855
-
-    private val fallbackSpellbookToggleButtons = intArrayOf(74212, 49047, 49046, 23024)
-    private val fallbackAutocastClearButtons = intArrayOf(1097, 1094, 1093)
-    private val fallbackAutocastSelectButtons = intArrayOf(
-        51133,
-        51185,
-        51091,
-        24018,
-        51159,
-        51211,
-        51111,
-        51069,
-        51146,
-        51198,
-        51102,
-        51058,
-        51172,
-        51224,
-        51122,
-        51080,
-    )
-    private val fallbackAutocastRefreshButtons = intArrayOf(24017)
 
     data class TeleportBinding(
         val componentId: Int,
@@ -40,30 +17,7 @@ object MagicComponents {
         val premium: Boolean,
     )
 
-    private val fallbackTeleports =
-        listOf(
-            TeleportBinding(0, "magic.teleport.yanille", intArrayOf(21741, 75010, 84237), 2604, 6, 3101, 3, false),
-            TeleportBinding(1, "magic.teleport.seers", intArrayOf(13035, 4143, 50235), 2722, 6, 3484, 2, false),
-            TeleportBinding(2, "magic.teleport.ardougne", intArrayOf(13045, 4146, 50245), 2660, 4, 3306, 4, false),
-            TeleportBinding(3, "magic.teleport.catherby", intArrayOf(13053, 4150, 50253), 2802, 4, 3432, 3, false),
-            TeleportBinding(4, "magic.teleport.legends_guild", intArrayOf(13061, 6004, 51005), 2726, 5, 3346, 2, false),
-            TeleportBinding(5, "magic.teleport.taverly", intArrayOf(13069, 6005, 51013), 2893, 4, 3454, 3, false),
-            TeleportBinding(6, "magic.teleport.fishing_guild", intArrayOf(13079, 29031, 51023), 2596, 3, 3406, 4, true),
-            TeleportBinding(7, "magic.teleport.gnome_village", intArrayOf(13087, 72038, 51031), 2472, 6, 3436, 3, false),
-            TeleportBinding(8, "magic.teleport.edgeville", intArrayOf(13095, 4140, 51039), 3085, 4, 3488, 4, false),
-        )
-
-    private val loadedData: MagicDataFile by lazy {
-        InterfaceMappingRegistry.magicData(
-            MagicDataFile(
-                spellbookToggleButtons = fallbackSpellbookToggleButtons,
-                autocastClearButtons = fallbackAutocastClearButtons,
-                autocastSelectButtons = fallbackAutocastSelectButtons,
-                autocastRefreshButtons = fallbackAutocastRefreshButtons,
-                teleports = fallbackTeleports,
-            ),
-        )
-    }
+    private val loadedData by lazy { InterfaceMappingRegistry.magicData() }
 
     val spellbookToggleButtons: IntArray
         get() = loadedData.spellbookToggleButtons

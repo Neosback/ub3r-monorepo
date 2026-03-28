@@ -233,13 +233,13 @@ object SkillTestItemCatalog {
             addIfValid(items, it.saplingId)
         }
         FarmingDefinitions.compost.values().forEach { addIfValid(items, it.itemId) }
-        FarmingDefinitions().regularCompostItems.forEach { addIfValid(items, it) }
-        FarmingDefinitions().superCompostItems.forEach { addIfValid(items, it) }
+        FarmingDefinitions.regularCompostItems.forEach { addIfValid(items, it) }
+        FarmingDefinitions.superCompostItems.forEach { addIfValid(items, it) }
         addAll(
             items,
-            FarmingDefinitions().BUCKET, FarmingDefinitions().SPADE, FarmingDefinitions().RAKE, FarmingDefinitions().SEED_DIBBER, FarmingDefinitions().TROWEL,
-            FarmingDefinitions().FILLED_PLANT_POT, FarmingDefinitions().EMPTY_PLANT_POT, FarmingDefinitions().SECATEURS, FarmingDefinitions().MAGIC_SECATEURS,
-            FarmingDefinitions().PLANT_CURE, FarmingDefinitions().VOLCANIC_ASH
+            FarmingDefinitions.BUCKET, FarmingDefinitions.SPADE, FarmingDefinitions.RAKE, FarmingDefinitions.SEED_DIBBER, FarmingDefinitions.TROWEL,
+            FarmingDefinitions.FILLED_PLANT_POT, FarmingDefinitions.EMPTY_PLANT_POT, FarmingDefinitions.SECATEURS, FarmingDefinitions.MAGIC_SECATEURS,
+            FarmingDefinitions.PLANT_CURE, FarmingDefinitions.VOLCANIC_ASH
         )
         return items.toList()
     }

@@ -109,6 +109,8 @@ class ArchitectureBoundaryTest {
             "/net/dodian/uber/game/content/",
             "/net/dodian/uber/game/event/",
             "/net/dodian/uber/game/netty/listener/",
+            "/net/dodian/uber/game/runtime/",
+            "/net/dodian/uber/game/model/entity/",
         )
         val forbiddenSnippets = listOf(
             "dbConnection",
@@ -323,6 +325,23 @@ class ArchitectureBoundaryTest {
                 val isRemovedPlayerTickPosting =
                     trimmed.contains("post(PlayerTickEvent(") ||
                         trimmed.contains("GameEventBus.post(PlayerTickEvent(")
+                val isLegacyStaticSkillTableBlock =
+                    (normalized.endsWith("/content/skills/smithing/SmithingDefinitions.kt") &&
+                        (
+                            trimmed.contains("smeltingRecipes {") ||
+                                trimmed.contains("classicSmeltingButtonMappings") ||
+                                trimmed.contains("smithingPageSlots = mapOf(") ||
+                                trimmed.contains("buildTier(")
+                            )) ||
+                        (normalized.endsWith("/content/skills/farming/FarmingDefinitions.kt") &&
+                            (
+                                trimmed.contains("enum class allotmentPatch") ||
+                                    trimmed.contains("enum class flowerPatch") ||
+                                    trimmed.contains("enum class herbPatch") ||
+                                    trimmed.contains("enum class bushPatch") ||
+                                    trimmed.contains("enum class fruitTreePatch") ||
+                                    trimmed.contains("enum class treePatch")
+                                ))
                 val isLegacyRef =
                     trimmed.contains("net.dodian.jobs.") ||
                         trimmed.contains("net.dodian.uber.game.skills.farming.FarmingProcessor") ||
@@ -349,7 +368,8 @@ class ArchitectureBoundaryTest {
                         || isManualCoreSkillControllerMarker ||
                         isRemovedInteractionRuntimeSymbol ||
                         isRemovedLegacyActionTimerSymbol ||
-                        isRemovedPlayerTickPosting
+                        isRemovedPlayerTickPosting ||
+                        isLegacyStaticSkillTableBlock
                 if (!isLegacyRef) return@mapIndexedNotNull null
                 "${file}:${idx + 1} -> $trimmed"
             }
@@ -399,6 +419,33 @@ class ArchitectureBoundaryTest {
         assertTrue(
             violations.isEmpty(),
             "Plugin index generation must be KSP-driven.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `required content toml files for migrated skills exist`() {
+        val repoRoot = Paths.get("..").normalize().toAbsolutePath()
+        val requiredToml = listOf(
+            "game-server/src/main/resources/content/skills/cooking.toml",
+            "game-server/src/main/resources/content/skills/fishing.toml",
+            "game-server/src/main/resources/content/skills/fletching.toml",
+            "game-server/src/main/resources/content/skills/woodcutting.toml",
+            "game-server/src/main/resources/content/skills/mining.toml",
+            "game-server/src/main/resources/content/skills/crafting.toml",
+            "game-server/src/main/resources/content/skills/herblore.toml",
+            "game-server/src/main/resources/content/skills/runecrafting.toml",
+            "game-server/src/main/resources/content/skills/slayer.toml",
+            "game-server/src/main/resources/content/skills/prayer.toml",
+            "game-server/src/main/resources/content/skills/smithing.toml",
+            "game-server/src/main/resources/content/skills/farming.toml",
+            "game-server/src/main/resources/content/interfaces/magic.toml",
+            "game-server/src/main/resources/content/interfaces/skillguide.toml",
+            "game-server/src/main/resources/content/objects/travel.toml",
+        )
+        val missing = requiredToml.filterNot { Files.exists(repoRoot.resolve(it)) }
+        assertTrue(
+            missing.isEmpty(),
+            "Missing required content TOML files.\n${missing.joinToString("\n")}",
         )
     }
 
@@ -515,6 +562,8 @@ class ArchitectureBoundaryTest {
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/cooking/CookingDefinitions.kt") to "SkillDataRegistry.cookingRecipes",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/fishing/FishingDefinitions.kt") to "SkillDataRegistry.fishingSpots",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/fletching/FletchingDefinitions.kt") to "SkillDataRegistry.fletchingBowLogs",
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/smithing/SmithingDefinitions.kt") to "SkillDataRegistry.smithingData",
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/farming/FarmingDefinitions.kt") to "SkillDataRegistry.farmingData",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/interfaces/magic/MagicComponents.kt") to "InterfaceMappingRegistry.magicData",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/interfaces/skillguide/SkillGuideComponents.kt") to "InterfaceMappingRegistry.skillGuideData",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/objects/travel/TravelObjectComponents.kt") to "InterfaceMappingRegistry.travelData",
@@ -530,6 +579,23 @@ class ArchitectureBoundaryTest {
         assertTrue(
             violations.isEmpty(),
             "Migrated modules must remain registry-backed.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `registry calls do not use fallback arguments`() {
+        val argumentCallPattern = Regex("""(SkillDataRegistry|InterfaceMappingRegistry)\.[A-Za-z0-9_]+\([^)]*[^)\s][^)]*\)""")
+        val violations = sourceFiles.flatMap { file ->
+            Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                val trimmed = line.trim()
+                val match = argumentCallPattern.find(trimmed) ?: return@mapIndexedNotNull null
+                if (match.value.endsWith("()")) return@mapIndexedNotNull null
+                "${file}:${idx + 1} -> $trimmed"
+            }
+        }
+        assertTrue(
+            violations.isEmpty(),
+            "Registry calls must use no-arg required accessors.\n${violations.joinToString("\n")}",
         )
     }
 }
