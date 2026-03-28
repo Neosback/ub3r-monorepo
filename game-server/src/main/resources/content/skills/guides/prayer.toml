@@ -1,0 +1,12 @@
+skillId = 5
+hideComponents = [8825,8813]
+
+[[labels]]
+componentId = 8846
+text = "Prayer"
+
+[[pages]]
+child = 0
+names = ["Thick Skin","Burst of Strength","Clarity of Thought","Sharp Eye","Mystic Will","Rock Skin","Superhuman Strength","Improved Reflexes","Hawk Eye","Mystic Lore","Wolfbane","Steel Skin","Ultimate Strength","Incredible Reflexes","Eagle Eye","Mystic Might","Protect from Magic","Protect from Missiles","Protect from Melee","Chivalry","Piety","Skillcape @red@(Premium only)"]
+levels = ["5","5","5","10","10","20","20","20","25","25","25","40","40","40","45","45","55","55","55","70","80","99"]
+items = [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,2952,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,9759]

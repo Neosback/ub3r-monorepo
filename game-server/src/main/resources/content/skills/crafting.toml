@@ -1,3 +1,6 @@
+tanningHigherTierLabelIds = [14779,14787,14783,14791,14780,14788,14784,14792]
+tanningInterfaceId = 14670
+
 [[hideDefinitions]]
 itemId = 1745
 experience = 97
@@ -331,8 +334,6 @@ text = ""
 componentId = 14790
 text = ""
 
-tanningHigherTierLabelIds = [14779,14787,14783,14791,14780,14788,14784,14792]
-
 [[tanningInterfaceModels]]
 componentId = 14769
 zoom = 250
@@ -362,5 +363,3 @@ itemId = 1749
 componentId = 14776
 zoom = 250
 itemId = 1747
-
-tanningInterfaceId = 14670

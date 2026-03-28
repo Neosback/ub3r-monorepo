@@ -1,0 +1,12 @@
+skillId = 10
+hideComponents = [8825,8813]
+
+[[labels]]
+componentId = 8846
+text = "Fishing"
+
+[[pages]]
+child = 0
+names = ["Shrimps","Trout","Salmon","Lobster","Swordfish","Monkfish @red@(Premium only)","Dragon harpoon","Shark","Sea Turtle @red@(Premium only)","Manta Ray @red@(Premium only)",""]
+levels = ["1","20","30","40","50","60","61","70","85","95"]
+items = [317,335,331,377,371,7944,21028,383,395,389]

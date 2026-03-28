@@ -1,3 +1,7 @@
+baselineHidden = [15307,15304,15294,8863,8860,8850,8841,8838,8828]
+baselineShown = [8825,8813]
+titleComponentIds = [8716,8846,8823,8824,8827,8837,8840,8843,8859,8849]
+
 [[skillButtons]]
 skillId = 0
 componentId = 0
@@ -107,19 +111,19 @@ componentKey = "skillguide.cooking"
 rawButtonIds = [8671, 33223, 94178]
 
 [[skillButtons]]
-skillId = 18
+skillId = 20
 componentId = 18
 componentKey = "skillguide.runecrafting"
 rawButtonIds = [8672, 33224, 95053]
 
 [[skillButtons]]
-skillId = 19
+skillId = 18
 componentId = 19
 componentKey = "skillguide.slayer"
 rawButtonIds = [12162, 47130, 95061]
 
 [[skillButtons]]
-skillId = 20
+skillId = 19
 componentId = 20
 componentKey = "skillguide.farming"
 rawButtonIds = [95068]
@@ -171,7 +175,3 @@ componentId = 34155
 componentKey = "skillguide.subtab.7"
 rawButtonIds = [34155]
 targetTab = 7
-
-baselineHidden = [15307,15304,15294,8863,8860,8850,8841,8838,8828]
-baselineShown = [8825,8813]
-titleComponentIds = [8716,8846,8823,8824,8827,8837,8840,8843,8859,8849]

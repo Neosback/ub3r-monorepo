@@ -68,5 +68,7 @@ object SkillGuideDataRegistry {
         cache = built
         return built
     }
-}
 
+    @JvmStatic
+    fun keyForSkillId(skillId: Int): String? = keyBySkillId[skillId]
+}

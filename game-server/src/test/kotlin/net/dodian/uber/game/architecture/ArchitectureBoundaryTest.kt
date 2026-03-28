@@ -7,6 +7,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.extension
 import kotlin.io.path.invariantSeparatorsPathString
+import kotlin.io.path.nameWithoutExtension
 
 class ArchitectureBoundaryTest {
     private val sourceRoot: Path = Paths.get("src/main")
@@ -441,6 +442,27 @@ class ArchitectureBoundaryTest {
             "game-server/src/main/resources/content/skills/smithing.toml",
             "game-server/src/main/resources/content/skills/farming.toml",
             "game-server/src/main/resources/content/skills/thieving.toml",
+            "game-server/src/main/resources/content/skills/guides/attack.toml",
+            "game-server/src/main/resources/content/skills/guides/defence.toml",
+            "game-server/src/main/resources/content/skills/guides/strength.toml",
+            "game-server/src/main/resources/content/skills/guides/hitpoints.toml",
+            "game-server/src/main/resources/content/skills/guides/ranged.toml",
+            "game-server/src/main/resources/content/skills/guides/prayer.toml",
+            "game-server/src/main/resources/content/skills/guides/magic.toml",
+            "game-server/src/main/resources/content/skills/guides/thieving.toml",
+            "game-server/src/main/resources/content/skills/guides/runecrafting.toml",
+            "game-server/src/main/resources/content/skills/guides/fishing.toml",
+            "game-server/src/main/resources/content/skills/guides/cooking.toml",
+            "game-server/src/main/resources/content/skills/guides/crafting.toml",
+            "game-server/src/main/resources/content/skills/guides/smithing.toml",
+            "game-server/src/main/resources/content/skills/guides/agility.toml",
+            "game-server/src/main/resources/content/skills/guides/woodcutting.toml",
+            "game-server/src/main/resources/content/skills/guides/mining.toml",
+            "game-server/src/main/resources/content/skills/guides/slayer.toml",
+            "game-server/src/main/resources/content/skills/guides/firemaking.toml",
+            "game-server/src/main/resources/content/skills/guides/herblore.toml",
+            "game-server/src/main/resources/content/skills/guides/fletching.toml",
+            "game-server/src/main/resources/content/skills/guides/farming.toml",
             "game-server/src/main/resources/content/skills/objects/crafting.toml",
             "game-server/src/main/resources/content/skills/objects/cooking.toml",
             "game-server/src/main/resources/content/skills/objects/smithing.toml",
@@ -586,6 +608,27 @@ class ArchitectureBoundaryTest {
             sourceRoot.resolve("resources/content/objects/travel.toml"),
             sourceRoot.resolve("resources/content/objects/banking.toml"),
             sourceRoot.resolve("resources/content/objects/partyroom.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/attack.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/defence.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/strength.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/hitpoints.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/ranged.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/prayer.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/magic.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/thieving.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/runecrafting.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/fishing.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/cooking.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/crafting.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/smithing.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/agility.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/woodcutting.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/mining.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/slayer.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/firemaking.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/herblore.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/fletching.toml"),
+            sourceRoot.resolve("resources/content/skills/guides/farming.toml"),
         )
         val missing = requiredResources.filterNot { Files.exists(it) }.map { it.toString() }
         assertTrue(
@@ -605,6 +648,7 @@ class ArchitectureBoundaryTest {
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/thieving/ThievingDefinitions.kt") to "SkillDataRegistry.thievingDefinitions",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/interfaces/magic/MagicComponents.kt") to "InterfaceMappingRegistry.magicData",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/interfaces/skillguide/SkillGuideComponents.kt") to "InterfaceMappingRegistry.skillGuideData",
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/guide/SkillGuideDefinitions.kt") to "SkillGuideDataRegistry.all",
             sourceRoot.resolve("kotlin/net/dodian/uber/game/content/objects/travel/TravelObjectComponents.kt") to "InterfaceMappingRegistry.travelData",
         )
         val violations = checks.mapNotNull { (path, marker) ->
@@ -635,6 +679,74 @@ class ArchitectureBoundaryTest {
         assertTrue(
             violations.isEmpty(),
             "Registry calls must use no-arg required accessors.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `skill guide toml skill ids match file keys`() {
+        val expectedSkillIdByKey = mapOf(
+            "attack" to 0,
+            "defence" to 1,
+            "strength" to 2,
+            "hitpoints" to 3,
+            "ranged" to 4,
+            "prayer" to 5,
+            "magic" to 6,
+            "cooking" to 7,
+            "woodcutting" to 8,
+            "fletching" to 9,
+            "fishing" to 10,
+            "firemaking" to 11,
+            "crafting" to 12,
+            "smithing" to 13,
+            "mining" to 14,
+            "herblore" to 15,
+            "agility" to 16,
+            "thieving" to 17,
+            "slayer" to 18,
+            "farming" to 19,
+            "runecrafting" to 20,
+        )
+
+        val guidesRoot = Paths.get("src/main/resources/content/skills/guides")
+        val violations = mutableListOf<String>()
+        Files.list(guidesRoot).use { stream ->
+            stream
+                .filter { Files.isRegularFile(it) && it.extension == "toml" }
+                .forEach { file ->
+                    val key = file.nameWithoutExtension
+                    val expected = expectedSkillIdByKey[key]
+                    if (expected == null) {
+                        violations += "Unexpected guide file key: $key"
+                        return@forEach
+                    }
+                    val skillIdLine =
+                        Files.readAllLines(file)
+                            .firstOrNull { it.trim().startsWith("skillId =") }
+                            ?: run {
+                                violations += "Missing skillId in $file"
+                                return@forEach
+                            }
+                    val actual = skillIdLine.substringAfter("=").trim().toIntOrNull()
+                    if (actual != expected) {
+                        violations += "$file -> skillId=$actual expected=$expected"
+                    }
+                }
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Guide TOML skillId/file-key mismatches detected.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `guide item id validation remains warn only`() {
+        val file = Paths.get("src/main/kotlin/net/dodian/uber/game/content/platform/ContentPlatformBootstrap.kt")
+        val text = Files.readString(file)
+        assertTrue(
+            text.contains("content/skills/guides/") && text.contains("ValidationSeverity.WARN"),
+            "Guide item validation must remain warn-only in content validation bootstrap.",
         )
     }
 }

@@ -209,15 +209,3 @@ oneDoseId = 2458
 twoDoseId = 2456
 threeDoseId = 2454
 fourDoseId = 2452
-
-[[potionDoseDefinitions]]
-oneDoseId = 12701
-twoDoseId = 12699
-threeDoseId = 12697
-fourDoseId = 12695
-
-[[potionDoseDefinitions]]
-oneDoseId = 11733
-twoDoseId = 11732
-threeDoseId = 11731
-fourDoseId = 11730

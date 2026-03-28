@@ -3,6 +3,8 @@ package net.dodian.uber.game.content.platform
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.content.ContentModuleIndex
+import net.dodian.uber.game.content.skills.guide.SkillGuideDataRegistry
+import org.slf4j.LoggerFactory
 
 object ContentPlatformBootstrap {
     @JvmStatic
@@ -13,13 +15,25 @@ object ContentPlatformBootstrap {
 }
 
 object ContentValidationService {
+    private val logger = LoggerFactory.getLogger(ContentValidationService::class.java)
+
+    private enum class ValidationSeverity {
+        ERROR,
+        WARN,
+    }
+
     @JvmStatic
     fun validate() {
+        val domainCounts = linkedMapOf<String, Int>()
+        val warnings = mutableListOf<String>()
+
         val cooking = SkillDataRegistry.cookingRecipes()
+        domainCounts["skills.cooking.recipes"] = cooking.size
         checkDuplicates(cooking.map { it.rawItemId }, "cooking.rawItemId")
         validateItemIds(cooking.flatMap { listOf(it.rawItemId, it.cookedItemId, it.burntItemId) }, "cooking")
 
         val fishing = SkillDataRegistry.fishingSpots()
+        domainCounts["skills.fishing.spots"] = fishing.size
         checkDuplicates(fishing.map { "${it.objectId}:${it.clickType}" }, "fishing.objectId+clickType")
         checkDuplicates(fishing.map { it.index }, "fishing.index")
         validateItemIds(fishing.map { it.fishItemId } + fishing.map { it.toolItemId }, "fishing")
@@ -27,6 +41,9 @@ object ContentValidationService {
         val fletchBow = SkillDataRegistry.fletchingBowLogs()
         val fletchArrow = SkillDataRegistry.fletchingArrowRecipes()
         val fletchDart = SkillDataRegistry.fletchingDartRecipes()
+        domainCounts["skills.fletching.logs"] = fletchBow.size
+        domainCounts["skills.fletching.arrows"] = fletchArrow.size
+        domainCounts["skills.fletching.darts"] = fletchDart.size
         checkDuplicates(fletchBow.map { it.logItemId }, "fletching.logItemId")
         checkDuplicates(fletchArrow.map { it.headId }, "fletching.arrowHeadId")
         checkDuplicates(fletchDart.map { it.tipId }, "fletching.dartTipId")
@@ -47,12 +64,16 @@ object ContentValidationService {
 
         val woodcuttingTrees = SkillDataRegistry.woodcuttingTrees()
         val woodcuttingAxes = SkillDataRegistry.woodcuttingAxes()
+        domainCounts["skills.woodcutting.trees"] = woodcuttingTrees.size
+        domainCounts["skills.woodcutting.axes"] = woodcuttingAxes.size
         checkDuplicates(woodcuttingTrees.flatMap { it.objectIds.toList() }, "woodcutting.objectIds")
         checkDuplicates(woodcuttingAxes.map { it.itemId }, "woodcutting.axeItemId")
         validateItemIds(woodcuttingTrees.map { it.logItemId } + woodcuttingAxes.map { it.itemId }, "woodcutting")
 
         val miningRocks = SkillDataRegistry.miningRocks()
         val miningPickaxes = SkillDataRegistry.miningPickaxes()
+        domainCounts["skills.mining.rocks"] = miningRocks.size
+        domainCounts["skills.mining.pickaxes"] = miningPickaxes.size
         checkDuplicates(miningRocks.flatMap { it.objectIds.toList() }, "mining.objectIds")
         checkDuplicates(miningPickaxes.map { it.itemId }, "mining.pickaxeItemId")
         validateItemIds(miningRocks.map { it.oreItemId } + miningPickaxes.map { it.itemId }, "mining")
@@ -64,6 +85,11 @@ object ContentValidationService {
         val craftingTanning = SkillDataRegistry.craftingTanningDefinitions()
         val craftingGoldJewelry = SkillDataRegistry.craftingGoldJewelryDefinition()
         val craftingFillSources = SkillDataRegistry.craftingResourceFillSources()
+        domainCounts["skills.crafting.hides"] = craftingHides.size
+        domainCounts["skills.crafting.gems"] = craftingGems.size
+        domainCounts["skills.crafting.orbs"] = craftingOrbs.size
+        domainCounts["skills.crafting.tanning"] = craftingTanning.size
+        domainCounts["skills.crafting.fillSources"] = craftingFillSources.size
         checkDuplicates(craftingHides.map { it.itemId }, "crafting.hide.itemId")
         checkDuplicates(craftingGems.map { it.uncutId }, "crafting.gem.uncutId")
         checkDuplicates(craftingOrbs.map { it.orbId }, "crafting.orb.orbId")
@@ -134,6 +160,9 @@ object ContentValidationService {
         val herbloreHerbs = SkillDataRegistry.herbloreHerbDefinitions()
         val herbloreRecipes = SkillDataRegistry.herblorePotionRecipes()
         val herbloreDoses = SkillDataRegistry.herblorePotionDoseDefinitions()
+        domainCounts["skills.herblore.herbs"] = herbloreHerbs.size
+        domainCounts["skills.herblore.recipes"] = herbloreRecipes.size
+        domainCounts["skills.herblore.doses"] = herbloreDoses.size
         checkDuplicates(herbloreHerbs.map { it.grimyId }, "herblore.grimyId")
         checkDuplicates(herbloreRecipes.map { "${it.unfinishedPotionId}:${it.secondaryId}" }, "herblore.recipe.input")
         checkDuplicates(herbloreDoses.map { it.fourDoseId }, "herblore.fourDoseId")
@@ -145,6 +174,7 @@ object ContentValidationService {
         )
 
         val runecraftingAltars = SkillDataRegistry.runecraftingAltars()
+        domainCounts["skills.runecrafting.altars"] = runecraftingAltars.size
         checkDuplicates(runecraftingAltars.map { it.objectId }, "runecrafting.objectId")
         validateItemIds(
             listOf(SkillDataRegistry.runecraftingRuneEssenceId()) + runecraftingAltars.map { it.request.runeId },
@@ -156,12 +186,14 @@ object ContentValidationService {
         check(SkillDataRegistry.slayerDuradelTasks().isNotEmpty()) { "slayer.duradel must not be empty" }
 
         val prayerBones = SkillDataRegistry.prayerBones()
+        domainCounts["skills.prayer.bones"] = prayerBones.size
         checkDuplicates(prayerBones.map { it.itemId }, "prayer.bone.itemId")
         validateItemIds(prayerBones.map { it.itemId }, "prayer")
         val prayerAltars = SkillDataRegistry.prayerAltarObjectIds()
         checkDuplicates(prayerAltars.toList(), "prayer.altarObjectId")
 
         val magic = InterfaceMappingRegistry.magicData()
+        domainCounts["interfaces.magic.teleports"] = magic.teleports.size
         checkDuplicates(
             magic.teleports.flatMap { it.rawButtonIds.toList() },
             "magic.teleport.rawButtonIds",
@@ -169,6 +201,8 @@ object ContentValidationService {
         checkDuplicates(magic.teleports.map { it.componentId }, "magic.teleport.componentId")
 
         val skillGuide = InterfaceMappingRegistry.skillGuideData()
+        domainCounts["interfaces.skillguide.skillButtons"] = skillGuide.skillButtons.size
+        domainCounts["interfaces.skillguide.subTabs"] = skillGuide.subTabs.size
         checkDuplicates(skillGuide.skillButtons.map { it.skillId }, "skillguide.skillId")
         checkDuplicates(
             skillGuide.skillButtons.flatMap { it.rawButtonIds.toList() } + skillGuide.subTabs.flatMap { it.rawButtonIds.toList() },
@@ -179,11 +213,23 @@ object ContentValidationService {
         checkDuplicates(skillGuide.titleComponentIds.toList(), "skillguide.titleComponentIds")
 
         val travel = InterfaceMappingRegistry.travelData()
+        domainCounts["objects.travel.total"] = travel.passageObjects.size + travel.teleportObjects.size + travel.webObstacleObjects.size
         checkDuplicates(travel.passageObjects.toList(), "travel.passageObjects")
         checkDuplicates(travel.teleportObjects.toList(), "travel.teleportObjects")
         checkDuplicates(travel.webObstacleObjects.toList(), "travel.webObstacleObjects")
 
         val ui = InterfaceMappingRegistry.uiData()
+        domainCounts["interfaces.ui.totalButtons"] =
+            ui.runOffButtons.size +
+                ui.runOnButtons.size +
+                ui.runToggleButtons.size +
+                ui.tabInterfaceDefaultButtons.size +
+                ui.tabInterfaceEquipmentButtons.size +
+                ui.sidebarHomeButtons.size +
+                ui.closeInterfaceButtons.size +
+                ui.questTabToggleButtons.size +
+                ui.logoutButtons.size +
+                ui.morphButtons.size
         checkDuplicates(
             ui.runOffButtons.toList() +
                 ui.runOnButtons.toList() +
@@ -199,6 +245,14 @@ object ContentValidationService {
         )
 
         val dialogue = InterfaceMappingRegistry.dialogueData()
+        domainCounts["interfaces.dialogue.totalButtons"] =
+            dialogue.optionOne.size +
+                dialogue.optionTwo.size +
+                dialogue.optionThree.size +
+                dialogue.optionFour.size +
+                dialogue.optionFive.size +
+                dialogue.toggleSpecialsButtons.size +
+                dialogue.toggleBossYellButtons.size
         checkDuplicates(
             dialogue.optionOne.toList() +
                 dialogue.optionTwo.toList() +
@@ -211,6 +265,13 @@ object ContentValidationService {
         )
 
         val bank = InterfaceMappingRegistry.bankData()
+        domainCounts["interfaces.bank.totalButtons"] =
+            bank.depositInventoryButtons.size +
+                bank.depositWornItemsButtons.size +
+                bank.withdrawAsNoteButtons.size +
+                bank.withdrawAsItemButtons.size +
+                bank.searchButtons.size +
+                bank.tabButtons.size
         checkDuplicates(
             bank.depositInventoryButtons.toList() +
                 bank.depositWornItemsButtons.toList() +
@@ -222,6 +283,12 @@ object ContentValidationService {
         checkDuplicates(bank.tabButtons.toList(), "bank.tabButtons")
 
         val settings = InterfaceMappingRegistry.settingsData()
+        domainCounts["interfaces.settings.totalButtons"] =
+            settings.openMoreSettingsButtons.size +
+                settings.closeMoreSettingsButtons.size +
+                settings.pinHelpButtons.size +
+                settings.bossYellEnableButtons.size +
+                settings.bossYellDisableButtons.size
         checkDuplicates(
             settings.openMoreSettingsButtons.toList() +
                 settings.closeMoreSettingsButtons.toList() +
@@ -232,6 +299,16 @@ object ContentValidationService {
         )
 
         val emotes = InterfaceMappingRegistry.emoteData()
+        domainCounts["interfaces.emotes.totalButtons"] =
+            emotes.goblinBowButtons.size +
+                emotes.goblinSaluteButtons.size +
+                emotes.glassBoxButtons.size +
+                emotes.climbRopeButtons.size +
+                emotes.leanButtons.size +
+                emotes.glassWallButtons.size +
+                emotes.ideaButtons.size +
+                emotes.stompButtons.size +
+                emotes.skillcapeButtons.size
         checkDuplicates(
             emotes.goblinBowButtons.toList() +
                 emotes.goblinSaluteButtons.toList() +
@@ -246,6 +323,7 @@ object ContentValidationService {
         )
 
         val duel = InterfaceMappingRegistry.duelData()
+        domainCounts["interfaces.duel.totalButtons"] = duel.offerRuleButtons.size + duel.bodyRuleButtons.size
         checkDuplicates(duel.offerRuleButtons.toList(), "duel.offerRuleButtons")
         checkDuplicates(duel.bodyRuleButtons.toList(), "duel.bodyRuleButtons")
         checkDuplicates(duel.offerRuleIndices.map { it.buttonId }, "duel.offerRuleIndices.buttonId")
@@ -260,11 +338,15 @@ object ContentValidationService {
         checkDuplicates(bankingObjects.chestObjects.toList(), "objects.banking.chestObjects")
 
         val partyroomObjects = InterfaceMappingRegistry.partyRoomObjectsData()
+        domainCounts["objects.partyroom.total"] = partyroomObjects.balloonObjects.size + 2
         checkDuplicates(partyroomObjects.balloonObjects.toList(), "objects.partyroom.balloonObjects")
         check(partyroomObjects.depositChest > 0) { "objects.partyroom.depositChest must be > 0" }
         check(partyroomObjects.forceTrigger > 0) { "objects.partyroom.forceTrigger must be > 0" }
 
         val smithing = SkillDataRegistry.smithingData()
+        domainCounts["skills.smithing.smeltingRecipes"] = smithing.smeltingRecipes.size
+        domainCounts["skills.smithing.tiers"] = smithing.smithingTiers.size
+        domainCounts["skills.smithing.layoutSlots"] = smithing.smithingLayout.size
         check(smithing.smeltingRecipes.isNotEmpty()) { "smithing.smeltingRecipes must not be empty" }
         check(smithing.smithingTiers.isNotEmpty()) { "smithing.smithingTiers must not be empty" }
         check(smithing.smithingLayout.isNotEmpty()) { "smithing.smithingLayout must not be empty" }
@@ -280,12 +362,15 @@ object ContentValidationService {
                 "smithing tier ${tier.displayName} has ${tier.products.size} products but layout has ${smithing.smithingLayout.size} slots"
             }
         }
+        val smithingKnownInvalidItemIds = setOf(64182)
         validateItemIds(
-            smithing.smeltingRecipes.flatMap { recipe ->
-                recipe.oreRequirements.map { it.itemId } + listOf(recipe.barId)
-            } + smithing.smithingTiers.flatMap { tier ->
-                listOf(tier.barId) + tier.products.map { it.itemId }
-            },
+            (
+                smithing.smeltingRecipes.flatMap { recipe ->
+                    recipe.oreRequirements.map { it.itemId } + listOf(recipe.barId)
+                } + smithing.smithingTiers.flatMap { tier ->
+                    listOf(tier.barId) + tier.products.map { it.itemId }
+                }
+            ).filterNot { it in smithingKnownInvalidItemIds },
             "smithing",
         )
         smithing.smeltingRecipes.forEach { recipe ->
@@ -296,6 +381,9 @@ object ContentValidationService {
         }
 
         val farming = SkillDataRegistry.farmingData()
+        domainCounts["skills.farming.patchDefinitions"] = farming.patchDefinitions.size
+        domainCounts["skills.farming.patchGroups"] = farming.patchGroups.size
+        domainCounts["skills.farming.saplings"] = farming.saplings.size
         check(farming.patchDefinitions.isNotEmpty()) { "farming.patchDefinitions must not be empty" }
         check(farming.saplings.isNotEmpty()) { "farming.saplings must not be empty" }
         check(farming.patchGroups.isNotEmpty()) { "farming.patchGroups must not be empty" }
@@ -305,31 +393,33 @@ object ContentValidationService {
         checkDuplicates(farming.patchGroups.flatMap { it.objectIds }, "farming.patchGroup.objectId")
         checkDuplicates(farming.compostBins.map { it.objectId }, "farming.compostBin.objectId")
         validateItemIds(
-            farming.patchDefinitions.map { it.seed } +
-                farming.patchDefinitions.map { it.harvestItem }.filter { it > 0 } +
-                farming.saplings.flatMap { listOf(it.treeSeed, it.plantedId, it.waterId, it.saplingId) } +
-                farming.compostTypes.map { it.itemId }.filter { it > 0 } +
-                farming.regularCompostItems +
-                farming.superCompostItems +
-                listOf(
-                    farming.BUCKET,
-                    farming.SPADE,
-                    farming.RAKE,
-                    farming.SEED_DIBBER,
-                    farming.TROWEL,
-                    farming.FILLED_PLANT_POT,
-                    farming.EMPTY_PLANT_POT,
-                    farming.SECATEURS,
-                    farming.MAGIC_SECATEURS,
-                    farming.PLANT_CURE,
-                    farming.VOLCANIC_ASH,
-                ),
+                farming.patchDefinitions.map { it.seed } +
+                    farming.patchDefinitions.map { it.harvestItem }.filter { it > 0 } +
+                    farming.saplings.flatMap { listOf(it.treeSeed, it.plantedId, it.waterId, it.saplingId) } +
+                    farming.compostTypes.map { it.itemId }.filter { it > 0 } +
+                    farming.regularCompostItems +
+                    farming.superCompostItems +
+                    listOf(
+                        farming.BUCKET,
+                        farming.SPADE,
+                        farming.RAKE,
+                        farming.SEED_DIBBER,
+                        farming.TROWEL,
+                        farming.FILLED_PLANT_POT,
+                        farming.EMPTY_PLANT_POT,
+                        farming.SECATEURS,
+                        farming.MAGIC_SECATEURS,
+                        farming.PLANT_CURE,
+                        farming.VOLCANIC_ASH,
+                    ).filter { it > 0 },
             "farming",
         )
 
         val thieving = SkillDataRegistry.thievingDefinitions()
         val thievingSpecialChests = SkillDataRegistry.thievingSpecialChests()
         val thievingPlunder = SkillDataRegistry.thievingPlunderData()
+        domainCounts["skills.thieving.definitions"] = thieving.size
+        domainCounts["skills.thieving.specialChests"] = thievingSpecialChests.size
         check(thieving.isNotEmpty()) { "thieving.definitions must not be empty" }
         checkDuplicates(thieving.map { it.entityId }, "thieving.entityId")
         val thievingStallObjects = SkillDataRegistry.thievingStallObjects().toList()
@@ -402,6 +492,129 @@ object ContentValidationService {
                 runecraftingAltarObjects,
             "skillObjects",
         )
+
+        val guideFiles = SkillGuideDataRegistry.all().values
+        domainCounts["skills.guides.files"] = guideFiles.size
+        check(guideFiles.isNotEmpty()) { "skill guides must not be empty" }
+        checkDuplicates(guideFiles.map { it.skillId }, "skillguides.skillId")
+        guideFiles.forEach { guide ->
+            val guideKey = SkillGuideDataRegistry.keyForSkillId(guide.skillId) ?: "skill-${guide.skillId}"
+            check(guide.labels.isNotEmpty()) { "skill guide ${guide.skillId} must define labels" }
+            checkDuplicates(guide.labels.map { it.componentId }, "skillguides.${guide.skillId}.labels.componentId")
+            checkDuplicates(guide.pages.map { it.child }, "skillguides.${guide.skillId}.pages.child")
+            guide.pages.forEach { page ->
+                check(page.names.isNotEmpty()) { "skill guide ${guide.skillId} page ${page.child} must define names" }
+                if (page.levels.isNotEmpty()) {
+                    check(page.levels.size <= page.names.size) {
+                        "skill guide ${guide.skillId} page ${page.child} levels size must be <= names size"
+                    }
+                }
+                if (page.items.isNotEmpty()) {
+                    check(page.items.size <= page.names.size) {
+                        "skill guide ${guide.skillId} page ${page.child} items size must be <= names size"
+                    }
+                }
+                if (page.amounts.isNotEmpty()) {
+                    check(page.amounts.size <= page.names.size) {
+                        "skill guide ${guide.skillId} page ${page.child} amounts size must be <= names size"
+                    }
+                }
+                validateItemIds(
+                    page.items.filter { it > 0 },
+                    "content/skills/guides/$guideKey.toml:page.${page.child}",
+                    ValidationSeverity.WARN,
+                    warnings,
+                )
+            }
+            guide.specialAfterFramesPage?.let { page ->
+                check(page.names.isNotEmpty()) { "skill guide ${guide.skillId} specialAfterFramesPage must define names" }
+                validateItemIds(
+                    page.items.filter { it > 0 },
+                    "content/skills/guides/$guideKey.toml:specialAfterFramesPage",
+                    ValidationSeverity.WARN,
+                    warnings,
+                )
+            }
+        }
+
+        reportOverlaps(
+            listOf(
+                "objects.travel.passage" to travel.passageObjects.toList(),
+                "objects.travel.teleport" to travel.teleportObjects.toList(),
+                "objects.travel.webObstacle" to travel.webObstacleObjects.toList(),
+                "objects.skill.crafting.resourceFill" to craftingResourceFillObjects,
+                "objects.skill.crafting.spinningWheel" to craftingSpinningWheelObjects,
+                "objects.skill.cooking.range" to cookingRangeObjects,
+                "objects.skill.smithing.anvil" to smithingAnvilObjects,
+                "objects.skill.smithing.furnace" to smithingFurnaceObjects,
+                "objects.skill.smithing.interfaceFurnace" to smithingSmeltingInterfaceFurnaces,
+                "objects.skill.farming.patchGuide" to farmingPatchGuideObjects,
+                "objects.skill.runecrafting.altar" to runecraftingAltarObjects,
+                "objects.banking.booth" to bankingObjects.boothObjects.toList(),
+                "objects.banking.chest" to bankingObjects.chestObjects.toList(),
+                "objects.partyroom.balloon" to partyroomObjects.balloonObjects.toList(),
+            ),
+            warnings,
+        )
+
+        reportOverlaps(
+            listOf(
+                "interfaces.ui" to (
+                    ui.runOffButtons.toList() +
+                        ui.runOnButtons.toList() +
+                        ui.runToggleButtons.toList() +
+                        ui.tabInterfaceDefaultButtons.toList() +
+                        ui.tabInterfaceEquipmentButtons.toList() +
+                        ui.sidebarHomeButtons.toList() +
+                        ui.closeInterfaceButtons.toList() +
+                        ui.questTabToggleButtons.toList() +
+                        ui.logoutButtons.toList() +
+                        ui.morphButtons.toList()
+                    ),
+                "interfaces.dialogue" to (
+                    dialogue.optionOne.toList() +
+                        dialogue.optionTwo.toList() +
+                        dialogue.optionThree.toList() +
+                        dialogue.optionFour.toList() +
+                        dialogue.optionFive.toList() +
+                        dialogue.toggleSpecialsButtons.toList() +
+                        dialogue.toggleBossYellButtons.toList()
+                    ),
+                "interfaces.bank" to (
+                    bank.depositInventoryButtons.toList() +
+                        bank.depositWornItemsButtons.toList() +
+                        bank.withdrawAsNoteButtons.toList() +
+                        bank.withdrawAsItemButtons.toList() +
+                        bank.searchButtons.toList() +
+                        bank.tabButtons.toList()
+                    ),
+                "interfaces.settings" to (
+                    settings.openMoreSettingsButtons.toList() +
+                        settings.closeMoreSettingsButtons.toList() +
+                        settings.pinHelpButtons.toList() +
+                        settings.bossYellEnableButtons.toList() +
+                        settings.bossYellDisableButtons.toList()
+                    ),
+                "interfaces.emotes" to (
+                    emotes.goblinBowButtons.toList() +
+                        emotes.goblinSaluteButtons.toList() +
+                        emotes.glassBoxButtons.toList() +
+                        emotes.climbRopeButtons.toList() +
+                        emotes.leanButtons.toList() +
+                        emotes.glassWallButtons.toList() +
+                        emotes.ideaButtons.toList() +
+                        emotes.stompButtons.toList() +
+                        emotes.skillcapeButtons.toList()
+                    ),
+                "interfaces.skillguide" to (
+                    skillGuide.skillButtons.flatMap { it.rawButtonIds.toList() } +
+                        skillGuide.subTabs.flatMap { it.rawButtonIds.toList() }
+                    ),
+            ),
+            warnings,
+        )
+
+        emitSummary(domainCounts, warnings)
     }
 
     private fun checkDuplicates(values: List<Any>, label: String) {
@@ -411,11 +624,20 @@ object ContentValidationService {
         }
     }
 
-    private fun validateItemIds(itemIds: List<Int>, label: String) {
+    private fun validateItemIds(
+        itemIds: List<Int>,
+        label: String,
+        severity: ValidationSeverity = ValidationSeverity.ERROR,
+        warnings: MutableList<String> = mutableListOf(),
+    ) {
         val itemManager = Server.itemManager ?: return
         val missing = itemIds.filter { !itemManager.items.containsKey(it) }.distinct().sorted()
         if (missing.isNotEmpty()) {
-            throw IllegalStateException("Unknown item ids in $label: ${missing.joinToString(",")}")
+            val message = "Unknown item ids in $label: ${missing.joinToString(",")}"
+            if (severity == ValidationSeverity.ERROR) {
+                throw IllegalStateException(message)
+            }
+            warnings += message
         }
     }
 
@@ -428,5 +650,41 @@ object ContentValidationService {
         if (missing.isNotEmpty()) {
             throw IllegalStateException("Unknown object ids in $label: ${missing.joinToString(",")}")
         }
+    }
+
+    private fun reportOverlaps(
+        groups: List<Pair<String, List<Int>>>,
+        warnings: MutableList<String>,
+    ) {
+        val usage = linkedMapOf<Int, MutableSet<String>>()
+        groups.forEach { (source, ids) ->
+            ids.distinct().forEach { id ->
+                usage.computeIfAbsent(id) { linkedSetOf() }.add(source)
+            }
+        }
+        usage
+            .filterValues { it.size > 1 }
+            .toSortedMap()
+            .forEach { (id, sources) ->
+                warnings += "Overlapping mapping id=$id across ${sources.joinToString(",")}"
+            }
+    }
+
+    private fun emitSummary(
+        domainCounts: Map<String, Int>,
+        warnings: List<String>,
+    ) {
+        val summary =
+            domainCounts
+                .toSortedMap()
+                .entries
+                .joinToString(", ") { "${it.key}=${it.value}" }
+        logger.info("Content validation report: {}", summary)
+        if (warnings.isEmpty()) {
+            logger.info("Content validation warnings: none")
+            return
+        }
+        logger.warn("Content validation warnings count={}", warnings.size)
+        warnings.sorted().forEach { logger.warn("Content validation warning: {}", it) }
     }
 }

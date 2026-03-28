@@ -41,13 +41,6 @@ experience = 1075
 baseDelayMs = 8200
 
 [[axes]]
-itemId = 20011
-requiredLevel = 61
-speedBonus = 0.8
-animationId = 2846
-dragonTierBoostEligible = true
-
-[[axes]]
 itemId = 6739
 requiredLevel = 61
 speedBonus = 0.8

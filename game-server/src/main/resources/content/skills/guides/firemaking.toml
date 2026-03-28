@@ -1,0 +1,12 @@
+skillId = 11
+hideComponents = [8825,8813]
+
+[[labels]]
+componentId = 8846
+text = "Firemaking"
+
+[[pages]]
+child = 0
+names = ["Logs","Oak logs","Willow logs","Maple logs","Yew logs","Magic logs","Skillcape @red@(Premium only)"]
+levels = ["1","15","30","45","60","75","99"]
+items = [1511,1521,1519,1517,1515,1513,9804]

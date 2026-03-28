@@ -1,0 +1,20 @@
+skillId = 0
+
+[[labels]]
+componentId = 8846
+text = "Attack"
+[[labels]]
+componentId = 8823
+text = "Defence"
+[[labels]]
+componentId = 8824
+text = "Range"
+[[labels]]
+componentId = 8827
+text = "Magic"
+
+[[pages]]
+child = 0
+names = ["Abyssal Whip","Bronze","Iron","Steel","Elemental battlestaff","Mithril","Adamant","Rune","Wolfbane","Keris","Unholy book","Unholy blessing","Granite longsword","Obsidian weapon","Dragon","Verac's flail","Torag's hammers","Skillcape @red@(Premium only)"]
+levels = ["1","1","1","10","20","20","30","40","40","40","45","45","50","55","60","70","70","99"]
+items = [4151,1291,1293,1295,1395,1299,1301,1303,2952,10581,3842,4153,6528,6523,1305,4755,4747,9747]

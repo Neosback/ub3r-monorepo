@@ -213,7 +213,7 @@ rawButtonIds = [3988,15148]
 
 [[smeltingRecipes]]
 barId = 2355
-name = "BAR_2355"
+name = "Silver"
 levelRequired = 20
 experience = 280
 [[smeltingRecipes.oreRequirements]]
@@ -258,7 +258,7 @@ rawButtonIds = [3996,15156]
 
 [[smeltingRecipes]]
 barId = 2357
-name = "BAR_2357"
+name = "Gold"
 levelRequired = 40
 experience = 460
 [[smeltingRecipes.oreRequirements]]

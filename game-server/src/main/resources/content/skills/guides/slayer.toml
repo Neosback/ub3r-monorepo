@@ -1,0 +1,30 @@
+skillId = 18
+hideComponents = [8825]
+
+[[labels]]
+componentId = 8846
+text = "Master"
+[[labels]]
+componentId = 8823
+text = "Monsters"
+[[labels]]
+componentId = 8824
+text = "Misc"
+
+[[pages]]
+child = 0
+names = ["Mazchna (level 3 combat)","Vannaka (level 3 combat)","Duradel (level 50 combat)"]
+levels = ["1","50","50"]
+items = [4155]
+
+[[pages]]
+child = 1
+names = ["Crawling hands","Pyrefiend","Albino bat","Death spawn","Jelly","Head mourner","Jungle horrors","Skeletal hellhound","Lesser demon","Bloodvelds","Greater demon","Black demon","Gargoyles","Cave horrors","Berserker Spirit","Aberrant Spectres","Tzhaar","Mithril Dragon","Abyssal demon","Dagannoth Prime"]
+levels = ["1","20","25","30","30","45","45","50","50","53","55","60","63","65","70","73","80","83","85","86"]
+items = [4133,4138,-1,-1,4142,-1,-1,-1,-1,4141,-1,-1,4147,8900,-1,4144,-1,-1,4149,-1]
+
+[[pages]]
+child = 2
+names = ["Skillcape @red@(Premium only)"]
+levels = ["99"]
+items = [9786]

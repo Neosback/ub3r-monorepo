@@ -1,3 +1,5 @@
+randomGemDropTable = [1623,1623,1623,1621,1621,1619,1617]
+
 [[rocks]]
 name = "Rune essence"
 objectIds = [7471]
@@ -90,22 +92,6 @@ restThreshold = 4
 category = "STANDARD"
 
 [[pickaxes]]
-name = "3rd age"
-itemId = 20014
-requiredLevel = 61
-speedBonus = 0.8
-animationId = 7139
-dragonTierBoostEligible = true
-
-[[pickaxes]]
-name = "Dragon"
-itemId = 11920
-requiredLevel = 61
-speedBonus = 0.8
-animationId = 7139
-dragonTierBoostEligible = true
-
-[[pickaxes]]
 name = "Rune"
 itemId = 1275
 requiredLevel = 41
@@ -126,14 +112,6 @@ name = "Steel"
 itemId = 1273
 requiredLevel = 21
 speedBonus = 0.24
-animationId = 629
-dragonTierBoostEligible = false
-
-[[pickaxes]]
-name = "Black"
-itemId = 12297
-requiredLevel = 11
-speedBonus = 0.15
 animationId = 629
 dragonTierBoostEligible = false
 
@@ -160,5 +138,3 @@ requiredLevel = 1
 speedBonus = 0.04
 animationId = 625
 dragonTierBoostEligible = false
-
-randomGemDropTable = [1623,1623,1623,1621,1621,1619,1617]
