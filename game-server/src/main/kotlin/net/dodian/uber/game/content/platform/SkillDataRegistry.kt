@@ -59,6 +59,10 @@ private data class CraftingDataFile(
     val tanningDefinitions: List<TanningDefinition> = emptyList(),
     val goldJewelry: GoldJewelryDefinitionData = GoldJewelryDefinitionData(),
     val resourceFillSources: List<ResourceFillSourceDefinition> = emptyList(),
+    val tanningHeaderStrings: List<ComponentTextDefinition> = emptyList(),
+    val tanningHigherTierLabelIds: List<Int> = emptyList(),
+    val tanningInterfaceModels: List<InterfaceModelDefinition> = emptyList(),
+    val tanningInterfaceId: Int = 14670,
 )
 
 private data class HerbloreDataFile(
@@ -98,6 +102,17 @@ data class ResourceFillSourceDefinition(
     val sourceKey: String,
     val objectIds: List<Int> = emptyList(),
     val entries: List<FillItemDefinition> = emptyList(),
+)
+
+data class ComponentTextDefinition(
+    val componentId: Int,
+    val text: String,
+)
+
+data class InterfaceModelDefinition(
+    val componentId: Int,
+    val zoom: Int,
+    val itemId: Int,
 )
 
 data class SmithingLayoutSlot(
@@ -448,6 +463,22 @@ object SkillDataRegistry {
     @JvmStatic
     fun craftingResourceFillSources(): List<ResourceFillSourceDefinition> =
         (craftingOverride ?: ContentDataLoader.loadRequired<CraftingDataFile>("content/skills/crafting.toml").also { craftingOverride = it }).resourceFillSources
+
+    @JvmStatic
+    fun craftingTanningHeaderStrings(): List<ComponentTextDefinition> =
+        (craftingOverride ?: ContentDataLoader.loadRequired<CraftingDataFile>("content/skills/crafting.toml").also { craftingOverride = it }).tanningHeaderStrings
+
+    @JvmStatic
+    fun craftingTanningHigherTierLabelIds(): IntArray =
+        (craftingOverride ?: ContentDataLoader.loadRequired<CraftingDataFile>("content/skills/crafting.toml").also { craftingOverride = it }).tanningHigherTierLabelIds.toIntArray()
+
+    @JvmStatic
+    fun craftingTanningInterfaceModels(): List<InterfaceModelDefinition> =
+        (craftingOverride ?: ContentDataLoader.loadRequired<CraftingDataFile>("content/skills/crafting.toml").also { craftingOverride = it }).tanningInterfaceModels
+
+    @JvmStatic
+    fun craftingTanningInterfaceId(): Int =
+        (craftingOverride ?: ContentDataLoader.loadRequired<CraftingDataFile>("content/skills/crafting.toml").also { craftingOverride = it }).tanningInterfaceId
 
     @JvmStatic
     fun herbloreHerbDefinitions(): List<HerbDefinition> =

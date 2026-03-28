@@ -1,6 +1,10 @@
 package net.dodian.uber.game.content.objects.banking
 
+import net.dodian.uber.game.content.platform.InterfaceMappingRegistry
+
 object BankingObjectComponents {
-    val boothObjects = intArrayOf(2213, 2214, 3045, 5276, 6084, 25808)
-    val chestObjects = intArrayOf(6943, 6948, 9391)
+    val boothObjects: IntArray
+        get() = InterfaceMappingRegistry.bankingObjectsData().boothObjects
+    val chestObjects: IntArray
+        get() = InterfaceMappingRegistry.bankingObjectsData().chestObjects
 }

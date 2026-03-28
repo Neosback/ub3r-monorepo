@@ -298,3 +298,69 @@ objectIds = [884,878,6249]
 emptyItemId = 1925
 filledItemId = 1929
 emote = 832
+
+[[tanningHeaderStrings]]
+componentId = 14777
+text = "Regular Leather"
+
+[[tanningHeaderStrings]]
+componentId = 14785
+text = "50gp"
+
+[[tanningHeaderStrings]]
+componentId = 14781
+text = ""
+
+[[tanningHeaderStrings]]
+componentId = 14789
+text = ""
+
+[[tanningHeaderStrings]]
+componentId = 14778
+text = ""
+
+[[tanningHeaderStrings]]
+componentId = 14786
+text = ""
+
+[[tanningHeaderStrings]]
+componentId = 14782
+text = ""
+
+[[tanningHeaderStrings]]
+componentId = 14790
+text = ""
+
+tanningHigherTierLabelIds = [14779,14787,14783,14791,14780,14788,14784,14792]
+
+[[tanningInterfaceModels]]
+componentId = 14769
+zoom = 250
+itemId = 1741
+
+[[tanningInterfaceModels]]
+componentId = 14773
+zoom = 250
+itemId = -1
+
+[[tanningInterfaceModels]]
+componentId = 14771
+zoom = 250
+itemId = 1753
+
+[[tanningInterfaceModels]]
+componentId = 14772
+zoom = 250
+itemId = 1751
+
+[[tanningInterfaceModels]]
+componentId = 14775
+zoom = 250
+itemId = 1749
+
+[[tanningInterfaceModels]]
+componentId = 14776
+zoom = 250
+itemId = 1747
+
+tanningInterfaceId = 14670

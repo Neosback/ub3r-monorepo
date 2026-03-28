@@ -1,0 +1,7 @@
+optionOne = [2461,9157,9167,9178,9190]
+optionTwo = [2462,9158,9168,9179,9191]
+optionThree = [9169,9180,9192]
+optionFour = [9181,9193]
+optionFive = [9194]
+toggleSpecialsButtons = [150]
+toggleBossYellButtons = [151]

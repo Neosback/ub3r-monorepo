@@ -102,6 +102,15 @@ object ContentValidationService {
             check(source.objectIds.isNotEmpty()) { "crafting resource fill source ${source.sourceKey} must define objectIds" }
             check(source.entries.isNotEmpty()) { "crafting resource fill source ${source.sourceKey} must define entries" }
         }
+        val tanningHeaderStrings = SkillDataRegistry.craftingTanningHeaderStrings()
+        val tanningLabelIds = SkillDataRegistry.craftingTanningHigherTierLabelIds().toList()
+        val tanningModels = SkillDataRegistry.craftingTanningInterfaceModels()
+        check(tanningHeaderStrings.isNotEmpty()) { "crafting.tanningHeaderStrings must not be empty" }
+        check(tanningLabelIds.isNotEmpty() && tanningLabelIds.size % 2 == 0) { "crafting.tanningHigherTierLabelIds must have even non-zero size" }
+        check(tanningModels.isNotEmpty()) { "crafting.tanningInterfaceModels must not be empty" }
+        checkDuplicates(tanningHeaderStrings.map { it.componentId }, "crafting.tanningHeaderStrings.componentId")
+        checkDuplicates(tanningLabelIds, "crafting.tanningHigherTierLabelIds")
+        checkDuplicates(tanningModels.map { it.componentId }, "crafting.tanningInterfaceModels.componentId")
         validateItemIds(
             craftingHides.flatMap { listOf(it.itemId, it.glovesId, it.chapsId, it.bodyId) } +
                 craftingGems.flatMap { listOf(it.uncutId, it.cutId) } +
@@ -165,11 +174,95 @@ object ContentValidationService {
             skillGuide.skillButtons.flatMap { it.rawButtonIds.toList() } + skillGuide.subTabs.flatMap { it.rawButtonIds.toList() },
             "skillguide.rawButtonIds",
         )
+        checkDuplicates(skillGuide.baselineHidden.toList(), "skillguide.baselineHidden")
+        checkDuplicates(skillGuide.baselineShown.toList(), "skillguide.baselineShown")
+        checkDuplicates(skillGuide.titleComponentIds.toList(), "skillguide.titleComponentIds")
 
         val travel = InterfaceMappingRegistry.travelData()
         checkDuplicates(travel.passageObjects.toList(), "travel.passageObjects")
         checkDuplicates(travel.teleportObjects.toList(), "travel.teleportObjects")
         checkDuplicates(travel.webObstacleObjects.toList(), "travel.webObstacleObjects")
+
+        val ui = InterfaceMappingRegistry.uiData()
+        checkDuplicates(
+            ui.runOffButtons.toList() +
+                ui.runOnButtons.toList() +
+                ui.runToggleButtons.toList() +
+                ui.tabInterfaceDefaultButtons.toList() +
+                ui.tabInterfaceEquipmentButtons.toList() +
+                ui.sidebarHomeButtons.toList() +
+                ui.closeInterfaceButtons.toList() +
+                ui.questTabToggleButtons.toList() +
+                ui.logoutButtons.toList() +
+                ui.morphButtons.toList(),
+            "ui.buttonIds",
+        )
+
+        val dialogue = InterfaceMappingRegistry.dialogueData()
+        checkDuplicates(
+            dialogue.optionOne.toList() +
+                dialogue.optionTwo.toList() +
+                dialogue.optionThree.toList() +
+                dialogue.optionFour.toList() +
+                dialogue.optionFive.toList() +
+                dialogue.toggleSpecialsButtons.toList() +
+                dialogue.toggleBossYellButtons.toList(),
+            "dialogue.buttonIds",
+        )
+
+        val bank = InterfaceMappingRegistry.bankData()
+        checkDuplicates(
+            bank.depositInventoryButtons.toList() +
+                bank.depositWornItemsButtons.toList() +
+                bank.withdrawAsNoteButtons.toList() +
+                bank.withdrawAsItemButtons.toList() +
+                bank.searchButtons.toList(),
+            "bank.buttonIds",
+        )
+        checkDuplicates(bank.tabButtons.toList(), "bank.tabButtons")
+
+        val settings = InterfaceMappingRegistry.settingsData()
+        checkDuplicates(
+            settings.openMoreSettingsButtons.toList() +
+                settings.closeMoreSettingsButtons.toList() +
+                settings.pinHelpButtons.toList() +
+                settings.bossYellEnableButtons.toList() +
+                settings.bossYellDisableButtons.toList(),
+            "settings.buttonIds",
+        )
+
+        val emotes = InterfaceMappingRegistry.emoteData()
+        checkDuplicates(
+            emotes.goblinBowButtons.toList() +
+                emotes.goblinSaluteButtons.toList() +
+                emotes.glassBoxButtons.toList() +
+                emotes.climbRopeButtons.toList() +
+                emotes.leanButtons.toList() +
+                emotes.glassWallButtons.toList() +
+                emotes.ideaButtons.toList() +
+                emotes.stompButtons.toList() +
+                emotes.skillcapeButtons.toList(),
+            "emotes.buttonIds",
+        )
+
+        val duel = InterfaceMappingRegistry.duelData()
+        checkDuplicates(duel.offerRuleButtons.toList(), "duel.offerRuleButtons")
+        checkDuplicates(duel.bodyRuleButtons.toList(), "duel.bodyRuleButtons")
+        checkDuplicates(duel.offerRuleIndices.map { it.buttonId }, "duel.offerRuleIndices.buttonId")
+
+        checkDuplicates(InterfaceMappingRegistry.partyRoomData().depositAcceptButtons.toList(), "partyroom.depositAcceptButtons")
+        checkDuplicates(InterfaceMappingRegistry.slotsData().spinButtons.toList(), "slots.spinButtons")
+        checkDuplicates(InterfaceMappingRegistry.appearanceData().confirmButtons.toList(), "appearance.confirmButtons")
+        checkDuplicates(InterfaceMappingRegistry.rewardData().skillSelectionButtons.toList(), "rewards.skillSelectionButtons")
+
+        val bankingObjects = InterfaceMappingRegistry.bankingObjectsData()
+        checkDuplicates(bankingObjects.boothObjects.toList(), "objects.banking.boothObjects")
+        checkDuplicates(bankingObjects.chestObjects.toList(), "objects.banking.chestObjects")
+
+        val partyroomObjects = InterfaceMappingRegistry.partyRoomObjectsData()
+        checkDuplicates(partyroomObjects.balloonObjects.toList(), "objects.partyroom.balloonObjects")
+        check(partyroomObjects.depositChest > 0) { "objects.partyroom.depositChest must be > 0" }
+        check(partyroomObjects.forceTrigger > 0) { "objects.partyroom.forceTrigger must be > 0" }
 
         val smithing = SkillDataRegistry.smithingData()
         check(smithing.smeltingRecipes.isNotEmpty()) { "smithing.smeltingRecipes must not be empty" }

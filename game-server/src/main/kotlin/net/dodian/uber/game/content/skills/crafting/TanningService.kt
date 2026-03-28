@@ -1,20 +1,16 @@
 package net.dodian.uber.game.content.skills.crafting
 
+import net.dodian.uber.game.content.platform.SkillDataRegistry
 import net.dodian.uber.game.model.entity.player.Client
 
 object TanningService {
     @JvmStatic
     fun open(client: Client) {
-        client.sendString("Regular Leather", 14777)
-        client.sendString("50gp", 14785)
-        client.sendString("", 14781)
-        client.sendString("", 14789)
-        client.sendString("", 14778)
-        client.sendString("", 14786)
-        client.sendString("", 14782)
-        client.sendString("", 14790)
+        SkillDataRegistry.craftingTanningHeaderStrings().forEach { definition ->
+            client.sendString(definition.text, definition.componentId)
+        }
 
-        val labels = intArrayOf(14779, 14787, 14783, 14791, 14780, 14788, 14784, 14792)
+        val labels = SkillDataRegistry.craftingTanningHigherTierLabelIds()
         val higherTier = TanningDefinitions.definitions.filter { it.hideType >= 2 }.sortedBy { it.hideType }
         higherTier.forEachIndexed { index, definition ->
             val base = index * 2
@@ -25,13 +21,10 @@ object TanningService {
             client.sendString("${formatCoins(definition.coinCost)}gp", labels[base + 1])
         }
 
-        client.sendInterfaceModel(14769, 250, 1741)
-        client.sendInterfaceModel(14773, 250, -1)
-        client.sendInterfaceModel(14771, 250, 1753)
-        client.sendInterfaceModel(14772, 250, 1751)
-        client.sendInterfaceModel(14775, 250, 1749)
-        client.sendInterfaceModel(14776, 250, 1747)
-        client.openInterface(14670)
+        SkillDataRegistry.craftingTanningInterfaceModels().forEach { model ->
+            client.sendInterfaceModel(model.componentId, model.zoom, model.itemId)
+        }
+        client.openInterface(SkillDataRegistry.craftingTanningInterfaceId())
     }
 
     @JvmStatic

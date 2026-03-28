@@ -6,8 +6,11 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SetSmithing
 
 object SmithingInterfaceService {
-    private val frameIds = intArrayOf(1119, 1120, 1121, 1122, 1123)
-    private val possibleBars = intArrayOf(2349, 2351, 2353, 2359, 2361, 2363)
+    private val frameIds: IntArray
+        get() = SmithingDefinitions.frameIds()
+
+    private val possibleBars: IntArray
+        get() = SmithingDefinitions.smeltingRecipes.map { it.barId }.distinct().toIntArray()
 
     @JvmStatic
     fun resolveTierId(barId: Int): Int = SmithingDefinitions.findSmithingTierByBar(barId)?.typeId ?: -1

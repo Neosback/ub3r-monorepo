@@ -171,3 +171,7 @@ componentId = 34155
 componentKey = "skillguide.subtab.7"
 rawButtonIds = [34155]
 targetTab = 7
+
+baselineHidden = [15307,15304,15294,8863,8860,8850,8841,8838,8828]
+baselineShown = [8825,8813]
+titleComponentIds = [8716,8846,8823,8824,8827,8837,8840,8843,8859,8849]

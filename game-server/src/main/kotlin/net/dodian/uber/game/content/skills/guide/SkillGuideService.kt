@@ -1,17 +1,13 @@
 package net.dodian.uber.game.content.skills.guide
 
+import net.dodian.uber.game.content.platform.InterfaceMappingRegistry
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.netty.listener.out.ShowInterface
 
 object SkillGuideService {
-    private val baselineHidden = intArrayOf(15307, 15304, 15294, 8863, 8860, 8850, 8841, 8838, 8828)
-    private val baselineShown = intArrayOf(8825, 8813)
-    private val titleComponentIds = intArrayOf(8716, 8846, 8823, 8824, 8827, 8837, 8840, 8843, 8859, 8849)
-
     @JvmStatic
     fun open(client: Client, skillId: Int, child: Int) {
         val switchingSkill = client.currentSkill != skillId
@@ -60,7 +56,7 @@ object SkillGuideService {
     }
 
     private fun clearInterface(client: Client) {
-        titleComponentIds.forEach { componentId -> client.sendString("", componentId) }
+        InterfaceMappingRegistry.skillGuideData().titleComponentIds.forEach { componentId -> client.sendString("", componentId) }
         for (componentId in 8720 until 8800) {
             client.sendString("", componentId)
         }
@@ -70,8 +66,8 @@ object SkillGuideService {
         if (skillId >= 23) {
             return
         }
-        baselineHidden.forEach { componentId -> client.changeInterfaceStatus(componentId, false) }
-        baselineShown.forEach { componentId -> client.changeInterfaceStatus(componentId, true) }
+        InterfaceMappingRegistry.skillGuideData().baselineHidden.forEach { componentId -> client.changeInterfaceStatus(componentId, false) }
+        InterfaceMappingRegistry.skillGuideData().baselineShown.forEach { componentId -> client.changeInterfaceStatus(componentId, true) }
         client.sendString("", 8849)
     }
 }

@@ -1,17 +1,30 @@
 package net.dodian.uber.game.content.interfaces.ui
 
+import net.dodian.uber.game.content.platform.InterfaceMappingRegistry
+
 object UiComponents {
-    val runOffButtons = intArrayOf(152)
-    val runOnButtons = intArrayOf(19158)
-    val runToggleButtons = intArrayOf(74214)
+    val runOffButtons: IntArray
+        get() = InterfaceMappingRegistry.uiData().runOffButtons
+    val runOnButtons: IntArray
+        get() = InterfaceMappingRegistry.uiData().runOnButtons
+    val runToggleButtons: IntArray
+        get() = InterfaceMappingRegistry.uiData().runToggleButtons
 
-    val tabInterfaceDefaultButtons = intArrayOf(83093)
-    val tabInterfaceEquipmentButtons = intArrayOf(27653)
+    val tabInterfaceDefaultButtons: IntArray
+        get() = InterfaceMappingRegistry.uiData().tabInterfaceDefaultButtons
+    val tabInterfaceEquipmentButtons: IntArray
+        get() = InterfaceMappingRegistry.uiData().tabInterfaceEquipmentButtons
 
-    val sidebarHomeButtons = intArrayOf(7212)
-    val closeInterfaceButtons = intArrayOf(83051, 9118, 19022, 50001)
-    val questTabToggleButtons = intArrayOf(83097)
-    val logoutButtons = intArrayOf(2458, 9154)
-    val morphButtons = intArrayOf(23132)
-    val ignoredButtons = intArrayOf(26076, 4130, 130, 3014, 3016, 3017)
+    val sidebarHomeButtons: IntArray
+        get() = InterfaceMappingRegistry.uiData().sidebarHomeButtons
+    val closeInterfaceButtons: IntArray
+        get() = InterfaceMappingRegistry.uiData().closeInterfaceButtons
+    val questTabToggleButtons: IntArray
+        get() = InterfaceMappingRegistry.uiData().questTabToggleButtons
+    val logoutButtons: IntArray
+        get() = InterfaceMappingRegistry.uiData().logoutButtons
+    val morphButtons: IntArray
+        get() = InterfaceMappingRegistry.uiData().morphButtons
+    val ignoredButtons: IntArray
+        get() = InterfaceMappingRegistry.uiData().ignoredButtons
 }

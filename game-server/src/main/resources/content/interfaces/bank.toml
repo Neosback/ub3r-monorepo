@@ -1,0 +1,6 @@
+depositInventoryButtons = [89223,50004]
+depositWornItemsButtons = [50007]
+withdrawAsNoteButtons = [21011,5387]
+withdrawAsItemButtons = [21010,5386]
+searchButtons = [50010]
+tabButtons = [50070,50074,50078,50082,50086,50090,50094,50098,50102,50106]

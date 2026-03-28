@@ -448,7 +448,19 @@ class ArchitectureBoundaryTest {
             "game-server/src/main/resources/content/skills/objects/runecrafting.toml",
             "game-server/src/main/resources/content/interfaces/magic.toml",
             "game-server/src/main/resources/content/interfaces/skillguide.toml",
+            "game-server/src/main/resources/content/interfaces/ui.toml",
+            "game-server/src/main/resources/content/interfaces/dialogue.toml",
+            "game-server/src/main/resources/content/interfaces/bank.toml",
+            "game-server/src/main/resources/content/interfaces/settings.toml",
+            "game-server/src/main/resources/content/interfaces/emotes.toml",
+            "game-server/src/main/resources/content/interfaces/duel.toml",
+            "game-server/src/main/resources/content/interfaces/partyroom.toml",
+            "game-server/src/main/resources/content/interfaces/slots.toml",
+            "game-server/src/main/resources/content/interfaces/appearance.toml",
+            "game-server/src/main/resources/content/interfaces/rewards.toml",
             "game-server/src/main/resources/content/objects/travel.toml",
+            "game-server/src/main/resources/content/objects/banking.toml",
+            "game-server/src/main/resources/content/objects/partyroom.toml",
         )
         val missing = requiredToml.filterNot { Files.exists(repoRoot.resolve(it)) }
         assertTrue(
@@ -561,7 +573,19 @@ class ArchitectureBoundaryTest {
             sourceRoot.resolve("resources/content/skills/objects/runecrafting.toml"),
             sourceRoot.resolve("resources/content/interfaces/magic.toml"),
             sourceRoot.resolve("resources/content/interfaces/skillguide.toml"),
+            sourceRoot.resolve("resources/content/interfaces/ui.toml"),
+            sourceRoot.resolve("resources/content/interfaces/dialogue.toml"),
+            sourceRoot.resolve("resources/content/interfaces/bank.toml"),
+            sourceRoot.resolve("resources/content/interfaces/settings.toml"),
+            sourceRoot.resolve("resources/content/interfaces/emotes.toml"),
+            sourceRoot.resolve("resources/content/interfaces/duel.toml"),
+            sourceRoot.resolve("resources/content/interfaces/partyroom.toml"),
+            sourceRoot.resolve("resources/content/interfaces/slots.toml"),
+            sourceRoot.resolve("resources/content/interfaces/appearance.toml"),
+            sourceRoot.resolve("resources/content/interfaces/rewards.toml"),
             sourceRoot.resolve("resources/content/objects/travel.toml"),
+            sourceRoot.resolve("resources/content/objects/banking.toml"),
+            sourceRoot.resolve("resources/content/objects/partyroom.toml"),
         )
         val missing = requiredResources.filterNot { Files.exists(it) }.map { it.toString() }
         assertTrue(
