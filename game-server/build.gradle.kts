@@ -50,6 +50,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.0")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.14.0")
     implementation("org.apache.commons:commons-compress:1.21")
 
     implementation("mysql:mysql-connector-java:8.0.29")
@@ -200,6 +201,13 @@ tasks.register<JavaExec>("exportWorldFromCache") {
     description = "Export data/world map+object files from data/cache for server clipping/object loaders"
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("net.dodian.cache.tools.CacheWorldExporter")
+}
+
+tasks.register<JavaExec>("exportContentFromDb") {
+    group = "build"
+    description = "Export static-table candidates from configured MySQL to TOML"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.tools.content.ContentDbExportTool")
 }
 
 // Custom task to run all migration tests

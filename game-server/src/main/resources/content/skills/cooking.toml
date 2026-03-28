@@ -1,0 +1,111 @@
+[[recipes]]
+rawItemId = 317
+cookedItemId = 315
+burntItemId = 323
+experience = 150
+requiredLevel = 1
+burnRollBase = 30
+
+[[recipes]]
+rawItemId = 2134
+cookedItemId = 2142
+burntItemId = 2146
+experience = 100
+requiredLevel = 1
+burnRollBase = 30
+
+[[recipes]]
+rawItemId = 2132
+cookedItemId = 2142
+burntItemId = 2146
+experience = 100
+requiredLevel = 1
+burnRollBase = 30
+
+[[recipes]]
+rawItemId = 2138
+cookedItemId = 2140
+burntItemId = 2144
+experience = 50
+requiredLevel = 1
+burnRollBase = 36
+
+[[recipes]]
+rawItemId = 2307
+cookedItemId = 2309
+burntItemId = 2311
+experience = 170
+requiredLevel = 10
+burnRollBase = 36
+
+[[recipes]]
+rawItemId = 3363
+cookedItemId = 3369
+burntItemId = 3375
+experience = 200
+requiredLevel = 15
+burnRollBase = 42
+
+[[recipes]]
+rawItemId = 335
+cookedItemId = 333
+burntItemId = 343
+experience = 250
+requiredLevel = 20
+burnRollBase = 50
+
+[[recipes]]
+rawItemId = 331
+cookedItemId = 329
+burntItemId = 343
+experience = 350
+requiredLevel = 30
+burnRollBase = 60
+
+[[recipes]]
+rawItemId = 377
+cookedItemId = 379
+burntItemId = 381
+experience = 500
+requiredLevel = 40
+burnRollBase = 70
+
+[[recipes]]
+rawItemId = 371
+cookedItemId = 373
+burntItemId = 375
+experience = 720
+requiredLevel = 50
+burnRollBase = 80
+
+[[recipes]]
+rawItemId = 7944
+cookedItemId = 7946
+burntItemId = 7948
+experience = 870
+requiredLevel = 60
+burnRollBase = 90
+
+[[recipes]]
+rawItemId = 383
+cookedItemId = 385
+burntItemId = 387
+experience = 1220
+requiredLevel = 70
+burnRollBase = 100
+
+[[recipes]]
+rawItemId = 395
+cookedItemId = 397
+burntItemId = 399
+experience = 1600
+requiredLevel = 85
+burnRollBase = 110
+
+[[recipes]]
+rawItemId = 389
+cookedItemId = 391
+burntItemId = 393
+experience = 2100
+requiredLevel = 95
+burnRollBase = 120

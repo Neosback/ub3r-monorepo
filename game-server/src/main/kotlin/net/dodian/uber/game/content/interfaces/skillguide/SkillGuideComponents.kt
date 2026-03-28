@@ -1,5 +1,7 @@
 package net.dodian.uber.game.content.interfaces.skillguide
 
+import net.dodian.uber.game.content.platform.InterfaceMappingRegistry
+import net.dodian.uber.game.content.platform.SkillGuideDataFile
 import net.dodian.uber.game.model.player.skills.Skill
 
 object SkillGuideComponents {
@@ -12,7 +14,7 @@ object SkillGuideComponents {
         val rawButtonIds: IntArray,
     )
 
-    val skillButtons =
+    private val fallbackSkillButtons =
         listOf(
             SkillGuideButtonGroup(Skill.ATTACK.id, 0, "skillguide.attack", intArrayOf(8654, 33206, 94167)),
             SkillGuideButtonGroup(Skill.HITPOINTS.id, 1, "skillguide.hitpoints", intArrayOf(8655, 33207, 94168)),
@@ -44,7 +46,7 @@ object SkillGuideComponents {
         val targetTab: Int,
     )
 
-    val subTabs =
+    private val fallbackSubTabs =
         listOf(
             SubTabDefinition(8846, "skillguide.subtab.0", intArrayOf(8846, 34142), 0),
             SubTabDefinition(8823, "skillguide.subtab.1", intArrayOf(8823, 34119), 1),
@@ -55,5 +57,19 @@ object SkillGuideComponents {
             SubTabDefinition(34139, "skillguide.subtab.6", intArrayOf(34139), 6),
             SubTabDefinition(34155, "skillguide.subtab.7", intArrayOf(34155), 7),
         )
-}
 
+    private val loadedData: SkillGuideDataFile by lazy {
+        InterfaceMappingRegistry.skillGuideData(
+            SkillGuideDataFile(
+                skillButtons = fallbackSkillButtons,
+                subTabs = fallbackSubTabs,
+            ),
+        )
+    }
+
+    val skillButtons: List<SkillGuideButtonGroup>
+        get() = loadedData.skillButtons
+
+    val subTabs: List<SubTabDefinition>
+        get() = loadedData.subTabs
+}

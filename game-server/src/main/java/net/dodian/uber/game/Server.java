@@ -8,6 +8,7 @@ import net.dodian.cache.region.Region;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopManager;
 import net.dodian.uber.game.model.chunk.ChunkManager;
+import net.dodian.uber.game.content.platform.ContentPlatformBootstrap;
 import net.dodian.uber.game.content.objects.ObjectContentRegistry;
 import net.dodian.uber.game.systems.world.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -97,11 +98,12 @@ public class Server {
             initializeDatabase();
         }
 
+        itemManager = new ItemManager();
         npcManager = new NpcManager();
+        ContentPlatformBootstrap.bootstrapAndValidate();
         npcManager.loadSpawns();
         NpcTimerScheduler.initialize(npcManager.getNpcs());
         logger.info("DONE LOADING NPC CONFIGURATION");
-        itemManager = new ItemManager();
         chunkManager = new ChunkManager();
         // NPC spawns are loaded before ChunkManager exists. Now that chunk repos are available,
         // bootstrap chunk membership once so viewport snapshots and active-chunk processing can see NPCs.

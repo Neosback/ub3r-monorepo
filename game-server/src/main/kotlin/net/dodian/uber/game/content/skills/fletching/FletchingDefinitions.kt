@@ -1,5 +1,7 @@
 package net.dodian.uber.game.content.skills.fletching
 
+import net.dodian.uber.game.content.platform.SkillDataRegistry
+
 data class FletchingLogDefinition(
     val logItemId: Int,
     val unstrungShortbowId: Int,
@@ -29,8 +31,7 @@ data class DartRecipe(
 )
 
 object FletchingDefinitions {
-    @JvmField
-    val bowLogs: List<FletchingLogDefinition> = listOf(
+    private val fallbackBowLogs: List<FletchingLogDefinition> = listOf(
         FletchingLogDefinition(1521, 54, 56, 843, 845, 20, 25, 102, 150, 6679, 6685),
         FletchingLogDefinition(1519, 60, 58, 849, 847, 35, 40, 198, 252, 6680, 6686),
         FletchingLogDefinition(1517, 64, 62, 853, 851, 50, 55, 300, 348, 6681, 6687),
@@ -38,8 +39,7 @@ object FletchingDefinitions {
         FletchingLogDefinition(1513, 72, 70, 861, 859, 80, 85, 504, 552, 6683, 6689),
     )
 
-    @JvmField
-    val arrowRecipes: List<ArrowRecipe> = listOf(
+    private val fallbackArrowRecipes: List<ArrowRecipe> = listOf(
         ArrowRecipe(39, 882, 1, 7),
         ArrowRecipe(40, 884, 15, 13),
         ArrowRecipe(41, 886, 30, 25),
@@ -49,8 +49,7 @@ object FletchingDefinitions {
         ArrowRecipe(11237, 11212, 90, 75),
     )
 
-    @JvmField
-    val dartRecipes: List<DartRecipe> = listOf(
+    private val fallbackDartRecipes: List<DartRecipe> = listOf(
         DartRecipe(819, 806, 1, 18),
         DartRecipe(820, 807, 22, 38),
         DartRecipe(821, 808, 37, 75),
@@ -59,13 +58,22 @@ object FletchingDefinitions {
         DartRecipe(824, 811, 81, 188),
     )
 
+    val bowLogs: List<FletchingLogDefinition>
+        get() = SkillDataRegistry.fletchingBowLogs(fallbackBowLogs)
+
+    val arrowRecipes: List<ArrowRecipe>
+        get() = SkillDataRegistry.fletchingArrowRecipes(fallbackArrowRecipes)
+
+    val dartRecipes: List<DartRecipe>
+        get() = SkillDataRegistry.fletchingDartRecipes(fallbackDartRecipes)
+
     private val bowWeaponIds: Set<Int> =
         buildSet {
             bowLogs.forEach { bow ->
                 add(bow.shortbowId)
                 add(bow.longbowId)
             }
-            addAll(listOf(839, 841, 4212, 6724, 20997, 11235, 4734))
+            addAll(SkillDataRegistry.fletchingExtraBowWeaponIds(setOf(839, 841, 4212, 6724, 20997, 11235, 4734)))
             addAll(12765..12768)
         }
 

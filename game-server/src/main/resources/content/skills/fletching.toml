@@ -1,0 +1,144 @@
+extraBowWeaponIds = [839, 841, 4212, 6724, 20997, 11235, 4734]
+
+[[bowLogs]]
+logItemId = 1521
+unstrungShortbowId = 54
+unstrungLongbowId = 56
+shortbowId = 843
+longbowId = 845
+shortLevelRequired = 20
+longLevelRequired = 25
+shortExperience = 102
+longExperience = 150
+shortStringAnimationId = 6679
+longStringAnimationId = 6685
+
+[[bowLogs]]
+logItemId = 1519
+unstrungShortbowId = 60
+unstrungLongbowId = 58
+shortbowId = 849
+longbowId = 847
+shortLevelRequired = 35
+longLevelRequired = 40
+shortExperience = 198
+longExperience = 252
+shortStringAnimationId = 6680
+longStringAnimationId = 6686
+
+[[bowLogs]]
+logItemId = 1517
+unstrungShortbowId = 64
+unstrungLongbowId = 62
+shortbowId = 853
+longbowId = 851
+shortLevelRequired = 50
+longLevelRequired = 55
+shortExperience = 300
+longExperience = 348
+shortStringAnimationId = 6681
+longStringAnimationId = 6687
+
+[[bowLogs]]
+logItemId = 1515
+unstrungShortbowId = 68
+unstrungLongbowId = 66
+shortbowId = 857
+longbowId = 855
+shortLevelRequired = 65
+longLevelRequired = 70
+shortExperience = 408
+longExperience = 450
+shortStringAnimationId = 6682
+longStringAnimationId = 6688
+
+[[bowLogs]]
+logItemId = 1513
+unstrungShortbowId = 72
+unstrungLongbowId = 70
+shortbowId = 861
+longbowId = 859
+shortLevelRequired = 80
+longLevelRequired = 85
+shortExperience = 504
+longExperience = 552
+shortStringAnimationId = 6683
+longStringAnimationId = 6689
+
+[[arrowRecipes]]
+headId = 39
+arrowId = 882
+requiredLevel = 1
+experience = 7
+
+[[arrowRecipes]]
+headId = 40
+arrowId = 884
+requiredLevel = 15
+experience = 13
+
+[[arrowRecipes]]
+headId = 41
+arrowId = 886
+requiredLevel = 30
+experience = 25
+
+[[arrowRecipes]]
+headId = 42
+arrowId = 888
+requiredLevel = 45
+experience = 38
+
+[[arrowRecipes]]
+headId = 43
+arrowId = 890
+requiredLevel = 60
+experience = 50
+
+[[arrowRecipes]]
+headId = 44
+arrowId = 892
+requiredLevel = 75
+experience = 63
+
+[[arrowRecipes]]
+headId = 11237
+arrowId = 11212
+requiredLevel = 90
+experience = 75
+
+[[dartRecipes]]
+tipId = 819
+dartId = 806
+requiredLevel = 1
+experience = 18
+
+[[dartRecipes]]
+tipId = 820
+dartId = 807
+requiredLevel = 22
+experience = 38
+
+[[dartRecipes]]
+tipId = 821
+dartId = 808
+requiredLevel = 37
+experience = 75
+
+[[dartRecipes]]
+tipId = 822
+dartId = 809
+requiredLevel = 52
+experience = 112
+
+[[dartRecipes]]
+tipId = 823
+dartId = 810
+requiredLevel = 67
+experience = 150
+
+[[dartRecipes]]
+tipId = 824
+dartId = 811
+requiredLevel = 81
+experience = 188

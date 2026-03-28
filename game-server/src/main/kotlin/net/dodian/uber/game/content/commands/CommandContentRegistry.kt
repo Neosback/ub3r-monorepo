@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import net.dodian.uber.game.content.commands.boss.BossCommands
 import net.dodian.uber.game.content.commands.dev.BetaOnlyCommands
 import net.dodian.uber.game.content.commands.dev.DevAccountAndStateCommands
+import net.dodian.uber.game.content.commands.dev.DevContentCommands
 import net.dodian.uber.game.content.commands.dev.DevDebugCommands
 import net.dodian.uber.game.content.commands.dev.DevNpcContentCommands
 import net.dodian.uber.game.content.commands.dev.DevSpawnAndNpcCommands
@@ -68,6 +69,7 @@ object CommandContentRegistry {
     private fun defaultContents(): List<CommandContent> =
         listOf(
             DevDebugCommands,
+            DevContentCommands,
             DevNpcContentCommands,
             DevVisualCommands,
             DevSpawnAndNpcCommands,

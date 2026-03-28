@@ -1,5 +1,7 @@
 package net.dodian.uber.game.content.skills.fishing
 
+import net.dodian.uber.game.content.platform.SkillDataRegistry
+
 data class FishingSpotDefinition(
     val index: Int,
     val objectId: Int,
@@ -15,8 +17,7 @@ data class FishingSpotDefinition(
 )
 
 object FishingDefinitions {
-    @JvmField
-    val fishingSpots: List<FishingSpotDefinition> = listOf(
+    private val fallbackFishingSpots: List<FishingSpotDefinition> = listOf(
         FishingSpotDefinition(0, 1510, 1, 317, 621, 1, 1350, 303, 110),
         FishingSpotDefinition(1, 1510, 2, 335, 622, 20, 1660, 309, 200, featherConsumed = true),
         FishingSpotDefinition(2, 1511, 1, 377, 619, 40, 2480, 301, 440),
@@ -26,6 +27,9 @@ object FishingDefinitions {
         FishingSpotDefinition(6, 1517, 1, 395, 619, 85, 5800, 301, 1450, premiumOnly = true),
         FishingSpotDefinition(7, 1517, 2, 389, 618, 95, 6650, 311, 1900, premiumOnly = true),
     )
+
+    val fishingSpots: List<FishingSpotDefinition>
+        get() = SkillDataRegistry.fishingSpots(fallbackFishingSpots)
 
     @JvmStatic
     fun byIndex(index: Int): FishingSpotDefinition? = fishingSpots.getOrNull(index)

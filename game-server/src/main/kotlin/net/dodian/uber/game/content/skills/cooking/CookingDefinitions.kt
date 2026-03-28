@@ -1,5 +1,7 @@
 package net.dodian.uber.game.content.skills.cooking
 
+import net.dodian.uber.game.content.platform.SkillDataRegistry
+
 data class CookingDefinition(
     val rawItemId: Int,
     val cookedItemId: Int,
@@ -10,8 +12,7 @@ data class CookingDefinition(
 )
 
 object CookingDefinitions {
-    @JvmField
-    val recipes: List<CookingDefinition> = listOf(
+    private val fallbackRecipes: List<CookingDefinition> = listOf(
         CookingDefinition(317, 315, 323, 150, 1, 30),
         CookingDefinition(2134, 2142, 2146, 100, 1, 30),
         CookingDefinition(2132, 2142, 2146, 100, 1, 30),
@@ -27,6 +28,9 @@ object CookingDefinitions {
         CookingDefinition(395, 397, 399, 1600, 85, 110),
         CookingDefinition(389, 391, 393, 2100, 95, 120),
     )
+
+    val recipes: List<CookingDefinition>
+        get() = SkillDataRegistry.cookingRecipes(fallbackRecipes)
 
     @JvmStatic
     fun findRecipe(rawItemId: Int): CookingDefinition? = recipes.firstOrNull { it.rawItemId == rawItemId }

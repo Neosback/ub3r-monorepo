@@ -102,6 +102,48 @@ class ArchitectureBoundaryTest {
     }
 
     @Test
+    fun `runtime interaction layers avoid direct database primitives`() {
+        val runtimeRoots = listOf(
+            "/net/dodian/uber/game/engine/",
+            "/net/dodian/uber/game/systems/",
+            "/net/dodian/uber/game/content/",
+            "/net/dodian/uber/game/event/",
+            "/net/dodian/uber/game/netty/listener/",
+        )
+        val forbiddenSnippets = listOf(
+            "dbConnection",
+            "dbStatement",
+            "getDbConnection(",
+            "prepareStatement(",
+            "createStatement(",
+            "DriverManager.getConnection(",
+        )
+
+        val violations = sourceFiles
+            .filter { file ->
+                val normalized = file.invariantSeparatorsPathString
+                runtimeRoots.any { normalized.contains(it) }
+            }
+            .flatMap { file ->
+                Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                    val trimmed = line.trim()
+                    if (trimmed.startsWith("//")) {
+                        return@mapIndexedNotNull null
+                    }
+                    if (!forbiddenSnippets.any { snippet -> trimmed.contains(snippet) }) {
+                        return@mapIndexedNotNull null
+                    }
+                    "${file}:${idx + 1} -> $trimmed"
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Runtime interaction layers must avoid direct database primitives.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
     fun `source file path matches declared package`() {
         val violations = sourceFiles.mapNotNull { file ->
             val lines = Files.readAllLines(file)
@@ -427,6 +469,67 @@ class ArchitectureBoundaryTest {
         assertTrue(
             violations.isEmpty(),
             "Hot paths must not access database directly.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `plugin discovery remains compile time without runtime classpath scanning`() {
+        val violations = sourceFiles
+            .flatMap { file ->
+                Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                    val trimmed = line.trim()
+                    if (trimmed.contains("ClassGraph") || trimmed.contains("Reflections(")) {
+                        "${file}:${idx + 1} -> $trimmed"
+                    } else {
+                        null
+                    }
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Runtime classpath scanning must not be introduced.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `declarative content files exist for migrated modules`() {
+        val requiredResources = listOf(
+            sourceRoot.resolve("resources/content/skills/cooking.toml"),
+            sourceRoot.resolve("resources/content/skills/fishing.toml"),
+            sourceRoot.resolve("resources/content/skills/fletching.toml"),
+            sourceRoot.resolve("resources/content/interfaces/magic.toml"),
+            sourceRoot.resolve("resources/content/interfaces/skillguide.toml"),
+            sourceRoot.resolve("resources/content/objects/travel.toml"),
+        )
+        val missing = requiredResources.filterNot { Files.exists(it) }.map { it.toString() }
+        assertTrue(
+            missing.isEmpty(),
+            "Migrated declarative content files must exist.\n${missing.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `migrated definitions are data-registry backed`() {
+        val checks = listOf(
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/cooking/CookingDefinitions.kt") to "SkillDataRegistry.cookingRecipes",
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/fishing/FishingDefinitions.kt") to "SkillDataRegistry.fishingSpots",
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/content/skills/fletching/FletchingDefinitions.kt") to "SkillDataRegistry.fletchingBowLogs",
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/content/interfaces/magic/MagicComponents.kt") to "InterfaceMappingRegistry.magicData",
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/content/interfaces/skillguide/SkillGuideComponents.kt") to "InterfaceMappingRegistry.skillGuideData",
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/content/objects/travel/TravelObjectComponents.kt") to "InterfaceMappingRegistry.travelData",
+        )
+        val violations = checks.mapNotNull { (path, marker) ->
+            val source = Files.readString(path)
+            if (!source.contains(marker)) {
+                "$path must reference $marker"
+            } else {
+                null
+            }
+        }
+        assertTrue(
+            violations.isEmpty(),
+            "Migrated modules must remain registry-backed.\n${violations.joinToString("\n")}",
         )
     }
 }

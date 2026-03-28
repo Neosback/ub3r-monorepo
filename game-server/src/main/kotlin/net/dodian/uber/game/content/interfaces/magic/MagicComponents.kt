@@ -1,12 +1,15 @@
 package net.dodian.uber.game.content.interfaces.magic
 
+import net.dodian.uber.game.content.platform.InterfaceMappingRegistry
+import net.dodian.uber.game.content.platform.MagicDataFile
+
 object MagicComponents {
     const val NORMAL_INTERFACE_ID = 1151
     const val ANCIENT_INTERFACE_ID = 12855
 
-    val spellbookToggleButtons = intArrayOf(74212, 49047, 49046, 23024)
-    val autocastClearButtons = intArrayOf(1097, 1094, 1093)
-    val autocastSelectButtons = intArrayOf(
+    private val fallbackSpellbookToggleButtons = intArrayOf(74212, 49047, 49046, 23024)
+    private val fallbackAutocastClearButtons = intArrayOf(1097, 1094, 1093)
+    private val fallbackAutocastSelectButtons = intArrayOf(
         51133,
         51185,
         51091,
@@ -24,7 +27,7 @@ object MagicComponents {
         51122,
         51080,
     )
-    val autocastRefreshButtons = intArrayOf(24017)
+    private val fallbackAutocastRefreshButtons = intArrayOf(24017)
 
     data class TeleportBinding(
         val componentId: Int,
@@ -37,7 +40,7 @@ object MagicComponents {
         val premium: Boolean,
     )
 
-    val teleports =
+    private val fallbackTeleports =
         listOf(
             TeleportBinding(0, "magic.teleport.yanille", intArrayOf(21741, 75010, 84237), 2604, 6, 3101, 3, false),
             TeleportBinding(1, "magic.teleport.seers", intArrayOf(13035, 4143, 50235), 2722, 6, 3484, 2, false),
@@ -49,4 +52,31 @@ object MagicComponents {
             TeleportBinding(7, "magic.teleport.gnome_village", intArrayOf(13087, 72038, 51031), 2472, 6, 3436, 3, false),
             TeleportBinding(8, "magic.teleport.edgeville", intArrayOf(13095, 4140, 51039), 3085, 4, 3488, 4, false),
         )
+
+    private val loadedData: MagicDataFile by lazy {
+        InterfaceMappingRegistry.magicData(
+            MagicDataFile(
+                spellbookToggleButtons = fallbackSpellbookToggleButtons,
+                autocastClearButtons = fallbackAutocastClearButtons,
+                autocastSelectButtons = fallbackAutocastSelectButtons,
+                autocastRefreshButtons = fallbackAutocastRefreshButtons,
+                teleports = fallbackTeleports,
+            ),
+        )
+    }
+
+    val spellbookToggleButtons: IntArray
+        get() = loadedData.spellbookToggleButtons
+
+    val autocastClearButtons: IntArray
+        get() = loadedData.autocastClearButtons
+
+    val autocastSelectButtons: IntArray
+        get() = loadedData.autocastSelectButtons
+
+    val autocastRefreshButtons: IntArray
+        get() = loadedData.autocastRefreshButtons
+
+    val teleports: List<TeleportBinding>
+        get() = loadedData.teleports
 }

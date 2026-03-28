@@ -1,7 +1,10 @@
 package net.dodian.uber.game.content.objects.travel
 
+import net.dodian.uber.game.content.platform.InterfaceMappingRegistry
+import net.dodian.uber.game.content.platform.TravelObjectsDataFile
+
 object TravelObjectComponents {
-    val passageObjects = intArrayOf(
+    private val fallbackPassageObjects = intArrayOf(
         882,
         1521, 1524,
         2309, 23140, 23271, 23564,
@@ -10,7 +13,7 @@ object TravelObjectComponents {
         15656, 16466, 16509, 16510,
     )
 
-    val teleportObjects = intArrayOf(
+    private val fallbackTeleportObjects = intArrayOf(
         823,
         133,
         410,
@@ -34,5 +37,24 @@ object TravelObjectComponents {
         6451, 6452,
     )
 
-    val webObstacleObjects = intArrayOf(733)
+    private val fallbackWebObstacleObjects = intArrayOf(733)
+
+    private val loadedData: TravelObjectsDataFile by lazy {
+        InterfaceMappingRegistry.travelData(
+            TravelObjectsDataFile(
+                passageObjects = fallbackPassageObjects,
+                teleportObjects = fallbackTeleportObjects,
+                webObstacleObjects = fallbackWebObstacleObjects,
+            ),
+        )
+    }
+
+    val passageObjects: IntArray
+        get() = loadedData.passageObjects
+
+    val teleportObjects: IntArray
+        get() = loadedData.teleportObjects
+
+    val webObstacleObjects: IntArray
+        get() = loadedData.webObstacleObjects
 }

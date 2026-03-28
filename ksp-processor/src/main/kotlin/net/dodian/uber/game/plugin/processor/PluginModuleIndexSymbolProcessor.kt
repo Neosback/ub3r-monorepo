@@ -40,8 +40,9 @@ class PluginModuleIndexSymbolProcessor(
         val itemContents = discoverObjectsByInterface(allObjects, "net.dodian.uber.game.content.items.ItemContent")
         val npcModules = discoverNpcModules(allObjects)
         val eventBootstraps = discoverEventBootstraps(allObjects)
+        val moduleMetadata = discoverModuleMetadata(interfaceButtons, objectContents, itemContents, npcModules, eventBootstraps)
 
-        val output = buildOutput(interfaceButtons, objectContents, itemContents, npcModules, eventBootstraps)
+        val output = buildOutput(interfaceButtons, objectContents, itemContents, npcModules, eventBootstraps, moduleMetadata)
         val outputFile =
             codeGenerator.createNewFile(
                 dependencies = Dependencies(aggregating = true, *resolver.getAllFiles().toList().toTypedArray()),
@@ -50,8 +51,20 @@ class PluginModuleIndexSymbolProcessor(
             )
         outputFile.bufferedWriter().use { it.write(output) }
         generated = true
-        logger.info("Generated PluginModuleIndex with ${interfaceButtons.size} interface buttons, ${objectContents.size} object modules, ${itemContents.size} item modules, ${npcModules.size} npc modules, ${eventBootstraps.size} event bootstraps.")
+        logger.info("Generated PluginModuleIndex with ${interfaceButtons.size} interface buttons, ${objectContents.size} object modules, ${itemContents.size} item modules, ${npcModules.size} npc modules, ${eventBootstraps.size} event bootstraps, ${moduleMetadata.size} module metadata entries.")
         return emptyList()
+    }
+
+    private fun discoverModuleMetadata(
+        interfaceButtons: List<DiscoveredSymbol>,
+        objectContents: List<DiscoveredSymbol>,
+        itemContents: List<DiscoveredSymbol>,
+        npcModules: List<DiscoveredSymbol>,
+        eventBootstraps: List<DiscoveredSymbol>,
+    ): List<DiscoveredSymbol> {
+        return (interfaceButtons + objectContents + itemContents + npcModules + eventBootstraps)
+            .distinctBy { it.fqcn }
+            .sortedBy { it.fqcn }
     }
 
     private fun discoverInterfaceButtons(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
@@ -137,10 +150,12 @@ class PluginModuleIndexSymbolProcessor(
         itemContents: List<DiscoveredSymbol>,
         npcModules: List<DiscoveredSymbol>,
         eventBootstraps: List<DiscoveredSymbol>,
+        moduleMetadata: List<DiscoveredSymbol>,
     ): String {
         val out = StringBuilder()
         out.appendLine("package net.dodian.uber.game.plugin")
         out.appendLine()
+        out.appendLine("import net.dodian.uber.game.content.platform.PluginModuleMetadata")
         out.appendLine("import net.dodian.uber.game.content.items.ItemContent")
         out.appendLine("import net.dodian.uber.game.content.npcs.spawns.NpcContentDefinition")
         out.appendLine("import net.dodian.uber.game.content.npcs.spawns.NpcModuleDefinitionBuilder")
@@ -184,22 +199,55 @@ class PluginModuleIndexSymbolProcessor(
         out.appendLine()
 
         out.appendLine("    @JvmField")
-        out.appendLine("    val npcContents: List<NpcContentDefinition> = listOf(")
+        out.appendLine("    val npcContentModules: List<Pair<String, NpcContentDefinition>> = listOf(")
         if (npcModules.isNotEmpty()) {
             npcModules.forEachIndexed { index, symbol ->
                 val suffix = if (index == npcModules.lastIndex) "" else ","
-                out.appendLine("        NpcModuleDefinitionBuilder.fromModule(module = ${symbol.fqcn}, explicitName = \"\", ownsSpawnDefinitions = false)$suffix")
+                out.appendLine("        \"${symbol.fqcn}\" to NpcModuleDefinitionBuilder.fromModule(module = ${symbol.fqcn}, explicitName = \"\", ownsSpawnDefinitions = false)$suffix")
             }
         }
         out.appendLine("    )")
         out.appendLine()
 
         out.appendLine("    @JvmField")
-        out.appendLine("    val eventBootstraps: List<() -> Unit> = listOf(")
+        out.appendLine("    val eventBootstrapModules: List<Pair<String, () -> Unit>> = listOf(")
         if (eventBootstraps.isNotEmpty()) {
             eventBootstraps.forEachIndexed { index, symbol ->
                 val suffix = if (index == eventBootstraps.lastIndex) "" else ","
-                out.appendLine("        { ${symbol.fqcn}.bootstrap() }$suffix")
+                out.appendLine("        \"${symbol.fqcn}\" to { ${symbol.fqcn}.bootstrap() }$suffix")
+            }
+        }
+        out.appendLine("    )")
+        out.appendLine()
+        out.appendLine("    @JvmField")
+        out.appendLine("    val npcContents: List<NpcContentDefinition> = npcContentModules.map { it.second }")
+        out.appendLine()
+        out.appendLine("    @JvmField")
+        out.appendLine("    val eventBootstraps: List<() -> Unit> = eventBootstrapModules.map { it.second }")
+        out.appendLine()
+
+        out.appendLine("    @JvmField")
+        out.appendLine("    val moduleMetadata: List<PluginModuleMetadata> = listOf(")
+        if (moduleMetadata.isNotEmpty()) {
+            moduleMetadata.forEachIndexed { index, symbol ->
+                val suffix = if (index == moduleMetadata.lastIndex) "" else ","
+                val moduleType =
+                    when {
+                        interfaceButtons.any { it.fqcn == symbol.fqcn } -> "interfaceButton"
+                        objectContents.any { it.fqcn == symbol.fqcn } -> "objectContent"
+                        itemContents.any { it.fqcn == symbol.fqcn } -> "itemContent"
+                        npcModules.any { it.fqcn == symbol.fqcn } -> "npcContent"
+                        eventBootstraps.any { it.fqcn == symbol.fqcn } -> "eventBootstrap"
+                        else -> "contentModule"
+                    }
+                val namespace =
+                    symbol.packageName
+                        .removePrefix("net.dodian.uber.game.content.")
+                        .ifEmpty { "content" }
+                val configPath = "content/modules/${symbol.fqcn.replace('.', '/')}.toml"
+                out.appendLine(
+                    "        PluginModuleMetadata(moduleKey = \"${symbol.fqcn}\", moduleClass = \"${symbol.fqcn}\", moduleType = \"$moduleType\", configPath = \"$configPath\", dataNamespace = \"$namespace\")$suffix",
+                )
             }
         }
         out.appendLine("    )")
