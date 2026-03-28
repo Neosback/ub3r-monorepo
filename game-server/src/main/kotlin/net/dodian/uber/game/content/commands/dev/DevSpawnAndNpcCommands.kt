@@ -8,11 +8,11 @@ import net.dodian.uber.game.content.commands.commandLogger
 import net.dodian.uber.game.content.commands.commands
 import net.dodian.uber.game.model.entity.npc.NpcData
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.command.CommandDbService
-import net.dodian.utilities.gameWorldId
+import net.dodian.uber.game.config.gameWorldId
 
 object DevSpawnAndNpcCommands : CommandContent {
     override fun definitions() =
@@ -43,8 +43,8 @@ private fun handleDevNpc(context: CommandContext): Boolean {
             val id = cmd[1].toInt()
             var found = 0
             var shown = 0
-            for (npc in Server.npcManager.npcs) {
-                if (npc == null || npc.id != id) continue
+            for (npc in Server.npcManager.npcMap.values) {
+                if (npc.id != id) continue
                 found++
                 if (shown < 20) {
                     val pos = npc.position
@@ -64,8 +64,8 @@ private fun handleDevNpc(context: CommandContext): Boolean {
     }
     if (command.startsWith("telemob") && context.specialRights) {
         val mobId = cmd[1].toInt()
-        for (npc in Server.npcManager.npcs) {
-            if (npc != null && npc.id == mobId) {
+        for (npc in Server.npcManager.npcMap.values) {
+            if (npc.id == mobId) {
                 client.triggerTele(npc.position.x, npc.position.y, npc.position.z, false)
                 return true
             }
@@ -74,8 +74,7 @@ private fun handleDevNpc(context: CommandContext): Boolean {
     }
     if (command.startsWith("findmob") && context.specialRights) {
         val npcName = command.substring(cmd[0].length + 1).replace("_", " ")
-        for (npc in Server.npcManager.npcs) {
-            if (npc == null) continue
+        for (npc in Server.npcManager.npcMap.values) {
             val npcCheckName = npc.npcName().replace("_", " ")
             if (npcName.equals(npcCheckName, true)) {
                 context.reply("Found $npcCheckName (${npc.id}) at ${npc.position}")
@@ -125,9 +124,9 @@ private fun handleDevNpc(context: CommandContext): Boolean {
                 { result ->
                     if (!client.disconnected) {
                         if (result.updatedRows < 1) {
-                            context.reply("${Server.npcManager.getName(npcId)} does not have the ${client.GetItemName(itemId)} with the chance $chance% !")
+                            context.reply("${Server.npcManager.getName(npcId)} does not have the ${client.getItemName(itemId)} with the chance $chance% !")
                         } else {
-                            context.reply("You deleted ${client.GetItemName(itemId)} drop with the chance of $chance% from ${Server.npcManager.getName(npcId)}")
+                            context.reply("You deleted ${client.getItemName(itemId)} drop with the chance of $chance% from ${Server.npcManager.getName(npcId)}")
                         }
                     }
                 },
@@ -161,13 +160,13 @@ private fun handleDevNpc(context: CommandContext): Boolean {
                     { CommandDbService.insertNpcDrop(npcId, chance, itemId, min, max, rareShout) },
                     { _ ->
                         if (!client.disconnected) {
-                            context.reply("You added $min-$max ${client.GetItemName(itemId)} to ${Server.npcManager.getName(npcId)} with a chance of $chance%${if (rareShout == "true") " with a yell!" else ""}")
+                            context.reply("You added $min-$max ${client.getItemName(itemId)} to ${Server.npcManager.getName(npcId)} with a chance of $chance%${if (rareShout == "true") " with a yell!" else ""}")
                         }
                     },
                     { exception ->
                         if (!client.disconnected) {
                             if (exception.message?.contains("Duplicate entry") == true) {
-                                context.reply("${client.GetItemName(itemId)} with the chance of $chance% already exist for the ${Server.npcManager.getName(npcId)}")
+                                context.reply("${client.getItemName(itemId)} with the chance of $chance% already exist for the ${Server.npcManager.getName(npcId)}")
                             } else {
                                 context.reply("Something bad happend with sql!")
                                 commandLogger.debug("add-npc-drop failed for npcId={} itemId={}", npcId, itemId, exception)
@@ -186,11 +185,14 @@ private fun handleDevNpc(context: CommandContext): Boolean {
                 return true
             }
             val npcId = client.playerNpc
-            val npcData: NpcData = Server.npcManager.getData(npcId)
+            val npcData: NpcData = Server.npcManager.getData(npcId) ?: run {
+                context.reply("Npc with id $npcId is missing from definitions.")
+                return true
+            }
             if (!npcData.drops.isEmpty()) {
                 context.reply("-----------DROPS FOR ${Server.npcManager.getName(client.playerNpc).uppercase()}-----------")
                 for (drop in npcData.drops) {
-                    context.reply("${drop.minAmount} - ${drop.maxAmount} ${client.GetItemName(drop.id)}(${drop.id}) ${drop.chance}%")
+                    context.reply("${drop.minAmount} - ${drop.maxAmount} ${client.getItemName(drop.id)}(${drop.id}) ${drop.chance}%")
                 }
             } else {
                 context.reply("Npc ${npcData.name} ($npcId) has no assigned drops!")

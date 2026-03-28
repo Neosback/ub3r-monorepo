@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.objects.travel
 
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.api.content.ContentTiming
+import net.dodian.uber.game.systems.api.content.ContentTiming
 
 data class VerticalTravelStyle(
     val animationId: Int = -1,
@@ -28,7 +28,7 @@ object VerticalTravel {
         }
         client.resetWalkingQueue()
         if (style.animationId >= 0) {
-            client.requestAnim(style.animationId, 0)
+            client.performAnimation(style.animationId, 0)
         }
         val token = client.beginVerticalTransition(style.delayMs)
         val debugContext =

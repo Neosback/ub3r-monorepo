@@ -2,9 +2,9 @@ package net.dodian.uber.game.content.interfaces.trade
 
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
-import net.dodian.uber.game.runtime.api.content.ContentInteraction
-import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
-import net.dodian.uber.game.ui.buttons.buttonBinding
+import net.dodian.uber.game.systems.api.content.ContentInteraction
+import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.systems.ui.buttons.buttonBinding
 import org.slf4j.LoggerFactory
 
 object TradeInterfaceButtons : InterfaceButtonContent {
@@ -24,17 +24,17 @@ object TradeInterfaceButtons : InterfaceButtonContent {
                         client.tradeConfirmed = true
                         if (other.tradeConfirmed) {
                             if (other.hasTradeSpace() || client.hasTradeSpace()) {
-                                client.send(SendMessage(client.failer))
-                                other.send(SendMessage(client.failer))
+                                client.sendMessage(client.failer)
+                                other.sendMessage(client.failer)
                                 client.declineTrade()
                                 return@buttonBinding true
                             }
                             client.confirmScreen()
                             other.confirmScreen()
                         } else {
-                            client.send(SendString("Waiting for other player...", 3431))
+                            client.sendString("Waiting for other player...", 3431)
                             if (client.validClient(client.trade_reqId)) {
-                                other.send(SendString("Other player has accepted", 3431))
+                                other.sendString("Other player has accepted", 3431)
                             }
                         }
                     }
@@ -57,8 +57,8 @@ object TradeInterfaceButtons : InterfaceButtonContent {
                             client.giveItems()
                             other.giveItems()
                         } else {
-                            other.send(SendString("Other player has accepted.", 3535))
-                            client.send(SendString("Waiting for other player...", 3535))
+                            other.sendString("Other player has accepted.", 3535)
+                            client.sendString("Waiting for other player...", 3535)
                         }
                     }
                 } catch (e: Exception) {

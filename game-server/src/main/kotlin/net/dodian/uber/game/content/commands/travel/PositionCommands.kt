@@ -5,6 +5,7 @@ import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
 import net.dodian.uber.game.content.commands.isBetaWorld
+import net.dodian.uber.game.config.gameWorldId
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
@@ -22,15 +23,15 @@ private fun handlePosition(context: CommandContext): Boolean {
     val cmd = context.parts
     if (context.alias == "goup" && context.specialRights) {
         client.teleportTo(client.position.x, client.position.y, client.position.z + 1)
-        client.send(SendMessage("You set your height to ${client.position.z}"))
+        client.sendMessage("You set your height to ${client.position.z}")
         return true
     }
     if (context.alias == "godown" && context.specialRights) {
         client.teleportTo(client.position.x, client.position.y, maxOf(client.position.z - 1, 0))
-        client.send(SendMessage("You set your height to ${client.position.z}"))
+        client.sendMessage("You set your height to ${client.position.z}")
         return true
     }
-    if ((context.alias == "bank" || context.alias == "b") && client.playerRights > 1 && net.dodian.utilities.gameWorldId < 2) {
+    if ((context.alias == "bank" || context.alias == "b") && client.playerRights > 1 && gameWorldId < 2) {
         client.openUpBank()
         return true
     }
@@ -48,14 +49,14 @@ private fun handlePosition(context: CommandContext): Boolean {
             val newPosY = cmd[2].toInt()
             val newHeight = if (cmd.size != 4) 0 else cmd[3].toInt()
             client.transport(Position(newPosX, newPosY, newHeight))
-            client.send(SendMessage("Welcome to $newPosX, $newPosY at height $newHeight"))
+            client.sendMessage("Welcome to $newPosX, $newPosY at height $newHeight")
             true
         } catch (_: Exception) {
             context.usage("Wrong usage.. ::${cmd[0]} x y or ::${cmd[0]} x y height")
         }
     }
     if ((context.rawCommand.equals("mypos", true) || context.rawCommand.equals("pos", true)) && (context.specialRights || isBetaWorld())) {
-        client.send(SendMessage("Your position is (${client.position.x} , ${client.position.y})"))
+        client.sendMessage("Your position is (${client.position.x} , ${client.position.y})")
         return true
     }
     return false

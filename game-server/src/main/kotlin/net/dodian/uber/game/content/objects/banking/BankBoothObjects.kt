@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.objects.banking
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.world.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
@@ -27,7 +27,7 @@ object BankBoothObjects : ObjectContent {
     }
 
     override fun onFourthClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        client.send(SendMessage("This bank options are not working currently!"))
+        client.sendMessage("This bank options are not working currently!")
         return true
     }
 }

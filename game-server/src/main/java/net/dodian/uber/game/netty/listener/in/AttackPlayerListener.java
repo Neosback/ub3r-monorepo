@@ -1,9 +1,6 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.GameEventScheduler;
-import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
@@ -11,15 +8,11 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.runtime.scheduler.QueueTask;
-import net.dodian.uber.game.runtime.scheduler.QueueTaskService;
-import net.dodian.uber.game.runtime.combat.CombatIntent;
-import net.dodian.uber.game.runtime.combat.CombatStartService;
+import net.dodian.uber.game.systems.combat.CombatIntent;
+import net.dodian.uber.game.systems.combat.CombatStartService;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.dodian.uber.game.combat.PlayerAttackCombatKt;
-import static net.dodian.utilities.DotEnvKt.getQueueTasksEnabled;
 
 /**
  * Opcode 73 – player attacking another player.
@@ -44,11 +37,10 @@ public class AttackPlayerListener implements PacketListener {
 
         if (client.deathStage >= 1) return;
 
-        Client plr = Server.playerHandler.getClient(victimSlot);
+        Client plr = PlayerRegistry.getClient(victimSlot);
         if (plr == null) return;
         if (client.randomed || client.UsingAgility) return;
 
-        boolean rangedAttack = PlayerAttackCombatKt.getAttackStyle(client) != 0;
         CombatStartService.startPlayerAttack(client, plr, CombatIntent.ATTACK_PLAYER);
     }
 }

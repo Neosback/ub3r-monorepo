@@ -3,12 +3,12 @@ package net.dodian.uber.game.persistence.account.login
 import java.sql.Connection
 import net.dodian.uber.game.model.Login
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.account.AccountPersistenceService
-import net.dodian.utilities.dbConnection
-import net.dodian.utilities.serverDebugMode
-import net.dodian.utilities.serverEnv
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
+import net.dodian.uber.game.config.serverDebugMode
+import net.dodian.uber.game.config.serverEnv
 
 object AccountLoginService {
     const val FINAL_SAVE_PENDING_INTERNAL = 98
@@ -16,7 +16,7 @@ object AccountLoginService {
     @JvmStatic
     fun loadCharacterGame(player: Client, playerName: String, playerPass: String): Int =
         try {
-            dbConnection.use { connection ->
+            DbAsyncRepository.withConnection { connection ->
                 loadCharacterGame(
                     player = player,
                     playerName = playerName,
@@ -34,7 +34,7 @@ object AccountLoginService {
     @JvmStatic
     fun loadGame(player: Client, playerName: String, playerPass: String): Int =
         try {
-            dbConnection.use { connection ->
+            DbAsyncRepository.withConnection { connection ->
                 loadGame(
                     player = player,
                     playerName = playerName,
@@ -53,18 +53,18 @@ object AccountLoginService {
     @JvmStatic
     fun updatePlayerForumRegistration(player: Client) {
         try {
-            dbConnection.use { connection ->
+            DbAsyncRepository.withConnection { connection ->
                 AccountLoginRepository.updateForumRegistration(connection, player.dbId, "40")
             }
         } catch (exception: Exception) {
             println("Something wrong with updating a players forum rights $exception")
         }
-        player.send(SendMessage("You have now been registered to the forum! Enjoy your stay :D"))
+        player.sendMessage("You have now been registered to the forum! Enjoy your stay :D")
     }
 
     @JvmStatic
     fun isBanned(id: Int): Boolean =
-        dbConnection.use { connection ->
+        DbAsyncRepository.withConnection { connection ->
             AccountLoginRepository.isBanned(connection, id)
         }
 
@@ -76,7 +76,7 @@ object AccountLoginService {
         allowDevAutoCreate: Boolean,
         allowDevPasswordBypass: Boolean,
     ): Int {
-        if (PlayerHandler.isPlayerOn(playerName)) {
+        if (PlayerRegistry.isPlayerOn(playerName)) {
             return 5
         }
         if (playerName.isEmpty()) {

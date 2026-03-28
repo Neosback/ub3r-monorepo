@@ -1,0 +1,29 @@
+package net.dodian.uber.game.content.skills.crafting.objects
+
+import net.dodian.uber.game.world.cache.`object`.GameObjectData
+import net.dodian.uber.game.content.objects.ObjectContent
+import net.dodian.uber.game.content.platform.SkillDataRegistry
+import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.model.UpdateFlag
+import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.content.skills.crafting.CraftingPlugin
+
+object SpinningWheelObjects : ObjectContent {
+    override val objectIds: IntArray = SkillDataRegistry.craftingSpinningWheelObjects()
+
+    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+        return when (objectId) {
+            14889, 25824 -> {
+                client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
+                CraftingPlugin.startSpinning(client)
+                true
+            }
+            14896, 14909 -> {
+                client.addItem(1779, 1)
+                client.checkItemUpdate()
+                true
+            }
+            else -> false
+        }
+    }
+}

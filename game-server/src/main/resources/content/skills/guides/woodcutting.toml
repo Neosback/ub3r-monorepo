@@ -1,0 +1,30 @@
+skillId = 8
+hideComponents = [8825]
+
+[[labels]]
+componentId = 8846
+text = "Axes"
+[[labels]]
+componentId = 8823
+text = "Logs"
+[[labels]]
+componentId = 8824
+text = "Misc"
+
+[[pages]]
+child = 0
+names = ["Bronze Axe","Iron Axe","Steel Axe","Black Axe","Mithril Axe","Adamant Axe","Rune Axe","Dragon Axe"]
+levels = ["1","1","6","11","21","31","41","61"]
+items = [1351,1349,1353,1361,1355,1357,1359,6739]
+
+[[pages]]
+child = 1
+names = ["Logs","Oak logs","Willow logs","Maple logs","Yew logs","Magic logs"]
+levels = ["1","15","30","45","60","75"]
+items = [1511,1521,1519,1517,1515,1513]
+
+[[pages]]
+child = 2
+names = ["Skillcape @red@(Premium only)"]
+levels = ["99"]
+items = [9807]

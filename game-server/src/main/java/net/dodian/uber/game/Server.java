@@ -1,55 +1,46 @@
 package net.dodian.uber.game;
 
-import net.dodian.cache.Cache;
-import net.dodian.cache.object.GameObjectData;
-import net.dodian.cache.object.ObjectDef;
-import net.dodian.cache.object.ObjectLoader;
-import net.dodian.cache.region.Region;
-import net.dodian.jobs.GameTickScheduler;
-import net.dodian.jobs.impl.*;
 import net.dodian.uber.game.model.Login;
-import net.dodian.uber.game.model.ShopHandler;
+import net.dodian.uber.game.model.ShopManager;
 import net.dodian.uber.game.model.chunk.ChunkManager;
+import net.dodian.uber.game.content.platform.ContentPlatformBootstrap;
 import net.dodian.uber.game.content.objects.ObjectContentRegistry;
-import net.dodian.uber.game.model.entity.npc.NpcManager;
+import net.dodian.uber.game.systems.world.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.model.item.ItemManager;
-import net.dodian.uber.game.model.object.DoorHandler;
+import net.dodian.uber.game.model.object.DoorRegistry;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
-import net.dodian.uber.game.runtime.loop.GameLoopService;
-import net.dodian.uber.game.runtime.phases.OutboundPacketProcessor;
+import net.dodian.uber.game.engine.loop.GameLoopService;
+import net.dodian.uber.game.engine.loop.GameTickScheduler;
 import net.dodian.uber.game.event.GameEventBus;
-import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
+import net.dodian.uber.game.systems.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.world.WorldDbPollService;
 import net.dodian.uber.game.persistence.WorldPollPublisher;
 import net.dodian.uber.game.persistence.audit.AsyncSqlService;
 import net.dodian.uber.game.persistence.audit.ChatLog;
-import net.dodian.utilities.DbTables;
-import net.dodian.utilities.DotEnvKt;
-import net.dodian.utilities.Rangable;
+import net.dodian.uber.game.persistence.world.ObjectDefinitionRepository;
+import net.dodian.uber.game.config.DotEnvKt;
 import net.dodian.utilities.Utils;
+import net.dodian.uber.game.systems.world.cache.WorldCacheBootstrap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 import net.dodian.uber.game.netty.bootstrap.NettyGameServer;
 
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static net.dodian.uber.api.WebApiKt.launchWebApi;
-import static net.dodian.utilities.DotEnvKt.*;
-import static net.dodian.utilities.DatabaseKt.closeConnectionPool;
-import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
-import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.webapi.WebApiKt.launchWebApi;
+import static net.dodian.uber.game.config.DotEnvKt.*;
+import static net.dodian.uber.game.persistence.db.DatabaseKt.closeConnectionPool;
+import static net.dodian.uber.game.persistence.db.DatabaseInitializerKt.initializeDatabase;
+import static net.dodian.uber.game.persistence.db.DatabaseInitializerKt.isDatabaseInitialized;
 
 public class Server {
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
@@ -73,8 +64,7 @@ public class Server {
     public static Map tempConns = new HashMap<>();
     public static Server clientHandler = null;
     public static boolean shutdownServer = false;
-    public static PlayerHandler playerHandler = null;
-    public static ShopHandler shopHandler = null;
+    public static ShopManager shopManager = null;
     public static boolean antiddos = false;
     public static ChunkManager chunkManager = null;
 
@@ -103,12 +93,12 @@ public class Server {
             initializeDatabase();
         }
 
+        itemManager = new ItemManager();
         npcManager = new NpcManager();
+        ContentPlatformBootstrap.bootstrapAndValidate();
         npcManager.loadSpawns();
         NpcTimerScheduler.initialize(npcManager.getNpcs());
         logger.info("DONE LOADING NPC CONFIGURATION");
-        itemManager = new ItemManager();
-        playerHandler = new PlayerHandler();
         chunkManager = new ChunkManager();
         // NPC spawns are loaded before ChunkManager exists. Now that chunk repos are available,
         // bootstrap chunk membership once so viewport snapshots and active-chunk processing can see NPCs.
@@ -117,24 +107,18 @@ public class Server {
                 npc.syncChunkMembership();
             }
         }
-        shopHandler = new ShopHandler();
+        shopManager = new ShopManager();
         clientHandler = new Server();
         login = new Login();
-        Cache.load();
-        ObjectDef.loadConfig();
-        Region.load();
-        Rangable.load();
-        ObjectLoader objectLoader = new ObjectLoader();
-        objectLoader.load();
-        GameObjectData.init();
+        WorldCacheBootstrap.bootstrap();
         loadObjects();
-        new DoorHandler();
+        new DoorRegistry();
         ObjectContentRegistry.bootstrap();
         net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry.bootstrap();
         GameEventBus.bootstrap();
         ObjectContentRegistry.prewarmObjectDefinitions();
 
-        nettyServer = new NettyGameServer(DotEnvKt.getServerPort(), playerHandler);
+        nettyServer = new NettyGameServer(DotEnvKt.getServerPort());
         logger.info("Starting Netty game server...");
         nettyServer.start();
 
@@ -147,19 +131,7 @@ public class Server {
 
 
         /* Processor for various stuff */
-        if (getGameLoopEnabled()) {
-            gameLoopService.start();
-        } else {
-            gameTickScheduler.registerTask("EntityProcessor", TICK, new EntityProcessor());
-            gameTickScheduler.registerTask("ActionProcessor", TICK, new ActionProcessor());
-            gameTickScheduler.registerTask("OutboundPacketProcessor", TICK, new OutboundPacketProcessor());
-            gameTickScheduler.registerTask("ItemProcessor", TICK, new ItemProcessor());
-            gameTickScheduler.registerTask("ShopProcessor", TICK, new ShopProcessor());
-            gameTickScheduler.registerTask("ObjectProcess", TICK, new ObjectProcess());
-            gameTickScheduler.registerTask("FarmingProcess", TICK * 100L, new FarmingProcess());
-            gameTickScheduler.registerTask("PlunderDoor", 900_000L, new PlunderDoor());
-            gameTickScheduler.start();
-        }
+        gameLoopService.start();
         System.gc();
         Login.banUid();
         logger.info("Server is now running on world " + getGameWorldId() + "!");
@@ -174,8 +146,8 @@ public class Server {
 
     public static int totalHostConnection(String host) {
         int num = 0;
-        for (int slot = 0; slot < PlayerHandler.players.length; slot++) {
-            Player p = PlayerHandler.players[slot];
+        for (int slot = 0; slot < PlayerRegistry.players.length; slot++) {
+            Player p = net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slot];
             if (p != null) {
                 if (host.equals(p.connectedFrom))
                     num++;
@@ -186,15 +158,9 @@ public class Server {
 
 
     public static void loadObjects() {
-        String sql = "SELECT id, x, y, type FROM " + DbTables.GAME_OBJECT_DEFINITIONS;
-
-        try (java.sql.Connection conn = getDbConnection();
-             Statement statement = conn.createStatement();
-             ResultSet results = statement.executeQuery(sql)) {
-
-            while (results.next()) {
-                objects.add(new RS2Object(results.getInt("id"), results.getInt("x"), results.getInt("y"), results.getInt("type")));
-            }
+        try {
+            objects.clear();
+            objects.addAll(ObjectDefinitionRepository.loadObjects());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -206,11 +172,7 @@ public class Server {
             return;
         }
 
-        if (getGameLoopEnabled()) {
-            gameLoopService.stop(Duration.ofSeconds(10));
-        } else {
-            gameTickScheduler.stop();
-        }
+        gameLoopService.stop(Duration.ofSeconds(10));
 
         try {
             AccountPersistenceService.shutdownAndDrain(Duration.ofSeconds(30));

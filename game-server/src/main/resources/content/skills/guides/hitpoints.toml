@@ -1,0 +1,11 @@
+skillId = 3
+hideComponents = [8825,8813]
+
+[[labels]]
+componentId = 8846
+text = "Hitpoints"
+
+[[pages]]
+child = 0
+names = ["Shrimps (3 health)","Chicken (3 health)","Meat (3 health)","Bread (5 health)","Thin snail (7 health)","Trout (8 health)","Salmon (10 health)","Lobster (12 health)","Swordfish (14 health)","Monkfish (16 health) @red@(Premium only)","Shark (20 health)","Sea Turtle (22 health) @red@(Premium only)","Manta Ray (24 health) @red@(Premium only)"]
+items = [315,2140,2142,2309,3369,333,329,379,373,7946,385,397,391]

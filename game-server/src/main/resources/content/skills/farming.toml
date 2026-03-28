@@ -1,0 +1,881 @@
+regularCompostItems = [6055,6010,6014,6020,1793,5986,5504,1955,1963,2108,5970,1957,1942,1965,1951,2126,753,1779,401,249,199,251,201,253,203,255,205,257,207]
+superCompostItems = [2114,5982,5972,5974,5978,5976,231,247,239,6018,2998,3049,261,211,263,213,3000,3051,265,215,2481,2485,267,217,269,219,259,209]
+BUCKET = 1925
+SPADE = 952
+RAKE = 5341
+SEED_DIBBER = 5343
+TROWEL = 5325
+FILLED_PLANT_POT = 5354
+EMPTY_PLANT_POT = 5350
+SECATEURS = 5329
+MAGIC_SECATEURS = 7409
+PLANT_CURE = 6036
+VOLCANIC_ASH = -1
+RAKE_ANIM = 2273
+SPADE_ANIM = 830
+WATERCAN_ANIM = 2293
+PLANTSEED_ANIM = 2291
+PRUNE_SECATEURS_ANIM = 2279
+HARVEST_FRUIT_ANIM = 2280
+HARVEST_BUSH_ANIM = 2281
+HARVEST_ANIM = 2282
+COMPOST_PATCH_ANIM = 2283
+CURING_ANIM = 2288
+FILL_PLANTPOT_ANIM = 2287
+farmPatchConfig = 4771
+compostBinConfig = 4775
+patchStates = ["WEED","GROWING","PROTECTED","DISEASE","DEAD","HARVEST","WATER","PRODUCTION","STUMP"]
+compostStates = ["EMPTY","FILLED","CLOSED","DONE","OPEN"]
+
+[[patchDefinitions]]
+name = "POTATO"
+family = "ALLOTMENT"
+ordinal = 0
+level = 1
+seed = 5318
+plantXp = 32
+disease = 180
+config = 5
+stages = 5
+ticks = 8
+harvestXp = 36
+harvestItem = 1942
+
+[[patchDefinitions]]
+name = "ONION"
+family = "ALLOTMENT"
+ordinal = 1
+level = 5
+seed = 5319
+plantXp = 38
+disease = 190
+config = 12
+stages = 5
+ticks = 8
+harvestXp = 42
+harvestItem = 1957
+
+[[patchDefinitions]]
+name = "CABBAGE"
+family = "ALLOTMENT"
+ordinal = 2
+level = 9
+seed = 5324
+plantXp = 40
+disease = 200
+config = 19
+stages = 5
+ticks = 8
+harvestXp = 46
+harvestItem = 1965
+
+[[patchDefinitions]]
+name = "TOMATO"
+family = "ALLOTMENT"
+ordinal = 3
+level = 16
+seed = 5322
+plantXp = 50
+disease = 210
+config = 26
+stages = 5
+ticks = 8
+harvestXp = 56
+harvestItem = 1982
+
+[[patchDefinitions]]
+name = "SWEETCORN"
+family = "ALLOTMENT"
+ordinal = 4
+level = 25
+seed = 5320
+plantXp = 68
+disease = 220
+config = 33
+stages = 7
+ticks = 8
+harvestXp = 76
+harvestItem = 5986
+
+[[patchDefinitions]]
+name = "STRAWBERRY"
+family = "ALLOTMENT"
+ordinal = 5
+level = 31
+seed = 5323
+plantXp = 100
+disease = 230
+config = 42
+stages = 7
+ticks = 8
+harvestXp = 116
+harvestItem = 5504
+
+[[patchDefinitions]]
+name = "WATERMELONS"
+family = "ALLOTMENT"
+ordinal = 6
+level = 47
+seed = 5321
+plantXp = 180
+disease = 240
+config = 51
+stages = 9
+ticks = 8
+harvestXp = 208
+harvestItem = 5982
+
+[[patchDefinitions]]
+name = "MARIGOLD"
+family = "FLOWER"
+ordinal = 0
+level = 3
+seed = 5096
+plantXp = 36
+disease = 185
+config = 7
+stages = 5
+ticks = 4
+harvestXp = 180
+harvestItem = 6010
+
+[[patchDefinitions]]
+name = "ROSEMARY"
+family = "FLOWER"
+ordinal = 1
+level = 13
+seed = 5097
+plantXp = 48
+disease = 190
+config = 12
+stages = 5
+ticks = 4
+harvestXp = 260
+harvestItem = 6014
+
+[[patchDefinitions]]
+name = "NASTURTIUM"
+family = "FLOWER"
+ordinal = 2
+level = 22
+seed = 5098
+plantXp = 80
+disease = 195
+config = 17
+stages = 5
+ticks = 4
+harvestXp = 440
+harvestItem = 6012
+
+[[patchDefinitions]]
+name = "WOAD"
+family = "FLOWER"
+ordinal = 3
+level = 26
+seed = 5099
+plantXp = 88
+disease = 200
+config = 22
+stages = 5
+ticks = 4
+harvestXp = 480
+harvestItem = 1793
+
+[[patchDefinitions]]
+name = "LIMPWURT"
+family = "FLOWER"
+ordinal = 4
+level = 34
+seed = 5100
+plantXp = 96
+disease = 210
+config = 27
+stages = 5
+ticks = 4
+harvestXp = 500
+harvestItem = 225
+
+[[patchDefinitions]]
+name = "GUAM"
+family = "HERB"
+ordinal = 0
+level = 8
+seed = 5291
+plantXp = 44
+disease = 210
+config = 3
+stages = 5
+ticks = 15
+harvestXp = 50
+harvestItem = 199
+
+[[patchDefinitions]]
+name = "MARRENTILL"
+family = "HERB"
+ordinal = 1
+level = 12
+seed = 5292
+plantXp = 54
+disease = 220
+config = 10
+stages = 5
+ticks = 15
+harvestXp = 60
+harvestItem = 201
+
+[[patchDefinitions]]
+name = "TARROMIN"
+family = "HERB"
+ordinal = 2
+level = 19
+seed = 5293
+plantXp = 64
+disease = 230
+config = 17
+stages = 5
+ticks = 15
+harvestXp = 72
+harvestItem = 203
+
+[[patchDefinitions]]
+name = "HARRALANDER"
+family = "HERB"
+ordinal = 3
+level = 999
+seed = 5294
+plantXp = 86
+disease = 240
+config = 24
+stages = 5
+ticks = 15
+harvestXp = 96
+harvestItem = -1
+
+[[patchDefinitions]]
+name = "RANARR"
+family = "HERB"
+ordinal = 4
+level = 34
+seed = 5295
+plantXp = 108
+disease = 250
+config = 31
+stages = 5
+ticks = 15
+harvestXp = 122
+harvestItem = 207
+
+[[patchDefinitions]]
+name = "TOADFLAX"
+family = "HERB"
+ordinal = 5
+level = 999
+seed = 5296
+plantXp = 154
+disease = 260
+config = 38
+stages = 5
+ticks = 15
+harvestXp = 154
+harvestItem = -1
+
+[[patchDefinitions]]
+name = "IRIT"
+family = "HERB"
+ordinal = 6
+level = 44
+seed = 5297
+plantXp = 172
+disease = 270
+config = 45
+stages = 5
+ticks = 15
+harvestXp = 194
+harvestItem = 209
+
+[[patchDefinitions]]
+name = "AVANTOE"
+family = "HERB"
+ordinal = 7
+level = 999
+seed = 5298
+plantXp = 218
+disease = 280
+config = 52
+stages = 5
+ticks = 15
+harvestXp = 246
+harvestItem = -1
+
+[[patchDefinitions]]
+name = "KWUARM"
+family = "HERB"
+ordinal = 8
+level = 56
+seed = 5299
+plantXp = 276
+disease = 290
+config = 67
+stages = 5
+ticks = 15
+harvestXp = 312
+harvestItem = 213
+
+[[patchDefinitions]]
+name = "SNAPDRAGON"
+family = "HERB"
+ordinal = 9
+level = 63
+seed = 5300
+plantXp = 350
+disease = 300
+config = 74
+stages = 5
+ticks = 15
+harvestXp = 394
+harvestItem = 3051
+
+[[patchDefinitions]]
+name = "CADANTINE"
+family = "HERB"
+ordinal = 10
+level = 70
+seed = 5301
+plantXp = 426
+disease = 310
+config = 81
+stages = 5
+ticks = 15
+harvestXp = 480
+harvestItem = 215
+
+[[patchDefinitions]]
+name = "LANTADYME"
+family = "HERB"
+ordinal = 11
+level = 999
+seed = 5302
+plantXp = 538
+disease = 320
+config = 88
+stages = 5
+ticks = 15
+harvestXp = 606
+harvestItem = -1
+
+[[patchDefinitions]]
+name = "DWARF_WEED"
+family = "HERB"
+ordinal = 12
+level = 79
+seed = 5303
+plantXp = 682
+disease = 330
+config = 95
+stages = 5
+ticks = 15
+harvestXp = 768
+harvestItem = 217
+
+[[patchDefinitions]]
+name = "TORSTOL"
+family = "HERB"
+ordinal = 13
+level = 85
+seed = 5304
+plantXp = 798
+disease = 340
+config = 102
+stages = 5
+ticks = 15
+harvestXp = 898
+harvestItem = 219
+
+[[patchDefinitions]]
+name = "REDBERRY_BUSH"
+family = "BUSH"
+ordinal = 0
+level = 22
+seed = 5101
+plantXp = 44
+disease = 230
+config = 4
+stages = 6
+ticks = 16
+checkHealthXp = 256
+harvestXp = 20
+harvestItem = 1951
+
+[[patchDefinitions]]
+name = "CADAVABERRY_BUSH"
+family = "BUSH"
+ordinal = 1
+level = 68
+seed = 5102
+plantXp = 400
+disease = 230
+config = 14
+stages = 7
+ticks = 16
+checkHealthXp = 2280
+harvestXp = 136
+harvestItem = 1987
+
+[[patchDefinitions]]
+name = "DWELLBERRY_BUSH"
+family = "BUSH"
+ordinal = 2
+level = 36
+seed = 5103
+plantXp = 120
+disease = 230
+config = 25
+stages = 8
+ticks = 16
+checkHealthXp = 700
+harvestXp = 48
+harvestItem = 2126
+
+[[patchDefinitions]]
+name = "JANGERBERRY_BUSH"
+family = "BUSH"
+ordinal = 3
+level = 48
+seed = 5104
+plantXp = 200
+disease = 230
+config = 37
+stages = 9
+ticks = 16
+checkHealthXp = 1120
+harvestXp = 76
+harvestItem = 247
+
+[[patchDefinitions]]
+name = "WHITEBERRY_BUSH"
+family = "BUSH"
+ordinal = 4
+level = 59
+seed = 5105
+plantXp = 312
+disease = 230
+config = 50
+stages = 9
+ticks = 16
+checkHealthXp = 1720
+harvestXp = 116
+harvestItem = 239
+
+[[patchDefinitions]]
+name = "APPLE_TREE"
+family = "FRUIT_TREE"
+ordinal = 0
+level = 27
+seed = 5496
+plantXp = 88
+disease = 240
+config = 7
+stages = 7
+ticks = 120
+checkHealthXp = 5090
+harvestXp = 36
+harvestItem = 1955
+
+[[patchDefinitions]]
+name = "BANANA_TREE"
+family = "FRUIT_TREE"
+ordinal = 1
+level = 33
+seed = 5497
+plantXp = 112
+disease = 240
+config = 34
+stages = 7
+ticks = 120
+checkHealthXp = 7366
+harvestXp = 44
+harvestItem = 1963
+
+[[patchDefinitions]]
+name = "ORANGE_TREE"
+family = "FRUIT_TREE"
+ordinal = 2
+level = 39
+seed = 5498
+plantXp = 140
+disease = 240
+config = 71
+stages = 7
+ticks = 120
+checkHealthXp = 10340
+harvestXp = 52
+harvestItem = 2108
+
+[[patchDefinitions]]
+name = "CURRY_TREE"
+family = "FRUIT_TREE"
+ordinal = 3
+level = 45
+seed = 5499
+plantXp = 160
+disease = 240
+config = 98
+stages = 7
+ticks = 120
+checkHealthXp = 12140
+harvestXp = 64
+harvestItem = 5970
+
+[[patchDefinitions]]
+name = "PINEAPPLE_TREE"
+family = "FRUIT_TREE"
+ordinal = 4
+level = 51
+seed = 5500
+plantXp = 220
+disease = 240
+config = 135
+stages = 7
+ticks = 120
+checkHealthXp = 19160
+harvestXp = 84
+harvestItem = 2114
+
+[[patchDefinitions]]
+name = "PAPAYA_TREE"
+family = "FRUIT_TREE"
+ordinal = 5
+level = 57
+seed = 5501
+plantXp = 280
+disease = 240
+config = 162
+stages = 7
+ticks = 120
+checkHealthXp = 25520
+harvestXp = 108
+harvestItem = 5972
+
+[[patchDefinitions]]
+name = "PALM_TREE"
+family = "FRUIT_TREE"
+ordinal = 6
+level = 63
+seed = 5502
+plantXp = 440
+disease = 240
+config = 199
+stages = 7
+ticks = 120
+checkHealthXp = 42000
+harvestXp = 140
+harvestItem = 5974
+
+[[patchDefinitions]]
+name = "OAK_TREE"
+family = "TREE"
+ordinal = 0
+level = 15
+seed = 5370
+plantXp = 60
+disease = 190
+config = 7
+stages = 5
+ticks = 30
+checkHealthXp = 1860
+harvestXp = 0
+harvestItem = 1521
+
+[[patchDefinitions]]
+name = "WILLOW_TREE"
+family = "TREE"
+ordinal = 1
+level = 30
+seed = 5371
+plantXp = 100
+disease = 200
+config = 14
+stages = 7
+ticks = 30
+checkHealthXp = 5800
+harvestXp = 0
+harvestItem = 1519
+
+[[patchDefinitions]]
+name = "MAPLE_TREE"
+family = "TREE"
+ordinal = 2
+level = 45
+seed = 5372
+plantXp = 180
+disease = 210
+config = 23
+stages = 9
+ticks = 30
+checkHealthXp = 13600
+harvestXp = 0
+harvestItem = 1517
+
+[[patchDefinitions]]
+name = "YEW_TREE"
+family = "TREE"
+ordinal = 3
+level = 60
+seed = 5373
+plantXp = 320
+disease = 220
+config = 34
+stages = 11
+ticks = 30
+checkHealthXp = 28000
+harvestXp = 0
+harvestItem = 1515
+
+[[patchDefinitions]]
+name = "MAGIC_TREE"
+family = "TREE"
+ordinal = 4
+level = 75
+seed = 5374
+plantXp = 580
+disease = 230
+config = 47
+stages = 13
+ticks = 30
+checkHealthXp = 54800
+harvestXp = 0
+harvestItem = 1513
+
+[[saplings]]
+name = "OAK"
+ordinal = 0
+farmLevel = 15
+treeSeed = 5312
+plantedId = 5358
+waterId = 5364
+saplingId = 5370
+
+[[saplings]]
+name = "WILLOW"
+ordinal = 1
+farmLevel = 30
+treeSeed = 5313
+plantedId = 5359
+waterId = 5365
+saplingId = 5371
+
+[[saplings]]
+name = "MAPLE"
+ordinal = 2
+farmLevel = 45
+treeSeed = 5314
+plantedId = 5360
+waterId = 5366
+saplingId = 5372
+
+[[saplings]]
+name = "YEW"
+ordinal = 3
+farmLevel = 60
+treeSeed = 5315
+plantedId = 5361
+waterId = 5367
+saplingId = 5373
+
+[[saplings]]
+name = "MAGIC"
+ordinal = 4
+farmLevel = 75
+treeSeed = 5316
+plantedId = 5362
+waterId = 5368
+saplingId = 5374
+
+[[saplings]]
+name = "APPLE"
+ordinal = 5
+farmLevel = 27
+treeSeed = 5283
+plantedId = 5480
+waterId = 5488
+saplingId = 5496
+
+[[saplings]]
+name = "BANANA"
+ordinal = 6
+farmLevel = 33
+treeSeed = 5284
+plantedId = 5481
+waterId = 5489
+saplingId = 5497
+
+[[saplings]]
+name = "ORANGE"
+ordinal = 7
+farmLevel = 39
+treeSeed = 5285
+plantedId = 5482
+waterId = 5490
+saplingId = 5498
+
+[[saplings]]
+name = "CURRY"
+ordinal = 8
+farmLevel = 45
+treeSeed = 5286
+plantedId = 5483
+waterId = 5491
+saplingId = 5499
+
+[[saplings]]
+name = "PINEAPPLE"
+ordinal = 9
+farmLevel = 51
+treeSeed = 5287
+plantedId = 5484
+waterId = 5492
+saplingId = 5500
+
+[[saplings]]
+name = "PAPAYA"
+ordinal = 10
+farmLevel = 57
+treeSeed = 5288
+plantedId = 5485
+waterId = 5493
+saplingId = 5501
+
+[[saplings]]
+name = "PALM"
+ordinal = 11
+farmLevel = 63
+treeSeed = 5289
+plantedId = 5486
+waterId = 5494
+saplingId = 5502
+
+[[patchGroups]]
+name = "CATHERBY_WEST"
+ordinal = 0
+updateX = 2809
+updateY = 3463
+updateZ = 0
+objectIds = [8552,8553,7848,8151]
+
+[[patchGroups]]
+name = "CATHERBY_EAST"
+ordinal = 1
+updateX = 2860
+updateY = 3433
+updateZ = 0
+objectIds = [7965]
+
+[[patchGroups]]
+name = "ARDOUGNE_EAST"
+ordinal = 2
+updateX = 2666
+updateY = 3374
+updateZ = 0
+objectIds = [8554,8555,7849,8152]
+
+[[patchGroups]]
+name = "ARDOUGNE_SOUTH"
+ordinal = 3
+updateX = 2617
+updateY = 3225
+updateZ = 0
+objectIds = [7580]
+
+[[patchGroups]]
+name = "ARDOUGNE_WEST"
+ordinal = 4
+updateX = 2489
+updateY = 3179
+updateZ = 0
+objectIds = [7963]
+
+[[patchGroups]]
+name = "CANIFIS_NORTH"
+ordinal = 5
+updateX = 3601
+updateY = 3525
+updateZ = 0
+objectIds = [8556,8557,7850,8153]
+
+[[patchGroups]]
+name = "GNOME_STRONGHOLD_SOUTH"
+ordinal = 6
+updateX = 2435
+updateY = 3414
+updateZ = 0
+objectIds = [19147]
+
+[[patchGroups]]
+name = "GNOME_STRONGHOLD_EAST"
+ordinal = 7
+updateX = 2475
+updateY = 3445
+updateZ = 0
+objectIds = [7962]
+
+[[patchGroups]]
+name = "TAVERLY_SOUTH"
+ordinal = 8
+updateX = 2935
+updateY = 3437
+updateZ = 0
+objectIds = [8388]
+
+[[compostTypes]]
+name = "NONE"
+ordinal = 0
+itemId = -1
+divideValue = 1
+
+[[compostTypes]]
+name = "COMPOST"
+ordinal = 1
+itemId = 6032
+divideValue = 4
+
+[[compostTypes]]
+name = "SUPERCOMPOST"
+ordinal = 2
+itemId = 6034
+divideValue = 8
+
+[[compostBins]]
+name = "CATHERBY"
+ordinal = 0
+updateX = 2804
+updateY = 3464
+updateZ = 0
+objectId = 7837
+ticks = 1
+
+[[compostBins]]
+name = "ARDOUGNE"
+ordinal = 1
+updateX = 2661
+updateY = 3375
+updateZ = 0
+objectId = 7839
+ticks = 1
+
+[[compostBins]]
+name = "CANAFIS"
+ordinal = 2
+updateX = 3610
+updateY = 3522
+updateZ = 0
+objectId = 7838
+ticks = 1
+
+[[compostBins]]
+name = "FALADOR"
+ordinal = 3
+updateX = 3333
+updateY = 3333
+updateZ = 0
+objectId = 1003
+ticks = 60

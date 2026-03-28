@@ -1,0 +1,812 @@
+smeltFrameIds = [2405,2406,2407,2409,2410,2411,2412,2413]
+
+[[smithingPageSlots]]
+frameId = 1119
+indices = [0,4,8,9,18]
+
+[[smithingPageSlots]]
+frameId = 1120
+indices = [1,2,13,14,17]
+
+[[smithingPageSlots]]
+frameId = 1121
+indices = [15,20,19,21,22]
+
+[[smithingPageSlots]]
+frameId = 1122
+indices = [3,10,12,16,6]
+
+[[smithingPageSlots]]
+frameId = 1123
+indices = [5,7,11,-1,-1]
+
+[[smithingLayout]]
+slotType = "dagger"
+itemNameLineId = 1094
+barCountLineId = 1125
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "axe"
+itemNameLineId = 1091
+barCountLineId = 1126
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "mace"
+itemNameLineId = 1093
+barCountLineId = 1129
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "med_helm"
+itemNameLineId = 1102
+barCountLineId = 1127
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "sword"
+itemNameLineId = 1085
+barCountLineId = 1128
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "nails"
+itemNameLineId = 1107
+barCountLineId = 1124
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "bolts"
+itemNameLineId = 13358
+barCountLineId = 13357
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "wire"
+itemNameLineId = 1108
+barCountLineId = 1130
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "scimitar"
+itemNameLineId = 1087
+barCountLineId = 1116
+barsRequired = 2
+
+[[smithingLayout]]
+slotType = "longsword"
+itemNameLineId = 1086
+barCountLineId = 1089
+barsRequired = 2
+
+[[smithingLayout]]
+slotType = "full_helm"
+itemNameLineId = 1103
+barCountLineId = 1113
+barsRequired = 2
+
+[[smithingLayout]]
+slotType = "knife"
+itemNameLineId = 1106
+barCountLineId = 1131
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "sq_shield"
+itemNameLineId = 1104
+barCountLineId = 1114
+barsRequired = 2
+
+[[smithingLayout]]
+slotType = "warhammer"
+itemNameLineId = 1083
+barCountLineId = 1118
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "battleaxe"
+itemNameLineId = 1092
+barCountLineId = 1095
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "chainbody"
+itemNameLineId = 1098
+barCountLineId = 1109
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "kiteshield"
+itemNameLineId = 1105
+barCountLineId = 1115
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "claws"
+itemNameLineId = 8429
+barCountLineId = 8428
+barsRequired = 2
+
+[[smithingLayout]]
+slotType = "2h_sword"
+itemNameLineId = 1088
+barCountLineId = 1090
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "platelegs"
+itemNameLineId = 1100
+barCountLineId = 1111
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "plateskirt"
+itemNameLineId = 1099
+barCountLineId = 1110
+barsRequired = 3
+
+[[smithingLayout]]
+slotType = "platebody"
+itemNameLineId = 1101
+barCountLineId = 1112
+barsRequired = 5
+
+[[smithingLayout]]
+slotType = "lantern"
+itemNameLineId = 1096
+barCountLineId = 1132
+barsRequired = 1
+
+[[smithingLayout]]
+slotType = "grapple_tip"
+itemNameLineId = 1134
+barCountLineId = 1135
+barsRequired = 1
+
+[[smeltingRecipes]]
+barId = 2349
+name = "Bronze"
+levelRequired = 1
+experience = 120
+[[smeltingRecipes.oreRequirements]]
+itemId = 436
+amount = 1
+[[smeltingRecipes.oreRequirements]]
+itemId = 438
+amount = 1
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [3987,15147]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [3986,15146]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [2807,10247]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [2414,9110]
+
+[[smeltingRecipes]]
+barId = 2351
+name = "Iron"
+levelRequired = 15
+experience = 260
+successChancePercent = 54
+failureMessage = "You fail to refine the iron"
+[[smeltingRecipes.oreRequirements]]
+itemId = 440
+amount = 1
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [3991,15151]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [3990,15150]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [3989,15149]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [3988,15148]
+
+[[smeltingRecipes]]
+barId = 2355
+name = "Silver"
+levelRequired = 20
+experience = 280
+[[smeltingRecipes.oreRequirements]]
+itemId = 442
+amount = 1
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [3995,15155]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [3994,15154]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [3993,15153]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [3992,15152]
+
+[[smeltingRecipes]]
+barId = 2353
+name = "Steel"
+levelRequired = 30
+experience = 360
+[[smeltingRecipes.oreRequirements]]
+itemId = 440
+amount = 1
+[[smeltingRecipes.oreRequirements]]
+itemId = 453
+amount = 2
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [3999,15159]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [3998,15158]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [3997,15157]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [3996,15156]
+
+[[smeltingRecipes]]
+barId = 2357
+name = "Gold"
+levelRequired = 40
+experience = 460
+[[smeltingRecipes.oreRequirements]]
+itemId = 444
+amount = 1
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [4003,15163]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [4002,15162]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [4001,15161]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [4000,15160]
+
+[[smeltingRecipes]]
+barId = 2359
+name = "Mithril"
+levelRequired = 55
+experience = 600
+[[smeltingRecipes.oreRequirements]]
+itemId = 447
+amount = 1
+[[smeltingRecipes.oreRequirements]]
+itemId = 453
+amount = 3
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [7441,29017]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [7440,29016]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [6397,24253]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [4158,16062]
+
+[[smeltingRecipes]]
+barId = 2361
+name = "Adamant"
+levelRequired = 70
+experience = 760
+[[smeltingRecipes.oreRequirements]]
+itemId = 449
+amount = 1
+[[smeltingRecipes.oreRequirements]]
+itemId = 453
+amount = 4
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [7446,29022]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [7444,29020]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [7443,29019]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [7442,29018]
+
+[[smeltingRecipes]]
+barId = 2363
+name = "Rune"
+levelRequired = 85
+experience = 1000
+[[smeltingRecipes.oreRequirements]]
+itemId = 451
+amount = 1
+[[smeltingRecipes.oreRequirements]]
+itemId = 453
+amount = 6
+[[smeltingRecipes.buttonGroups]]
+amount = 1
+rawButtonIds = [7450,29026]
+[[smeltingRecipes.buttonGroups]]
+amount = 5
+rawButtonIds = [7449,29025]
+[[smeltingRecipes.buttonGroups]]
+amount = 10
+rawButtonIds = [7448,29024]
+[[smeltingRecipes.buttonGroups]]
+amount = 28
+rawButtonIds = [7447,29023]
+
+[[smithingTiers]]
+typeId = 1
+displayName = "Bronze"
+barId = 2349
+[[smithingTiers.products]]
+itemId = 1205
+levelRequired = 1
+[[smithingTiers.products]]
+itemId = 1351
+levelRequired = 1
+[[smithingTiers.products]]
+itemId = 1422
+levelRequired = 2
+[[smithingTiers.products]]
+itemId = 1139
+levelRequired = 3
+[[smithingTiers.products]]
+itemId = 1277
+levelRequired = 3
+[[smithingTiers.products]]
+itemId = 819
+levelRequired = 4
+outputAmount = 10
+[[smithingTiers.products]]
+itemId = 4819
+levelRequired = 4
+outputAmount = 15
+[[smithingTiers.products]]
+itemId = 39
+levelRequired = 5
+outputAmount = 15
+[[smithingTiers.products]]
+itemId = 1321
+levelRequired = 5
+[[smithingTiers.products]]
+itemId = 1291
+levelRequired = 6
+[[smithingTiers.products]]
+itemId = 1155
+levelRequired = 7
+[[smithingTiers.products]]
+itemId = 864
+levelRequired = 7
+outputAmount = 5
+[[smithingTiers.products]]
+itemId = 1173
+levelRequired = 8
+[[smithingTiers.products]]
+itemId = 1337
+levelRequired = 9
+[[smithingTiers.products]]
+itemId = 1375
+levelRequired = 10
+[[smithingTiers.products]]
+itemId = 1103
+levelRequired = 11
+[[smithingTiers.products]]
+itemId = 1189
+levelRequired = 12
+[[smithingTiers.products]]
+itemId = 3095
+levelRequired = 13
+[[smithingTiers.products]]
+itemId = 1307
+levelRequired = 14
+[[smithingTiers.products]]
+itemId = 1087
+levelRequired = 16
+[[smithingTiers.products]]
+itemId = 1075
+levelRequired = 16
+[[smithingTiers.products]]
+itemId = 1117
+levelRequired = 18
+[[smithingTiers.products]]
+itemId = 1794
+levelRequired = 4
+
+[[smithingTiers]]
+typeId = 2
+displayName = "Iron"
+barId = 2351
+[[smithingTiers.products]]
+itemId = 1203
+levelRequired = 15
+[[smithingTiers.products]]
+itemId = 1349
+levelRequired = 16
+[[smithingTiers.products]]
+itemId = 1420
+levelRequired = 17
+[[smithingTiers.products]]
+itemId = 1137
+levelRequired = 18
+[[smithingTiers.products]]
+itemId = 1279
+levelRequired = 19
+[[smithingTiers.products]]
+itemId = 820
+levelRequired = 19
+outputAmount = 10
+[[smithingTiers.products]]
+itemId = 4820
+levelRequired = 19
+outputAmount = 15
+[[smithingTiers.products]]
+itemId = 40
+levelRequired = 20
+outputAmount = 15
+[[smithingTiers.products]]
+itemId = 1323
+levelRequired = 20
+[[smithingTiers.products]]
+itemId = 1293
+levelRequired = 21
+[[smithingTiers.products]]
+itemId = 1153
+levelRequired = 22
+[[smithingTiers.products]]
+itemId = 863
+levelRequired = 22
+outputAmount = 5
+[[smithingTiers.products]]
+itemId = 1175
+levelRequired = 23
+[[smithingTiers.products]]
+itemId = 1335
+levelRequired = 24
+[[smithingTiers.products]]
+itemId = 1363
+levelRequired = 25
+[[smithingTiers.products]]
+itemId = 1101
+levelRequired = 26
+[[smithingTiers.products]]
+itemId = 1191
+levelRequired = 27
+[[smithingTiers.products]]
+itemId = 3096
+levelRequired = 28
+[[smithingTiers.products]]
+itemId = 1309
+levelRequired = 29
+[[smithingTiers.products]]
+itemId = 1081
+levelRequired = 31
+[[smithingTiers.products]]
+itemId = 1067
+levelRequired = 31
+[[smithingTiers.products]]
+itemId = 1115
+levelRequired = 33
+[[smithingTiers.products]]
+itemId = 4540
+levelRequired = 26
+
+[[smithingTiers]]
+typeId = 3
+displayName = "Steel"
+barId = 2353
+[[smithingTiers.products]]
+itemId = 1207
+levelRequired = 30
+[[smithingTiers.products]]
+itemId = 1353
+levelRequired = 31
+[[smithingTiers.products]]
+itemId = 1424
+levelRequired = 32
+[[smithingTiers.products]]
+itemId = 1141
+levelRequired = 33
+[[smithingTiers.products]]
+itemId = 1281
+levelRequired = 34
+[[smithingTiers.products]]
+itemId = 821
+levelRequired = 34
+outputAmount = 10
+[[smithingTiers.products]]
+itemId = 1539
+levelRequired = 34
+outputAmount = 15
+[[smithingTiers.products]]
+itemId = 41
+levelRequired = 35
+outputAmount = 15
+[[smithingTiers.products]]
+itemId = 1325
+levelRequired = 35
+[[smithingTiers.products]]
+itemId = 1295
+levelRequired = 36
+[[smithingTiers.products]]
+itemId = 1157
+levelRequired = 37
+[[smithingTiers.products]]
+itemId = 865
+levelRequired = 37
+outputAmount = 5
+[[smithingTiers.products]]
+itemId = 1177
+levelRequired = 38
+[[smithingTiers.products]]
+itemId = 1339
+levelRequired = 39
+[[smithingTiers.products]]
+itemId = 1365
+levelRequired = 40
+[[smithingTiers.products]]
+itemId = 1105
+levelRequired = 41
+[[smithingTiers.products]]
+itemId = 1193
+levelRequired = 42
+[[smithingTiers.products]]
+itemId = 3097
+levelRequired = 43
+[[smithingTiers.products]]
+itemId = 1311
+levelRequired = 44
+[[smithingTiers.products]]
+itemId = 1083
+levelRequired = 46
+[[smithingTiers.products]]
+itemId = 1069
+levelRequired = 46
+[[smithingTiers.products]]
+itemId = 1119
+levelRequired = 48
+[[smithingTiers.products]]
+itemId = 4544
+levelRequired = 49
+[[smithingTiers.products]]
+itemId = 2370
+levelRequired = 36
+
+[[smithingTiers]]
+typeId = 4
+displayName = "Mithril"
+barId = 2359
+[[smithingTiers.products]]
+itemId = 1209
+levelRequired = 50
+[[smithingTiers.products]]
+itemId = 1355
+levelRequired = 51
+[[smithingTiers.products]]
+itemId = 1428
+levelRequired = 52
+[[smithingTiers.products]]
+itemId = 1143
+levelRequired = 53
+[[smithingTiers.products]]
+itemId = 1285
+levelRequired = 53
+[[smithingTiers.products]]
+itemId = 822
+levelRequired = 54
+outputAmount = 10
+[[smithingTiers.products]]
+itemId = 4822
+levelRequired = 54
+outputAmount = 15
+[[smithingTiers.products]]
+itemId = 42
+levelRequired = 55
+outputAmount = 15
+[[smithingTiers.products]]
+itemId = 1329
+levelRequired = 55
+[[smithingTiers.products]]
+itemId = 1299
+levelRequired = 56
+[[smithingTiers.products]]
+itemId = 1159
+levelRequired = 57
+[[smithingTiers.products]]
+itemId = 866
+levelRequired = 57
+outputAmount = 5
+[[smithingTiers.products]]
+itemId = 1181
+levelRequired = 58
+[[smithingTiers.products]]
+itemId = 1343
+levelRequired = 59
+[[smithingTiers.products]]
+itemId = 1369
+levelRequired = 60
+[[smithingTiers.products]]
+itemId = 1109
+levelRequired = 61
+[[smithingTiers.products]]
+itemId = 1197
+levelRequired = 62
+[[smithingTiers.products]]
+itemId = 3099
+levelRequired = 63
+[[smithingTiers.products]]
+itemId = 1315
+levelRequired = 64
+[[smithingTiers.products]]
+itemId = 1085
+levelRequired = 66
+[[smithingTiers.products]]
+itemId = 1071
+levelRequired = 66
+[[smithingTiers.products]]
+itemId = 1121
+levelRequired = 68
+
+[[smithingTiers]]
+typeId = 5
+displayName = "Adamant"
+barId = 2361
+[[smithingTiers.products]]
+itemId = 1211
+levelRequired = 70
+[[smithingTiers.products]]
+itemId = 1357
+levelRequired = 71
+[[smithingTiers.products]]
+itemId = 1430
+levelRequired = 72
+[[smithingTiers.products]]
+itemId = 1145
+levelRequired = 73
+[[smithingTiers.products]]
+itemId = 1287
+levelRequired = 74
+[[smithingTiers.products]]
+itemId = 823
+levelRequired = 74
+outputAmount = 10
+[[smithingTiers.products]]
+itemId = 4823
+levelRequired = 74
+outputAmount = 15
+[[smithingTiers.products]]
+itemId = 43
+levelRequired = 75
+outputAmount = 15
+[[smithingTiers.products]]
+itemId = 1331
+levelRequired = 75
+[[smithingTiers.products]]
+itemId = 1301
+levelRequired = 76
+[[smithingTiers.products]]
+itemId = 1161
+levelRequired = 77
+[[smithingTiers.products]]
+itemId = 867
+levelRequired = 77
+outputAmount = 5
+[[smithingTiers.products]]
+itemId = 1183
+levelRequired = 78
+[[smithingTiers.products]]
+itemId = 1345
+levelRequired = 79
+[[smithingTiers.products]]
+itemId = 1371
+levelRequired = 80
+[[smithingTiers.products]]
+itemId = 1111
+levelRequired = 81
+[[smithingTiers.products]]
+itemId = 1199
+levelRequired = 82
+[[smithingTiers.products]]
+itemId = 3100
+levelRequired = 83
+[[smithingTiers.products]]
+itemId = 1317
+levelRequired = 84
+[[smithingTiers.products]]
+itemId = 1091
+levelRequired = 86
+[[smithingTiers.products]]
+itemId = 1073
+levelRequired = 86
+[[smithingTiers.products]]
+itemId = 1123
+levelRequired = 88
+
+[[smithingTiers]]
+typeId = 6
+displayName = "Rune"
+barId = 2363
+[[smithingTiers.products]]
+itemId = 1213
+levelRequired = 85
+[[smithingTiers.products]]
+itemId = 1359
+levelRequired = 86
+[[smithingTiers.products]]
+itemId = 1432
+levelRequired = 87
+[[smithingTiers.products]]
+itemId = 1147
+levelRequired = 88
+[[smithingTiers.products]]
+itemId = 1289
+levelRequired = 89
+[[smithingTiers.products]]
+itemId = 824
+levelRequired = 89
+outputAmount = 10
+[[smithingTiers.products]]
+itemId = 4824
+levelRequired = 89
+outputAmount = 15
+[[smithingTiers.products]]
+itemId = 44
+levelRequired = 90
+outputAmount = 15
+[[smithingTiers.products]]
+itemId = 1333
+levelRequired = 90
+[[smithingTiers.products]]
+itemId = 1303
+levelRequired = 91
+[[smithingTiers.products]]
+itemId = 1163
+levelRequired = 92
+[[smithingTiers.products]]
+itemId = 868
+levelRequired = 92
+outputAmount = 5
+[[smithingTiers.products]]
+itemId = 1185
+levelRequired = 93
+[[smithingTiers.products]]
+itemId = 1347
+levelRequired = 94
+[[smithingTiers.products]]
+itemId = 1373
+levelRequired = 95
+[[smithingTiers.products]]
+itemId = 1113
+levelRequired = 96
+[[smithingTiers.products]]
+itemId = 1201
+levelRequired = 97
+[[smithingTiers.products]]
+itemId = 3101
+levelRequired = 98
+[[smithingTiers.products]]
+itemId = 1319
+levelRequired = 99
+[[smithingTiers.products]]
+itemId = 1093
+levelRequired = 99
+[[smithingTiers.products]]
+itemId = 1079
+levelRequired = 99
+[[smithingTiers.products]]
+itemId = 1127
+levelRequired = 99

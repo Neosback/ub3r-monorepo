@@ -39,8 +39,6 @@ tasks.jar {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation(project(":game-plugin-index-annotations"))
-    ksp(project(":game-plugin-index-processor"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
@@ -52,6 +50,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.0")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.14.0")
     implementation("org.apache.commons:commons-compress:1.21")
 
     implementation("mysql:mysql-connector-java:8.0.29")
@@ -62,12 +61,15 @@ dependencies {
 
     implementation("io.netty:netty-all:4.1.108.Final")
     implementation("com.google.guava:guava:33.1.0-jre")
+    implementation(project(":routefinder"))
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.3")
     testImplementation("com.h2database:h2:2.2.224")
 
     implementation("com.sparkjava:spark-kotlin:1.0.0-alpha")
+
+    ksp(project(":ksp-processor"))
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -195,11 +197,18 @@ tasks.register<JavaExec>("runIntegrationTest") {
     mainClass.set("net.dodian.uber.game.model.entity.player.PlayerUpdatingIntegrationTest")
 }
 
-tasks.register<JavaExec>("exportWorldFromCache") {
+tasks.register<Copy>("syncMysticCache") {
     group = "build"
-    description = "Export data/world map+object files from data/cache for server clipping/object loaders"
+    description = "Sync mystic client cache into game-server/data/cache/mystic for server runtime"
+    from(rootProject.layout.projectDirectory.dir("mystic-updatedclient/Cache"))
+    into(layout.projectDirectory.dir("data/cache/mystic"))
+}
+
+tasks.register<JavaExec>("exportContentFromDb") {
+    group = "build"
+    description = "Export static-table candidates from configured MySQL to TOML"
     classpath = sourceSets.main.get().runtimeClasspath
-    mainClass.set("net.dodian.cache.tools.CacheWorldExporter")
+    mainClass.set("net.dodian.uber.game.tools.content.ContentDbExportTool")
 }
 
 // Custom task to run all migration tests

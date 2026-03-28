@@ -6,12 +6,12 @@ import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.ShopHandler;
+import net.dodian.uber.game.model.ShopManager;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.item.*;
-import net.dodian.uber.game.model.object.DoorHandler;
+import net.dodian.uber.game.model.object.DoorRegistry;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.content.Skillcape;
 import net.dodian.uber.game.model.player.bank.PlayerBankService;
@@ -20,75 +20,73 @@ import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.skills.slayer.SlayerService;
-import net.dodian.uber.game.skills.farming.FarmingService;
-import net.dodian.uber.game.skills.farming.FarmingState;
+import net.dodian.uber.game.content.skills.slayer.SlayerService;
+import net.dodian.uber.game.content.skills.farming.FarmingService;
+import net.dodian.uber.game.content.skills.farming.FarmingState;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.persistence.command.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
+import net.dodian.uber.game.persistence.player.RefundRecord;
+import net.dodian.uber.game.persistence.player.RefundRepository;
 import net.dodian.uber.game.persistence.player.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
-import net.dodian.uber.game.runtime.net.InboundPacketMailbox;
-import net.dodian.uber.game.runtime.net.OutboundSessionQueue;
-import net.dodian.jobs.impl.EntityProcessor;
-import net.dodian.uber.game.skills.mining.MiningService;
-import net.dodian.uber.game.skills.woodcutting.WoodcuttingService;
-import net.dodian.uber.game.skills.fletching.FletchingService;
-import net.dodian.uber.game.skills.fletching.FletchingState;
-import net.dodian.uber.game.skills.fishing.FishingService;
-import net.dodian.uber.game.skills.fishing.FishingState;
-import net.dodian.uber.game.skills.cooking.CookingService;
-import net.dodian.uber.game.skills.cooking.CookingState;
-import net.dodian.uber.game.skills.crafting.CraftingService;
-import net.dodian.uber.game.skills.crafting.CraftingMode;
-import net.dodian.uber.game.skills.crafting.CraftingState;
-import net.dodian.uber.game.skills.crafting.GoldJewelryService;
-import net.dodian.uber.game.skills.crafting.TanningRequest;
-import net.dodian.uber.game.skills.crafting.TanningService;
-import net.dodian.uber.game.skills.prayer.PrayerInteractionService;
-import net.dodian.uber.game.skills.prayer.PrayerOfferingState;
-import net.dodian.uber.game.skills.runecrafting.RunecraftingDefinitions;
-import net.dodian.uber.game.skills.runecrafting.RunecraftingPouchService;
-import net.dodian.uber.game.skills.runecrafting.RunecraftingService;
-import net.dodian.uber.game.skills.runecrafting.RunecraftingState;
-import net.dodian.uber.game.content.dialogue.DialogueOptionService;
-import net.dodian.uber.game.content.dialogue.DialogueDisplayService;
-import net.dodian.uber.game.content.dialogue.DialogueService;
-import net.dodian.uber.game.skills.smithing.SmithingDefinitions;
-import net.dodian.uber.game.skills.smithing.SmithingInterfaceService;
-import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
+import net.dodian.uber.game.engine.net.InboundPacketMailbox;
+import net.dodian.uber.game.engine.net.OutboundSessionQueue;
+import net.dodian.uber.game.engine.processing.EntityProcessor;
+import net.dodian.uber.game.content.skills.mining.MiningService;
+import net.dodian.uber.game.content.skills.woodcutting.WoodcuttingService;
+import net.dodian.uber.game.content.skills.fletching.FletchingService;
+import net.dodian.uber.game.content.skills.fletching.FletchingState;
+import net.dodian.uber.game.content.skills.fishing.FishingService;
+import net.dodian.uber.game.content.skills.fishing.FishingState;
+import net.dodian.uber.game.content.skills.cooking.CookingService;
+import net.dodian.uber.game.content.skills.cooking.CookingState;
+import net.dodian.uber.game.content.skills.crafting.CraftingService;
+import net.dodian.uber.game.content.skills.crafting.CraftingMode;
+import net.dodian.uber.game.content.skills.crafting.CraftingState;
+import net.dodian.uber.game.content.skills.crafting.GoldJewelryService;
+import net.dodian.uber.game.content.skills.crafting.TanningRequest;
+import net.dodian.uber.game.content.skills.crafting.TanningService;
+import net.dodian.uber.game.content.skills.prayer.PrayerInteractionService;
+import net.dodian.uber.game.content.skills.prayer.PrayerOfferingState;
+import net.dodian.uber.game.content.skills.runecrafting.RunecraftingDefinitions;
+import net.dodian.uber.game.content.skills.runecrafting.RunecraftingPouchService;
+import net.dodian.uber.game.content.skills.runecrafting.RunecraftingService;
+import net.dodian.uber.game.content.skills.runecrafting.RunecraftingState;
+import net.dodian.uber.game.systems.ui.dialogue.DialogueOptionService;
+import net.dodian.uber.game.systems.ui.dialogue.DialogueDisplayService;
+import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
+import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions;
+import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService;
+import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.netty.listener.out.*;
-import net.dodian.uber.game.party.RewardItem;
+import net.dodian.uber.game.content.events.partyroom.RewardItem;
 import net.dodian.uber.game.persistence.audit.*;
-import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
-import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
-import net.dodian.uber.game.runtime.action.PlayerActionType;
-import net.dodian.uber.game.runtime.action.ProductionActionService;
-import net.dodian.uber.game.runtime.action.SkillingActionService;
-import net.dodian.uber.game.runtime.action.SmithingActionService;
-import net.dodian.uber.game.runtime.action.TeleportActionService;
-import net.dodian.uber.game.runtime.animation.PlayerAnimationService;
-import net.dodian.uber.game.runtime.combat.CombatStartService;
-import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService;
-import net.dodian.uber.game.runtime.interaction.InteractionAnchorState;
-import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
+import net.dodian.uber.game.systems.action.PlayerActionCancellationService;
+import net.dodian.uber.game.systems.action.PlayerActionCancelReason;
+import net.dodian.uber.game.systems.action.PlayerActionType;
+import net.dodian.uber.game.systems.action.ProductionActionService;
+import net.dodian.uber.game.systems.action.SkillingActionService;
+import net.dodian.uber.game.systems.action.SmithingActionService;
+import net.dodian.uber.game.systems.action.TeleportActionService;
+import net.dodian.uber.game.systems.animation.PlayerAnimationService;
+import net.dodian.uber.game.systems.combat.CombatStartService;
+import net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService;
+import net.dodian.uber.game.systems.interaction.InteractionAnchorState;
+import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
 import net.dodian.utilities.*;
-import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
+import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import io.netty.channel.Channel;
 
 /* Kotlin imports */
-import static net.dodian.uber.game.combat.ClientExtensionsKt.getRangedStr;
-import static net.dodian.uber.game.combat.PlayerAttackCombatKt.attackTarget;
+import static net.dodian.uber.game.systems.combat.ClientExtensionsKt.getRangedStr;
+import static net.dodian.uber.game.systems.combat.PlayerAttackCombatKt.attackTarget;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
-import static net.dodian.utilities.DotEnvKt.*;
+import static net.dodian.uber.game.config.DotEnvKt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -211,9 +209,6 @@ public class Client extends Player implements Runnable {
     public int stairs = 0, stairDistance = 0;
     public boolean validLogin = false;
 
-    /**
-     * Legacy NPC compatibility bridge.
-     */
     public void openTan() {
         TanningService.open(this);
     }
@@ -331,7 +326,7 @@ public class Client extends Player implements Runnable {
     }
 
     public int getbattleTimer(int weapon) {
-        String wep = GetItemName(weapon).toLowerCase();
+        String wep = getItemName(weapon).toLowerCase();
         //2952 aka wolfbane to strong as 3 tick weapon!
         int wepPlainTick = 4; //Default tick for many weapons
         if (wep.contains("dart") || wep.contains("knife")) {
@@ -376,8 +371,8 @@ public class Client extends Player implements Runnable {
     }
 
     public void animation(int id, Position pos) {
-        for (int i = 0; i < PlayerHandler.players.length; i++) {
-            Player p = PlayerHandler.players[i];
+        for (int i = 0; i < PlayerRegistry.players.length; i++) {
+            Player p = net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i];
             if (p != null) {
                 Client person = (Client) p;
                 if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && pos.getZ() == getPosition().getZ())
@@ -392,8 +387,8 @@ public class Client extends Player implements Runnable {
 
     public void stillgfx(int id, Position pos, int height, boolean showAll) {
         if (showAll) {
-            for (int i = 0; i < PlayerHandler.players.length; i++) {
-                Player p = PlayerHandler.players[i];
+            for (int i = 0; i < PlayerRegistry.players.length; i++) {
+                Player p = net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i];
                 if (p != null) {
                     Client person = (Client) p;
                     if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && getPosition().getZ() == pos.getZ())
@@ -483,7 +478,7 @@ public class Client extends Player implements Runnable {
             }
             return;
         }
-        PlayerHandler.forEachActivePlayer(viewer -> {
+        PlayerRegistry.forEachActivePlayer(viewer -> {
             if (canViewProjectile(viewer, source, false)) {
                 consumer.accept(viewer);
             }
@@ -502,10 +497,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void println_debug(String str) {
-        if (!getClientPacketTraceEnabled() && !getClientUiTraceEnabled()) {
-            return;
-        }
-        logger.debug("[client-{}-{}] {}", getSlot(), getPlayerName(), str);
+        return;
     }
 
     public void print_debug(String str) {
@@ -524,15 +516,23 @@ public class Client extends Player implements Runnable {
         PlayerAnimationService.requestResetClear(this);
     }
 
-    public void sendFrame200(int MainFrame, int SubFrame) {
+    public void sendMessage(String text) {
+        send(new SendMessage(text));
+    }
+
+    public void sendString(String text, int lineId) {
+        send(new SendString(text, lineId));
+    }
+
+    public void sendInterfaceAnimation(int MainFrame, int SubFrame) {
         send(new SendFrame200(MainFrame, SubFrame));
     }
 
-    public void sendFrame164(int Frame) {
+    public void sendChatboxInterface(int Frame) {
         send(new SendFrame164(Frame));
     }
 
-    public void sendFrame246(int MainFrame, int SubFrame, int SubFrame2) {
+    public void sendInterfaceModel(int MainFrame, int SubFrame, int SubFrame2) {
         send(new SendFrame246(MainFrame, SubFrame, SubFrame2));
     }
 
@@ -545,10 +545,14 @@ public class Client extends Player implements Runnable {
             send(new SendString("", j));
     }
 
-    public void showInterface(int interfaceid) {
+    public void openInterface(int interfaceid) {
         resetAction();
-        // Delegates to the new packet implementation while preserving the old method signature.
         send(new ShowInterface(interfaceid));
+    }
+
+    public void closeInterfaces() {
+        send(new RemoveInterfaces());
+        clearWalkableInterface();
     }
 
     public int ancients = 1;
@@ -724,7 +728,7 @@ public class Client extends Player implements Runnable {
         net.dodian.uber.game.netty.listener.PacketListener listener =
                 net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.opcode());
         if (listener != null) {
-            boolean sample = net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.shouldSample();
+            boolean sample = net.dodian.uber.game.engine.metrics.InboundOpcodeProfiler.shouldSample();
             if (logger.isDebugEnabled() && isNpcTraceOpcode(packet.opcode())) {
                 logger.debug(
                         "Inbound npc-trace opcode={} size={} preview={} recent={} player={}",
@@ -735,25 +739,11 @@ public class Client extends Player implements Runnable {
                         getPlayerName()
                 );
             }
-            if (sample || getInboundOpcodeProfilingEnabled()) {
+            if (sample) {
                 long startNs = System.nanoTime();
                 listener.handle(this, packet);
                 long elapsedNs = System.nanoTime() - startNs;
-                if (sample) {
-                    net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.record(this, packet, listener, elapsedNs);
-                }
-                if (getInboundOpcodeProfilingEnabled()) {
-                    long elapsedMs = elapsedNs / 1_000_000L;
-                    if (elapsedMs >= getInboundOpcodeProfilingWarnMs()) {
-                        println_debug(
-                                "Slow inbound opcode " + packet.opcode() +
-                                        " size=" + packet.size() +
-                                        " player=" + getPlayerName() +
-                                        " listener=" + listener.getClass().getSimpleName() +
-                                        " took=" + elapsedMs + "ms"
-                        );
-                    }
-                }
+                net.dodian.uber.game.engine.metrics.InboundOpcodeProfiler.record(this, packet, listener, elapsedNs);
             } else {
                 listener.handle(this, packet);
             }
@@ -775,7 +765,7 @@ public class Client extends Player implements Runnable {
         int slot = recentInboundWriteIndex;
         recentInboundOpcodes[slot] = packet.opcode();
         recentInboundSizes[slot] = packet.size();
-        recentInboundCycles[slot] = PlayerHandler.cycle;
+        recentInboundCycles[slot] = PlayerRegistry.cycle;
         recentInboundWriteIndex = (recentInboundWriteIndex + 1) % RECENT_INBOUND_TRACE_SIZE;
         if (recentInboundCount < RECENT_INBOUND_TRACE_SIZE) {
             recentInboundCount++;
@@ -1045,10 +1035,10 @@ public class Client extends Player implements Runnable {
         if (logout) {
             saveNeeded = false;
             /* Remove player from list! */
-            PlayerHandler.playersOnline.remove(longName);
-            PlayerHandler.allOnline.remove(longName);
+            PlayerRegistry.playersOnline.remove(longName);
+            PlayerRegistry.allOnline.remove(longName);
             println_debug(getPlayerName() + " has logged out correctly!");
-        /*for (Player p : PlayerHandler.players) {
+        /*for (Player p : PlayerRegistry.players) {
             if (p != null && !p.disconnected && p.dbId > 0) {
                 if (p.getDamage().containsKey(getSlot())) {
                     p.getDamage().put(getSlot(), 0);
@@ -1060,7 +1050,7 @@ public class Client extends Player implements Runnable {
                 int minutes = (int) (elapsed / 60000);
                 Server.login.sendSession(dbId, officialClient ? 1 : 1337, minutes, connectedFrom, start, System.currentTimeMillis());
             }
-            for (Client c : PlayerHandler.playersOnline.values()) {
+            for (Client c : PlayerRegistry.playersOnline.values()) {
                 if (c.hasFriend(longName)) {
                     c.refreshFriends();
                 }
@@ -1104,7 +1094,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         boolean bankChanged = false;
-        int id = GetNotedItem(itemID);
+        int id = getNotedItem(itemID);
         if (amount == -2) { //draw all from bank!
             if (!takeAsNote && !Server.itemManager.isStackable(itemID))
                 amount = freeSlots() == 0 ? 1 : Math.min(bankItemsN[fromSlot], freeSlots());
@@ -1236,7 +1226,7 @@ public class Client extends Player implements Runnable {
         }
         boolean bankChanged = false;
         ensureBankTabState();
-        int id = GetUnnotedItem(itemID);
+        int id = getUnnotedItem(itemID);
         if (id == 0) {
             if (playerItems[fromSlot] <= 0) {
                 return;
@@ -1364,7 +1354,7 @@ public class Client extends Player implements Runnable {
                 int toBankSlot = 0;
                 boolean alreadyInBank = false;
                 for (int i = 0; i < bankSize(); i++) {
-                    if (bankItems[i] == GetUnnotedItem(playerItems[fromSlot] - 1) + 1) {
+                    if (bankItems[i] == getUnnotedItem(playerItems[fromSlot] - 1) + 1) {
                         if (playerItemsN[fromSlot] < amount) {
                             amount = playerItemsN[fromSlot];
                         }
@@ -1644,7 +1634,7 @@ public class Client extends Player implements Runnable {
         }
         MyShopID = ShopID;
         checkItemUpdate();
-        send(new SendString(ShopHandler.ShopName[ShopID], 3901));
+        send(new SendString(ShopManager.ShopName[ShopID], 3901));
         send(new InventoryInterface(3824, 3822));
     }
 
@@ -1806,7 +1796,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void deleteItem(int id, int amount) {
-        deleteItem(id, GetItemSlot(id), amount);
+        deleteItem(id, getItemSlot(id), amount);
     }
 
     public void deleteItem(int id, int slot, int amount) {
@@ -1850,7 +1840,7 @@ public class Client extends Player implements Runnable {
         if (isBusy() || interFace != 3214) {
             return;
         }
-        if (net.dodian.uber.game.skills.runecrafting.RunecraftingPlugin.emptyPouch(this, wearID)) { //Runecrafting Pouches
+        if (net.dodian.uber.game.content.skills.runecrafting.RunecraftingPlugin.emptyPouch(this, wearID)) { //Runecrafting Pouches
             return;
         }
         if (wearID == 5733) { //Potato
@@ -1871,7 +1861,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (wearID == 4155) { //Enchanted gem
-            net.dodian.uber.game.skills.slayer.SlayerPlugin.sendCurrentTask(this);
+            net.dodian.uber.game.content.skills.slayer.SlayerPlugin.sendCurrentTask(this);
             return;
         }
         if (duelConfirmed && !duelFight)
@@ -1916,9 +1906,9 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean checkEquip(int id, int slot, int invSlot) {
-        boolean maxCheck = GetItemName(id).contains(("Max cape")) || GetItemName(id).contains(("Max hood"));
+        boolean maxCheck = getItemName(id).contains(("Max cape")) || getItemName(id).contains(("Max hood"));
         if (maxCheck && totalLevel() < Skills.maxTotalLevel()) {
-            send(new SendMessage("You need a total level of " + Skills.maxTotalLevel() + " to equip the " + GetItemName(id).toLowerCase() + "."));
+            send(new SendMessage("You need a total level of " + Skills.maxTotalLevel() + " to equip the " + getItemName(id).toLowerCase() + "."));
             return false;
         }
         int CLAttack = GetCLAttack(id);
@@ -2108,7 +2098,7 @@ public class Client extends Player implements Runnable {
     public int currentSkill = -1;
 
     public static void publicyell(String message) {
-        for (Player p : PlayerHandler.players) {
+        for (Player p : PlayerRegistry.players) {
             if (p == null || !p.isActive) {
                 continue;
             }
@@ -2122,7 +2112,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void yell(String message) {
-        for (Player p : PlayerHandler.players) {
+        for (Player p : PlayerRegistry.players) {
             if (p == null || !p.isActive)
                 continue;
             Client temp = (Client) p;
@@ -2131,7 +2121,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void yellKilled(String message) {
-        for (Player p : PlayerHandler.players) {
+        for (Player p : PlayerRegistry.players) {
             if (p == null || !p.isActive || !(p.inWildy() || p.inEdgeville()))
                 continue;
             Client temp = (Client) p;
@@ -2140,7 +2130,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void yellAreaKilled(String message, String area) {
-        for (Player p : PlayerHandler.players) {
+        for (Player p : PlayerRegistry.players) {
             if (p == null || !p.isActive || !p.getPositionName().contains(area))
                 continue;
             Client temp = (Client) p;
@@ -2194,7 +2184,7 @@ public class Client extends Player implements Runnable {
 
     public boolean usingBow = false;
 
-    public boolean IsItemInBag(int ItemID) {
+    public boolean hasItemInInventory(int ItemID) {
         for (int playerItem : playerItems) {
             if ((playerItem - 1) == ItemID) {
                 return true;
@@ -2203,7 +2193,7 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
-    public boolean AreXItemsInBag(int ItemID, int Amount) {
+    public boolean hasItemsInInventory(int ItemID, int Amount) {
         int ItemCount = 0;
 
         for (int playerItem : playerItems) {
@@ -2217,7 +2207,7 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
-    public int GetItemSlot(int ItemID) {
+    public int getItemSlot(int ItemID) {
         for (int i = 0; i < playerItems.length; i++) {
             if ((playerItems[i] - 1) == ItemID) {
                 return i;
@@ -2233,6 +2223,10 @@ public class Client extends Player implements Runnable {
             }
         }
         return -1;
+    }
+
+    public int getBankItemSlot(int itemId) {
+        return GetBankItemSlot(itemId);
     }
 
     public boolean randomed2;
@@ -2253,7 +2247,7 @@ public class Client extends Player implements Runnable {
 
     public boolean playerHasItem(String name) {
         for (int playerItem : playerItems)
-            if (GetItemName(playerItem - 1).contains(name))
+            if (getItemName(playerItem - 1).contains(name))
                 return true;
         return false;
     }
@@ -2304,7 +2298,7 @@ public class Client extends Player implements Runnable {
 
     public void sendpm(long name, int rights, byte[] chatmessage, int messagesize) {
         // Preserve old signature but route through new outgoing packet implementation.
-        send(new PrivateMessage(name, rights, chatmessage, messagesize, handler.lastchatid++));
+        send(new PrivateMessage(name, rights, chatmessage, messagesize, net.dodian.uber.game.systems.world.player.PlayerRegistry.lastchatid++));
     }
 
     public void loadpm(long name, int world) {
@@ -2356,7 +2350,7 @@ public class Client extends Player implements Runnable {
         return Server.npcManager.getName(NpcID).replaceAll("_", " ");
     }
 
-    public String GetItemName(int ItemID) {
+    public String getItemName(int ItemID) {
         return Server.itemManager.getName(ItemID);
     }
 
@@ -2368,7 +2362,7 @@ public class Client extends Player implements Runnable {
         return Server.itemManager.getShopBuyValue(ItemID);
     }
 
-    public int GetUnnotedItem(int ItemID) {
+    public int getUnnotedItem(int ItemID) {
         String NotedName = Server.itemManager.getName(ItemID);
         for (Item item : Server.itemManager.items.values()) {
             String checkName = item.getName(), checkDesc = item.getDescription();
@@ -2379,7 +2373,7 @@ public class Client extends Player implements Runnable {
         return 0;
     }
 
-    public int GetNotedItem(int ItemID) {
+    public int getNotedItem(int ItemID) {
         String NotedName = Server.itemManager.getName(ItemID);
         for (Item item : Server.itemManager.items.values()) {
             String checkName = item.getName(), checkDesc = item.getDescription();
@@ -2395,6 +2389,10 @@ public class Client extends Player implements Runnable {
         send(new SendRunEnergy(100));
         invalidateUiText(149);
         send(new SendString("100%", 149));
+    }
+
+    public void updateRunEnergy() {
+        WriteEnergy();
     }
 
     public void ResetBonus() {
@@ -2464,7 +2462,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void fromTrade(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
+        if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
             if(!canOffer)  declineTrade(); //Not sure if we need this here but..Maybe?!
             return;
         }
@@ -2533,7 +2531,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void tradeItem(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_TWO, 200L)) {
+        if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
         if (!Server.itemManager.isStackable(itemID))
@@ -2542,9 +2540,7 @@ public class Client extends Player implements Runnable {
             amount = Math.min(amount, playerItemsN[fromSlot]);
         Client other = getClient(trade_reqId);
         if (!inTrade || !validClient(trade_reqId) || !canOffer) {
-            if (getClientPacketTraceEnabled()) {
-                logger.debug("declining in tradeItem() for {}", getPlayerName());
-            }
+            
             declineTrade();
             return;
         }
@@ -2602,27 +2598,27 @@ public class Client extends Player implements Runnable {
         /* Item Values */
         int original = itemID;
         int price = (int) Math.floor(GetShopBuyValue(itemID));
-        itemID = GetUnnotedItem(original) > 0 ? GetUnnotedItem(original) : itemID;
+        itemID = getUnnotedItem(original) > 0 ? getUnnotedItem(original) : itemID;
         /* Functions */
         if (!Server.shopping || tradeLocked) {
             send(new SendMessage(tradeLocked ? "You are trade locked!" : "Currently selling stuff to the store has been disabled!"));
             return;
         }
-        if (price < 0 || !Server.itemManager.isTradable(itemID) || ShopHandler.ShopBModifier[MyShopID] > 2) {
-            send(new SendMessage("You cannot sell " + GetItemName(itemID).toLowerCase() + " in this store."));
+        if (price < 0 || !Server.itemManager.isTradable(itemID) || ShopManager.ShopBModifier[MyShopID] > 2) {
+            send(new SendMessage("You cannot sell " + getItemName(itemID).toLowerCase() + " in this store."));
             return;
         }
-        if (ShopHandler.ShopBModifier[MyShopID] == 2 && !ShopHandler.findDefaultItem(MyShopID, itemID)) {
+        if (ShopManager.ShopBModifier[MyShopID] == 2 && !ShopManager.findDefaultItem(MyShopID, itemID)) {
             send(new SendMessage("Can't sell that item to the store!"));
             return;
         }
         int slot = -1;
-        for (int i = 0; i < ShopHandler.MaxShopItems; i++) {
-            if (ShopHandler.ShopItems[MyShopID][i] <= 0 && slot == -1)
+        for (int i = 0; i < ShopManager.MaxShopItems; i++) {
+            if (ShopManager.ShopItems[MyShopID][i] <= 0 && slot == -1)
                 slot = i;
-            else if (itemID == ShopHandler.ShopItems[MyShopID][i] - 1) {
+            else if (itemID == ShopManager.ShopItems[MyShopID][i] - 1) {
                 slot = i;
-                i = ShopHandler.MaxShopItems; //Just to stop the loop!
+                i = ShopManager.MaxShopItems; //Just to stop the loop!
             }
         }
         if (slot == -1) { //If we do not have a slot means the store is full!
@@ -2632,7 +2628,7 @@ public class Client extends Player implements Runnable {
         /* Amount checks */
         boolean stack = Server.itemManager.isStackable(original);
         amount = Math.min(amount, getInvAmt(original));
-        amount = Math.min(Integer.MAX_VALUE - ShopHandler.ShopItemsN[MyShopID][slot], amount);
+        amount = Math.min(Integer.MAX_VALUE - ShopManager.ShopItemsN[MyShopID][slot], amount);
         amount = Integer.MAX_VALUE - getInvAmt(995) < amount * price ? (Integer.MAX_VALUE - getInvAmt(995)) / price : amount;
 
         if (amount > 0) { // Code to check if there is any amount to sell!
@@ -2643,8 +2639,8 @@ public class Client extends Player implements Runnable {
             } else {
                 deleteItem(original, amount);
             }
-            ShopHandler.ShopItems[MyShopID][slot] = itemID + 1;
-            ShopHandler.ShopItemsN[MyShopID][slot] += amount;
+            ShopManager.ShopItems[MyShopID][slot] = itemID + 1;
+            ShopManager.ShopItemsN[MyShopID][slot] += amount;
             addItem(995, amount * price);
         } else
             send(new SendMessage("Could not sell anything!"));
@@ -2672,9 +2668,9 @@ public class Client extends Player implements Runnable {
     }
 
     public void buyItem(int itemID, int fromSlot, int amount) {
-        if (amount > 0 && itemID == (ShopHandler.ShopItems[MyShopID][fromSlot] - 1)) {
+        if (amount > 0 && itemID == (ShopManager.ShopItems[MyShopID][fromSlot] - 1)) {
             boolean stack = Server.itemManager.isStackable(itemID);
-            amount = Math.min(ShopHandler.ShopItemsN[MyShopID][fromSlot], amount);
+            amount = Math.min(ShopManager.ShopItemsN[MyShopID][fromSlot], amount);
             if (canUse(itemID)) {
                 send(new SendMessage("You must be a premium member to buy this item"));
                 send(new SendMessage("Visit Dodian.net to subscribe"));
@@ -2691,7 +2687,7 @@ public class Client extends Player implements Runnable {
             int coins = getInvAmt(currency);
             amount = amount * TotPrice2 > coins ? coins / TotPrice2 : amount;
             if (amount == 0) {
-                send(new SendMessage("You don't have enough " + GetItemName(currency).toLowerCase()));
+                send(new SendMessage("You don't have enough " + getItemName(currency).toLowerCase()));
                 return;
             }
             if (!stack) {
@@ -2702,9 +2698,9 @@ public class Client extends Player implements Runnable {
                     }
                     if (addItem(itemID, 1)) {
                         deleteItem(currency, TotPrice2);
-                        ShopHandler.ShopItemsN[MyShopID][fromSlot] -= 1;
-                        if ((fromSlot + 1) > ShopHandler.ShopItemsStandard[MyShopID] && ShopHandler.ShopItemsN[MyShopID][fromSlot] <= 0) {
-                            ShopHandler.resetAnItem(MyShopID, fromSlot);
+                        ShopManager.ShopItemsN[MyShopID][fromSlot] -= 1;
+                        if ((fromSlot + 1) > ShopManager.ShopItemsStandard[MyShopID] && ShopManager.ShopItemsN[MyShopID][fromSlot] <= 0) {
+                            ShopManager.resetAnItem(MyShopID, fromSlot);
                             break;
                         }
                     } else {
@@ -2715,9 +2711,9 @@ public class Client extends Player implements Runnable {
             } else {
                 if (addItem(itemID, amount)) {
                     deleteItem(currency, TotPrice2 * amount);
-                    ShopHandler.ShopItemsN[MyShopID][fromSlot] -= amount;
-                    if ((fromSlot + 1) > ShopHandler.ShopItemsStandard[MyShopID] && ShopHandler.ShopItemsN[MyShopID][fromSlot] <= 0) {
-                        ShopHandler.resetAnItem(MyShopID, fromSlot);
+                    ShopManager.ShopItemsN[MyShopID][fromSlot] -= amount;
+                    if ((fromSlot + 1) > ShopManager.ShopItemsStandard[MyShopID] && ShopManager.ShopItemsN[MyShopID][fromSlot] <= 0) {
+                        ShopManager.resetAnItem(MyShopID, fromSlot);
                     }
                 } else
                     return;
@@ -2730,10 +2726,10 @@ public class Client extends Player implements Runnable {
 
     public void UpdatePlayerShop() {
         for (int i = 1; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] != null) {
-                if (PlayerHandler.players[i].isShopping() && PlayerHandler.players[i].MyShopID == MyShopID
+            if (net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i] != null) {
+                if (net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i].isShopping() && net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i].MyShopID == MyShopID
                         && i != getSlot()) {
-                    ((Client) PlayerHandler.players[i]).checkItemUpdate();
+                    ((Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i]).checkItemUpdate();
                 }
             }
         }
@@ -2761,7 +2757,7 @@ public class Client extends Player implements Runnable {
         if (ItemID == -1) {
             return 1;
         }
-        String ItemName = GetItemName(ItemID);
+        String ItemName = getItemName(ItemID);
         String ItemName2 = ItemName.replaceAll("Bronze", "");
 
         ItemName2 = ItemName2.replaceAll("Iron", "");
@@ -2813,10 +2809,10 @@ public class Client extends Player implements Runnable {
 
     public int GetCLDefence(int ItemID) {
         if (ItemID == -1) return 1;
-        String checkName = GetItemName(ItemID).toLowerCase();
+        String checkName = getItemName(ItemID).toLowerCase();
         if (checkName.endsWith("arrow") || checkName.endsWith("hat") || (checkName.endsWith("axe") && !checkName.startsWith("battle")))
             return 1;
-        String ItemName = GetItemName(ItemID);
+        String ItemName = getItemName(ItemID);
         if (ItemName.toLowerCase().contains("beret") || ItemName.toLowerCase().contains("cavalier") || ItemName.toLowerCase().contains("mystic") || checkName.contains("mask") || checkName.contains("partyhat"))
             return 1;
         String ItemName2 = ItemName.replaceAll("Bronze", "");
@@ -2906,7 +2902,7 @@ public class Client extends Player implements Runnable {
 
     public int GetCLMagic(int ItemID) {
         if (ItemID == -1) return 1;
-        String ItemName = GetItemName(ItemID);
+        String ItemName = getItemName(ItemID);
         if (ItemID >= 2415 && ItemID <= 2417)
             return 10;
         if (ItemName.startsWith("White Mystic") || ItemName.startsWith("Splitbark"))
@@ -2930,7 +2926,7 @@ public class Client extends Player implements Runnable {
 
     public int GetCLRanged(int ItemID) {
         if (ItemID == -1) return 1;
-        String ItemName = GetItemName(ItemID);
+        String ItemName = getItemName(ItemID);
         if (ItemName.startsWith("Oak")) {
             return 1;
         }
@@ -3048,7 +3044,7 @@ public class Client extends Player implements Runnable {
             resetDuel();
         }
         if (stake) {
-            showInterface(6733);
+            openInterface(6733);
         }
         heal(getMaxHealth());
         getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
@@ -3073,7 +3069,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void stakeItem(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
+        if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
             if(!canOffer) declineDuel(); //Not sure if we need this here but..Maybe?!
             return;
         }
@@ -3153,7 +3149,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void fromDuel(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO, 200L)) {
+        if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
         Client other = getClient(duel_with);
@@ -3287,7 +3283,7 @@ public class Client extends Player implements Runnable {
         send(new SendString("", 2811));
         send(new SendString("", 2831));
         genie = true;
-        showInterface(2808);
+        openInterface(2808);
     }
 
     public void openAntique() {
@@ -3299,7 +3295,7 @@ public class Client extends Player implements Runnable {
         send(new SendString("", 2811));
         send(new SendString("", 2831));
         antique = true;
-        showInterface(2808);
+        openInterface(2808);
     }
 
     public int findItem(int id, int[] items, int[] amounts) {
@@ -3339,20 +3335,20 @@ public class Client extends Player implements Runnable {
     }
 
     public void replaceDoors() {
-        for (int d = 0; d < DoorHandler.doorX.length; d++) {
-            if (DoorHandler.doorX[d] > 0 && DoorHandler.doorHeight[d] == getPosition().getZ()
-                    && Math.abs(DoorHandler.doorX[d] - getPosition().getX()) <= 120
-                    && Math.abs(DoorHandler.doorY[d] - getPosition().getY()) <= 120) {
-                if (distanceToPoint(DoorHandler.doorX[d], DoorHandler.doorY[d]) < 50) {
-                    ReplaceObject(DoorHandler.doorX[d], DoorHandler.doorY[d], DoorHandler.doorId[d], DoorHandler.doorFace[d], 0);
+        for (int d = 0; d < DoorRegistry.doorX.length; d++) {
+            if (DoorRegistry.doorX[d] > 0 && DoorRegistry.doorHeight[d] == getPosition().getZ()
+                    && Math.abs(DoorRegistry.doorX[d] - getPosition().getX()) <= 120
+                    && Math.abs(DoorRegistry.doorY[d] - getPosition().getY()) <= 120) {
+                if (distanceToPoint(DoorRegistry.doorX[d], DoorRegistry.doorY[d]) < 50) {
+                    ReplaceObject(DoorRegistry.doorX[d], DoorRegistry.doorY[d], DoorRegistry.doorId[d], DoorRegistry.doorFace[d], 0);
                 }
             }
         }
     }
 
     public void modYell(String msg) {
-        for (int i = 0; i < PlayerHandler.players.length; i++) {
-            Client p = (Client) PlayerHandler.players[i];
+        for (int i = 0; i < PlayerRegistry.players.length; i++) {
+            Client p = (Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i];
             if (p != null && !p.disconnected && p.getPosition().getX() > 0 && p.dbId > 0 && p.playerRights > 0) {
                 p.send(new SendMessage(msg));
             }
@@ -3403,10 +3399,10 @@ public class Client extends Player implements Runnable {
         resetTItems(3415);
         resetOTItems(3416);
         send(new InventoryInterface(3323, 3321)); // trading window + bag
-        String out = PlayerHandler.players[trade_reqId].getPlayerName();
-        if (PlayerHandler.players[trade_reqId].playerRights == 1) {
+        String out = net.dodian.uber.game.systems.world.player.PlayerRegistry.players[trade_reqId].getPlayerName();
+        if (net.dodian.uber.game.systems.world.player.PlayerRegistry.players[trade_reqId].playerRights == 1) {
             out = "@cr1@" + out;
-        } else if (PlayerHandler.players[trade_reqId].playerRights == 2) {
+        } else if (net.dodian.uber.game.systems.world.player.PlayerRegistry.players[trade_reqId].playerRights == 2) {
             out = "@cr2@" + out;
         }
         send(new SendString("Trading With: " + out, 3417));
@@ -3447,12 +3443,12 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean validClient(int index) {
-        Client p = (Client) PlayerHandler.players[index];
+        Client p = (Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[index];
         return p != null && !p.disconnected && p.dbId > 0;
     }
 
     public Client getClient(int index) {
-        return index < 0 ? null : ((Client) PlayerHandler.players[index]);
+        return index < 0 ? null : ((Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[index]);
     }
 
     public void tradeReq(int id) {
@@ -3461,14 +3457,14 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("Trading has been temporarily disabled"));
             return;
         }
-        for (int a = 0; a < PlayerHandler.players.length; a++) {
+        for (int a = 0; a < PlayerRegistry.players.length; a++) {
             Client o = getClient(a);
             if (a != getSlot() && validClient(a) && o.dbId > 0 && o.dbId == dbId) {
                 logout();
             }
         }
-        Client other = (Client) PlayerHandler.players[id];
-        String tradeBlockMessage = net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService.tradeBlockMessage(this, other);
+        Client other = (Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[id];
+        String tradeBlockMessage = net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService.tradeBlockMessage(this, other);
         if (tradeBlockMessage != null) {
             send(new SendMessage(tradeBlockMessage));
             return;
@@ -3494,7 +3490,7 @@ public class Client extends Player implements Runnable {
         if (validClient(trade_reqId) && !inTrade && other.tradeRequested && other.trade_reqId == getSlot()) {
             openTrade();
             other.openTrade();
-        } else if (validClient(trade_reqId) && !inTrade && net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.TRADE_REQUEST, 1000L)) {
+        } else if (validClient(trade_reqId) && !inTrade && net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.TRADE_REQUEST, 1000L)) {
             tradeRequested = true;
             trade_reqId = id;
             send(new SendMessage("Sending trade request..."));
@@ -3519,7 +3515,7 @@ public class Client extends Player implements Runnable {
                 int id = 0;
                 for (GameItem item : offeredItems) {
                     if (id > 0) offerItems.append("\\n");
-                    offerItems.append(GetItemName(item.getId()));
+                    offerItems.append(getItemName(item.getId()));
                     String amt = Misc.format(item.getAmount());
                     if (item.getAmount() >= 1000000000) {
                         amt = "@gre@" + (item.getAmount() / 1000000000) + " billion @whi@(" + Misc.format(item.getAmount()) + ")";
@@ -3540,7 +3536,7 @@ public class Client extends Player implements Runnable {
                 int id = 0;
                 for (GameItem item : other.offeredItems) {
                     if (id > 0) otherOfferItems.append("\\n");
-                    otherOfferItems.append(GetItemName(item.getId()));
+                    otherOfferItems.append(getItemName(item.getId()));
                     String amt = Misc.format(item.getAmount());
                     if (item.getAmount() >= 1000000000) {
                         amt = "@gre@" + (item.getAmount() / 1000000000) + " billion @whi@(" + Misc.format(item.getAmount()) + ")";
@@ -3617,7 +3613,7 @@ public class Client extends Player implements Runnable {
     public void duelReq(int pid) {
         facePlayer(pid);
         Client other = getClient(pid);
-        String duelBlockMessage = net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService.duelBlockMessage(this, other);
+        String duelBlockMessage = net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService.duelBlockMessage(this, other);
         if (duelBlockMessage != null) {
             send(new SendMessage(duelBlockMessage));
             return;
@@ -3626,9 +3622,9 @@ public class Client extends Player implements Runnable {
             send(new SendMessage(isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
             return;
         }
-        if (net.dodian.uber.game.runtime.combat.CombatLogoutLockService.isLocked(this)
-                || net.dodian.uber.game.runtime.combat.CombatLogoutLockService.isLocked(other)) {
-            send(new SendMessage(net.dodian.uber.game.runtime.combat.CombatLogoutLockService.isLocked(this)
+        if (net.dodian.uber.game.systems.combat.CombatLogoutLockService.isLocked(this)
+                || net.dodian.uber.game.systems.combat.CombatLogoutLockService.isLocked(other)) {
+            send(new SendMessage(net.dodian.uber.game.systems.combat.CombatLogoutLockService.isLocked(this)
                     ? "You can't duel while in combat."
                     : other.getPlayerName() + " can't duel while in combat."));
             return;
@@ -3641,7 +3637,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("Dueling has been temporarily disabled"));
             return;
         }
-        for (int a = 0; a < PlayerHandler.players.length; a++) {
+        for (int a = 0; a < PlayerRegistry.players.length; a++) {
             Client o = getClient(a);
             if (a != getSlot() && validClient(a) && o.dbId > 0 && o.dbId == dbId) {
                 logout();
@@ -3809,7 +3805,7 @@ public class Client extends Player implements Runnable {
     public boolean toggleDuelRule(int ruleIndex) {
         Client other = getClient(duel_with);
         if (other == null || ruleIndex < 0 || ruleIndex >= duelRule.length
-                || !net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_RULES, 800L)) {
+                || !net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_RULES, 800L)) {
             return false;
         }
         if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
@@ -3829,7 +3825,7 @@ public class Client extends Player implements Runnable {
     public boolean toggleDuelBodyRule(int ruleIndex) {
         Client other = getClient(duel_with);
         if (other == null || ruleIndex < 0 || ruleIndex >= duelBodyRules.length
-                || !net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_BODY_RULES, 400L)) {
+                || !net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_BODY_RULES, 400L)) {
             return false;
         }
         if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
@@ -3855,7 +3851,7 @@ public class Client extends Player implements Runnable {
             }
         }
         friends.add(new Friend(name, true));
-        for (Client c : PlayerHandler.playersOnline.values()) {
+        for (Client c : PlayerRegistry.playersOnline.values()) {
             if (c.hasFriend(longName)) {
                 c.refreshFriends();
             }
@@ -3884,8 +3880,8 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("That player is not on your friends list"));
             return;
         }
-        if (PlayerHandler.playersOnline.containsKey(friend)) {
-            Client to = PlayerHandler.playersOnline.get(friend);
+        if (PlayerRegistry.playersOnline.containsKey(friend)) {
+            Client to = PlayerRegistry.playersOnline.get(friend);
             boolean specialRights = to.playerGroup == 6 || to.playerGroup == 10 || to.playerGroup == 35;
             if (specialRights && to.busy && playerRights < 1) {
                 send(new SendMessage("<col=FF0000>This player is busy and did not receive your message."));
@@ -3913,7 +3909,7 @@ public class Client extends Player implements Runnable {
 
     public void refreshFriends() {
         for (Friend f : friends) {
-            Client player = PlayerHandler.playersOnline.get(f.name);
+            Client player = PlayerRegistry.playersOnline.get(f.name);
             if (player == null) {
                 loadpm(f.name, 0);
                 continue;
@@ -3947,7 +3943,7 @@ public class Client extends Player implements Runnable {
             if (f.name == name) {
                 ignores.remove(f);
                 refreshFriends();
-                Client player = PlayerHandler.playersOnline.get(f.name);
+                Client player = PlayerRegistry.playersOnline.get(f.name);
                 if (player != null) {
                     player.refreshFriends();
                 }
@@ -3971,7 +3967,7 @@ public class Client extends Player implements Runnable {
         }
         if (canAdd) {
             ignores.add(new Friend(name, true));
-            Client player = PlayerHandler.playersOnline.get(name);
+            Client player = PlayerRegistry.playersOnline.get(name);
             if (player != null) {
                 player.refreshFriends();
             }
@@ -4026,9 +4022,7 @@ public class Client extends Player implements Runnable {
         if (speed.length != 3) { //Need atleast 3 values!
             return;
         }
-        if (getClientPacketTraceEnabled()) {
-            logger.debug("x = {}, y = {}", startPos.getX(), startPos.getY());
-        }
+        
         int startX = startPos.getX();
         int startY = startPos.getY();
         int endX = endPos.getX();
@@ -4125,7 +4119,7 @@ public class Client extends Player implements Runnable {
 
     public void updatePlayerDisplay() {
         String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
-        String text = serverName + " (" + PlayerHandler.getPlayerCount() + " online)";
+        String text = serverName + " (" + PlayerRegistry.getPlayerCount() + " online)";
         sendCachedString(text, 6570);
         lastTopBarText = text;
         sendCachedString("", 6664);
@@ -4193,7 +4187,7 @@ public class Client extends Player implements Runnable {
     public void acceptDuelWon() {
         if (duelFight && duelWin) {
             duelWin = false;
-            if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_ACCEPT_WIN, 1000L)) {
+            if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_ACCEPT_WIN, 1000L)) {
                 return;
             }
             Client other = getClient(duel_with);
@@ -4441,7 +4435,7 @@ public class Client extends Player implements Runnable {
 
     public boolean bowWeapon(int weaponId) {
         boolean bow = false;
-        if (net.dodian.uber.game.skills.fletching.FletchingDefinitions.isBowWeapon(weaponId)) {
+        if (net.dodian.uber.game.content.skills.fletching.FletchingDefinitions.isBowWeapon(weaponId)) {
             bow = true;
         }
         if (weaponId == 839 || weaponId == 841 || weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||
@@ -4458,8 +4452,8 @@ public class Client extends Player implements Runnable {
             return;
         }
         ArrayList<GameItem> otherInv = new ArrayList<>();
-        if (PlayerHandler.getPlayer(player) != null) { //Online check
-            Client other = (Client) PlayerHandler.getPlayer(player);
+        if (PlayerRegistry.getPlayer(player) != null) { //Online check
+            Client other = (Client) PlayerRegistry.getPlayer(player);
             for (int i = 0; i < Objects.requireNonNull(other).playerItems.length; i++) {
                 otherInv.add(i, new GameItem(other.playerItems[i] - 1, other.playerItemsN[i]));
             }
@@ -4490,8 +4484,8 @@ public class Client extends Player implements Runnable {
         ArrayList<GameItem> otherBank = new ArrayList<>();
         IsBanking = false;
         clearBankStyleView();
-        if (PlayerHandler.getPlayer(player) != null) { //Online check
-            Client other = (Client) PlayerHandler.getPlayer(player);
+        if (PlayerRegistry.getPlayer(player) != null) { //Online check
+            Client other = (Client) PlayerRegistry.getPlayer(player);
             ArrayList<Integer> ids = new ArrayList<>();
             ArrayList<Integer> amounts = new ArrayList<>();
             for (int i = 0; i < Objects.requireNonNull(other).bankItems.length; i++) {
@@ -4522,7 +4516,7 @@ public class Client extends Player implements Runnable {
         /* Untradeable items prio 1! */
         if (!Ground.untradeable_items.isEmpty())
             for (GroundItem item : Ground.untradeable_items) {
-                if (item.isTaken() || dbId != item.playerId || !GoodDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
+                if (item.isTaken() || dbId != item.playerId || !isWithinDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
                     continue;
                 send(new RemoveGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                 send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
@@ -4530,7 +4524,7 @@ public class Client extends Player implements Runnable {
         /* Tradeable items prio 2! */
         if (!Ground.tradeable_items.isEmpty())
             for (GroundItem item : Ground.tradeable_items) {
-                if (item.isTaken() || (item.playerId != dbId && !item.isVisible()) || !GoodDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
+                if (item.isTaken() || (item.playerId != dbId && !item.isVisible()) || !isWithinDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
                     continue;
                 send(new RemoveGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                 send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
@@ -4538,7 +4532,7 @@ public class Client extends Player implements Runnable {
         /* Static ground items prio last! */
         if (!Ground.ground_items.isEmpty())
             for (GroundItem item : Ground.ground_items) {
-                if (item.isTaken() || !item.visible || !GoodDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
+                if (item.isTaken() || !item.visible || !isWithinDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
                     continue;
                 send(new RemoveGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                 send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
@@ -4550,8 +4544,8 @@ public class Client extends Player implements Runnable {
     @Deprecated
     public void removeItemsFromPlayer(String user, int id, int amount) {
         int totalItemRemoved = 0;
-        if (PlayerHandler.getPlayer(user) != null) { //Online check
-            Client other = (Client) PlayerHandler.getPlayer(user);
+        if (PlayerRegistry.getPlayer(user) != null) { //Online check
+            Client other = (Client) PlayerRegistry.getPlayer(user);
             for (int i = 0; i < Objects.requireNonNull(other).bankItems.length; i++) {
                 if (other.bankItems[i] - 1 == id) {
                     int canRemove = Math.min(other.bankItemsN[i], amount);
@@ -4585,11 +4579,11 @@ public class Client extends Player implements Runnable {
                 }
             }
             if (totalItemRemoved > 0) { //Update items only if there is any deleted!
-                send(new SendMessage("Finished deleting " + totalItemRemoved + " of " + GetItemName(id).toLowerCase()));
+                send(new SendMessage("Finished deleting " + totalItemRemoved + " of " + getItemName(id).toLowerCase()));
                 other.checkItemUpdate();
                 other.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
             } else
-                send(new SendMessage("The user '" + user + "' did not had any " + GetItemName(id).toLowerCase()));
+                send(new SendMessage("The user '" + user + "' did not had any " + getItemName(id).toLowerCase()));
         } else { //Database check!
             final int requestedAmount = amount;
             CommandDbService.submit(
@@ -4604,9 +4598,9 @@ public class Client extends Player implements Runnable {
                             return;
                         }
                         if (result.getTotalItemRemoved() > 0) {
-                            send(new SendMessage("Finished deleting " + result.getTotalItemRemoved() + " of " + GetItemName(id).toLowerCase()));
+                            send(new SendMessage("Finished deleting " + result.getTotalItemRemoved() + " of " + getItemName(id).toLowerCase()));
                         } else {
-                            send(new SendMessage("The user " + user + " did not had any " + GetItemName(id).toLowerCase()));
+                            send(new SendMessage("The user " + user + " did not had any " + getItemName(id).toLowerCase()));
                         }
                     },
                     exception -> {
@@ -4693,7 +4687,7 @@ public class Client extends Player implements Runnable {
         send(new SendString("", 811)); //Trollheim?!
         send(new SendString("Shilo", 812));
         send(new SendString("Sophanem", 813));
-        showInterface(802);
+        openInterface(802);
     }
 
     public void transport(Position pos) {
@@ -4759,15 +4753,15 @@ public class Client extends Player implements Runnable {
 
     public int refundSlot = -1;
     public ArrayList<RewardItem> rewardList = new ArrayList<>();
+    private final ArrayList<String> refundDates = new ArrayList<>();
 
     public void setRefundList() {
         rewardList.clear();
-        try (Connection conn = getDbConnection();
-             Statement stm = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
-            String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + dbId + "' AND claimed IS NULL ORDER BY date ASC";
-            ResultSet result = stm.executeQuery(query);
-            while (result.next()) {
-                rewardList.add(new RewardItem(result.getInt("item"), result.getInt("amount")));
+        refundDates.clear();
+        try {
+            for (RefundRecord refund : RefundRepository.loadUnclaimed(dbId)) {
+                rewardList.add(new RewardItem(refund.getItemId(), refund.getAmount()));
+                refundDates.add(refund.getDate());
             }
         } catch (Exception e) {
             logger.warn("Error in checking sql!! {}", e.getMessage(), e);
@@ -4785,7 +4779,7 @@ public class Client extends Player implements Runnable {
         text[0] = "Refund Item List";
         int position = Math.min(3, rewardList.size() - slot);
         for (int i = 0; i < position; i++)
-            text[i + 1] = "Claim " + rewardList.get(slot + i).getAmount() + " of " + GetItemName(rewardList.get(slot + i).getId());
+            text[i + 1] = "Claim " + rewardList.get(slot + i).getAmount() + " of " + getItemName(rewardList.get(slot + i).getId());
         text[position + 1] = text.length < 6 && slot == 0 ? "Close" : text.length == 6 ? "Next" : "Previous";
         if (text.length == 6)
             text[position + 2] = slot == 0 ? "Close" : "Previous";
@@ -4794,18 +4788,19 @@ public class Client extends Player implements Runnable {
 
     public void reclaim(int position) {
         int slot = refundSlot + position;
-        try (Connection conn = getDbConnection();
-             Statement stm = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-            String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + dbId + "' AND claimed IS NULL ORDER BY date ASC";
-            ResultSet result = stm.executeQuery(query);
-            String date = "";
-            RewardItem item = rewardList.get(slot - 1);
-            while (result.next() && date.isEmpty()) {
-                if (result.getRow() == slot) {
-                    date = result.getString("date");
-                }
+        try {
+            int rowIndex = slot - 1;
+            if (rowIndex < 0 || rowIndex >= rewardList.size() || rowIndex >= refundDates.size()) {
+                sendMessage("That refund entry is no longer available.");
+                setRefundList();
+                return;
             }
-            stm.executeUpdate("UPDATE " + DbTables.GAME_REFUND_ITEMS + " SET claimed='" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "' where date='" + date + "'");
+            RewardItem item = rewardList.get(rowIndex);
+            if (!RefundRepository.markClaimed(dbId, refundDates.get(rowIndex))) {
+                sendMessage("That refund entry was already claimed.");
+                setRefundList();
+                return;
+            }
             /* Set back options! */
             setRefundList();
             if (!rewardList.isEmpty()) {

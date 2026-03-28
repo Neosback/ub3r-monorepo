@@ -3,12 +3,12 @@ package net.dodian.uber.game.content.interfaces.crafting
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.runtime.api.content.ContentActions
-import net.dodian.uber.game.runtime.api.content.ContentProductionRequest
-import net.dodian.uber.game.skills.crafting.TanningRequest
-import net.dodian.uber.game.skills.crafting.CraftingPlugin
-import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
-import net.dodian.uber.game.ui.buttons.buttonBinding
+import net.dodian.uber.game.systems.api.content.ContentActions
+import net.dodian.uber.game.systems.api.content.ContentProductionRequest
+import net.dodian.uber.game.content.skills.crafting.TanningRequest
+import net.dodian.uber.game.content.skills.crafting.CraftingPlugin
+import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.systems.ui.buttons.buttonBinding
 
 object CraftingInterfaceButtons : InterfaceButtonContent {
     override val bindings =
@@ -64,7 +64,7 @@ object CraftingInterfaceButtons : InterfaceButtonContent {
                     ) { client, request ->
                         client.send(RemoveInterfaces())
                         if (product.minimumLevel > 1 && client.getLevel(Skill.CRAFTING) < product.minimumLevel) {
-                            product.levelMessage?.let { client.send(SendMessage(it)) }
+                            product.levelMessage?.let { client.sendMessage(it) }
                             return@buttonBinding true
                         }
                         val amount = product.amountByButton[request.rawButtonId] ?: return@buttonBinding false

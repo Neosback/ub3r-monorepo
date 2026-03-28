@@ -7,7 +7,7 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService;
+import net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ public class TradeRequestListener implements PacketListener {
         // If holding rubber chicken, just do the emote.
         if (client.getEquipment()[Equipment.Slot.WEAPON.getId()] == 4566) {
             client.facePlayer(targetSlot);
-            client.requestAnim(1833, 0);
+            client.performAnimation(1833, 0);
             return;
         }
 

@@ -1,9 +1,9 @@
 package net.dodian.uber.game.content.interfaces.smithing
 
-import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService
-import net.dodian.uber.game.skills.smithing.SmithingDefinitions
-import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
-import net.dodian.uber.game.ui.buttons.buttonBinding
+import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService
+import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions
+import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.systems.ui.buttons.buttonBinding
 
 object SmithingInterfaceButtons : InterfaceButtonContent {
     override val bindings =

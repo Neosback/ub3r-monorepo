@@ -3,9 +3,9 @@ package net.dodian.uber.game.model
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileWriter
-import net.dodian.utilities.DbTables
-import net.dodian.utilities.dbConnection
-import net.dodian.utilities.gameWorldId
+import net.dodian.uber.game.persistence.db.DbTables
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
+import net.dodian.uber.game.config.gameWorldId
 
 class Login {
     @Synchronized
@@ -18,7 +18,7 @@ class Login {
         end: Long,
     ) {
         try {
-            dbConnection.use { conn ->
+            DbAsyncRepository.withConnection { conn ->
                 conn.createStatement().use { stmt ->
                     stmt.executeUpdate(
                         "INSERT INTO ${DbTables.GAME_PLAYER_SESSIONS} SET dbid='$dbId', client='$clientPid', duration='$elapsed', " +

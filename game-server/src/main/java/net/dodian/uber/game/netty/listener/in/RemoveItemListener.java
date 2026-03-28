@@ -2,10 +2,10 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
-import net.dodian.uber.game.skills.smithing.SmithingInterfaceService;
+import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService;
+import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService;
 import net.dodian.uber.game.content.interfaces.skilling.SkillingInterfaceItemService;
-import net.dodian.uber.game.model.ShopHandler;
+import net.dodian.uber.game.model.ShopManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
@@ -16,7 +16,7 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.party.Balloons;
+import net.dodian.uber.game.content.events.partyroom.Balloons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,25 +95,25 @@ public class RemoveItemListener implements PacketListener {
                 return;
             }
             if (Server.itemManager.getShopBuyValue(removeID) < 0 || !Server.itemManager.isTradable(removeID)) {
-                client.send(new SendMessage("You cannot sell " + client.GetItemName(removeID).toLowerCase() + " in this store."));
+                client.send(new SendMessage("You cannot sell " + client.getItemName(removeID).toLowerCase() + " in this store."));
                 return;
             }
             boolean isIn = false;
-            if (ShopHandler.ShopSModifier[client.MyShopID] > 1) {
-                for (int j = 0; j <= ShopHandler.ShopItemsStandard[client.MyShopID]; j++) {
-                    if (removeID == (ShopHandler.ShopItems[client.MyShopID][j] - 1)) {
+            if (ShopManager.ShopSModifier[client.MyShopID] > 1) {
+                for (int j = 0; j <= ShopManager.ShopItemsStandard[client.MyShopID]; j++) {
+                    if (removeID == (ShopManager.ShopItems[client.MyShopID][j] - 1)) {
                         isIn = true;
                         break;
                     }
                 }
             } else isIn = true;
-            if (!isIn && (ShopHandler.ShopBModifier[client.MyShopID] == 2 && !ShopHandler.findDefaultItem(client.MyShopID, removeID))) {
-                client.send(new SendMessage("You cannot sell " + client.GetItemName(removeID).toLowerCase() + " in this store."));
+            if (!isIn && (ShopManager.ShopBModifier[client.MyShopID] == 2 && !ShopManager.findDefaultItem(client.MyShopID, removeID))) {
+                client.send(new SendMessage("You cannot sell " + client.getItemName(removeID).toLowerCase() + " in this store."));
             } else {
                 int currency = client.MyShopID == 55 ? 11997 : 995;
                 int shopValue = client.MyShopID == 55 ? 1000 : (int) Math.floor(client.GetShopBuyValue(removeID));
                 String shopAdd = formatValueSuffix(shopValue);
-                client.send(new SendMessage(client.GetItemName(removeID) + ": shop will buy for " + shopValue + " " + client.GetItemName(currency).toLowerCase() + shopAdd));
+                client.send(new SendMessage(client.getItemName(removeID) + ": shop will buy for " + shopValue + " " + client.getItemName(currency).toLowerCase() + shopAdd));
             }
         } else if (interfaceID == 3900) { // shop buy value
             int currency = client.MyShopID == 55 ? 11997 : 995;
@@ -121,7 +121,7 @@ public class RemoveItemListener implements PacketListener {
             shopValue = client.MyShopID >= 7 && client.MyShopID <= 11 ? (int) (shopValue * 1.5) : shopValue;
             shopValue = client.MyShopID >= 9 && client.MyShopID <= 11 ? (int) (shopValue * 1.5) : shopValue;
             String shopAdd = formatValueSuffix(shopValue);
-            client.send(new SendMessage(client.GetItemName(removeID) + ": currently costs " + shopValue + " " + client.GetItemName(currency).toLowerCase() + shopAdd));
+            client.send(new SendMessage(client.getItemName(removeID) + ": currently costs " + shopValue + " " + client.getItemName(currency).toLowerCase() + shopAdd));
         }
         client.CheckGear();
     }

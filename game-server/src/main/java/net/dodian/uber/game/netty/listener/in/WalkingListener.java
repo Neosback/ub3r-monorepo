@@ -7,23 +7,20 @@ import net.dodian.uber.game.netty.codec.ValueType;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.content.dialogue.DialogueService;
-import net.dodian.uber.game.content.dialogue.text.DialoguePagingService;
+import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
+import net.dodian.uber.game.systems.ui.dialogue.text.DialoguePagingService;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
-import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
-import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
-import net.dodian.uber.game.runtime.combat.CombatRuntimeService;
-import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
-import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService;
+import net.dodian.uber.game.systems.action.PlayerActionCancellationService;
+import net.dodian.uber.game.systems.action.PlayerActionCancelReason;
+import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
+import net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.AtomicLong;
-import static net.dodian.utilities.DotEnvKt.getOpcode248HasExtra14ByteSuffix;
 
 
 
@@ -65,8 +62,6 @@ public final class WalkingListener implements PacketListener {
             client.resetWalkingQueue();
             return;
         }
-        if (opcode != 98) client.setWalkToTask(null);
-
         // Auto-decline trade/duel when walking
         if (client.inTrade && (opcode == 164 || opcode == 248)) client.declineTrade();
         else if (client.inDuel && !client.duelFight && (opcode == 164 || opcode == 248)) client.declineDuel();
@@ -168,10 +163,6 @@ public final class WalkingListener implements PacketListener {
             PlayerActionCancellationService.cancel(client, PlayerActionCancelReason.MOVEMENT, true, false, false, true);
             client.discord = false;
             if (client.checkInv) { client.checkInv = false; client.resetItems(3214);}            
-            if (opcode != 98 && CombatRuntimeService.hasActiveCombat(client)) {
-                client.setCombatCancellationReason(CombatCancellationReason.MOVEMENT_INTERRUPTED);
-                client.resetAttack();
-            }
             client.faceTarget(65535);
         }
 
@@ -200,12 +191,12 @@ public final class WalkingListener implements PacketListener {
     }
 
     static int resolveEffectiveSize(int opcode, int packetSize) {
-        return resolveEffectiveSize(opcode, packetSize, getOpcode248HasExtra14ByteSuffix());
+        return resolveEffectiveSize(opcode, packetSize, false);
     }
 
-    static int resolveEffectiveSize(int opcode, int packetSize, boolean opcode248HasExtra14ByteSuffix) {
+    static int resolveEffectiveSize(int opcode, int packetSize, boolean hasMinimapSuffix) {
         if (opcode == OP_MINIMAP_WALK) {
-            return opcode248HasExtra14ByteSuffix ? packetSize - MINIMAP_TRAILING_BYTES : packetSize;
+            return hasMinimapSuffix ? packetSize - MINIMAP_TRAILING_BYTES : packetSize;
         }
         return packetSize;
     }

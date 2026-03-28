@@ -1,0 +1,34 @@
+package net.dodian.uber.game.world.cache.object;
+
+import net.dodian.uber.game.model.Position;
+
+public class GameObjectDef {
+
+    private final int id;
+    private final int type;
+    private final int face;
+    private final Position position;
+
+    public GameObjectDef(int id, int type, int face, Position position) {
+        this.id = id;
+        this.type = type;
+        this.face = face;
+        this.position = position;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public int getFace() {
+        return face;
+    }
+
+    public Position getPosition() {
+        return position;
+    }
+}

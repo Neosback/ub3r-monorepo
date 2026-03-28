@@ -5,17 +5,19 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.netty.listener.out.PlayerDetails;
 import net.dodian.uber.game.netty.listener.out.CameraReset;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService;
+import net.dodian.uber.game.content.skills.farming.FarmingCatchUpService;
+import net.dodian.uber.game.persistence.db.DbTables;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
-import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
+import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.game.persistence.db.DatabaseKt.getDbConnection;
 
 public class PlayerInitializer {
     public void initializePlayer(Client client) {
@@ -44,7 +46,7 @@ public class PlayerInitializer {
         });
 
         if (client.lookNeeded) {
-            client.showInterface(3559);
+            client.openInterface(3559);
         } else {
             client.setLook(client.playerLooks);
         }
@@ -69,6 +71,7 @@ public class PlayerInitializer {
     }
 
     public void initializeDeferredPostLoginState(Client client) {
+        FarmingCatchUpService.applyLoginCatchUp(client);
         initializeInterfaceTexts(client);
         client.onPostLoginUiInit();
         client.refreshFriends();
@@ -79,7 +82,7 @@ public class PlayerInitializer {
     }
 
     private void refreshPresenceForInterestedFriends(Client client) {
-        for (Client other : PlayerHandler.playersOnline.values()) {
+        for (Client other : PlayerRegistry.playersOnline.values()) {
             if (other != client && other.hasFriend(client.longName)) {
                 other.refreshFriends();
             }

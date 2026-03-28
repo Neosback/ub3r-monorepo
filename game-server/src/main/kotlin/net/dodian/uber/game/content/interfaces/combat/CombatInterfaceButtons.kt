@@ -1,9 +1,9 @@
 package net.dodian.uber.game.content.interfaces.combat
 
-import net.dodian.uber.game.combat.style.CombatStyleService
+import net.dodian.uber.game.systems.combat.style.CombatStyleService
 import net.dodian.uber.game.model.entity.player.Player
-import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
-import net.dodian.uber.game.ui.buttons.buttonBinding
+import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.systems.ui.buttons.buttonBinding
 
 object CombatInterfaceButtons : InterfaceButtonContent {
     override val bindings =

@@ -1,0 +1,67 @@
+skillId = 19
+showComponents = [8827,8828,8838,8841]
+hideComponents = [8850]
+
+[[labels]]
+componentId = 8846
+text = "Allotment"
+[[labels]]
+componentId = 8823
+text = "Flower"
+[[labels]]
+componentId = 8824
+text = "Bush"
+[[labels]]
+componentId = 8827
+text = "Herb"
+[[labels]]
+componentId = 8837
+text = "Tree"
+[[labels]]
+componentId = 8840
+text = "Fruit tree"
+[[labels]]
+componentId = 8843
+text = "Misc"
+
+[[pages]]
+child = 0
+names = ["Potatoes \\nPayment: 3 compost","Onions \\nPayment: 1 sack of potato","Cabbage \\nPayment: 1 sack of onion","Tomatoes \\nPayment: 1 sack of cabbage","Sweetcorn \\nPayment: 2 basket of tomato","Strawberries @red@(Premium only)\\nPayment: 12 sweetcorn","Watermelons @red@(Premium only)\\nPayment: 3 basket of strawberries","Snape grass @red@(Premium only)\\nPayment: 15 watermelon"]
+levels = ["1","5","9","16","25","31","47","59"]
+items = [1942,1957,1965,1982,5986,5504,5982,231]
+
+[[pages]]
+child = 1
+names = ["Marigold \\nPayment: 2 compost","Rosemary \\nPayment: 2 Marigold","Nasturtium \\nPayment: 2 Rosemary","Woad \\nPayment: 2 Nasturtium","Limpwurt plants \\nPayment: 2 Woad leaf"]
+levels = ["3","13","22","26","34"]
+items = [6010,6014,6012,1793,225]
+
+[[pages]]
+child = 2
+names = ["Redberry bushes @red@(Premium only)\\nPayment: 5 super compost","Dwellberry bushes @red@(Premium only)\\nPayment: 8 redberries","Jangerberry bushes @red@(Premium only)\\nPayment: 8 dwellberries","White berry bushes @red@(Premium only)\\nPayment: 8 jangerberries","Grape bushes@red@(Premium only)\\nPayment: 8 jangerberries & 8 redberries"]
+levels = ["22","36","48","59","68"]
+items = [1951,2126,247,239,1987]
+
+[[pages]]
+child = 3
+names = ["Guam","Marrentill","Tarromin","Ranarr","Irit @red@(Premium only)","Kwuarm @red@(Premium only)","Snapdragon @red@(Premium only)","Cadantine @red@(Premium only)","Dwarf weed @red@(Premium only)","Torstol @red@(Premium only)"]
+levels = ["8","12","19","34","44","56","63","70","79","85"]
+items = [199,201,203,207,209,213,3051,215,217,219]
+
+[[pages]]
+child = 4
+names = ["Acorn trees \\nPayment: 1 basket of Tomatoes & 1 basket of Strawberries","Willow trees @red@(Premium only)\\nPayment: 3 oak roots","Maple trees @red@(Premium only)\\nPayment: 3 willow roots","Yew trees @red@(Premium only)\\nPayment: 3 maple roots","Magic trees @red@(Premium only)\\nPayment: 3 yew roots"]
+levels = ["15","30","45","60","75"]
+items = [1521,1519,1517,1515,1513]
+
+[[pages]]
+child = 5
+names = ["Apple trees \\nPayment: 9 sweetcorn","Banana trees \\nPayment: 2 basket of apples","Orange trees \\nPayment: 2 basket of bananas","Curry trees \\nPayment: 2 basket of oranges","Pineapple plants @red@(Premium only)\\nPayment: 10 curry","Papaya trees @red@(Premium only)\\nPayment: 10 pineapple","Palm trees @red@(Premium only)\\nPayment: 10 papaya"]
+levels = ["27","33","39","45","51","57","63"]
+items = [1955,1963,2108,5970,2114,5972,5974]
+
+[[pages]]
+child = 6
+names = ["Skillcape @red@(Premium only)"]
+levels = ["99"]
+items = [9810]

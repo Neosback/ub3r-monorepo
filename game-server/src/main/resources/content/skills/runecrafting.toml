@@ -1,0 +1,25 @@
+runeEssenceId = 1436
+
+[[altarDefinitions]]
+objectId = 14905
+
+  [altarDefinitions.request]
+  runeId = 561
+  requiredLevel = 1
+  experiencePerEssence = 60
+
+[[altarDefinitions]]
+objectId = 27978
+
+  [altarDefinitions.request]
+  runeId = 565
+  requiredLevel = 50
+  experiencePerEssence = 85
+
+[[altarDefinitions]]
+objectId = 14903
+
+  [altarDefinitions.request]
+  runeId = 564
+  requiredLevel = 75
+  experiencePerEssence = 120

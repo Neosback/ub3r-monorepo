@@ -1,0 +1,31 @@
+skillId = 6
+hideComponents = [8825]
+
+[[labels]]
+componentId = 8846
+text = "Spells"
+[[labels]]
+componentId = 8823
+text = "Armor"
+[[labels]]
+componentId = 8824
+text = "Misc"
+
+[[pages]]
+child = 0
+names = ["High Alch","Smoke Rush","Enchant Sapphire","Shadow Rush","Blood Rush","Enchant Emerald","Ice Rush","Smoke Burst","Superheat","Enchant Ruby","Shadow Burst","Enchant Diamond","Blood Burst","Enchant Dragonstone","Ice Burst","Smoke Blitz","Shadow Blitz","Blood Blitz","Ice Blitz","Smoke Barrage","Enchant Onyx","Shadow Barrage","Blood Barrage","Ice Barrage"]
+levels = ["1","1","7","10","20","27","30","40","43","49","50","57","60","68","70","74","76","80","82","86","87","88","92","94"]
+items = [561,565,564,565,565,564,565,565,561,564,565,564,565,564,565,565,565,565,565,565,564,565,565,565]
+amounts = [1,1,10,1,1,10,1,1,1,10,1,10,1,10,1,1,1,1,1,1,10,1,1,1]
+
+[[pages]]
+child = 1
+names = ["Blue Mystic","White Mystic","Splitbark (with 20 defence)","Black Mystic","Holy book","Holy blessing","Infinity","Ahrim (with 70 defence)"]
+levels = ["1","20","20","35","45","45","50","70"]
+items = [4089,4109,3385,4099,3840,20220,6918,4708]
+
+[[pages]]
+child = 2
+names = ["Battlestaff","Elemental battlestaff","Zamorak staff","Saradomin staff","Guthix staff","Ancient staff","Obsidian staff","Master wand","Ahrim's staff","Skillcape @red@(Premium only)"]
+levels = ["1","1","10","10","10","25","40","50","70","99"]
+items = [1391,1395,2417,2415,2416,4675,6526,6914,4710,9762]

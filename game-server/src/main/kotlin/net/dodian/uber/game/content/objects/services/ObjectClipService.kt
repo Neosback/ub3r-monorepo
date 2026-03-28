@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.objects.services
 
-import net.dodian.cache.region.Region
 import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.world.cache.region.Region
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
@@ -21,7 +21,7 @@ object ObjectClipService {
         try {
             Region.addClippingForVariableObject(position.x, position.y, position.z, type, direction, solid)
         } catch (e: Exception) {
-            logger.debug("Clipping apply failed at {} (region cache not ready yet)", position, e)
+            logger.debug("Clipping apply failed at {}", position, e)
         }
         appliedClips[key(position)] = AppliedClip(position.copy(), type, direction, solid)
     }
@@ -30,7 +30,7 @@ object ObjectClipService {
         try {
             Region.removeClippingForVariableObject(position.x, position.y, position.z, type, direction, solid)
         } catch (e: Exception) {
-            logger.debug("Clipping remove failed at {} (region cache not ready yet)", position, e)
+            logger.debug("Clipping remove failed at {}", position, e)
         }
         appliedClips.remove(key(position))
     }

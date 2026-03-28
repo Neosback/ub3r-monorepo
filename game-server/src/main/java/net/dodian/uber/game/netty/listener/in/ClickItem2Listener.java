@@ -2,7 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.content.items.ItemDispatcher;
-import net.dodian.uber.game.skills.slayer.SlayerPlugin;
+import net.dodian.uber.game.content.skills.slayer.SlayerPlugin;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -43,7 +43,7 @@ public class ClickItem2Listener implements PacketListener {
             return;
         }
 
-        String itemName = client.GetItemName(itemId);
+        String itemName = client.getItemName(itemId);
 
         /* Slayer helm task reminder */
         if (itemName.startsWith("Slayer helm")) {

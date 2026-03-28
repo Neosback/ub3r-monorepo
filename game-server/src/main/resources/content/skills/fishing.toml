@@ -1,0 +1,103 @@
+[[fishingSpots]]
+index = 0
+objectId = 1510
+clickType = 1
+fishItemId = 317
+animationId = 621
+requiredLevel = 1
+baseDelayMs = 1350
+toolItemId = 303
+experience = 110
+premiumOnly = false
+featherConsumed = false
+
+[[fishingSpots]]
+index = 1
+objectId = 1510
+clickType = 2
+fishItemId = 335
+animationId = 622
+requiredLevel = 20
+baseDelayMs = 1660
+toolItemId = 309
+experience = 200
+premiumOnly = false
+featherConsumed = true
+
+[[fishingSpots]]
+index = 2
+objectId = 1511
+clickType = 1
+fishItemId = 377
+animationId = 619
+requiredLevel = 40
+baseDelayMs = 2480
+toolItemId = 301
+experience = 440
+premiumOnly = false
+featherConsumed = false
+
+[[fishingSpots]]
+index = 3
+objectId = 1511
+clickType = 2
+fishItemId = 371
+animationId = 618
+requiredLevel = 50
+baseDelayMs = 3300
+toolItemId = 311
+experience = 650
+premiumOnly = false
+featherConsumed = false
+
+[[fishingSpots]]
+index = 4
+objectId = 1514
+clickType = 1
+fishItemId = 7944
+animationId = 621
+requiredLevel = 60
+baseDelayMs = 2480
+toolItemId = 303
+experience = 780
+premiumOnly = true
+featherConsumed = false
+
+[[fishingSpots]]
+index = 5
+objectId = 1514
+clickType = 2
+fishItemId = 383
+animationId = 618
+requiredLevel = 70
+baseDelayMs = 4900
+toolItemId = 311
+experience = 1100
+premiumOnly = true
+featherConsumed = false
+
+[[fishingSpots]]
+index = 6
+objectId = 1517
+clickType = 1
+fishItemId = 395
+animationId = 619
+requiredLevel = 85
+baseDelayMs = 5800
+toolItemId = 301
+experience = 1450
+premiumOnly = true
+featherConsumed = false
+
+[[fishingSpots]]
+index = 7
+objectId = 1517
+clickType = 2
+fishItemId = 389
+animationId = 618
+requiredLevel = 95
+baseDelayMs = 6650
+toolItemId = 311
+experience = 1900
+premiumOnly = true
+featherConsumed = false

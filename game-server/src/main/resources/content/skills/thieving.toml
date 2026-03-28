@@ -1,0 +1,271 @@
+stallObjects = [4877]
+chestObjects = [375,378,6847,20873,11729,11730,11731,11732,11733,11734]
+plunderObjects = [20275,20277,20931,20932,26580,26600,26601,26602,26603,26604,26605,26606,26607,26608,26609,26610,26611,26612,26613,26616,26618,26619,26620,26621,26622,26623,26624,26625,26626]
+
+[[definitions]]
+name = "FARMER"
+entityId = 3086
+requiredLevel = 10
+receivedExperience = 800
+respawnTime = 0
+type = "PICKPOCKETING"
+[[definitions.rewards]]
+itemId = 314
+minAmount = 2
+maxAmount = 5
+chance = 100
+
+[[definitions]]
+name = "MASTER_FARMER"
+entityId = 3257
+requiredLevel = 70
+receivedExperience = 1200
+respawnTime = 0
+type = "PICKPOCKETING"
+[[definitions.rewards]]
+itemId = 314
+minAmount = 4
+maxAmount = 10
+chance = 100
+
+[[definitions]]
+name = "CAGE"
+entityId = 20873
+requiredLevel = 1
+receivedExperience = 150
+respawnTime = 0
+type = "OTHER"
+[[definitions.rewards]]
+itemId = 995
+minAmount = 20
+maxAmount = 50
+chance = 100
+
+[[definitions]]
+name = "BAKER_STALL"
+entityId = 11730
+requiredLevel = 10
+receivedExperience = 1000
+respawnTime = 12
+type = "STALL_THIEVING"
+[[definitions.rewards]]
+itemId = 2309
+minAmount = 1
+maxAmount = 1
+chance = 100
+
+[[definitions]]
+name = "FUR_STALL"
+entityId = 11732
+requiredLevel = 40
+receivedExperience = 1800
+respawnTime = 25
+type = "STALL_THIEVING"
+[[definitions.rewards]]
+itemId = 1751
+minAmount = 1
+maxAmount = 1
+chance = 5
+[[definitions.rewards]]
+itemId = 1753
+minAmount = 1
+maxAmount = 1
+chance = 10
+[[definitions.rewards]]
+itemId = 1739
+minAmount = 1
+maxAmount = 1
+chance = 15
+[[definitions.rewards]]
+itemId = 1759
+minAmount = 1
+maxAmount = 1
+chance = 20
+[[definitions.rewards]]
+itemId = 995
+minAmount = 150
+maxAmount = 350
+chance = 100
+
+[[definitions]]
+name = "SILVER_STALL"
+entityId = 11734
+requiredLevel = 65
+receivedExperience = 2500
+respawnTime = 25
+type = "STALL_THIEVING"
+[[definitions.rewards]]
+itemId = 2349
+minAmount = 1
+maxAmount = 1
+chance = 5
+[[definitions.rewards]]
+itemId = 2351
+minAmount = 1
+maxAmount = 1
+chance = 10
+[[definitions.rewards]]
+itemId = 2353
+minAmount = 1
+maxAmount = 1
+chance = 15
+[[definitions.rewards]]
+itemId = 2357
+minAmount = 1
+maxAmount = 1
+chance = 20
+[[definitions.rewards]]
+itemId = 2359
+minAmount = 1
+maxAmount = 1
+chance = 25
+[[definitions.rewards]]
+itemId = 995
+minAmount = 300
+maxAmount = 600
+chance = 100
+
+[[definitions]]
+name = "SPICE_STALL"
+entityId = 11733
+requiredLevel = 80
+receivedExperience = 4800
+respawnTime = 35
+type = "STALL_THIEVING"
+[[definitions.rewards]]
+itemId = 215
+minAmount = 1
+maxAmount = 1
+chance = 5
+[[definitions.rewards]]
+itemId = 213
+minAmount = 1
+maxAmount = 1
+chance = 10
+[[definitions.rewards]]
+itemId = 209
+minAmount = 1
+maxAmount = 1
+chance = 20
+[[definitions.rewards]]
+itemId = 207
+minAmount = 1
+maxAmount = 1
+chance = 35
+[[definitions.rewards]]
+itemId = 203
+minAmount = 1
+maxAmount = 1
+chance = 55
+[[definitions.rewards]]
+itemId = 199
+minAmount = 1
+maxAmount = 1
+chance = 100
+
+[[definitions]]
+name = "GEM_STALL"
+entityId = 11731
+requiredLevel = 90
+receivedExperience = 5800
+respawnTime = 38
+type = "STALL_THIEVING"
+[[definitions.rewards]]
+itemId = 1617
+minAmount = 1
+maxAmount = 1
+chance = 2
+[[definitions.rewards]]
+itemId = 1619
+minAmount = 1
+maxAmount = 1
+chance = 5
+[[definitions.rewards]]
+itemId = 1621
+minAmount = 1
+maxAmount = 1
+chance = 8
+[[definitions.rewards]]
+itemId = 1623
+minAmount = 1
+maxAmount = 1
+chance = 15
+[[definitions.rewards]]
+itemId = 995
+minAmount = 500
+maxAmount = 850
+chance = 100
+
+[[specialChests]]
+chestKey = "yanille"
+objectId = 375
+requiredLevel = 70
+premiumOnly = false
+lockMs = 1200
+replacementObjectId = 378
+replacementLifetimeMs = 12000
+replacementType = 10
+replacementFace = 2
+rareRewardChancePercent = 0.3
+coinsMin = 300
+coinsMaxOffset = 1200
+baseXp = 300
+randomEventXp = 900
+[specialChests.location]
+x = 2593
+y = 3108
+z = 1
+[[specialChests.rareRewards]]
+itemId = 2577
+[[specialChests.rareRewards]]
+itemId = 2579
+[[specialChests.rareRewards]]
+itemId = 2631
+
+[[specialChests]]
+chestKey = "legends"
+objectId = 375
+requiredLevel = 85
+premiumOnly = true
+lockMs = 1200
+replacementObjectId = 378
+replacementLifetimeMs = 15000
+replacementType = 11
+replacementFace = -1
+rareRewardChancePercent = 0.3
+coinsMin = 500
+coinsMaxOffset = 2000
+baseXp = 500
+randomEventXp = 1500
+[specialChests.location]
+x = 2733
+y = 3374
+z = 0
+[[specialChests.rareRewards]]
+itemId = 1050
+[[specialChests.rareRewards]]
+itemId = 2581
+[[specialChests.rareRewards]]
+itemId = 2631
+
+[plunder]
+start = { x = 1927, y = 4477, z = 0 }
+end = { x = 3289, y = 2801, z = 0 }
+allDoors = [
+  { x = 3288, y = 2799, z = 0 },
+  { x = 3293, y = 2794, z = 0 },
+  { x = 3288, y = 2789, z = 0 },
+  { x = 3283, y = 2794, z = 0 }
+]
+roomEntrances = [
+  { x = 1954, y = 4477, z = 0 },
+  { x = 1977, y = 4471, z = 0 },
+  { x = 1927, y = 4453, z = 0 },
+  { x = 1965, y = 4444, z = 0 },
+  { x = 1927, y = 4424, z = 0 },
+  { x = 1943, y = 4421, z = 0 },
+  { x = 1974, y = 4420, z = 0 }
+]
+obstacles = [26616,0,26626,0,26618,0,26619,0,26620,0,26621,0,26580,0,26600,0,26601,0,26602,0,26603,0,26604,0,26605,0,26606,0,26607,0,26608,0,26609,0,26610,0,26611,0,26612,0,26613,0]
+urnConfig = [0,2,4,6,8,10,12,14,16,18,20,22,24,26,28]
+tombConfig = [2,0,9,10,11,12]

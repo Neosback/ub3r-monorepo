@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.commands.dev
 
-import net.dodian.cache.`object`.GameObjectDef
+import net.dodian.uber.game.world.cache.`object`.GameObjectDef
 import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
@@ -11,7 +11,7 @@ import net.dodian.uber.game.netty.listener.out.ObjectAnimation
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.Server
-import net.dodian.utilities.gameWorldId
+import net.dodian.uber.game.config.gameWorldId
 
 object DevVisualCommands : CommandContent {
     override fun definitions() =
@@ -70,8 +70,8 @@ private fun handleDevVisual(context: CommandContext): Boolean {
             return try {
                 val face = cmd[1].toInt()
                 var found: Npc? = null
-                for (npc in Server.npcManager.npcs) {
-                    if (npc != null && client.position == npc.position) {
+                for (npc in Server.npcManager.npcMap.values) {
+                    if (client.position == npc.position) {
                         found = npc
                     }
                 }
@@ -94,12 +94,12 @@ private fun handleDevVisual(context: CommandContext): Boolean {
         }
         "if" -> {
             val id = cmd[1].toInt()
-            client.showInterface(id)
+            client.openInterface(id)
             context.reply("You open interface $id")
         }
         "emote" -> {
             val id = cmd[1].toInt()
-            client.requestAnim(id, 0)
+            client.performAnimation(id, 0)
             context.reply("You set animation to: $id")
         }
         "heat" -> {

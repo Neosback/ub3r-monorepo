@@ -8,8 +8,8 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
-import net.dodian.uber.game.skills.runecrafting.RunecraftingPlugin;
+import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService;
+import net.dodian.uber.game.content.skills.runecrafting.RunecraftingPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

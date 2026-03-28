@@ -1,0 +1,140 @@
+randomGemDropTable = [1623,1623,1623,1621,1621,1619,1617]
+
+[[rocks]]
+name = "Rune essence"
+objectIds = [7471]
+requiredLevel = 1
+baseDelayMs = 1000
+oreItemId = 1436
+experience = 50
+randomGemEligible = false
+restThreshold = 14
+category = "STANDARD"
+
+[[rocks]]
+name = "Copper"
+objectIds = [7451,7484]
+requiredLevel = 1
+baseDelayMs = 2000
+oreItemId = 436
+experience = 110
+restThreshold = 4
+category = "STANDARD"
+
+[[rocks]]
+name = "Tin"
+objectIds = [7452,7485]
+requiredLevel = 1
+baseDelayMs = 2000
+oreItemId = 438
+experience = 110
+restThreshold = 4
+category = "STANDARD"
+
+[[rocks]]
+name = "Iron"
+objectIds = [7455,7488]
+requiredLevel = 15
+baseDelayMs = 3000
+oreItemId = 440
+experience = 280
+restThreshold = 4
+category = "STANDARD"
+
+[[rocks]]
+name = "Coal"
+objectIds = [7456,7489]
+requiredLevel = 30
+baseDelayMs = 5000
+oreItemId = 453
+experience = 420
+restThreshold = 4
+category = "STANDARD"
+
+[[rocks]]
+name = "Gold"
+objectIds = [7458,7491]
+requiredLevel = 40
+baseDelayMs = 6000
+oreItemId = 444
+experience = 510
+restThreshold = 4
+category = "STANDARD"
+
+[[rocks]]
+name = "Mithril"
+objectIds = [7459,7492]
+requiredLevel = 55
+baseDelayMs = 7000
+oreItemId = 447
+experience = 620
+restThreshold = 4
+category = "STANDARD"
+
+[[rocks]]
+name = "Adamantite"
+objectIds = [7460,7493]
+requiredLevel = 70
+baseDelayMs = 9000
+oreItemId = 449
+experience = 780
+restThreshold = 4
+category = "STANDARD"
+
+[[rocks]]
+name = "Runite"
+objectIds = [7461,7494]
+requiredLevel = 85
+baseDelayMs = 35000
+oreItemId = 451
+experience = 3100
+restThreshold = 4
+category = "STANDARD"
+
+[[pickaxes]]
+name = "Rune"
+itemId = 1275
+requiredLevel = 41
+speedBonus = 0.42
+animationId = 624
+dragonTierBoostEligible = false
+
+[[pickaxes]]
+name = "Iron"
+itemId = 1271
+requiredLevel = 31
+speedBonus = 0.33
+animationId = 628
+dragonTierBoostEligible = false
+
+[[pickaxes]]
+name = "Steel"
+itemId = 1273
+requiredLevel = 21
+speedBonus = 0.24
+animationId = 629
+dragonTierBoostEligible = false
+
+[[pickaxes]]
+name = "Mithril"
+itemId = 1269
+requiredLevel = 6
+speedBonus = 0.1
+animationId = 627
+dragonTierBoostEligible = false
+
+[[pickaxes]]
+name = "Adamant"
+itemId = 1267
+requiredLevel = 1
+speedBonus = 0.065
+animationId = 626
+dragonTierBoostEligible = false
+
+[[pickaxes]]
+name = "Bronze"
+itemId = 1265
+requiredLevel = 1
+speedBonus = 0.04
+animationId = 625
+dragonTierBoostEligible = false

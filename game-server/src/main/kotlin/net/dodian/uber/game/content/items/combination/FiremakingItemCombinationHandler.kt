@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.items.combination
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object FiremakingItemCombinationHandler {
@@ -25,7 +25,7 @@ object FiremakingItemCombinationHandler {
         }
         val log = logs.firstOrNull { itemUsed == it.itemId || useWith == it.itemId } ?: return false
         if (client.getLevel(Skill.FIREMAKING) < log.level) {
-            client.send(SendMessage("You need a firemaking level of ${log.level} to burn ${log.name}."))
+            client.sendMessage("You need a firemaking level of ${log.level} to burn ${log.name}.")
             return true
         }
         client.deleteItem(log.itemId, 1)

@@ -1,9 +1,9 @@
 package net.dodian.uber.game.content.objects
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.world.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.api.content.ContentObjectInteractionPolicy
+import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 
 class ObjectContentBuilder {
     private val bindings = mutableListOf<ObjectBinding>()

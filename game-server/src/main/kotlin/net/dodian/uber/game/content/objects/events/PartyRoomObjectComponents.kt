@@ -1,8 +1,14 @@
 package net.dodian.uber.game.content.objects.events
 
+import net.dodian.uber.game.content.platform.InterfaceMappingRegistry
+
 object PartyRoomObjectComponents {
-    val balloonObjects = intArrayOf(115, 116, 117, 118, 119, 120, 121, 122)
-    const val DEPOSIT_CHEST = 26193
-    const val FORCE_TRIGGER = 26194
-    val allObjects = balloonObjects + intArrayOf(DEPOSIT_CHEST, FORCE_TRIGGER)
+    val balloonObjects: IntArray
+        get() = InterfaceMappingRegistry.partyRoomObjectsData().balloonObjects
+    val DEPOSIT_CHEST: Int
+        get() = InterfaceMappingRegistry.partyRoomObjectsData().depositChest
+    val FORCE_TRIGGER: Int
+        get() = InterfaceMappingRegistry.partyRoomObjectsData().forceTrigger
+    val allObjects: IntArray
+        get() = balloonObjects + intArrayOf(DEPOSIT_CHEST, FORCE_TRIGGER)
 }

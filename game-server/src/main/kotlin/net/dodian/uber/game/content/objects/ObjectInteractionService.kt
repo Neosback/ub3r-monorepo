@@ -1,13 +1,13 @@
 package net.dodian.uber.game.content.objects
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.world.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
 import net.dodian.uber.game.content.objects.services.ObjectInteractionType
 import net.dodian.uber.game.event.GameEventBus
 import net.dodian.uber.game.event.events.ObjectClickEvent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.api.content.ContentDispatchTiming
+import net.dodian.uber.game.systems.api.content.ContentDispatchTiming
 import org.slf4j.LoggerFactory
 
 object ObjectInteractionService {

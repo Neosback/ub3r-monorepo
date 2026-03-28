@@ -9,9 +9,9 @@ import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
-import net.dodian.uber.game.runtime.sync.SynchronizationContext;
-import net.dodian.uber.game.runtime.sync.scratch.ThreadLocalSyncScratch;
-import net.dodian.uber.game.runtime.sync.viewport.ViewportSnapshot;
+import net.dodian.uber.game.engine.sync.SynchronizationContext;
+import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
+import net.dodian.uber.game.engine.sync.viewport.ViewportSnapshot;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.dodian.utilities.DotEnvKt.getSyncScratchBufferReuseEnabled;
 
 /**
  * @author Dashboard
@@ -173,23 +172,15 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     private ByteMessage withUpdateBlock() {
-        if (getSyncScratchBufferReuseEnabled()) {
-            return ThreadLocalSyncScratch.npcUpdateBlock();
-        }
-        return ByteMessage.raw(16384);
+        return ThreadLocalSyncScratch.npcUpdateBlock();
     }
 
     private ByteMessage withSharedBlock() {
-        if (getSyncScratchBufferReuseEnabled()) {
-            return ThreadLocalSyncScratch.sharedBlock();
-        }
-        return ByteMessage.raw(512);
+        return ThreadLocalSyncScratch.sharedBlock();
     }
 
     private static void releaseScratch(ByteMessage message) {
-        if (!getSyncScratchBufferReuseEnabled()) {
-            message.releaseAll();
-        }
+        // Scratch buffers are reused from thread-local storage.
     }
 
     public void appendTextUpdate(Npc npc, ByteMessage buf) {
@@ -290,7 +281,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     public void updateNPCMovement(Npc npc, ByteMessage buf) {
-        if (npc.getDirection() == -1) {
+        int walkDirection = npc.getNextWalkingDirection();
+        if (walkDirection == -1) {
             if (npc.getUpdateFlags().isUpdateRequired()) {
                 buf.putBits(1, 1);
                 buf.putBits(2, 0);
@@ -298,7 +290,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 buf.putBits(1, 0);
             }
         } else {
-            int translatedDirection = translateDirectionToClient(npc);
+            int translatedDirection = translateDirectionToClient(npc, walkDirection);
             if (translatedDirection == -1) {
                 if (npc.getUpdateFlags().isUpdateRequired()) {
                     buf.putBits(1, 1);
@@ -323,8 +315,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         return DEBUG_MOVEMENT_WRITE_COUNTER.getAndSet(0);
     }
 
-    private int translateDirectionToClient(Npc npc) {
-        int direction = npc.getDirection();
+    private int translateDirectionToClient(Npc npc, int direction) {
         if (direction < 0 || direction >= Utils.xlateDirectionToClient.length) {
             logger.warn("Invalid npc direction {} for slot={} id={}", direction, npc.getSlot(), npc.getId());
             return -1;

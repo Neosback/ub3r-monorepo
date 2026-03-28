@@ -1,9 +1,9 @@
 package net.dodian.uber.game.persistence.audit
 
 import net.dodian.uber.game.model.YellSystem
-import net.dodian.utilities.DbTables
-import net.dodian.utilities.dbConnection
-import net.dodian.utilities.gameWorldId
+import net.dodian.uber.game.persistence.db.DbTables
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
+import net.dodian.uber.game.config.gameWorldId
 import org.slf4j.LoggerFactory
 
 object DuelLog {
@@ -17,7 +17,7 @@ object DuelLog {
 
         AsyncSqlService.execute("duel-log", Runnable {
             try {
-                dbConnection.use { connection ->
+                DbAsyncRepository.withConnection { connection ->
                     connection.prepareStatement(insertSql).use { statement ->
                         statement.setString(1, player)
                         statement.setString(2, opponent)

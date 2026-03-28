@@ -11,21 +11,20 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.runtime.sync.SynchronizationContext;
-import net.dodian.uber.game.runtime.sync.player.PlayerSyncDecision;
-import net.dodian.uber.game.runtime.sync.player.ViewerPlayerSyncState;
-import net.dodian.uber.game.runtime.sync.playerinfo.PlayerVisibilityRules;
-import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.RootPlayerInfoPlan;
-import net.dodian.uber.game.runtime.sync.scratch.ThreadLocalSyncScratch;
-import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplate;
-import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplateKey;
-import net.dodian.uber.game.runtime.sync.viewport.ViewportSnapshot;
+import net.dodian.uber.game.engine.sync.SynchronizationContext;
+import net.dodian.uber.game.engine.sync.player.PlayerSyncDecision;
+import net.dodian.uber.game.engine.sync.player.ViewerPlayerSyncState;
+import net.dodian.uber.game.engine.sync.playerinfo.PlayerVisibilityRules;
+import net.dodian.uber.game.engine.sync.playerinfo.dispatch.RootPlayerInfoPlan;
+import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
+import net.dodian.uber.game.engine.sync.template.PlayerSyncTemplate;
+import net.dodian.uber.game.engine.sync.template.PlayerSyncTemplateKey;
+import net.dodian.uber.game.engine.sync.viewport.ViewportSnapshot;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static net.dodian.utilities.DotEnvKt.getSyncAppearanceCacheEnabled;
-import static net.dodian.utilities.DotEnvKt.getSyncScratchBufferReuseEnabled;
 
 /**
  * @author blakeman8192
@@ -238,7 +237,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         }
 
         if (Server.chunkManager == null) {
-            java.util.List<Player> candidates = PlayerHandler.getLocalPlayers(player);
+            java.util.List<Player> candidates = PlayerRegistry.getLocalPlayers(player);
             if (candidates.isEmpty()) {
                 return;
             }
@@ -772,8 +771,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     public byte[] getAppearanceBytes(Player player) {
-        if (getSyncAppearanceCacheEnabled()
-                && !player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE)
+        if (!player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE)
                 && player.isCachedAppearanceValid()) {
             SynchronizationContext.recordPlayerAppearanceCacheHit(true);
             return player.getCachedAppearanceBytes();
@@ -868,9 +866,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             playerProps.put(player.determineCombatLevel()); // combat level
             playerProps.putShort(0); // incase != 0, writes skill-%d
             byte[] appearanceBytes = playerProps.toByteArray();
-            if (getSyncAppearanceCacheEnabled()) {
-                player.cacheAppearanceBytes(appearanceBytes);
-            }
+            player.cacheAppearanceBytes(appearanceBytes);
             SynchronizationContext.recordPlayerAppearanceCacheHit(false);
             return appearanceBytes;
         } finally {
@@ -879,33 +875,22 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     public ByteMessage withScratchUpdateBlock() {
-        if (getSyncScratchBufferReuseEnabled()) {
-            SynchronizationContext.recordPlayerScratchReuse();
-            return ThreadLocalSyncScratch.playerUpdateBlock();
-        }
-        return ByteMessage.raw(8192);
+        SynchronizationContext.recordPlayerScratchReuse();
+        return ThreadLocalSyncScratch.playerUpdateBlock();
     }
 
     private ByteMessage withAppearanceScratch() {
-        if (getSyncScratchBufferReuseEnabled()) {
-            SynchronizationContext.recordPlayerScratchReuse();
-            return ThreadLocalSyncScratch.appearanceBlock();
-        }
-        return ByteMessage.raw(256);
+        SynchronizationContext.recordPlayerScratchReuse();
+        return ThreadLocalSyncScratch.appearanceBlock();
     }
 
     private ByteMessage withSharedBlock() {
-        if (getSyncScratchBufferReuseEnabled()) {
-            SynchronizationContext.recordPlayerScratchReuse();
-            return ThreadLocalSyncScratch.sharedBlock();
-        }
-        return ByteMessage.raw(512);
+        SynchronizationContext.recordPlayerScratchReuse();
+        return ThreadLocalSyncScratch.sharedBlock();
     }
 
     private static void releaseScratch(ByteMessage message) {
-        if (!getSyncScratchBufferReuseEnabled()) {
-            message.releaseAll();
-        }
+        // Scratch buffers are reused from thread-local storage.
     }
 
     private int movementMode(Player player) {
@@ -934,7 +919,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     private java.util.BitSet toBitSet(int[] slots, int count) {
-        java.util.BitSet set = new java.util.BitSet(PlayerHandler.players.length);
+        java.util.BitSet set = new java.util.BitSet(PlayerRegistry.players.length);
         int limit = Math.min(count, slots.length);
         for (int i = 0; i < limit; i++) {
             int slot = slots[i];
@@ -946,10 +931,10 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     private Player resolvePlayerSlot(int slot) {
-        if (slot < 0 || slot >= PlayerHandler.players.length) {
+        if (slot < 0 || slot >= PlayerRegistry.players.length) {
             return null;
         }
-        return PlayerHandler.players[slot];
+        return net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slot];
     }
 
     @Override

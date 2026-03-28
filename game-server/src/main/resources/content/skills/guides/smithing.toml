@@ -1,0 +1,39 @@
+skillId = 13
+showComponents = [8827,8828,8838,8841,8850]
+
+[[labels]]
+componentId = 8846
+text = "Smelting"
+[[labels]]
+componentId = 8823
+text = "Bronze"
+[[labels]]
+componentId = 8824
+text = "Iron"
+[[labels]]
+componentId = 8827
+text = "Steel"
+[[labels]]
+componentId = 8837
+text = "Mithril"
+[[labels]]
+componentId = 8840
+text = "Adamant"
+[[labels]]
+componentId = 8843
+text = "Runite"
+[[labels]]
+componentId = 8859
+text = "Special"
+
+[[pages]]
+child = 0
+names = ["Bronze bar","Iron bar ({iron_success}% success)","Steel bar (2 coal & 1 iron ore)","Gold bar","Mithril bar (3 coal & 1 mithril ore)","Adamantite bar (4 coal & 1 adamantite ore)","Runite bar (6 coal & 1 runite ore)"]
+levels = ["1","15","30","40","55","70","85"]
+items = [2349,2351,2353,2357,2359,2361,2363]
+
+[specialAfterFramesPage]
+child = -1
+names = ["Rockshell armour","Dragonfire shield","Skillcape @red@(Premium only)"]
+levels = ["60","90","99"]
+items = [6129,11284,9795]

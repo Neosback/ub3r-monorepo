@@ -1,0 +1,58 @@
+skillId = 12
+showComponents = [8827,8828,8838]
+hideComponents = [8841,8850]
+
+[[labels]]
+componentId = 8846
+text = "Spinning"
+[[labels]]
+componentId = 8823
+text = "Armor"
+[[labels]]
+componentId = 8824
+text = "Jewelry"
+[[labels]]
+componentId = 8827
+text = "Glass"
+[[labels]]
+componentId = 8837
+text = "Weaponry"
+[[labels]]
+componentId = 8840
+text = "Other"
+
+[[pages]]
+child = 0
+names = ["Ball of wool","Bow string","2 tick stringing","1 tick stringing"]
+levels = ["1","10","40","70"]
+items = [1759,1777]
+
+[[pages]]
+child = 1
+names = ["Leather gloves","Leather boots","Leather cowl","Leather vambraces","Leather body","Leather chaps","Coif","Green d'hide vamb","Green d'hide chaps","Green d'hide body","Blue d'hide vamb","Blue d'hide chaps","Blue d'hide body","Slayer helmet","Red d'hide vamb","Red d'hide chaps","Red d'hide body","Black d'hide vamb","Black d'hide chaps","Black d'hide body"]
+levels = ["1","7","9","11","14","18","39","50","54","58","62","66","70","70","73","76","79","82","85","88"]
+items = [1059,1061,1167,1063,1129,1095,1169,1065,1099,1135,2487,2493,2499,11864,2489,2495,2501,2491,2497,2503]
+
+[[pages]]
+child = 2
+names = ["Gold ring","Gold necklace","Gold bracelet","Gold amulet","Cut sapphire","Sapphire ring","Sapphire necklace","Sapphire bracelet","Sapphire amulet","Cut emerald","Emerald ring","Emerald necklace","Emerald bracelet","Emerald amulet","Cut ruby","Ruby ring","Ruby necklace","Ruby bracelet","Cut diamond","Diamond ring","Ruby amulet","Cut dragonstone","Dragonstone ring","Diamond necklace","Diamond bracelet","Cut onyx","Onyx ring","Diamond amulet","Dragonstone necklace","Dragonstone bracelet","Dragonstone amulet","Onyx necklace","Onyx bracelet","Onyx amulet"]
+levels = ["5","6","7","8","20","20","22","23","24","27","27","29","30","31","34","34","40","42","43","43","50","55","55","56","58","67","67","70","72","74","80","82","84","90"]
+items = [1635,1654,11069,1692,1607,1637,1656,11072,1694,1605,1639,1658,11076,1696,1603,1641,1660,11085,1601,1643,1698,1615,1645,1662,11092,6573,6575,1700,1664,11115,1702,6577,11130,6581]
+
+[[pages]]
+child = 3
+names = ["Vial","Empty cup","Fishbowl","Unpowered orb"]
+levels = ["1","18","32","48"]
+items = [229,1980,6667,567]
+
+[[pages]]
+child = 4
+names = ["Water battlestaff","Earth battlestaff","Fire battlestaff","Air battlestaff"]
+levels = ["51","56","61","66"]
+items = [1395,1399,1393,1397]
+
+[[pages]]
+child = 5
+names = ["Crystal key","Skillcape @red@(Premium only)"]
+levels = ["60","99"]
+items = [989,9780]

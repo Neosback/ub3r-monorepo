@@ -4,16 +4,18 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
+import net.dodian.uber.game.event.GameEventScheduler
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
-import net.dodian.uber.game.runtime.tasking.coroutine.gameClock
-import net.dodian.uber.game.runtime.tasking.coroutine.npcTaskCoroutine
-import net.dodian.uber.game.runtime.tasking.coroutine.playerTaskCoroutine
-import net.dodian.uber.game.runtime.tasking.coroutine.worldTaskCoroutine
-import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.api.content.ContentCoroutines.gameClock
+import net.dodian.uber.game.systems.api.content.ContentCoroutines.npcTaskCoroutine
+import net.dodian.uber.game.systems.api.content.ContentCoroutines.playerTaskCoroutine
+import net.dodian.uber.game.systems.api.content.ContentCoroutines.worldTaskCoroutine
+import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import java.util.function.BooleanSupplier
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.party.Balloons
+import net.dodian.uber.game.content.events.partyroom.Balloons
 import net.dodian.utilities.Misc
 
 object DevDebugCommands : CommandContent {
@@ -39,7 +41,12 @@ private fun handleDevDebug(context: CommandContext): Boolean {
         "npca" -> {
             return try {
                 val id = cmd[1].toInt()
-                Server.npcManager.getData(id).attackEmote = cmd[2].toInt()
+                val data = Server.npcManager.getData(id)
+                if (data == null) {
+                    context.reply("No npc definition found for id $id.")
+                    return true
+                }
+                data.attackEmote = cmd[2].toInt()
                 true
             } catch (_: Exception) {
                 context.usage("Wrong usage.. ::${cmd[0]} npcid animationId")
@@ -96,13 +103,10 @@ private fun handleDevDebug(context: CommandContext): Boolean {
                     4 -> {
                         client.cancelFarmDebugTask()
                         val farmConfig = intArrayOf(0)
-                        client.farmDebugTaskHandle = net.dodian.uber.game.runtime.scheduler.QueueTaskHandle.from(
-                            net.dodian.uber.game.runtime.tasking.GameTaskRuntime.queuePlayerRepeating(
-                                client,
-                                net.dodian.uber.game.runtime.tasking.TaskPriority.STANDARD,
-                                1,
-                                1,
-                            ) {
+                        client.farmDebugTaskHandle = GameEventScheduler.schedule(
+                            1,
+                            1,
+                            BooleanSupplier {
                                 if (client.disconnected || !client.isActive) {
                                     client.farmDebugTaskHandle = null
                                     false
@@ -165,7 +169,7 @@ private fun handleDevDebug(context: CommandContext): Boolean {
                         -1
                     }
             }
-            context.reply("You found gem..${client.GetItemName(gem)}($gem)")
+            context.reply("You found gem..${client.getItemName(gem)}($gem)")
         }
         "rune" -> {
             val level = cmd[1].toInt()
@@ -200,22 +204,22 @@ private fun handleDevDebug(context: CommandContext): Boolean {
         "wcor" -> {
             context.reply("Scheduled world coroutine demo.")
             worldTaskCoroutine {
-                client.send(SendMessage("[${gameClock()}] world: start"))
+                client.sendMessage("[${gameClock()}] world: start")
                 delay(3)
-                client.send(SendMessage("[${gameClock()}] world: step-2"))
+                client.sendMessage("[${gameClock()}] world: step-2")
                 delay(7)
-                client.send(SendMessage("[${gameClock()}] world: stop"))
+                client.sendMessage("[${gameClock()}] world: stop")
                 stop()
             }
         }
         "pcor" -> {
             context.reply("Scheduled player coroutine demo.")
             playerTaskCoroutine(client) {
-                player.send(SendMessage("[${gameClock()}] player: start"))
+                player.sendMessage("[${gameClock()}] player: start")
                 delay(2)
-                player.send(SendMessage("[${gameClock()}] player: step-2"))
+                player.sendMessage("[${gameClock()}] player: step-2")
                 delay(2)
-                player.send(SendMessage("[${gameClock()}] player: stop"))
+                player.sendMessage("[${gameClock()}] player: stop")
                 stop()
             }
         }

@@ -6,7 +6,6 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
-import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.npc.NpcData;
@@ -25,34 +24,35 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.skills.slayer.SlayerService;
-import net.dodian.uber.game.content.dialogue.DialogueService;
-import net.dodian.uber.game.party.Balloons;
-import net.dodian.uber.game.party.RewardItem;
+import net.dodian.uber.game.content.skills.slayer.SlayerService;
+import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
+import net.dodian.uber.game.content.events.partyroom.Balloons;
+import net.dodian.uber.game.content.events.partyroom.RewardItem;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
-import net.dodian.uber.game.skills.mining.MiningState;
-import net.dodian.uber.game.skills.woodcutting.WoodcuttingState;
-import net.dodian.uber.game.skills.fletching.FletchingState;
-import net.dodian.uber.game.skills.fishing.FishingState;
-import net.dodian.uber.game.skills.cooking.CookingState;
-import net.dodian.uber.game.skills.crafting.CraftingState;
-import net.dodian.uber.game.skills.prayer.PrayerOfferingState;
-import net.dodian.uber.game.skills.runecrafting.RunecraftingState;
-import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
-import net.dodian.uber.game.runtime.interaction.InteractionAnchorState;
-import net.dodian.uber.game.runtime.interaction.InteractionIntent;
-import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
-import net.dodian.uber.game.runtime.combat.CombatTargetState;
-import net.dodian.uber.game.runtime.lifecycle.DeathTaskState;
-import net.dodian.uber.game.skills.smithing.ActiveSmithingSelection;
-import net.dodian.uber.game.skills.smithing.SmeltingSelection;
-import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderPlayerState;
-import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
-import net.dodian.uber.game.runtime.action.PendingProductionSelection;
-import net.dodian.uber.game.runtime.action.ActiveProductionSelection;
-import net.dodian.uber.game.runtime.action.PlayerActionType;
-import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
-import net.dodian.uber.game.runtime.tasking.GameTaskSet;
+import net.dodian.uber.game.content.skills.mining.MiningState;
+import net.dodian.uber.game.content.skills.woodcutting.WoodcuttingState;
+import net.dodian.uber.game.content.skills.fletching.FletchingState;
+import net.dodian.uber.game.content.skills.fishing.FishingState;
+import net.dodian.uber.game.content.skills.cooking.CookingState;
+import net.dodian.uber.game.content.skills.crafting.CraftingState;
+import net.dodian.uber.game.content.skills.prayer.PrayerOfferingState;
+import net.dodian.uber.game.content.skills.runecrafting.RunecraftingState;
+import net.dodian.uber.game.systems.interaction.ActiveInteraction;
+import net.dodian.uber.game.systems.interaction.InteractionAnchorState;
+import net.dodian.uber.game.systems.interaction.InteractionIntent;
+import net.dodian.uber.game.systems.combat.CombatCancellationReason;
+import net.dodian.uber.game.systems.combat.CombatTargetState;
+import net.dodian.uber.game.engine.lifecycle.DeathTaskState;
+import net.dodian.uber.game.content.skills.smithing.ActiveSmithingSelection;
+import net.dodian.uber.game.content.skills.smithing.SmeltingSelection;
+import net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderPlayerState;
+import net.dodian.uber.game.systems.action.PlayerActionCancelReason;
+import net.dodian.uber.game.systems.action.PendingProductionSelection;
+import net.dodian.uber.game.systems.action.ActiveProductionSelection;
+import net.dodian.uber.game.systems.action.PlayerActionType;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
+import net.dodian.uber.game.engine.scheduler.QueueTaskHandle;
+import net.dodian.uber.game.engine.tasking.GameTaskSet;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
@@ -85,7 +85,6 @@ public abstract class Player extends Entity {
     public int duelStatus = -1, iconTimer = 6; // duelStatus 0 = Requesting duel, 1 = in duel screen, 2 = waiting for other player to accept, 3 = in duel, 4 = won
     public String forcedChat = "";
     public int headIcon = -1, skullIcon = -1, customCombat = -1;
-    private WalkToTask walkToTask;
     public boolean IsPMLoaded = false;
     public int playerIsMember = 1;
     public int[] playerBonus = new int[12];
@@ -100,13 +99,11 @@ public abstract class Player extends Entity {
     public boolean isNpc, morph = false;
     public boolean initialized = false, disconnected = false, isKicked = false;
     public boolean isActive = false, debug = false;
-    public int actionTimer = 0;
     public String connectedFrom = "";
     public int ip = 0;
     public String UUID = "";
     public boolean takeAsNote = false;
     public String playerName = null, playerPass = null;
-    public PlayerHandler handler = null;
     public int maxItemAmount = Integer.MAX_VALUE;
     public int[] playerItems = new int[28];
     public int[] playerItemsN = new int[28];
@@ -262,7 +259,7 @@ public abstract class Player extends Entity {
                     dealDamage(null, 3 + Misc.random(12), Entity.hitType.STANDARD);
                     c.send(new SendMessage("The thirst from the heat damage you!"));
                 } else {
-                    c.requestAnim(829, 0);
+                    c.performAnimation(829, 0);
                     c.checkItemUpdate();
                     //c.send(new SendMessage("You take a sip on some water.")); //Should we add a msg when drinking?!
                 }
@@ -371,21 +368,11 @@ public abstract class Player extends Entity {
     }
 
     public void println_debug(String str) {
-        if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
-                && !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
-            return;
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("[player-{}]: {}", getSlot(), str);
-        }
+        return;
     }
 
     public void println(String str) {
-        if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
-                && !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
-            return;
-        }
-        logger.info("[player-{}]: {}", getSlot(), str);
+        return;
     }
 
     public String getSongUnlockedSaveText() {
@@ -577,14 +564,6 @@ public abstract class Player extends Entity {
 
     public ArrayList<String> getDailyReward() {
         return accountState.getDailyReward();
-    }
-
-    public WalkToTask getWalkToTask() {
-        return this.walkToTask;
-    }
-
-    public void setWalkToTask(WalkToTask walkToTask) {
-        this.walkToTask = walkToTask;
     }
 
     public int mapRegionX, mapRegionY; // the map region the player is
@@ -1284,17 +1263,17 @@ public abstract class Player extends Entity {
         return progressState.isSongUnlocked(songId);
     }
     public boolean blackMaskEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
-        net.dodian.uber.game.skills.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forNpc(npcId);
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
+        net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
         int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
         return (itemId == 8921 || itemId == 11864) && onTask;
     }
     public boolean blackMaskImbueEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
-        net.dodian.uber.game.skills.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forNpc(npcId);
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
+        net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
-        String headName = ((Client) this).GetItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
+        String headName = ((Client) this).getItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
         return (headName.contains("black mask (i)") || headName.contains("slayer helmet (i)")) && onTask;
     }
 
@@ -1302,7 +1281,7 @@ public abstract class Player extends Entity {
         return playerEquipment[slot];
     }
     public String getEquipName(int slot) {
-        return ((Client) this).GetItemName(getEquipment(slot));
+        return ((Client) this).getItemName(getEquipment(slot));
     }
     public boolean armourSet(String armourName) {
         return switch (armourName) {
@@ -1340,7 +1319,7 @@ public abstract class Player extends Entity {
         return false;
     }
     public boolean gotSlayerHelmet(Client c) {
-        return c.GetItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase().contains("slayer helm");
+        return c.getItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase().contains("slayer helm");
     }
 
     public boolean areAllSongsUnlocked() {
@@ -1639,12 +1618,12 @@ public abstract class Player extends Entity {
 
     public boolean skillcapePerk(Skill skill, boolean checkInventory) {
         Skillcape skillcape = Skillcape.getSkillCape(getEquipment()[Equipment.Slot.CAPE.getId()]);
-        boolean maxCape = ((Client) this).GetItemName(getEquipment()[Equipment.Slot.CAPE.getId()]).toLowerCase().contains("max cape");
+        boolean maxCape = ((Client) this).getItemName(getEquipment()[Equipment.Slot.CAPE.getId()]).toLowerCase().contains("max cape");
 
         if(checkInventory && (!maxCape || (skillcape != null && skillcape.getSkill() != skill))) {
             for(int i = 0; i < 28 && !maxCape; i++) {
                 skillcape = Skillcape.getSkillCape(playerItems[i] - 1);
-                if(((Client) this).GetItemName(playerItems[i] - 1).toLowerCase().contains("max cape")
+                if(((Client) this).getItemName(playerItems[i] - 1).toLowerCase().contains("max cape")
                 || (skillcape != null && skillcape.getSkill() == skill))
                     maxCape = true; //I am lazy and this is some shiet that could work :L
             }
@@ -2009,16 +1988,16 @@ public abstract class Player extends Entity {
     }
 
     public boolean rejectTeleport() {
-        return net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService.hindersTeleport(((Client) this));
+        return net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderService.hindersTeleport(((Client) this));
     }
     public void loginPosition(int x, int y, int z) {
         moveTo(x, y, z);
         if(getPositionName(getPosition()) == positions.PYRAMID_PLUNDER)
-            net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService.reset(((Client) this));
+            net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderService.reset(((Client) this));
     }
 
     public void examineItem(Client c, int id, int amount) {
-        String name = c.GetItemName(id);
+        String name = c.getItemName(id);
         if(amount >= 0x186a0)
             c.send(new SendMessage(amount + " x " + name));
         else { //Got this incase we need to do future stuff for item examine!
@@ -2073,7 +2052,7 @@ public abstract class Player extends Entity {
         text[0] = "What do you wish me to do?";
         int position = Math.min(3, herbOptions.size() - slot);
         for(int i = 0; i < position; i++)
-            text[i + 1] = c.GetItemName(herbOptions.get(slot + i).getId());
+            text[i + 1] = c.getItemName(herbOptions.get(slot + i).getId());
         text[position + 1] = text.length < 6 && slot == 0 ? "Close" : text.length == 6 ? "Next" : "Previous";
         if(text.length == 6)
             text[position + 2] = slot == 0 ? "Close" : "Previous";

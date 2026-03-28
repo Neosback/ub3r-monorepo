@@ -2,11 +2,11 @@ package net.dodian.uber.game.event
 
 import java.util.function.BooleanSupplier
 import kotlin.math.max
-import net.dodian.uber.game.runtime.scheduler.QueueTask
-import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle
-import net.dodian.uber.game.runtime.scheduler.QueueTaskService
-import net.dodian.uber.game.runtime.tasking.GameTaskRuntime
-import net.dodian.uber.game.runtime.tasking.TaskHandle
+import net.dodian.uber.game.engine.scheduler.QueueTask
+import net.dodian.uber.game.engine.scheduler.QueueTaskHandle
+import net.dodian.uber.game.engine.scheduler.QueueTaskService
+import net.dodian.uber.game.engine.tasking.GameTaskRuntime
+import net.dodian.uber.game.engine.tasking.TaskHandle
 
 object GameEventScheduler {
     private const val GAME_TICK_MS = 600
@@ -17,6 +17,13 @@ object GameEventScheduler {
         intervalTicks: Int = 0,
         task: QueueTask,
     ): QueueTaskHandle = QueueTaskService.schedule(delayTicks, intervalTicks, task)
+
+    @JvmStatic
+    fun schedule(
+        delayTicks: Int,
+        intervalTicks: Int = 0,
+        action: BooleanSupplier,
+    ): QueueTaskHandle = QueueTaskService.schedule(delayTicks, intervalTicks, QueueTask { action.asBoolean })
 
     @JvmStatic
     fun runLater(delayTicks: Int, action: Runnable): TaskHandle {

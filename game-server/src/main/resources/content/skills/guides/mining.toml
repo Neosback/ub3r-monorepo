@@ -1,0 +1,30 @@
+skillId = 14
+hideComponents = [8825]
+
+[[labels]]
+componentId = 8846
+text = "Pickaxes"
+[[labels]]
+componentId = 8823
+text = "Ores"
+[[labels]]
+componentId = 8824
+text = "Misc"
+
+[[pages]]
+child = 0
+names = ["Bronze Pickaxe","Iron Pickaxe","Steel Pickaxe","Black Pickaxe","Mithril Pickaxe","Adamant Pickaxe","Rune Pickaxe","Dragon Pickaxe"]
+levels = ["1","1","6","11","21","31","41","61"]
+items = [1265,1267,1269,12297,1273,1271,1275,11920]
+
+[[pages]]
+child = 1
+names = ["Rune essence","Copper ore","Tin ore","Iron ore","Coal","Gold ore","Mithril ore","Adamant ore","Runite ore"]
+levels = ["1","1","1","15","30","40","55","70","85"]
+items = [1436,436,438,440,453,444,447,449,451]
+
+[[pages]]
+child = 2
+names = ["Skillcape @red@(Premium only)"]
+levels = ["99"]
+items = [9792]

@@ -1,8 +1,8 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.cache.object.GameObjectData;
-import net.dodian.cache.object.GameObjectDef;
+import net.dodian.uber.game.world.cache.object.GameObjectData;
+import net.dodian.uber.game.world.cache.object.GameObjectDef;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
@@ -14,11 +14,11 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.runtime.interaction.ItemOnObjectIntent;
-import net.dodian.uber.game.runtime.interaction.MagicOnObjectIntent;
-import net.dodian.uber.game.runtime.interaction.ObjectClickIntent;
-import net.dodian.uber.game.runtime.interaction.scheduler.InteractionTaskScheduler;
-import net.dodian.uber.game.runtime.interaction.scheduler.ObjectInteractionTask;
+import net.dodian.uber.game.systems.interaction.ItemOnObjectIntent;
+import net.dodian.uber.game.systems.interaction.MagicOnObjectIntent;
+import net.dodian.uber.game.systems.interaction.ObjectClickIntent;
+import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler;
+import net.dodian.uber.game.systems.interaction.scheduler.ObjectInteractionTask;
 import net.dodian.utilities.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +100,7 @@ public class ObjectInteractionListener implements PacketListener {
         ObjectClickIntent intent =
                 new ObjectClickIntent(
                         packet.opcode(),
-                        net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
+                        net.dodian.uber.game.systems.world.player.PlayerRegistry.cycle,
                         option,
                         objectId,
                         targetPosition,
@@ -137,7 +137,7 @@ public class ObjectInteractionListener implements PacketListener {
         ItemOnObjectIntent intent =
                 new ItemOnObjectIntent(
                         packet.opcode(),
-                        net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
+                        net.dodian.uber.game.systems.world.player.PlayerRegistry.cycle,
                         interfaceId,
                         itemSlot,
                         itemId,
@@ -171,7 +171,7 @@ public class ObjectInteractionListener implements PacketListener {
         MagicOnObjectIntent intent =
                 new MagicOnObjectIntent(
                         packet.opcode(),
-                        net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
+                        net.dodian.uber.game.systems.world.player.PlayerRegistry.cycle,
                         spellId,
                         objectId,
                         targetPosition,

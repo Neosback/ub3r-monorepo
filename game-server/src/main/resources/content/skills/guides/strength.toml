@@ -1,0 +1,12 @@
+skillId = 2
+hideComponents = [8825,8813]
+
+[[labels]]
+componentId = 8846
+text = "Strength"
+
+[[pages]]
+child = 0
+names = ["Unholy book","Unholy blessing","War blessing","Granite maul","Obsidian maul","Dharok's greataxe","Guthan's warspear","Skillcape @red@(Premium only)"]
+levels = ["45","45","45","50","55","70","70","99"]
+items = [3842,4153,6528,4718,4726,9747,4151,9750]

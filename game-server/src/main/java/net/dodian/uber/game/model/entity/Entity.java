@@ -1,13 +1,13 @@
 package net.dodian.uber.game.model.entity;
 
-import net.dodian.cache.region.Region;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.UpdateFlags;
-import net.dodian.uber.game.combat.style.CombatStyle;
+import net.dodian.uber.game.systems.combat.style.CombatStyle;
 import net.dodian.uber.game.model.entity.npc.Npc;
+import net.dodian.uber.game.systems.world.collision.CollisionService;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -43,7 +43,7 @@ public abstract class Entity {
         this.type = type;
     }
 
-    public void requestAnim(int id, int delay) {
+    public void performAnimation(int id, int delay) {
         setAnimationId(id);
         setAnimationDelay(delay * 10);
         getUpdateFlags().setRequired(UpdateFlag.ANIM, true);
@@ -53,6 +53,10 @@ public abstract class Entity {
         this.gfxId = id;
         this.gfxHeight = height;
         getUpdateFlags().setRequired(UpdateFlag.GRAPHICS, true);
+    }
+
+    public void performGraphic(int id, int delay) {
+        setGfx(id, delay);
     }
     public int getGfxHeight() {
         return this.gfxHeight;
@@ -69,9 +73,13 @@ public abstract class Entity {
         return text;
     }
 
-    public boolean GoodDistance(int entityX, int entityY, int otherX, int otherY, int distance) {
+    public boolean isWithinDistance(int entityX, int entityY, int otherX, int otherY, int distance) {
         int dist = (int) Math.sqrt(Math.pow(entityX - otherX, 2) + Math.pow(entityY - otherY, 2));
         return dist <= distance;
+    }
+
+    public boolean isWithinDistance(Position otherPosition, int distance) {
+        return getPosition().withinDistance(otherPosition, distance);
     }
 
     public int getSlot() {
@@ -174,8 +182,15 @@ public abstract class Entity {
     }
 
     public boolean canMove(int x, int y) {
-        return Region.canMove(getPosition().getX(), getPosition().getY(), getPosition().getX() + x,
-                getPosition().getY() + y, getPosition().getZ(), getSize(), getSize());
+        return CollisionService.canMove(
+                getPosition().getX(),
+                getPosition().getY(),
+                getPosition().getX() + x,
+                getPosition().getY() + y,
+                getPosition().getZ(),
+                getSize(),
+                getSize()
+        );
     }
 
     public CombatStyle getCombatStyle() {

@@ -1,0 +1,37 @@
+altarObjectIds = [409, 20377]
+
+[[bones]]
+itemId = 526
+experience = 45
+
+[[bones]]
+itemId = 530
+experience = 85
+
+[[bones]]
+itemId = 532
+experience = 150
+
+[[bones]]
+itemId = 4812
+experience = 265
+
+[[bones]]
+itemId = 3125
+experience = 395
+
+[[bones]]
+itemId = 4832
+experience = 585
+
+[[bones]]
+itemId = 536
+experience = 735
+
+[[bones]]
+itemId = 6729
+experience = 1050
+
+[[bones]]
+itemId = 4834
+experience = 1200

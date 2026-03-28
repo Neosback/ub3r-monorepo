@@ -1,0 +1,177 @@
+baselineHidden = [15307,15304,15294,8863,8860,8850,8841,8838,8828]
+baselineShown = [8825,8813]
+titleComponentIds = [8716,8846,8823,8824,8827,8837,8840,8843,8859,8849]
+
+[[skillButtons]]
+skillId = 0
+componentId = 0
+componentKey = "skillguide.attack"
+rawButtonIds = [8654, 33206, 94167]
+
+[[skillButtons]]
+skillId = 3
+componentId = 1
+componentKey = "skillguide.hitpoints"
+rawButtonIds = [8655, 33207, 94168]
+
+[[skillButtons]]
+skillId = 14
+componentId = 2
+componentKey = "skillguide.mining"
+rawButtonIds = [8656, 33208, 94169]
+
+[[skillButtons]]
+skillId = 2
+componentId = 3
+componentKey = "skillguide.strength"
+rawButtonIds = [8657, 33209, 94170]
+
+[[skillButtons]]
+skillId = 16
+componentId = 4
+componentKey = "skillguide.agility"
+rawButtonIds = [8658, 33210, 94171]
+
+[[skillButtons]]
+skillId = 13
+componentId = 5
+componentKey = "skillguide.smithing"
+rawButtonIds = [8659, 33211, 94172]
+
+[[skillButtons]]
+skillId = 1
+componentId = 6
+componentKey = "skillguide.defence"
+rawButtonIds = [8660, 33212, 94173]
+
+[[skillButtons]]
+skillId = 15
+componentId = 7
+componentKey = "skillguide.herblore"
+rawButtonIds = [8661, 33213, 94174]
+
+[[skillButtons]]
+skillId = 9
+componentId = 8
+componentKey = "skillguide.fletching"
+rawButtonIds = [8662, 33214, 94183]
+
+[[skillButtons]]
+skillId = 4
+componentId = 9
+componentKey = "skillguide.ranged"
+rawButtonIds = [8663, 33215, 94176]
+
+[[skillButtons]]
+skillId = 17
+componentId = 10
+componentKey = "skillguide.thieving"
+rawButtonIds = [8664, 33216, 94177]
+
+[[skillButtons]]
+skillId = 10
+componentId = 11
+componentKey = "skillguide.fishing"
+rawButtonIds = [8665, 33217, 94175]
+
+[[skillButtons]]
+skillId = 5
+componentId = 12
+componentKey = "skillguide.prayer"
+rawButtonIds = [8666, 94179]
+
+[[skillButtons]]
+skillId = 12
+componentId = 13
+componentKey = "skillguide.crafting"
+rawButtonIds = [8667, 33219, 94180]
+
+[[skillButtons]]
+skillId = 8
+componentId = 14
+componentKey = "skillguide.woodcutting"
+rawButtonIds = [8668, 33220, 94184]
+
+[[skillButtons]]
+skillId = 6
+componentId = 15
+componentKey = "skillguide.magic"
+rawButtonIds = [8669, 33221, 94182]
+
+[[skillButtons]]
+skillId = 11
+componentId = 16
+componentKey = "skillguide.firemaking"
+rawButtonIds = [8670, 33222, 94181]
+
+[[skillButtons]]
+skillId = 7
+componentId = 17
+componentKey = "skillguide.cooking"
+rawButtonIds = [8671, 33223, 94178]
+
+[[skillButtons]]
+skillId = 20
+componentId = 18
+componentKey = "skillguide.runecrafting"
+rawButtonIds = [8672, 33224, 95053]
+
+[[skillButtons]]
+skillId = 18
+componentId = 19
+componentKey = "skillguide.slayer"
+rawButtonIds = [12162, 47130, 95061]
+
+[[skillButtons]]
+skillId = 19
+componentId = 20
+componentKey = "skillguide.farming"
+rawButtonIds = [95068]
+
+[[subTabs]]
+componentId = 8846
+componentKey = "skillguide.subtab.0"
+rawButtonIds = [8846, 34142]
+targetTab = 0
+
+[[subTabs]]
+componentId = 8823
+componentKey = "skillguide.subtab.1"
+rawButtonIds = [8823, 34119]
+targetTab = 1
+
+[[subTabs]]
+componentId = 8824
+componentKey = "skillguide.subtab.2"
+rawButtonIds = [8824, 34120]
+targetTab = 2
+
+[[subTabs]]
+componentId = 8827
+componentKey = "skillguide.subtab.3"
+rawButtonIds = [8827, 34123]
+targetTab = 3
+
+[[subTabs]]
+componentId = 34133
+componentKey = "skillguide.subtab.4"
+rawButtonIds = [34133]
+targetTab = 4
+
+[[subTabs]]
+componentId = 34136
+componentKey = "skillguide.subtab.5"
+rawButtonIds = [34136]
+targetTab = 5
+
+[[subTabs]]
+componentId = 34139
+componentKey = "skillguide.subtab.6"
+rawButtonIds = [34139]
+targetTab = 6
+
+[[subTabs]]
+componentId = 34155
+componentKey = "skillguide.subtab.7"
+rawButtonIds = [34155]
+targetTab = 7

@@ -1,0 +1,12 @@
+skillId = 17
+hideComponents = [8825,8813]
+
+[[labels]]
+componentId = 8846
+text = "Thieving"
+
+[[pages]]
+child = 0
+names = ["Cage","Farmer","Baker stall","fur stall","silver stall","Master Farmer","Yanille chest","Spice Stall","Legends chest @red@(Premium only)","Gem Stall @red@(Premium only)"]
+levels = ["1","10","10","40","65","70","70","80","85","90"]
+items = [4443,3243,2309,1739,2349,5068,6759,199,6759,1623]

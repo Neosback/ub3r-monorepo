@@ -1,0 +1,12 @@
+skillId = 16
+hideComponents = [8825,8813]
+
+[[labels]]
+componentId = 8846
+text = "Agility"
+
+[[pages]]
+child = 0
+names = ["Gnome Course","Barbarian Course","Yanille castle wall","Crystal Shield","Werewolf Course","Taverly dungeon shortcut","Wilderness course","Shilo stepping stones ","Prime boss shortcut","Skillcape @red@(Premium only)"]
+levels = ["1","40","50","60","60","70","70","75","85","99"]
+items = [751,1365,-1,4224,4179,4155,964,-1,4155,9771]

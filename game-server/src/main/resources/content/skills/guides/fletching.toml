@@ -1,0 +1,11 @@
+skillId = 9
+hideComponents = [8825,8813]
+
+[[labels]]
+componentId = 8846
+text = "Fletching"
+
+[[pages]]
+child = 0
+names = ["Arrow Shafts","Oak Shortbow","Oak Longbow","Willow Shortbow","Willow Longbow","Maple Shortbow","Maple Longbow","Yew Shortbow","Yew Longbow","Magic Shortbow","Magic Longbow"]
+levels = ["1","20","25","35","40","50","55","65","70","80","85"]

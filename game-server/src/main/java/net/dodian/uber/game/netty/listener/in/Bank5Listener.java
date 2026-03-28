@@ -4,8 +4,8 @@ import io.netty.buffer.ByteBuf;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.content.interfaces.skilling.SkillingInterfaceItemService;
-import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
-import net.dodian.uber.game.skills.smithing.SmithingInterfaceService;
+import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService;
+import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -14,7 +14,7 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.party.Balloons;
+import net.dodian.uber.game.content.events.partyroom.Balloons;
 
 
 import org.slf4j.Logger;
@@ -118,9 +118,9 @@ public class Bank5Listener implements PacketListener {
             client.buyItem(removeId, removeSlot, 1);
         } else if (interfaceId == 1688) { // operate equipment – animations and special chats
             if (removeId == 4566) {
-                client.requestAnim(1835, 0);
+                client.performAnimation(1835, 0);
             } else if (removeSlot == 0 && client.gotSlayerHelmet(client)) {
-                net.dodian.uber.game.skills.slayer.SlayerPlugin.sendCurrentTask(client);
+                net.dodian.uber.game.content.skills.slayer.SlayerPlugin.sendCurrentTask(client);
             }
         }
     }

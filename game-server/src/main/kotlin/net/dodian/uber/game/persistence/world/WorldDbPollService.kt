@@ -10,8 +10,8 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import net.dodian.uber.game.persistence.DbDispatchers
-import net.dodian.utilities.DbTables
-import net.dodian.utilities.dbConnection
+import net.dodian.uber.game.persistence.db.DbTables
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import org.slf4j.LoggerFactory
 
 object WorldDbPollService {
@@ -55,7 +55,7 @@ object WorldDbPollService {
         val bannedPlayers = HashSet<Int>()
 
         try {
-            dbConnection.use { connection ->
+            DbAsyncRepository.withConnection { connection ->
                 if (input.worldId == 1) {
                     updatePlayerCount(connection, input.worldId, input.playerCount)
                 }

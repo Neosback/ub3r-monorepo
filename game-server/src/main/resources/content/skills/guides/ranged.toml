@@ -1,0 +1,30 @@
+skillId = 4
+hideComponents = [8825]
+
+[[labels]]
+componentId = 8846
+text = "Bows"
+[[labels]]
+componentId = 8823
+text = "Armour"
+[[labels]]
+componentId = 8824
+text = "Misc"
+
+[[pages]]
+child = 0
+names = ["Oak bow","Willow bow","Maple bow","Yew bow","Magic bow","Crystal bow","Karil's crossbow","Seercull"]
+levels = ["1","20","30","40","50","65","70","75"]
+items = [843,849,853,857,861,4212,4734,6724]
+
+[[pages]]
+child = 1
+names = ["Leather","Green dragonhide body (with 40 defence)","Green dragonhide chaps","Green dragonhide vambraces","Book of balance","Peaceful blessing","Honourable blessing","Blue dragonhide body (with 40 defence)","Blue dragonhide chaps","Blue dragonhide vambraces","Red dragonhide body (with 40 defence)","Red dragonhide chaps","Red dragonhide vambraces","Black dragonhide body (with 40 defence)","Black dragonhide chaps","Black dragonhide vambraces","Karil (with 70 defence)","Spined"]
+levels = ["1","40","40","40","45","45","45","50","50","50","60","60","60","70","70","70","70","75"]
+items = [1129,1135,1099,1065,3844,20226,20229,2499,2493,2487,2501,2495,2489,2503,2497,2491,4736,6133]
+
+[[pages]]
+child = 2
+names = ["Bronze arrow","Iron arrow","Steel arrow","Mithril arrow","Adamant arrow","Rune arrow","Dragon arrow","Skillcape @red@(Premium only)"]
+levels = ["1","1","10","20","30","40","60","99"]
+items = [882,884,886,888,890,892,11212,9756]

@@ -1,0 +1,18 @@
+offerRuleButtons = [6698,6699,6697,6702]
+bodyRuleButtons = [13813,13814,13815,13816,13817,13818,13819,13820,13821,13822,13823]
+
+[[offerRuleIndices]]
+buttonId = 6698
+ruleIndex = 0
+
+[[offerRuleIndices]]
+buttonId = 6699
+ruleIndex = 1
+
+[[offerRuleIndices]]
+buttonId = 6697
+ruleIndex = 2
+
+[[offerRuleIndices]]
+buttonId = 6702
+ruleIndex = 7
