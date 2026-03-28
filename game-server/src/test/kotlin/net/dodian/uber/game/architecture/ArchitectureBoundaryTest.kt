@@ -749,4 +749,65 @@ class ArchitectureBoundaryTest {
             "Guide item validation must remain warn-only in content validation bootstrap.",
         )
     }
+
+    @Test
+    fun `shopkeeper roaming radius remains 12 in content`() {
+        val shopKeeperFile =
+            Paths.get("src/main/kotlin/net/dodian/uber/game/content/npcs/spawns/ShopKeeper.kt")
+        val shopKeeperSource = Files.readString(shopKeeperFile)
+        val walkRadiusOccurrences = "walkRadius = 12".toRegex().findAll(shopKeeperSource).count()
+        assertTrue(
+            walkRadiusOccurrences == 2,
+            "ShopKeeper content entries must keep walkRadius = 12 for both spawns.",
+        )
+    }
+
+    @Test
+    fun `legacy npc reference json files are removed`() {
+        val spawnJson = Paths.get("scripts/npc_Spawn.json")
+        val defJson = Paths.get("scripts/npc_Def.json")
+        assertTrue(
+            !Files.exists(spawnJson) && !Files.exists(defJson),
+            "Legacy NPC reference JSON files must remain deleted.",
+        )
+    }
+
+    @Test
+    fun `legacy cache namespace and export task are removed`() {
+        val repoRoot = Paths.get("..").normalize().toAbsolutePath()
+        val serverBuild = repoRoot.resolve("game-server/build.gradle.kts")
+        val sourceRoot = repoRoot.resolve("game-server/src/main")
+        val violations = mutableListOf<String>()
+
+        val buildText = Files.readString(serverBuild)
+        if (buildText.contains("exportWorldFromCache")) {
+            violations += "Legacy exportWorldFromCache task must be removed from game-server/build.gradle.kts"
+        }
+        if (buildText.contains("CacheWorldExporter")) {
+            violations += "Legacy CacheWorldExporter reference must be removed from game-server/build.gradle.kts"
+        }
+
+        Files.walk(sourceRoot).use { stream ->
+            stream
+                .filter { Files.isRegularFile(it) }
+                .filter { it.extension == "kt" || it.extension == "java" }
+                .forEach { file ->
+                    Files.readAllLines(file).forEachIndexed { idx, line ->
+                        val trimmed = line.trim()
+                        if (
+                            trimmed.contains("net.dodian.cache") ||
+                            trimmed.contains("Rangable") ||
+                            trimmed.contains("data/world/map_index")
+                        ) {
+                            violations += "${file}:${idx + 1} -> $trimmed"
+                        }
+                    }
+                }
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Legacy cache namespace/flow must be removed.\n${violations.joinToString("\n")}",
+        )
+    }
 }

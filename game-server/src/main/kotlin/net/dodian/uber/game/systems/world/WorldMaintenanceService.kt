@@ -5,6 +5,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.persistence.world.WorldPollResult
 import net.dodian.uber.game.persistence.WorldPollPublisher
 import net.dodian.uber.game.persistence.WorldPollSnapshot
+import net.dodian.uber.game.content.skills.farming.FarmingCatchUpService
 import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
 import net.dodian.uber.game.systems.world.farming.FarmingScheduler
 import net.dodian.uber.game.systems.world.pulse.GlobalPulseService
@@ -57,6 +58,20 @@ class WorldMaintenanceService(
     }
 
     fun runFarming(cycle: Long) {
+        var catchUpPulsesApplied: Int
+        val catchUpElapsed = measureNanoTime {
+            catchUpPulsesApplied =
+                FarmingCatchUpService.drainQueuedCatchUp(FARMING_CATCH_UP_MAX_PULSES_PER_TICK)
+        }
+        val catchUpElapsedMs = catchUpElapsed / 1_000_000L
+        if (catchUpElapsedMs >= runtimePhaseWarnMs) {
+            logger.warn(
+                "World maintenance farming catch-up took {}ms pulsesApplied={}",
+                catchUpElapsedMs,
+                catchUpPulsesApplied,
+            )
+        }
+
         if (!GlobalPulseService.isDue(cycle)) {
             return
         }
@@ -117,6 +132,7 @@ class WorldMaintenanceService(
     private companion object {
         private const val MAINTENANCE_INTERVAL_TICKS = 100L
         private const val PLUNDER_DOOR_INTERVAL_MS = 900_000L
+        private const val FARMING_CATCH_UP_MAX_PULSES_PER_TICK = 8
     }
 
     private fun isMaintenanceDue(cycle: Long): Boolean = cycle % MAINTENANCE_INTERVAL_TICKS == 0L

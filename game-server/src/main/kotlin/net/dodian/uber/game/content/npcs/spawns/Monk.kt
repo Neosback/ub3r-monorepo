@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client
 
 internal object Monk {
     val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 555, x = 2604, y = 3092, z = 0, face = 0),
+        NpcSpawnDef(npcId = 651, x = 2604, y = 3092, z = 0, face = 0),
     )
     val npcIds: IntArray = npcIdsFromEntries(entries)
 

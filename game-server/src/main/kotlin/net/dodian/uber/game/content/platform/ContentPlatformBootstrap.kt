@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.platform
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.world.cache.`object`.GameObjectData
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.content.ContentModuleIndex
 import net.dodian.uber.game.content.skills.guide.SkillGuideDataRegistry

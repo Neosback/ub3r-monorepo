@@ -61,6 +61,7 @@ dependencies {
 
     implementation("io.netty:netty-all:4.1.108.Final")
     implementation("com.google.guava:guava:33.1.0-jre")
+    implementation(project(":routefinder"))
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.3")
@@ -196,11 +197,11 @@ tasks.register<JavaExec>("runIntegrationTest") {
     mainClass.set("net.dodian.uber.game.model.entity.player.PlayerUpdatingIntegrationTest")
 }
 
-tasks.register<JavaExec>("exportWorldFromCache") {
+tasks.register<Copy>("syncMysticCache") {
     group = "build"
-    description = "Export data/world map+object files from data/cache for server clipping/object loaders"
-    classpath = sourceSets.main.get().runtimeClasspath
-    mainClass.set("net.dodian.cache.tools.CacheWorldExporter")
+    description = "Sync mystic client cache into game-server/data/cache/mystic for server runtime"
+    from(rootProject.layout.projectDirectory.dir("mystic-updatedclient/Cache"))
+    into(layout.projectDirectory.dir("data/cache/mystic"))
 }
 
 tasks.register<JavaExec>("exportContentFromDb") {

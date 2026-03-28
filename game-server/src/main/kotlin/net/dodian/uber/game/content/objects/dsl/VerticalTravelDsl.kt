@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.objects.dsl
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.world.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.content.objects.travel.VerticalTravel
 import net.dodian.uber.game.content.objects.travel.VerticalTravelStyle

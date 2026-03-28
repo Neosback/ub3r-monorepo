@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.commands.dev
 
-import net.dodian.cache.`object`.GameObjectDef
+import net.dodian.uber.game.world.cache.`object`.GameObjectDef
 import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands

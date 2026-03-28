@@ -22,6 +22,7 @@ import net.dodian.uber.game.engine.lifecycle.PlayerLifecycleTickService
 import net.dodian.uber.game.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.systems.combat.CombatRuntimeService
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.systems.world.collision.CollisionService
 import net.dodian.uber.game.systems.world.npc.NpcTimerScheduler
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
@@ -157,31 +158,105 @@ class EntityProcessor : Runnable {
             return
         }
 
-        if (Misc.chance(10) != 1) {
+        if (!shouldAttemptRoam(npc)) {
             return
         }
 
-        repeat(NPC_ROAM_DELTAS.size) {
-            val delta = NPC_ROAM_DELTAS[Utils.random(NPC_ROAM_DELTAS.size - 1)]
+        if (DEBUG_NPC_ROAM && isDebugTrackedNpc(npc.id)) {
+            roamAttempts++
+        }
+
+        val origin = npc.originalPosition
+        val currentX = npc.position.x
+        val currentY = npc.position.y
+        var advanced = false
+
+        repeat(ROAM_DESTINATION_ATTEMPTS) {
+            val targetX = origin.x + Utils.random(walkRadius * 2) - walkRadius
+            val targetY = origin.y + Utils.random(walkRadius * 2) - walkRadius
+            if (!withinWalkRadius(origin, targetX, targetY, walkRadius)) {
+                return@repeat
+            }
+
+            val bestStep = selectStepTowardTarget(npc, currentX, currentY, targetX, targetY, walkRadius)
+            if (bestStep == null) {
+                if (DEBUG_NPC_ROAM && isDebugTrackedNpc(npc.id)) {
+                    roamBlockedByCollision++
+                }
+                return@repeat
+            }
+
+            val toX = currentX + bestStep[0]
+            val toY = currentY + bestStep[1]
+            npc.moveTo(toX, toY, npc.position.z)
+            npc.markWalkStep(currentX, currentY, toX, toY)
+            advanced = true
+            if (DEBUG_NPC_ROAM && isDebugTrackedNpc(npc.id)) {
+                roamSuccessfulSteps++
+                maybeLogRoamDebug(npc, "step")
+            }
+            return
+        }
+
+        if (DEBUG_NPC_ROAM && isDebugTrackedNpc(npc.id) && !advanced) {
+            roamNoStepFound++
+            maybeLogRoamDebug(npc, "blocked")
+        }
+    }
+
+    private fun shouldAttemptRoam(npc: Npc): Boolean {
+        return when (npc.id) {
+            506, 2856 -> true
+            else -> Misc.chance(10) == 1
+        }
+    }
+
+    private fun selectStepTowardTarget(
+        npc: Npc,
+        currentX: Int,
+        currentY: Int,
+        targetX: Int,
+        targetY: Int,
+        walkRadius: Int,
+    ): IntArray? {
+        var bestDistance = Int.MAX_VALUE
+        var bestCount = 0
+        val bestSteps = arrayOfNulls<IntArray>(NPC_ROAM_DELTAS.size)
+        for (delta in NPC_ROAM_DELTAS) {
             val dx = delta[0]
             val dy = delta[1]
-
-            val fromX = npc.position.x
-            val fromY = npc.position.y
-            val toX = fromX + dx
-            val toY = fromY + dy
-
+            val toX = currentX + dx
+            val toY = currentY + dy
             if (!withinWalkRadius(npc.originalPosition, toX, toY, walkRadius)) {
-                return@repeat
+                continue
             }
-            if (!npc.canMove(dx, dy)) {
-                return@repeat
+            if (
+                !CollisionService.canNpcRoamStep(
+                    currentX,
+                    currentY,
+                    dx,
+                    dy,
+                    npc.position.z,
+                    kotlin.math.max(npc.size, 1),
+                )
+            ) {
+                continue
             }
 
-            npc.moveTo(toX, toY, npc.position.z)
-            npc.markWalkStep(fromX, fromY, toX, toY)
-            return
+            val chebyshevDistance = kotlin.math.max(kotlin.math.abs(targetX - toX), kotlin.math.abs(targetY - toY))
+            if (chebyshevDistance < bestDistance) {
+                bestDistance = chebyshevDistance
+                bestSteps[0] = delta
+                bestCount = 1
+            } else if (chebyshevDistance == bestDistance && bestCount < bestSteps.size) {
+                bestSteps[bestCount] = delta
+                bestCount++
+            }
         }
+        if (bestCount == 0) {
+            return null
+        }
+        return bestSteps[Utils.random(bestCount - 1)]
     }
 
     private fun collectActiveNpcs(activeChunks: LongHashSet, output: ArrayList<Npc>): List<Npc> {
@@ -448,6 +523,13 @@ class EntityProcessor : Runnable {
 
     companion object {
         private val logger = LoggerFactory.getLogger(EntityProcessor::class.java)
+        private const val DEBUG_NPC_ROAM = false
+        private const val ROAM_DESTINATION_ATTEMPTS = 8
+        private var roamAttempts = 0L
+        private var roamBlockedByCollision = 0L
+        private var roamSuccessfulSteps = 0L
+        private var roamNoStepFound = 0L
+        private var roamDebugSamples = 0L
         private val NPC_ROAM_DELTAS =
             arrayOf(
                 intArrayOf(-1, -1),
@@ -525,5 +607,28 @@ class EntityProcessor : Runnable {
         private fun unpackChunkX(key: Long): Int = (key shr 32).toInt()
 
         private fun unpackChunkY(key: Long): Int = key.toInt()
+
+        private fun isDebugTrackedNpc(npcId: Int): Boolean = npcId == 506 || npcId == 2856
+
+        private fun maybeLogRoamDebug(npc: Npc, outcome: String) {
+            roamDebugSamples++
+            if (roamDebugSamples % 10L != 0L) {
+                return
+            }
+            logger.info(
+                "NPC roam debug id={} slot={} pos=({}, {}, {}) radius={} outcome={} attempts={} success={} blockedCollision={} blockedNoStep={}",
+                npc.id,
+                npc.slot,
+                npc.position.x,
+                npc.position.y,
+                npc.position.z,
+                npc.walkRadius,
+                outcome,
+                roamAttempts,
+                roamSuccessfulSteps,
+                roamBlockedByCollision,
+                roamNoStepFound,
+            )
+        }
     }
 }

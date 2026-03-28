@@ -1,10 +1,5 @@
 package net.dodian.uber.game;
 
-import net.dodian.cache.Cache;
-import net.dodian.cache.object.GameObjectData;
-import net.dodian.cache.object.ObjectDef;
-import net.dodian.cache.object.ObjectLoader;
-import net.dodian.cache.region.Region;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopManager;
 import net.dodian.uber.game.model.chunk.ChunkManager;
@@ -29,8 +24,8 @@ import net.dodian.uber.game.persistence.audit.AsyncSqlService;
 import net.dodian.uber.game.persistence.audit.ChatLog;
 import net.dodian.uber.game.persistence.world.ObjectDefinitionRepository;
 import net.dodian.uber.game.config.DotEnvKt;
-import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
+import net.dodian.uber.game.systems.world.cache.WorldCacheBootstrap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,13 +110,7 @@ public class Server {
         shopManager = new ShopManager();
         clientHandler = new Server();
         login = new Login();
-        Cache.load();
-        ObjectDef.loadConfig();
-        Region.load();
-        Rangable.load();
-        ObjectLoader objectLoader = new ObjectLoader();
-        objectLoader.load();
-        GameObjectData.init();
+        WorldCacheBootstrap.bootstrap();
         loadObjects();
         new DoorRegistry();
         ObjectContentRegistry.bootstrap();

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.skills.cooking.objects
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.world.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.content.platform.SkillDataRegistry
 import net.dodian.uber.game.model.Position

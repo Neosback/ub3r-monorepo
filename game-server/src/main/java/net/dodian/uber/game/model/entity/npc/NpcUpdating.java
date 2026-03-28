@@ -281,7 +281,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     public void updateNPCMovement(Npc npc, ByteMessage buf) {
-        if (npc.getDirection() == -1) {
+        int walkDirection = npc.getNextWalkingDirection();
+        if (walkDirection == -1) {
             if (npc.getUpdateFlags().isUpdateRequired()) {
                 buf.putBits(1, 1);
                 buf.putBits(2, 0);
@@ -289,7 +290,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 buf.putBits(1, 0);
             }
         } else {
-            int translatedDirection = translateDirectionToClient(npc);
+            int translatedDirection = translateDirectionToClient(npc, walkDirection);
             if (translatedDirection == -1) {
                 if (npc.getUpdateFlags().isUpdateRequired()) {
                     buf.putBits(1, 1);
@@ -314,8 +315,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         return DEBUG_MOVEMENT_WRITE_COUNTER.getAndSet(0);
     }
 
-    private int translateDirectionToClient(Npc npc) {
-        int direction = npc.getDirection();
+    private int translateDirectionToClient(Npc npc, int direction) {
         if (direction < 0 || direction >= Utils.xlateDirectionToClient.length) {
             logger.warn("Invalid npc direction {} for slot={} id={}", direction, npc.getSlot(), npc.getId());
             return -1;

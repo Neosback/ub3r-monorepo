@@ -734,10 +734,7 @@ public class Npc extends Entity {
     }
 
     public int getNextWalkingDirection() {
-        int direction = pendingWalkingDirection;
-        pendingWalkingDirection = -1;
-        walking = false;
-        return direction;
+        return pendingWalkingDirection;
     }
 
     /**

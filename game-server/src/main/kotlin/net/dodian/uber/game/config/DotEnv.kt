@@ -33,6 +33,7 @@ val gameConnectionsPerIp = dotenv["GAME_CONNECTIONS_PER_IP"]?.toInt() ?: 2
 
 // Game Settings - Client
 val gameClientCustomVersion = dotenv["CLIENT_CUSTOM_VERSION"] ?: "dodian_client"
+val mysticCacheDir = dotenv["MYSTIC_CACHE_DIR"]?.takeIf { it.isNotBlank() }
 
 // Database Pool Settings
 val databasePoolMinSize = dotenv["DATABASE_POOL_MIN_SIZE"]?.toInt() ?: 5

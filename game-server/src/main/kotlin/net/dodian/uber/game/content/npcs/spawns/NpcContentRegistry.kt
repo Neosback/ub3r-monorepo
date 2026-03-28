@@ -102,15 +102,7 @@ object NpcContentRegistry {
     @JvmStatic
     fun allSpawns(): List<NpcSpawnDef> {
         bootstrap()
-        val defaults = definitions.flatMap { it.entries }
-        val overlays = NpcJsonSpawnOverlayLoader.loadOverlaySpawns()
-        if (overlays.isEmpty()) {
-            return defaults
-        }
-        val mergedByKey = LinkedHashMap<String, NpcSpawnDef>(defaults.size + overlays.size)
-        defaults.forEach { mergedByKey[spawnKey(it)] = it }
-        overlays.forEach { mergedByKey[spawnKey(it)] = it }
-        return mergedByKey.values.toList()
+        return definitions.flatMap { it.entries }
     }
 
     @JvmStatic
@@ -197,10 +189,6 @@ object NpcContentRegistry {
             }
         }
         byNpcId = rebuilt
-    }
-
-    private fun spawnKey(spawn: NpcSpawnDef): String {
-        return "${spawn.npcId}:${spawn.x}:${spawn.y}:${spawn.z}"
     }
 
     private fun readFlag(property: String, defaultValue: Boolean): Boolean {

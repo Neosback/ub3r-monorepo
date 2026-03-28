@@ -1,8 +1,8 @@
 package net.dodian.uber.game.systems.interaction
 
 import net.dodian.uber.game.Server
-import net.dodian.cache.`object`.GameObjectData
-import net.dodian.cache.`object`.GameObjectDef
+import net.dodian.uber.game.world.cache.`object`.GameObjectData
+import net.dodian.uber.game.world.cache.`object`.GameObjectDef
 import net.dodian.uber.game.systems.combat.getAttackStyle
 import net.dodian.uber.game.content.objects.ObjectContentRegistry
 import net.dodian.uber.game.content.objects.services.ObjectInteractionContext

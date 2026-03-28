@@ -1,7 +1,7 @@
 package net.dodian.uber.game.systems.interaction
 
-import net.dodian.cache.`object`.GameObjectData
-import net.dodian.cache.`object`.GameObjectDef
+import net.dodian.uber.game.world.cache.`object`.GameObjectData
+import net.dodian.uber.game.world.cache.`object`.GameObjectDef
 import net.dodian.uber.game.model.Position
 
 data class ItemOnObjectIntent(

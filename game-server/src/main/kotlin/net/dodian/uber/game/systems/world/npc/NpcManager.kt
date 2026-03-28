@@ -52,6 +52,15 @@ class NpcManager {
                 val position = Position(spawn.x, spawn.y, spawn.z)
                 val key = "${spawn.npcId}:${spawn.x}:${spawn.y}:${spawn.z}"
                 if (!seen.add(key) || hasSpawnAt(spawn.npcId, position)) {
+                    if (spawn.npcId == 506 || spawn.npcId == 2856) {
+                        logger.warn(
+                            "Skipped duplicate roaming NPC spawn id={} at ({}, {}, {})",
+                            spawn.npcId,
+                            spawn.x,
+                            spawn.y,
+                            spawn.z,
+                        )
+                    }
                     skipped++
                     skippedDuplicatePosition++
                     continue
@@ -72,6 +81,17 @@ class NpcManager {
                     spawn.alwaysActive,
                     spawn.condition,
                 )
+                if (spawn.npcId == 506 || spawn.npcId == 2856) {
+                    logger.info(
+                        "Loaded roaming NPC spawn id={} at ({}, {}, {}) walkRadius={} attackRange={}",
+                        spawn.npcId,
+                        spawn.x,
+                        spawn.y,
+                        spawn.z,
+                        spawn.walkRadius,
+                        spawn.attackRange,
+                    )
+                }
                 loaded++
             } catch (e: Exception) {
                 failed++

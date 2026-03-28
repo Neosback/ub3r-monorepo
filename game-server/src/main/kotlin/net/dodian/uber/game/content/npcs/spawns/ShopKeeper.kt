@@ -8,8 +8,8 @@ internal object ShopKeeper {
     val npcIds: IntArray = npcIds(520, 506)
 
     val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 506, x = 2595, y = 3104, z = 0, face = 0),
-        NpcSpawnDef(npcId = 506, x = 3216, y = 3416, z = 0, face = 0),
+        NpcSpawnDef(npcId = 506, x = 2596, y = 3104, z = 0, face = 0, walkRadius = 12, alwaysActive = true),
+        NpcSpawnDef(npcId = 506, x = 3217, y = 3416, z = 0, face = 0, walkRadius = 12, alwaysActive = true),
     )
     val definition =
         npcPlugin("ShopKeeper") {
