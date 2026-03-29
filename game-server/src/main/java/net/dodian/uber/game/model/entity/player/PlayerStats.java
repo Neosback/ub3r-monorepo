@@ -1,9 +1,9 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.game.Server;
-import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
+import net.dodian.game.Server;
+import net.dodian.game.model.player.skills.Skill;
+import net.dodian.game.model.player.skills.Skills;
+import net.dodian.game.persistence.player.PlayerSaveSegment;
 
 final class PlayerStats {
     private final Player owner;

@@ -1,6 +1,6 @@
 package net.dodian.cache.region;
 
-import net.dodian.uber.game.model.Position;
+import net.dodian.game.model.Position;
 
 import java.util.HashMap;
 import java.util.Map;

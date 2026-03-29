@@ -1,6 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.game.model.UpdateFlag;
 
 final class PlayerAppearanceState {
     private final Player owner;

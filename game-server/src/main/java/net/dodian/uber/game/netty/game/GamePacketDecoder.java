@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.util.AttributeKey;
-import net.dodian.utilities.ISAACCipher;
+import net.dodian.util.crypto.ISAACCipher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

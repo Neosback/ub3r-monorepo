@@ -1,6 +1,6 @@
 package net.dodian.cache.object;
 
-import net.dodian.uber.game.model.Position;
+import net.dodian.game.model.Position;
 
 public class GameObjectDef {
 

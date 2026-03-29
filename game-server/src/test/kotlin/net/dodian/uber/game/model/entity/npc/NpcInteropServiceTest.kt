@@ -1,4 +1,4 @@
-package net.dodian.uber.game.model.entity.npc
+package net.dodian.game.model.entity.npc
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue

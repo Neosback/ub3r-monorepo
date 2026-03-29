@@ -1,27 +1,27 @@
 package net.dodian.uber.game.model.entity.player;
 
 
-import net.dodian.uber.game.Server;
-import net.dodian.uber.game.model.UpdateFlag;
-import net.dodian.uber.game.model.chunk.ChunkPlayerComparator;
+import net.dodian.game.Server;
+import net.dodian.game.model.UpdateFlag;
+import net.dodian.game.model.chunk.ChunkPlayerComparator;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
-import net.dodian.uber.game.model.item.Equipment;
+import net.dodian.game.model.item.Equipment;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.engine.sync.SynchronizationContext;
-import net.dodian.uber.game.engine.sync.player.PlayerSyncDecision;
-import net.dodian.uber.game.engine.sync.player.ViewerPlayerSyncState;
-import net.dodian.uber.game.engine.sync.playerinfo.PlayerVisibilityRules;
-import net.dodian.uber.game.engine.sync.playerinfo.dispatch.RootPlayerInfoPlan;
-import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
-import net.dodian.uber.game.engine.sync.template.PlayerSyncTemplate;
-import net.dodian.uber.game.engine.sync.template.PlayerSyncTemplateKey;
-import net.dodian.uber.game.engine.sync.viewport.ViewportSnapshot;
-import net.dodian.uber.game.systems.world.player.PlayerRegistry;
-import net.dodian.utilities.Utils;
+import net.dodian.game.engine.sync.SynchronizationContext;
+import net.dodian.game.engine.sync.player.PlayerSyncDecision;
+import net.dodian.game.engine.sync.player.ViewerPlayerSyncState;
+import net.dodian.game.engine.sync.playerinfo.PlayerVisibilityRules;
+import net.dodian.game.engine.sync.playerinfo.dispatch.RootPlayerInfoPlan;
+import net.dodian.game.engine.sync.scratch.ThreadLocalSyncScratch;
+import net.dodian.game.engine.sync.template.PlayerSyncTemplate;
+import net.dodian.game.engine.sync.template.PlayerSyncTemplateKey;
+import net.dodian.game.engine.sync.viewport.ViewportSnapshot;
+import net.dodian.game.systems.world.player.PlayerRegistry;
+import net.dodian.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

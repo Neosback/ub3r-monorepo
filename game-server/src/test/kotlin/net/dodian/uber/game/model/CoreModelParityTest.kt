@@ -1,6 +1,6 @@
-package net.dodian.uber.game.model
+package net.dodian.game.model
 
-import net.dodian.uber.game.model.entity.Entity
+import net.dodian.game.model.entity.Entity
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals

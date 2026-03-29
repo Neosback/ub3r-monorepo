@@ -1,13 +1,13 @@
-package net.dodian.uber.game.model.player
+package net.dodian.game.model.player
 
-import net.dodian.uber.game.Server
-import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.music.RegionSong
-import net.dodian.uber.game.model.player.casino.SlotMachine
-import net.dodian.uber.game.model.player.casino.Spin
-import net.dodian.uber.game.model.player.casino.Symbol
-import net.dodian.uber.game.model.player.content.Skillcape
-import net.dodian.uber.game.model.player.quests.QuestSend
+import net.dodian.game.Server
+import net.dodian.game.model.Position
+import net.dodian.game.model.music.RegionSong
+import net.dodian.game.model.player.casino.SlotMachine
+import net.dodian.game.model.player.casino.Spin
+import net.dodian.game.model.player.casino.Symbol
+import net.dodian.game.model.player.content.Skillcape
+import net.dodian.game.model.player.quests.QuestSend
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue

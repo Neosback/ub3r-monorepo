@@ -1,13 +1,13 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
+import net.dodian.game.systems.ui.dialogue.DialogueService;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.event.GameEventBus;
-import net.dodian.uber.game.event.events.DialogueContinueEvent;
+import net.dodian.game.event.GameEventBus;
+import net.dodian.game.event.events.DialogueContinueEvent;
 
 /**
  * Netty implementation of legacy {@code Dialogue} (opcode 40).

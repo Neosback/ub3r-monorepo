@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import io.netty.util.AttributeKey;
-import net.dodian.utilities.ISAACCipher;
+import net.dodian.util.crypto.ISAACCipher;
 
 /**
  * Very thin wrapper that simply forwards a {@link ByteBuf} message downstream without modification.

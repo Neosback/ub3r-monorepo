@@ -1,0 +1,37 @@
+package net.dodian.game.persistence.audit
+
+import net.dodian.game.model.YellSystem
+import net.dodian.game.persistence.db.DbTables
+import net.dodian.game.persistence.repository.DbAsyncRepository
+import net.dodian.game.config.gameWorldId
+import org.slf4j.LoggerFactory
+
+object DuelLog {
+    private val logger = LoggerFactory.getLogger(DuelLog::class.java)
+    private val insertSql =
+        "INSERT INTO ${DbTables.GAME_LOGS_PLAYER_DUELS} (player, opponent, playerstake, opponentstake, winner, timestamp) VALUES (?, ?, ?, ?, ?, ?)"
+
+    @JvmStatic
+    fun recordDuel(player: String, opponent: String, playerStake: String, opponentStake: String, winner: String) {
+        if (gameWorldId > 1) return
+
+        AsyncSqlService.execute("duel-log", Runnable {
+            try {
+                DbAsyncRepository.withConnection { connection ->
+                    connection.prepareStatement(insertSql).use { statement ->
+                        statement.setString(1, player)
+                        statement.setString(2, opponent)
+                        statement.setString(3, playerStake)
+                        statement.setString(4, opponentStake)
+                        statement.setString(5, winner)
+                        statement.setString(6, LogEntry.getTimeStamp())
+                        statement.executeUpdate()
+                    }
+                }
+            } catch (exception: Exception) {
+                logger.error("Unable to record duel", exception)
+                YellSystem.alertStaff("Unable to record duels, please contact an admin.")
+            }
+        })
+    }
+}

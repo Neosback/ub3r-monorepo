@@ -1,4 +1,4 @@
-package net.dodian.uber.game.architecture
+package net.dodian.game.architecture
 
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -27,19 +27,19 @@ class ArchitectureBoundaryTest {
                 Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                     val trimmed = line.trim()
                     if (!trimmed.startsWith("import ")) return@mapIndexedNotNull null
-                    if (!trimmed.contains("net.dodian.uber.game.engine.")) return@mapIndexedNotNull null
+                    if (!trimmed.contains("net.dodian.game.engine.")) return@mapIndexedNotNull null
                     val allowedRuntimeBridge =
                         (
                             normalizedPath.endsWith("/content/skills/core/runtime/GatheringTask.kt") &&
                                 (
-                                    trimmed == "import net.dodian.uber.game.engine.tasking.GameTaskRuntime" ||
-                                        trimmed == "import net.dodian.uber.game.engine.tasking.TaskHandle" ||
-                                        trimmed == "import net.dodian.uber.game.engine.tasking.TaskPriority"
+                                    trimmed == "import net.dodian.game.engine.tasking.GameTaskRuntime" ||
+                                        trimmed == "import net.dodian.game.engine.tasking.TaskHandle" ||
+                                        trimmed == "import net.dodian.game.engine.tasking.TaskPriority"
                                     )
                             ) ||
                             (
                                 normalizedPath.endsWith("/content/skills/core/runtime/SkillingActionDsl.kt") &&
-                                    trimmed == "import net.dodian.uber.game.engine.tasking.TaskPriority"
+                                    trimmed == "import net.dodian.game.engine.tasking.TaskPriority"
                                 )
                     if (allowedRuntimeBridge) return@mapIndexedNotNull null
                     if (trimmed in (temporaryAllowListByFile[normalizedPath] ?: emptySet())) return@mapIndexedNotNull null
@@ -60,8 +60,8 @@ class ArchitectureBoundaryTest {
                 Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                     val trimmed = line.trim()
                     if (!trimmed.startsWith("import ")) return@mapIndexedNotNull null
-                    val forbidden = trimmed.contains("net.dodian.uber.game.engine.sync") ||
-                        trimmed.contains("net.dodian.uber.game.engine.net")
+                    val forbidden = trimmed.contains("net.dodian.game.engine.sync") ||
+                        trimmed.contains("net.dodian.game.engine.net")
                     if (!forbidden) return@mapIndexedNotNull null
                     "${file}:${idx + 1} -> $trimmed"
                 }
@@ -78,20 +78,20 @@ class ArchitectureBoundaryTest {
             .filter { file ->
                 Files.readAllLines(file).any { line ->
                     val pkg = line.trim()
-                    pkg.startsWith("package net.dodian.uber.game.engine.loop") ||
-                        pkg.startsWith("package net.dodian.uber.game.engine.phases") ||
-                        pkg.startsWith("package net.dodian.uber.game.engine.sync") ||
-                        pkg.startsWith("package net.dodian.uber.game.engine.net") ||
-                        pkg.startsWith("package net.dodian.uber.game.engine.tasking") ||
-                        pkg.startsWith("package net.dodian.uber.game.engine.scheduler") ||
-                        pkg.startsWith("package net.dodian.uber.game.engine.metrics")
+                    pkg.startsWith("package net.dodian.game.engine.loop") ||
+                        pkg.startsWith("package net.dodian.game.engine.phases") ||
+                        pkg.startsWith("package net.dodian.game.engine.sync") ||
+                        pkg.startsWith("package net.dodian.game.engine.net") ||
+                        pkg.startsWith("package net.dodian.game.engine.tasking") ||
+                        pkg.startsWith("package net.dodian.game.engine.scheduler") ||
+                        pkg.startsWith("package net.dodian.game.engine.metrics")
                 }
             }
             .flatMap { file ->
                 Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                     val trimmed = line.trim()
                     if (!trimmed.startsWith("import ")) return@mapIndexedNotNull null
-                    if (!trimmed.contains("net.dodian.uber.game.persistence")) return@mapIndexedNotNull null
+                    if (!trimmed.contains("net.dodian.game.persistence")) return@mapIndexedNotNull null
                     "${file}:${idx + 1} -> $trimmed"
                 }
             }
@@ -196,11 +196,11 @@ class ArchitectureBoundaryTest {
             val packageName = packageLine.removePrefix("package ").trim().removeSuffix(";")
             val fileName = file.fileName.toString()
             val isLegacy =
-                packageName.startsWith("net.dodian.uber.game.content.entities") ||
-                    packageName.startsWith("net.dodian.uber.game.systems.ui.interfaces") ||
-                    packageName.startsWith("net.dodian.uber.game.systems.ui.dialogue.modules") ||
-                    (packageName == "net.dodian.uber.game.skills.farming" && fileName == "FarmingProcessor.kt") ||
-                    (packageName == "net.dodian.uber.game.skills.thieving.plunder" && fileName == "PlunderDoorProcessor.kt") ||
+                packageName.startsWith("net.dodian.game.content.entities") ||
+                    packageName.startsWith("net.dodian.game.systems.ui.interfaces") ||
+                    packageName.startsWith("net.dodian.game.systems.ui.dialogue.modules") ||
+                    (packageName == "net.dodian.game.skills.farming" && fileName == "FarmingProcessor.kt") ||
+                    (packageName == "net.dodian.game.skills.thieving.plunder" && fileName == "PlunderDoorProcessor.kt") ||
                     packageName.startsWith("net.dodian.jobs") ||
                     (packageName == "net.dodian.utilities" && (
                         fileName == "Database.kt" ||
@@ -283,11 +283,11 @@ class ArchitectureBoundaryTest {
                         trimmed.contains("GameEventBus.post(PlayerTickEvent(")
                 val isLegacyRef =
                     trimmed.contains("net.dodian.jobs.") ||
-                        trimmed.contains("net.dodian.uber.game.skills.farming.FarmingProcessor") ||
-                        trimmed.contains("net.dodian.uber.game.skills.thieving.plunder.PlunderDoorProcessor") ||
-                        trimmed.contains("net.dodian.utilities.DatabaseKt") ||
-                        trimmed.contains("net.dodian.utilities.DatabaseInitializerKt") ||
-                        trimmed.contains("net.dodian.utilities.DotEnvKt") ||
+                        trimmed.contains("net.dodian.game.skills.farming.FarmingProcessor") ||
+                        trimmed.contains("net.dodian.game.skills.thieving.plunder.PlunderDoorProcessor") ||
+                        trimmed.contains("net.dodian.util.DatabaseKt") ||
+                        trimmed.contains("net.dodian.util.DatabaseInitializerKt") ||
+                        trimmed.contains("net.dodian.util.DotEnvKt") ||
                         removedSkillSymbols.any { symbol ->
                             trimmed.contains(symbol)
                         } ||
@@ -296,8 +296,8 @@ class ArchitectureBoundaryTest {
                             trimmed.contains(symbol)
                         } ||
                         removedToggleSymbols.any { symbol ->
-                            trimmed.contains("import net.dodian.uber.game.config.$symbol") ||
-                                trimmed.contains("import static net.dodian.uber.game.config.DotEnvKt.get${symbol.replaceFirstChar { c -> c.uppercaseChar() }}")
+                            trimmed.contains("import net.dodian.game.config.$symbol") ||
+                                trimmed.contains("import static net.dodian.game.config.DotEnvKt.get${symbol.replaceFirstChar { c -> c.uppercaseChar() }}")
                         } ||
                         isWave2LegacyLoopMarker ||
                         isLegacyPlayerArrayAccess ||

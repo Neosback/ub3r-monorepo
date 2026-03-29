@@ -6,9 +6,9 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.util.AttributeKey;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.systems.world.player.PlayerRegistry;
-import net.dodian.uber.game.engine.loop.GameThreadTaskQueue;
-import net.dodian.utilities.Utils;
+import net.dodian.game.systems.world.player.PlayerRegistry;
+import net.dodian.game.engine.loop.GameThreadTaskQueue;
+import net.dodian.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

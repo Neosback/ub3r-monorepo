@@ -1,0 +1,17 @@
+package net.dodian.game.content.skills.runecrafting.objects
+
+import net.dodian.cache.`object`.GameObjectData
+import net.dodian.game.content.objects.ObjectContent
+import net.dodian.game.model.Position
+import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.game.content.skills.runecrafting.RunecraftingDefinitions
+import net.dodian.game.content.skills.runecrafting.RunecraftingPlugin
+
+object RunecraftingObjectBindings : ObjectContent {
+    override val objectIds: IntArray = RunecraftingDefinitions.altarObjectIds
+
+    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+        val altar = RunecraftingDefinitions.byObjectId(objectId) ?: return false
+        return RunecraftingPlugin.start(client, altar.request)
+    }
+}

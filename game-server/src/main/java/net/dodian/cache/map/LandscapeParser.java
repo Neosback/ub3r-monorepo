@@ -6,7 +6,7 @@ import net.dodian.cache.object.CacheObject;
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.util.ByteBufferUtils;
 import net.dodian.cache.util.ZipUtils;
-import net.dodian.uber.game.model.Position;
+import net.dodian.game.model.Position;
 
 import java.io.IOException;
 import java.nio.BufferUnderflowException;

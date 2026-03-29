@@ -6,9 +6,9 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.systems.combat.CombatLogoutLockService;
-import net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService;
-import net.dodian.utilities.Utils;
+import net.dodian.game.systems.combat.CombatLogoutLockService;
+import net.dodian.game.systems.interaction.PlayerInteractionGuardService;
+import net.dodian.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,0 +1,7 @@
+package net.dodian.game.content.skills.crafting
+
+data class GoldJewelryRequest(
+    val interfaceId: Int,
+    val slot: Int,
+    val amount: Int,
+)

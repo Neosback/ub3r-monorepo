@@ -10,7 +10,7 @@ import net.dodian.cache.obj.ObjectDefinitionListener;
 import net.dodian.cache.obj.ObjectDefinitionParser;
 import net.dodian.cache.region.RegionManager;
 import net.dodian.cache.region.Regions;
-import net.dodian.uber.game.model.Position;
+import net.dodian.game.model.Position;
 import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,18 +1,18 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.game.systems.combat.PlayerAttackCombatKt;
-import net.dodian.uber.game.event.GameEventScheduler;
-import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.game.systems.combat.PlayerAttackCombatKt;
+import net.dodian.game.event.GameEventScheduler;
+import net.dodian.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.PendingHitBuffer;
-import net.dodian.uber.game.model.item.Equipment;
-import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.model.player.skills.prayer.Prayers;
+import net.dodian.game.model.item.Equipment;
+import net.dodian.game.model.player.skills.Skill;
+import net.dodian.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.systems.combat.CombatDefenderReaction;
-import net.dodian.uber.game.systems.combat.CombatLogoutLockService;
-import net.dodian.utilities.Misc;
+import net.dodian.game.systems.combat.CombatDefenderReaction;
+import net.dodian.game.systems.combat.CombatLogoutLockService;
+import net.dodian.util.Misc;
 
 class PlayerCombatState {
     private final Player owner;

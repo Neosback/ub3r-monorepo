@@ -8,9 +8,9 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.systems.combat.CombatIntent;
-import net.dodian.uber.game.systems.combat.CombatStartService;
-import net.dodian.uber.game.systems.world.player.PlayerRegistry;
+import net.dodian.game.systems.combat.CombatIntent;
+import net.dodian.game.systems.combat.CombatStartService;
+import net.dodian.game.systems.world.player.PlayerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

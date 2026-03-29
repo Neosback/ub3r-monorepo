@@ -1,0 +1,230 @@
+package net.dodian.game;
+
+import net.dodian.cache.Cache;
+import net.dodian.cache.object.GameObjectData;
+import net.dodian.cache.object.ObjectDef;
+import net.dodian.cache.object.ObjectLoader;
+import net.dodian.cache.region.Region;
+import net.dodian.game.model.Login;
+import net.dodian.game.model.ShopManager;
+import net.dodian.game.model.chunk.ChunkManager;
+import net.dodian.game.content.objects.ObjectContentRegistry;
+import net.dodian.game.systems.world.npc.NpcManager;
+import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.model.entity.player.Player;
+import net.dodian.game.systems.world.player.PlayerRegistry;
+import net.dodian.game.model.item.ItemManager;
+import net.dodian.game.model.object.DoorRegistry;
+import net.dodian.game.model.object.RS2Object;
+import net.dodian.game.model.player.casino.SlotMachine;
+import net.dodian.game.engine.loop.GameLoopService;
+import net.dodian.game.engine.loop.GameTickScheduler;
+import net.dodian.game.event.GameEventBus;
+import net.dodian.game.systems.world.npc.NpcTimerScheduler;
+import net.dodian.game.persistence.account.AccountPersistenceService;
+import net.dodian.game.persistence.world.WorldDbPollService;
+import net.dodian.game.persistence.WorldPollPublisher;
+import net.dodian.game.persistence.audit.AsyncSqlService;
+import net.dodian.game.persistence.audit.ChatLog;
+import net.dodian.game.persistence.world.ObjectDefinitionRepository;
+import net.dodian.game.config.DotEnvKt;
+import net.dodian.util.Rangable;
+import net.dodian.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+import net.dodian.uber.game.netty.bootstrap.NettyGameServer;
+
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static net.dodian.webapi.WebApiKt.launchWebApi;
+import static net.dodian.game.config.DotEnvKt.*;
+import static net.dodian.game.persistence.db.DatabaseKt.closeConnectionPool;
+import static net.dodian.game.persistence.db.DatabaseInitializerKt.initializeDatabase;
+import static net.dodian.game.persistence.db.DatabaseInitializerKt.isDatabaseInitialized;
+
+public class Server {
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
+
+    public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
+    public static int TICK = 600;
+    public static boolean updateRunning;
+    public static int updateSeconds;
+    public static long updateStartTime, serverStartup;
+    public Player player;
+    public Client c;
+    public static ArrayList connections = new ArrayList<>();
+    public static ArrayList banned = new ArrayList<>();
+
+    public static ArrayList<RS2Object> objects = new ArrayList<>();
+    public static int nullConnections = 0;
+    public static Login login = null;
+    public static ItemManager itemManager = null;
+    public static NpcManager npcManager = null;
+    public static SlotMachine slots = new SlotMachine();
+    public static Map tempConns = new HashMap<>();
+    public static Server clientHandler = null;
+    public static boolean shutdownServer = false;
+    public static ShopManager shopManager = null;
+    public static boolean antiddos = false;
+    public static ChunkManager chunkManager = null;
+
+
+    private static NettyGameServer nettyServer;
+    private static final GameTickScheduler gameTickScheduler = new GameTickScheduler(TICK);
+    private static final GameLoopService gameLoopService = new GameLoopService();
+    private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean(false);
+
+    public static void main(String[] args) throws Exception {
+        logger.info("Info log!");
+        logger.error("Error log!");
+        logger.warn("Warning log!");
+        logger.debug("Debug log!");
+
+        serverStartup = System.currentTimeMillis();
+        System.out.println();
+        System.out.println("    ____ ");
+        System.out.println("   / __ \\____ ____/ (_)___ _____ ");
+        System.out.println("  / / / / __ \\/ __ / / __ `/ __ \\ ");
+        System.out.println(" / /_/ / /_/ / /_/ / / /_/ / / / / ");
+        System.out.println("/_____/\\____/\\____/_/\\____/_/ /_/ ");
+        System.out.println();
+
+        if (getDatabaseInitialize() && !isDatabaseInitialized()) {
+            initializeDatabase();
+        }
+
+        npcManager = new NpcManager();
+        npcManager.loadSpawns();
+        NpcTimerScheduler.initialize(npcManager.getNpcs());
+        logger.info("DONE LOADING NPC CONFIGURATION");
+        itemManager = new ItemManager();
+        chunkManager = new ChunkManager();
+        // NPC spawns are loaded before ChunkManager exists. Now that chunk repos are available,
+        // bootstrap chunk membership once so viewport snapshots and active-chunk processing can see NPCs.
+        for (net.dodian.uber.game.model.entity.npc.Npc npc : npcManager.getNpcs()) {
+            if (npc != null) {
+                npc.syncChunkMembership();
+            }
+        }
+        shopManager = new ShopManager();
+        clientHandler = new Server();
+        login = new Login();
+        Cache.load();
+        ObjectDef.loadConfig();
+        Region.load();
+        Rangable.load();
+        ObjectLoader objectLoader = new ObjectLoader();
+        objectLoader.load();
+        GameObjectData.init();
+        loadObjects();
+        new DoorRegistry();
+        ObjectContentRegistry.bootstrap();
+        net.dodian.game.content.npcs.spawns.NpcContentRegistry.bootstrap();
+        GameEventBus.bootstrap();
+        ObjectContentRegistry.prewarmObjectDefinitions();
+
+        nettyServer = new NettyGameServer(DotEnvKt.getServerPort());
+        logger.info("Starting Netty game server...");
+        nettyServer.start();
+
+        // Add a shutdown hook to gracefully close server resources.
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Shutdown hook triggered. Shutting down server...");
+            shutdown();
+            logger.info("Server shut down.");
+        }));
+
+
+        /* Processor for various stuff */
+        gameLoopService.start();
+        System.gc();
+        Login.banUid();
+        logger.info("Server is now running on world " + getGameWorldId() + "!");
+
+        launchWebApi();
+    }
+
+
+    public static void logError(String message) {
+        Utils.println(message);
+    }
+
+    public static int totalHostConnection(String host) {
+        int num = 0;
+        for (int slot = 0; slot < PlayerRegistry.players.length; slot++) {
+            Player p = net.dodian.game.systems.world.player.PlayerRegistry.players[slot];
+            if (p != null) {
+                if (host.equals(p.connectedFrom))
+                    num++;
+            }
+        }
+        return num;
+    }
+
+
+    public static void loadObjects() {
+        try {
+            objects.clear();
+            objects.addAll(ObjectDefinitionRepository.loadObjects());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public static void shutdown() {
+        if (!SHUTDOWN_STARTED.compareAndSet(false, true)) {
+            return;
+        }
+
+        gameLoopService.stop(Duration.ofSeconds(10));
+
+        try {
+            AccountPersistenceService.shutdownAndDrain(Duration.ofSeconds(30));
+        } catch (Exception exception) {
+            logger.warn("Failed to drain account persistence service during shutdown", exception);
+        }
+
+        try {
+            WorldPollPublisher.shutdown();
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown world poll publisher", exception);
+        }
+
+        try {
+            WorldDbPollService.shutdown(Duration.ofSeconds(10));
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown world DB poll service", exception);
+        }
+
+        try {
+            ChatLog.shutdown();
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown chat log service", exception);
+        }
+
+        try {
+            AsyncSqlService.shutdown(Duration.ofSeconds(10));
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown async SQL service", exception);
+        }
+
+        try {
+            closeConnectionPool();
+        } catch (Exception exception) {
+            logger.warn("Failed to close shared connection pool", exception);
+        }
+
+        try {
+            if (nettyServer != null) {
+                nettyServer.shutdown();
+            }
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown netty server", exception);
+        }
+    }
+}

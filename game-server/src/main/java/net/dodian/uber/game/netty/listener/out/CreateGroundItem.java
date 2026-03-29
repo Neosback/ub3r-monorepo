@@ -1,8 +1,8 @@
 package net.dodian.uber.game.netty.listener.out;
 
-import net.dodian.uber.game.model.Position;
+import net.dodian.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.item.GameItem;
+import net.dodian.game.model.item.GameItem;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.*;
 

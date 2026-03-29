@@ -1,15 +1,15 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.uber.game.Server;
-import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.game.Server;
+import net.dodian.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendSideTab;
-import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService;
-import net.dodian.uber.game.content.skills.core.runtime.RuneCostService;
-import net.dodian.uber.game.content.skills.smithing.SmithingPlugin;
+import net.dodian.game.model.player.skills.Skill;
+import net.dodian.game.content.skills.core.progression.SkillProgressionService;
+import net.dodian.game.content.skills.core.runtime.RuneCostService;
+import net.dodian.game.content.skills.smithing.SmithingPlugin;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;

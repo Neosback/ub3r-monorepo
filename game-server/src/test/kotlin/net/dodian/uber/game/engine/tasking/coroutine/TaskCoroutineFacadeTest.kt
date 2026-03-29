@@ -1,10 +1,10 @@
-package net.dodian.uber.game.engine.tasking.coroutine
+package net.dodian.game.engine.tasking.coroutine
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import net.dodian.uber.game.engine.tasking.GameTaskRuntime
+import net.dodian.game.engine.tasking.GameTaskRuntime
 
 class TaskCoroutineFacadeTest {
     @Test

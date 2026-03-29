@@ -1,7 +1,7 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.game.model.Position;
-import net.dodian.utilities.Utils;
+import net.dodian.game.model.Position;
+import net.dodian.util.Utils;
 
 final class PlayerMovementState {
     private final Player owner;

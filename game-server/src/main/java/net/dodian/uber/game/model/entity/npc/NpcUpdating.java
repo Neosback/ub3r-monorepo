@@ -1,7 +1,7 @@
 package net.dodian.uber.game.model.entity.npc;
 
-import net.dodian.uber.game.Server;
-import net.dodian.uber.game.model.Position;
+import net.dodian.game.Server;
+import net.dodian.game.model.Position;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -9,10 +9,10 @@ import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
-import net.dodian.uber.game.engine.sync.SynchronizationContext;
-import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
-import net.dodian.uber.game.engine.sync.viewport.ViewportSnapshot;
-import net.dodian.utilities.Utils;
+import net.dodian.game.engine.sync.SynchronizationContext;
+import net.dodian.game.engine.sync.scratch.ThreadLocalSyncScratch;
+import net.dodian.game.engine.sync.viewport.ViewportSnapshot;
+import net.dodian.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
