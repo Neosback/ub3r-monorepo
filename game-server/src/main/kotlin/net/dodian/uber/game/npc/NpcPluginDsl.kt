@@ -1,7 +1,5 @@
 package net.dodian.uber.game.npc
 
-import net.dodian.uber.game.content.npcs.NpcSequentialOptionBuilder
-import net.dodian.uber.game.content.npcs.buildSequentialHandler
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
