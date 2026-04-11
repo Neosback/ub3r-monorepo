@@ -1,4 +1,4 @@
-package net.dodian.uber.game.systems.plugin
+package net.dodian.uber.game.api.plugin
 
 import net.dodian.uber.game.content.shop.plugin.ShopPlugin
 import net.dodian.uber.game.plugin.GeneratedPluginModuleIndex

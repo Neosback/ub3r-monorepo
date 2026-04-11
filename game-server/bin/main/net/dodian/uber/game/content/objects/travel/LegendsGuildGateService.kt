@@ -2,8 +2,8 @@ package net.dodian.uber.game.content.objects.travel
 
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.interaction.PersonalObjectService
-import net.dodian.uber.game.systems.interaction.PersonalPassageService
+import net.dodian.uber.game.engine.systems.interaction.PersonalObjectService
+import net.dodian.uber.game.engine.systems.interaction.PersonalPassageService
 
 object LegendsGuildGateService {
     private val leftGate = Position(2728, 3349, 0)

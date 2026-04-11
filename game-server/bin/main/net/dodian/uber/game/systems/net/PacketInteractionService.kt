@@ -1,17 +1,17 @@
-package net.dodian.uber.game.systems.net
+package net.dodian.uber.game.engine.systems.net
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.combat.PlayerAttackEvent
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.interaction.AttackPlayerIntent
-import net.dodian.uber.game.systems.interaction.ItemOnNpcIntent
-import net.dodian.uber.game.systems.interaction.NpcInteractionIntent
-import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler
-import net.dodian.uber.game.systems.interaction.scheduler.NpcInteractionTask
-import net.dodian.uber.game.systems.interaction.scheduler.PlayerInteractionTask
-import net.dodian.uber.game.systems.interaction.npcs.NpcClickMetrics
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.interaction.AttackPlayerIntent
+import net.dodian.uber.game.engine.systems.interaction.ItemOnNpcIntent
+import net.dodian.uber.game.engine.systems.interaction.NpcInteractionIntent
+import net.dodian.uber.game.engine.systems.interaction.scheduler.InteractionTaskScheduler
+import net.dodian.uber.game.engine.systems.interaction.scheduler.NpcInteractionTask
+import net.dodian.uber.game.engine.systems.interaction.scheduler.PlayerInteractionTask
+import net.dodian.uber.game.engine.systems.interaction.npcs.NpcClickMetrics
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 /**
  * Kotlin service for player-interaction packet side-effects that must stay out

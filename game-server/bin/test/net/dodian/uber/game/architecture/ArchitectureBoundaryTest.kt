@@ -8,8 +8,8 @@ import java.nio.file.Paths
 import kotlin.io.path.extension
 import kotlin.io.path.invariantSeparatorsPathString
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.plugin.ContentModuleIndex
-import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
+import net.dodian.uber.game.api.plugin.ContentModuleIndex
+import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 
 class ArchitectureBoundaryTest {
     private val sourceRoot: Path = Paths.get("src/main")
@@ -230,13 +230,13 @@ class ArchitectureBoundaryTest {
     @Test
     fun `legacy gameplay packages are no longer under systems`() {
         val legacyPrefixes = listOf(
-            "package net.dodian.uber.game.systems.combat",
-            "package net.dodian.uber.game.systems.ui",
-            "package net.dodian.uber.game.systems.chat",
-            "package net.dodian.uber.game.systems.dispatch",
-            "package net.dodian.uber.game.systems.skills.action",
-            "package net.dodian.uber.game.systems.skills.requirements",
-            "package net.dodian.uber.game.systems.skills.parity",
+            "package net.dodian.uber.game.engine.systems.combat",
+            "package net.dodian.uber.game.engine.systems.ui",
+            "package net.dodian.uber.game.engine.systems.chat",
+            "package net.dodian.uber.game.engine.systems.dispatch",
+            "package net.dodian.uber.game.engine.systems.skills.action",
+            "package net.dodian.uber.game.engine.systems.skills.requirements",
+            "package net.dodian.uber.game.engine.systems.skills.parity",
         )
 
         val violations = sourceFiles
@@ -502,8 +502,8 @@ class ArchitectureBoundaryTest {
                     return@mapIndexedNotNull null
                 }
                 val usesLegacySplitPolicy =
-                    trimmed.contains("net.dodian.uber.game.systems.interaction.ObjectInteractionPolicy") ||
-                        trimmed.contains("net.dodian.uber.game.systems.action.PlayerActionInterruptPolicy")
+                    trimmed.contains("net.dodian.uber.game.engine.systems.interaction.ObjectInteractionPolicy") ||
+                        trimmed.contains("net.dodian.uber.game.engine.systems.action.PlayerActionInterruptPolicy")
                 if (!usesLegacySplitPolicy) {
                     return@mapIndexedNotNull null
                 }
@@ -1139,19 +1139,19 @@ class ArchitectureBoundaryTest {
     @Test
     fun `java callers use only approved systems skills wrappers`() {
         val approvedJavaSkillApis = setOf(
-            "net.dodian.uber.game.systems.skills.ProgressionService",
-            "net.dodian.uber.game.systems.skills.RuneCostService",
-            "net.dodian.uber.game.systems.skills.SkillingRandomEventService",
-            "net.dodian.uber.game.systems.skills.SkillAdminService",
-            "net.dodian.uber.game.systems.skills.SkillReadService",
-            "net.dodian.uber.game.systems.skills.SkillDoctor",
+            "net.dodian.uber.game.engine.systems.skills.ProgressionService",
+            "net.dodian.uber.game.engine.systems.skills.RuneCostService",
+            "net.dodian.uber.game.engine.systems.skills.SkillingRandomEventService",
+            "net.dodian.uber.game.engine.systems.skills.SkillAdminService",
+            "net.dodian.uber.game.engine.systems.skills.SkillReadService",
+            "net.dodian.uber.game.engine.systems.skills.SkillDoctor",
         )
         val violations = sourceFiles
             .filter { it.invariantSeparatorsPathString.endsWith(".java") }
             .flatMap { file ->
                 Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                     val trimmed = line.trim()
-                    if (!trimmed.startsWith("import net.dodian.uber.game.systems.skills.")) {
+                    if (!trimmed.startsWith("import net.dodian.uber.game.engine.systems.skills.")) {
                         return@mapIndexedNotNull null
                     }
                     val importedType = trimmed.removePrefix("import ").removeSuffix(";").trim()
