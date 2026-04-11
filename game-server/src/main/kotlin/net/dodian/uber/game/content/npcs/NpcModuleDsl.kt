@@ -1,14 +1,13 @@
 package net.dodian.uber.game.content.npcs
 
+@Deprecated("Use net.dodian.uber.game.npc.simpleNpcDefinition")
 fun simpleNpcDefinition(
     name: String,
     entries: List<NpcSpawnDef>,
 ): NpcContentDefinition =
-    npcPlugin(name) {
-        ids(*npcIdsFromEntries(entries))
-        spawns(entries)
-    }.toContentDefinition(name, false)
+    net.dodian.uber.game.npc.simpleNpcDefinition(name, entries)
 
+@Deprecated("Use net.dodian.uber.game.npc.legacyNpcDefinition")
 fun legacyNpcDefinition(
     name: String,
     entries: List<NpcSpawnDef>,
@@ -18,27 +17,13 @@ fun legacyNpcDefinition(
     onFourthClick: NpcClickHandler = NO_CLICK_HANDLER,
     onAttack: NpcClickHandler = NO_CLICK_HANDLER,
 ): NpcContentDefinition {
-    val plugin =
-        npcPlugin(name) {
-            ids(*npcIdsFromEntries(entries))
-            spawns(entries)
-            options {
-                if (onFirstClick !== NO_CLICK_HANDLER) {
-                    first("first", onFirstClick)
-                }
-                if (onSecondClick !== NO_CLICK_HANDLER) {
-                    second("second", onSecondClick)
-                }
-                if (onThirdClick !== NO_CLICK_HANDLER) {
-                    third("third", onThirdClick)
-                }
-                if (onFourthClick !== NO_CLICK_HANDLER) {
-                    fourth("fourth", onFourthClick)
-                }
-                if (onAttack !== NO_CLICK_HANDLER) {
-                    attack("attack", onAttack)
-                }
-            }
-        }
-    return plugin.toContentDefinition(name, false)
+    return net.dodian.uber.game.npc.legacyNpcDefinition(
+        name = name,
+        entries = entries,
+        onFirstClick = onFirstClick,
+        onSecondClick = onSecondClick,
+        onThirdClick = onThirdClick,
+        onFourthClick = onFourthClick,
+        onAttack = onAttack,
+    )
 }
