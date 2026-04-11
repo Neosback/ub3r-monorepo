@@ -8,6 +8,7 @@ import net.dodian.uber.game.api.plugin.skills.SkillPluginRegistry
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class SkillPluginRegistryTest {
@@ -86,5 +87,27 @@ class SkillPluginRegistryTest {
         assertNotNull(snapshot.itemOnObjectBinding(objectId = 888_001, itemId = 111))
 
         SkillPluginRegistry.resetForTests()
+    }
+
+    @Test
+    fun `plugin registry freezes after bootstrap lifecycle`() {
+        PluginRegistry.resetForTests()
+        PluginRegistry.discover()
+        PluginRegistry.validate()
+        PluginRegistry.bootstrap()
+
+        val error = assertThrows(IllegalStateException::class.java) {
+            PluginRegistry.registerSkill(
+                object : SkillPlugin {
+                    override val definition =
+                        skillPlugin("LateRegistration", Skill.COOKING) {
+                            itemClick(preset = PolicyPreset.PRODUCTION, option = 1, 999_112) { _, _, _, _ -> true }
+                        }
+                },
+            )
+        }
+        assertTrue(error.message?.contains("frozen") == true)
+
+        PluginRegistry.resetForTests()
     }
 }

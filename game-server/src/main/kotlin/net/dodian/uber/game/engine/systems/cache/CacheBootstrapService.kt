@@ -80,7 +80,12 @@ class CacheBootstrapService(
                 summary.objectCount,
             )
             MapIndexTable(regions = regions, summary = summary)
-        } catch (exception: Exception) {
+        } catch (exception: java.io.IOException) {
+            logger.warn("Cache bootstrap: failed to decode cache at {}", store.describe(), exception)
+            collisionBuildService.rebuild(MapIndexTable(emptyList()))
+            CacheCollisionAuditStore.publish(emptyList(), emptyMap())
+            MapIndexTable(emptyList())
+        } catch (exception: RuntimeException) {
             logger.warn("Cache bootstrap: failed to decode cache at {}", store.describe(), exception)
             collisionBuildService.rebuild(MapIndexTable(emptyList()))
             CacheCollisionAuditStore.publish(emptyList(), emptyMap())

@@ -10,7 +10,7 @@ class PacketEventEmissionTest {
     @Test
     fun `walking service emits walk event`() {
         assertContains(
-            Paths.get("src/main/kotlin/net/dodian/uber/game/systems/net/PacketWalkingService.kt"),
+            Paths.get("src/main/kotlin/net/dodian/uber/game/engine/systems/net/PacketWalkingService.kt"),
             Regex("""GameEventBus\.post\s*\(\s*WalkEvent\s*\("""),
         )
     }
@@ -18,7 +18,7 @@ class PacketEventEmissionTest {
     @Test
     fun `attack player service emits player attack event`() {
         assertContains(
-            Paths.get("src/main/kotlin/net/dodian/uber/game/systems/net/PacketInteractionService.kt"),
+            Paths.get("src/main/kotlin/net/dodian/uber/game/engine/systems/net/PacketInteractionService.kt"),
             Regex("""GameEventBus\.post\s*\(\s*PlayerAttackEvent\s*\("""),
         )
     }
@@ -26,7 +26,7 @@ class PacketEventEmissionTest {
     @Test
     fun `attack npc service emits player attack event`() {
         val source = normalizedSource(
-            Paths.get("src/main/kotlin/net/dodian/uber/game/systems/net/PacketInteractionService.kt"),
+            Paths.get("src/main/kotlin/net/dodian/uber/game/engine/systems/net/PacketInteractionService.kt"),
         )
         assertTrue(Regex("""GameEventBus\.post\s*\(\s*PlayerAttackEvent\s*\(\s*client\s*,\s*npcIndex\s*,\s*false\s*\)""").containsMatchIn(source))
     }
@@ -34,7 +34,7 @@ class PacketEventEmissionTest {
     @Test
     fun `use item on player service emits item on player event`() {
         assertContains(
-            Paths.get("src/main/kotlin/net/dodian/uber/game/systems/net/PacketItemActionService.kt"),
+            Paths.get("src/main/kotlin/net/dodian/uber/game/engine/systems/net/PacketItemActionService.kt"),
             Regex("""GameEventBus\.post\s*\(\s*ItemOnPlayerEvent\s*\("""),
         )
     }
@@ -42,7 +42,7 @@ class PacketEventEmissionTest {
     @Test
     fun `public chat service emits chat message event`() {
         assertContains(
-            Paths.get("src/main/kotlin/net/dodian/uber/game/systems/net/PacketChatService.kt"),
+            Paths.get("src/main/kotlin/net/dodian/uber/game/engine/systems/net/PacketChatService.kt"),
             Regex("""GameEventBus\.post\s*\(\s*ChatMessageEvent\s*\("""),
         )
     }

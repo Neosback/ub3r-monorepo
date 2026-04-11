@@ -3,6 +3,7 @@ package net.dodian.uber.game.architecture
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.model.player.skills.Skill
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -72,5 +73,18 @@ class GeneratedContentIndexTest {
         assertTrue(moduleNames.any { it.endsWith("content.skills.smithing.SmithingSkillPlugin") }, "Expected smithing skill plugin in generated index")
         assertTrue(moduleNames.any { it.endsWith("content.skills.thieving.ThievingSkillPlugin") }, "Expected thieving skill plugin in generated index")
         assertTrue(moduleNames.any { it.endsWith("content.skills.woodcutting.WoodcuttingSkillPlugin") }, "Expected woodcutting skill plugin in generated index")
+    }
+
+    @Test
+    fun `plugin catalog metadata and ordering are deterministic`() {
+        val catalog = ContentModuleIndex.pluginCatalog
+        assertFalse(catalog.isEmpty(), "expected plugin catalog entries")
+        assertEquals(catalog.map { it.moduleClass }.sorted(), catalog.map { it.moduleClass }, "plugin catalog must be sorted by class")
+        catalog.forEach { entry ->
+            assertTrue(entry.metadata.name.isNotBlank(), "plugin metadata name must be set for ${entry.moduleClass}")
+            assertTrue(entry.metadata.description.isNotBlank(), "plugin metadata description must be set for ${entry.moduleClass}")
+            assertTrue(entry.metadata.version.isNotBlank(), "plugin metadata version must be set for ${entry.moduleClass}")
+            assertTrue(entry.metadata.owner.isNotBlank(), "plugin metadata owner must be set for ${entry.moduleClass}")
+        }
     }
 }

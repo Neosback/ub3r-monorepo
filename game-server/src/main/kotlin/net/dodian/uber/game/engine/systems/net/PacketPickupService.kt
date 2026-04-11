@@ -6,7 +6,8 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.engine.systems.world.item.Ground
-import java.util.Date
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 /**
  * Kotlin service for ground-item pickup packet logic (opcode 236).
@@ -15,6 +16,8 @@ import java.util.Date
  * lookup, pickup scheduling — lives here rather than in the listener.
  */
 object PacketPickupService {
+    private val RING_REPEAT_BLOCK_CUTOFF_EPOCH_MS: Long =
+        LocalDate.of(2024, 6, 1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 
     /**
      * Processes a pick-up-ground-item request after the listener has decoded
@@ -34,14 +37,9 @@ object PacketPickupService {
             return
         }
 
-        try {
-            @Suppress("DEPRECATION")
-            if (itemId == 7927 && Date().before(Date("06/1/2024")) && client.checkItem(7927)) {
-                client.send(SendMessage("You already got this ring! Wait until after May!"))
-                return
-            }
-        } catch (_: Exception) {
-            // date parse fallback; ignore
+        if (itemId == 7927 && System.currentTimeMillis() < RING_REPEAT_BLOCK_CUTOFF_EPOCH_MS && client.checkItem(7927)) {
+            client.send(SendMessage("You already got this ring! Wait until after May!"))
+            return
         }
 
         PlayerActionCancellationService.cancel(
@@ -64,4 +62,3 @@ object PacketPickupService {
         }
     }
 }
-

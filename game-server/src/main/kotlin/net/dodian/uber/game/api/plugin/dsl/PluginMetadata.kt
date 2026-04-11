@@ -18,13 +18,20 @@ class PluginMetadata {
     /** The version of this plugin. */
     var version: String = "1.0.0"
 
-    /** The authors who wrote this plugin. */
+    /** The owner of this plugin module (team, org, or individual). */
+    var owner: String? = null
+
+    /**
+     * Compatibility field for legacy declarations.
+     * New modules should prefer [owner].
+     */
     val authors: MutableList<String> = ArrayList(2)
 
     internal fun validate() {
         requireNotNull(name) { "Plugin metadata must specify a 'name'." }
         requireNotNull(description) { "Plugin metadata must specify a 'description'." }
-        if (authors.isEmpty()) authors += "Unspecified"
+        if (owner.isNullOrBlank()) {
+            owner = authors.firstOrNull()?.ifBlank { null } ?: "Unspecified"
+        }
     }
 }
-

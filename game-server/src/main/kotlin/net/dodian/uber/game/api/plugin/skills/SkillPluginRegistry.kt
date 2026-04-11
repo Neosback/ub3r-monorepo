@@ -52,22 +52,34 @@ internal class SkillPluginRegistryEngine {
     private val logger = LoggerFactory.getLogger("PluginRegistry")
 
     private val bootstrapped = AtomicBoolean(false)
+    private val frozen = AtomicBoolean(false)
     private val definitions = mutableListOf<SkillPlugin>()
     @Volatile
     private var snapshot: SkillPluginSnapshot = SkillPluginSnapshot.empty()
+
+    fun validate(discoveredPlugins: List<SkillPlugin>) {
+        synchronized(this) {
+            buildSnapshot(discoveredPlugins.sortedBy { it::class.java.name })
+        }
+    }
 
     fun bootstrap(discoveredPlugins: List<SkillPlugin>) {
         if (bootstrapped.get()) return
         synchronized(this) {
             if (bootstrapped.get()) return
-            definitions += discoveredPlugins
+            definitions += discoveredPlugins.sortedBy { it::class.java.name }
             rebuildSnapshotLocked()
             bootstrapped.set(true)
         }
     }
 
+    fun freeze() {
+        frozen.set(true)
+    }
+
     fun register(plugin: SkillPlugin) {
         synchronized(this) {
+            check(!frozen.get()) { "Skill plugin registry is frozen; cannot register ${plugin::class.java.name}" }
             definitions += plugin
             if (bootstrapped.get()) {
                 rebuildSnapshotLocked()
@@ -84,6 +96,7 @@ internal class SkillPluginRegistryEngine {
             definitions.clear()
             snapshot = SkillPluginSnapshot.empty()
             bootstrapped.set(true)
+            frozen.set(true)
         }
     }
 
@@ -92,10 +105,25 @@ internal class SkillPluginRegistryEngine {
             definitions.clear()
             snapshot = SkillPluginSnapshot.empty()
             bootstrapped.set(false)
+            frozen.set(false)
         }
     }
 
     private fun rebuildSnapshotLocked() {
+        snapshot = buildSnapshot(definitions)
+        logger.info(
+            "skills bootstrapped {} plugins (object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, button={})",
+            definitions.size,
+            snapshot.objectBindingCount,
+            snapshot.npcBindingCount,
+            snapshot.itemOnItemBindingCount,
+            snapshot.itemBindingCount,
+            snapshot.itemOnObjectBindingCount,
+            snapshot.buttonBindingCount,
+        )
+    }
+
+    private fun buildSnapshot(source: List<SkillPlugin>): SkillPluginSnapshot {
         val objectBindings = HashMap<Long, SkillObjectClickBinding>()
         val npcBindings = HashMap<Long, SkillNpcClickBinding>()
         val itemOnItemBindings = HashMap<Long, SkillItemOnItemBinding>()
@@ -104,7 +132,7 @@ internal class SkillPluginRegistryEngine {
         val buttonBindings = HashMap<Long, SkillButtonBinding>()
         val objectPresetById = HashMap<Int, MutableSet<net.dodian.uber.game.engine.systems.action.PolicyPreset>>()
 
-        definitions.forEach { plugin ->
+        source.forEach { plugin ->
             val definition = plugin.definition
 
             definition.objectBindings.forEach { binding ->
@@ -175,25 +203,14 @@ internal class SkillPluginRegistryEngine {
             }
         }
 
-        snapshot =
-            SkillPluginSnapshot(
-                objectBindings = objectBindings,
-                npcBindings = npcBindings,
-                itemOnItemBindings = itemOnItemBindings,
-                itemBindings = itemBindings,
-                itemOnObjectBindings = itemOnObjectBindings,
-                buttonBindings = buttonBindings,
-                objectPresetById = objectPresetById,
-            )
-        logger.info(
-            "skills bootstrapped {} plugins (object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, button={})",
-            definitions.size,
-            objectBindings.size,
-            npcBindings.size,
-            itemOnItemBindings.size,
-            itemBindings.size,
-            itemOnObjectBindings.size,
-            buttonBindings.size,
+        return SkillPluginSnapshot(
+            objectBindings = objectBindings,
+            npcBindings = npcBindings,
+            itemOnItemBindings = itemOnItemBindings,
+            itemBindings = itemBindings,
+            itemOnObjectBindings = itemOnObjectBindings,
+            buttonBindings = buttonBindings,
+            objectPresetById = objectPresetById,
         )
     }
 }
@@ -207,6 +224,13 @@ data class SkillPluginSnapshot(
     private val buttonBindings: Map<Long, SkillButtonBinding>,
     private val objectPresetById: Map<Int, Set<net.dodian.uber.game.engine.systems.action.PolicyPreset>>,
 ) {
+    val objectBindingCount: Int get() = objectBindings.size
+    val npcBindingCount: Int get() = npcBindings.size
+    val itemOnItemBindingCount: Int get() = itemOnItemBindings.size
+    val itemBindingCount: Int get() = itemBindings.size
+    val itemOnObjectBindingCount: Int get() = itemOnObjectBindings.size
+    val buttonBindingCount: Int get() = buttonBindings.size
+
     fun objectBinding(option: Int, objectId: Int): SkillObjectClickBinding? =
         objectBindings[SkillPluginKeys.objectKey(option, objectId)]
 

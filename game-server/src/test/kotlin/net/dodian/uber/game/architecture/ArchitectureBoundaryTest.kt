@@ -88,27 +88,27 @@ class ArchitectureBoundaryTest {
             "src/main/kotlin/net/dodian/uber/game/content/ContentModuleIndex.kt",
         )
         val missingSystemsFiles = setOf(
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/items/ItemContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/items/ItemDispatcher.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/npcs/NpcContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/npcs/NpcContentDispatcher.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/objects/ObjectContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/objects/ObjectInteractionService.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/objects/ObjectClickLoggingService.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/commands/CommandAccess.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/commands/CommandContent.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/commands/CommandContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/commands/CommandContext.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/commands/CommandDispatcher.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/commands/CommandLogging.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/commands/CommandParsing.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/commands/CommandReply.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/items/ItemCombinationService.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/items/ItemOnNpcContentService.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/npcs/NpcInteractionActionService.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/npcs/NpcClickMetrics.kt",
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction/ui/SkillingInterfaceItemService.kt",
-            "src/main/kotlin/net/dodian/uber/api/plugin/ContentModuleIndex.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/items/ItemContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/items/ItemDispatcher.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/npcs/NpcContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/npcs/NpcContentDispatcher.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/objects/ObjectContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/objects/ObjectInteractionService.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/objects/ObjectClickLoggingService.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/commands/CommandAccess.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/commands/CommandContent.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/commands/CommandContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/commands/CommandContext.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/commands/CommandDispatcher.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/commands/CommandLogging.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/commands/CommandParsing.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/commands/CommandReply.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/items/ItemCombinationService.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/items/ItemOnNpcContentService.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/npcs/NpcInteractionActionService.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/npcs/NpcClickMetrics.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/ui/SkillingInterfaceItemService.kt",
+            "src/main/kotlin/net/dodian/uber/game/api/plugin/ContentModuleIndex.kt",
         )
 
         val forbidden = sourceFiles
@@ -155,14 +155,14 @@ class ArchitectureBoundaryTest {
     @Test
     fun `repackaged kotlin roots keep practical depth cap`() {
         val cappedRoots = mapOf(
-            "src/main/kotlin/net/dodian/uber/engine/tasking" to 1,
-            "src/main/kotlin/net/dodian/uber/engine/sync/player" to 2,
-            "src/main/kotlin/net/dodian/uber/engine/systems/action" to 1,
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction" to 2,
-            "src/main/kotlin/net/dodian/uber/api/plugin" to 2,
-            "src/main/kotlin/net/dodian/uber/engine/systems/skills" to 1,
+            "src/main/kotlin/net/dodian/uber/game/engine/tasking" to 1,
+            "src/main/kotlin/net/dodian/uber/game/engine/sync/player" to 2,
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/action" to 1,
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction" to 2,
+            "src/main/kotlin/net/dodian/uber/game/api/plugin" to 2,
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/skills" to 1,
             "src/main/kotlin/net/dodian/uber/game/content/objects" to 2,
-            "src/main/kotlin/net/dodian/uber/api/model/object" to 1,
+            "src/main/kotlin/net/dodian/uber/game/model/object" to 1,
         )
 
         val violations = cappedRoots.flatMap { (root, maxDepth) ->
@@ -210,7 +210,7 @@ class ArchitectureBoundaryTest {
     @Test
     fun `systems layer does not import engine sync or net internals`() {
         val violations = sourceFiles
-            .filter { it.toString().contains("/net/dodian/uber/engine/systems/") }
+            .filter { it.toString().contains("/net/dodian/uber/game/engine/systems/") }
             .flatMap { file ->
                 Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                     val trimmed = line.trim()
@@ -267,7 +267,7 @@ class ArchitectureBoundaryTest {
             "src/main/kotlin/net/dodian/uber/game/content/social" to 2,
             "src/main/kotlin/net/dodian/uber/game/content/skills/runtime" to 2,
             "src/main/kotlin/net/dodian/uber/game/content/ui/buttons" to 1,
-            "src/main/kotlin/net/dodian/uber/engine/systems/interaction" to 2,
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction" to 2,
         )
         val violations = cappedRoots.flatMap { (root, maxDepth) ->
             val rootPath = Paths.get(root)
@@ -293,7 +293,7 @@ class ArchitectureBoundaryTest {
     @Test
     fun `interaction processor does not hardcode migrated skill dispatch`() {
         val interactionPath =
-            Paths.get("src/main/kotlin/net/dodian/uber/engine/systems/interaction/InteractionProcessor.kt")
+            Paths.get("src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/InteractionProcessor.kt")
         val source = Files.readString(interactionPath)
 
         val forbiddenCalls = listOf(
@@ -830,10 +830,11 @@ class ArchitectureBoundaryTest {
 
     @Test
     fun `combat preemption is centralized in cancellation service`() {
-        val cancellationService = sourceRoot.resolve("kotlin/net/dodian/uber/engine/systems/action/PlayerActionCancellationService.kt")
-        val interactionScheduler = sourceRoot.resolve("kotlin/net/dodian/uber/engine/systems/interaction/scheduler/InteractionTaskScheduler.kt")
+        val interactionScheduler = sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/systems/interaction/scheduler/InteractionTaskScheduler.kt")
+        val canonicalCancellationService =
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/systems/action/PlayerActionCancellationService.kt")
 
-        val cancellationSource = Files.readString(cancellationService)
+        val cancellationSource = Files.readString(canonicalCancellationService)
         val schedulerSource = Files.readString(interactionScheduler)
         val violations = mutableListOf<String>()
 
@@ -855,8 +856,8 @@ class ArchitectureBoundaryTest {
         val violations = sourceFiles
             .filter { file ->
                 val normalized = file.invariantSeparatorsPathString
-                normalized.contains("/net/dodian/uber/engine/loop/") ||
-                    normalized.contains("/net/dodian/uber/engine/processing/") ||
+                normalized.contains("/net/dodian/uber/game/engine/loop/") ||
+                    normalized.contains("/net/dodian/uber/game/engine/processing/") ||
                     normalized.contains("/net/dodian/uber/game/netty/listener/")
             }
             .flatMap { file ->
@@ -938,7 +939,7 @@ class ArchitectureBoundaryTest {
         val violations = sourceFiles.flatMap { file ->
             val normalized = file.invariantSeparatorsPathString
             val isInfraFile =
-                normalized.contains("/net/dodian/uber/engine/event/")
+                normalized.contains("/net/dodian/uber/game/engine/event/")
             Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                 val trimmed = line.trim()
                 val usesLowLevelListenerInternals =
@@ -1002,7 +1003,7 @@ class ArchitectureBoundaryTest {
     @Test
     fun `events package stays payload only`() {
         val violations = sourceFiles
-            .filter { it.invariantSeparatorsPathString.contains("/net/dodian/uber/api/event/") }
+            .filter { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/events/") }
             .flatMap { file ->
                 Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                     val trimmed = line.trim()
@@ -1026,13 +1027,13 @@ class ArchitectureBoundaryTest {
 
     @Test
     fun `event contract runtime and payload packages stay split`() {
-        val gameEventPath = sourceRoot.resolve("kotlin/net/dodian/uber/api/event/GameEvent.kt")
+        val gameEventPath = sourceRoot.resolve("kotlin/net/dodian/uber/game/events/GameEvent.kt")
         val runtimeFiles = listOf(
-            sourceRoot.resolve("kotlin/net/dodian/uber/engine/event/GameEventBus.kt"),
-            sourceRoot.resolve("kotlin/net/dodian/uber/engine/event/GameEventScheduler.kt"),
-            sourceRoot.resolve("kotlin/net/dodian/uber/engine/event/EventListener.kt"),
-            sourceRoot.resolve("kotlin/net/dodian/uber/engine/event/EventFilter.kt"),
-            sourceRoot.resolve("kotlin/net/dodian/uber/engine/event/ReturnableEventListener.kt"),
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/event/GameEventBus.kt"),
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/event/GameEventScheduler.kt"),
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/event/EventListener.kt"),
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/event/EventFilter.kt"),
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/event/ReturnableEventListener.kt"),
         )
 
         val missing = buildList {
@@ -1174,7 +1175,7 @@ class ArchitectureBoundaryTest {
 
     @Test
     fun `player initializer routes farming login through content runtime api`() {
-        val path = sourceRoot.resolve("java/net/dodian/uber/api/model/entity/player/PlayerInitializer.java")
+        val path = sourceRoot.resolve("java/net/dodian/uber/game/model/entity/player/PlayerInitializer.java")
         val source = Files.readString(path)
 
         assertTrue(

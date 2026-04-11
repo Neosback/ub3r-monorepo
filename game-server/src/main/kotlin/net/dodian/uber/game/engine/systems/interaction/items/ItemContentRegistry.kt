@@ -3,13 +3,11 @@ package net.dodian.uber.game.engine.systems.interaction.items
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.content.items.ItemContent
 import net.dodian.uber.game.api.plugin.ContentBootstrap
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 object ItemContentRegistry : ContentBootstrap {
     override val id: String = "items.registry"
-    private val logger = LoggerFactory.getLogger(ItemContentRegistry::class.java)
 
     private val loaded = AtomicBoolean(false)
     private val byItemId = ConcurrentHashMap<Int, ItemContent>()
@@ -22,13 +20,8 @@ object ItemContentRegistry : ContentBootstrap {
     fun register(content: ItemContent) {
         for (itemId in content.itemIds) {
             val existing = byItemId.putIfAbsent(itemId, content)
-            if (existing != null) {
-                logger.error(
-                    "Duplicate ItemContent for itemId={} (existing={}, new={})",
-                    itemId,
-                    existing::class.java.name,
-                    content::class.java.name
-                )
+            check(existing == null) {
+                "Duplicate ItemContent for itemId=$itemId existing=${existing?.javaClass?.name} new=${content::class.java.name}"
             }
         }
     }
