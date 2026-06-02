@@ -104,6 +104,7 @@ import com.runescape.util.PacketConstants;
 import com.runescape.util.SecondsTimer;
 import com.runescape.util.SkillConstants;
 import com.runescape.util.StringUtils;
+import com.runescape.web.WebBridgeSocket;
 import java.awt.event.KeyEvent;
 
 public class Client extends GameApplet {
@@ -173,6 +174,14 @@ public class Client extends GameApplet {
 	}
 
 	public void savePlayerData() {
+		if (Configuration.web_bridge_enabled) {
+			try {
+				com.runescape.web.CheerpJWs.setLocalStorage("remember_username", rememberMe ? "true" : "false");
+				com.runescape.web.CheerpJWs.setLocalStorage("username", rememberMe ? myUsername : "");
+			} catch (Throwable t) {
+				// Prevent crashes if running outside CheerpJ (e.g. desktop)
+			}
+		}
 		try {
 			File file = new File(SignLink.findcachedir() + "/settings.dat");
 			if (!file.exists()) {
@@ -210,15 +219,10 @@ public class Client extends GameApplet {
 
 
 	private void loadPlayerData() throws IOException {
-
 		File file = new File(SignLink.findcachedir() + "/settings.dat");
-		if (!file.exists()) {
-			return;
-		}
-
-		DataInputStream stream = new DataInputStream(new FileInputStream(file));
-
-		try {
+		if (file.exists()) {
+			DataInputStream stream = new DataInputStream(new FileInputStream(file));
+			try {
 
 			rememberMe = stream.readBoolean();
 			myUsername = stream.readUTF();
@@ -259,10 +263,33 @@ public class Client extends GameApplet {
 			settings[166] = brightnessState;
 
 
-		} catch (IOException e) {
-			file.delete();
-		} finally {
-			stream.close();
+			} catch (IOException e) {
+				file.delete();
+			} finally {
+				stream.close();
+			}
+		}
+
+		if (Configuration.web_bridge_enabled) {
+			try {
+				String rem = com.runescape.web.CheerpJWs.getLocalStorage("remember_username");
+				String user = com.runescape.web.CheerpJWs.getLocalStorage("username");
+				if (rem != null && !rem.isEmpty()) {
+					rememberMe = rem.equals("true");
+				}
+				if (rememberMe) {
+					if (user != null) {
+						myUsername = user;
+					}
+				} else {
+					myUsername = "";
+				}
+				if (rememberMe && myUsername.length() > 0) {
+					loginScreenCursorPos = 1;
+				}
+			} catch (Throwable t) {
+				// Prevent crashes if running outside CheerpJ
+			}
 		}
 	}
 
@@ -680,12 +707,14 @@ public class Client extends GameApplet {
 
 	public void refreshFrameSize() {
 		if (frameMode == ScreenMode.RESIZABLE) {
+			boolean resized = false;
 			if (frameWidth != (appletClient() ? getGameComponent().getWidth()
 					: gameFrame.getFrameWidth())) {
 				frameWidth = (appletClient() ? getGameComponent().getWidth()
 						: gameFrame.getFrameWidth());
 				screenAreaWidth = frameWidth;
 				setBounds();
+				resized = true;
 			}
 			if (frameHeight != (appletClient() ? getGameComponent().getHeight()
 					: gameFrame.getFrameHeight())) {
@@ -693,6 +722,10 @@ public class Client extends GameApplet {
 						: gameFrame.getFrameHeight());
 				screenAreaHeight = frameHeight;
 				setBounds();
+				resized = true;
+			}
+			if (resized && gameFrame != null) {
+				graphics = gameFrame.getGraphics();
 			}
 		}
 	}
@@ -1267,6 +1300,12 @@ public class Client extends GameApplet {
 	}
 
 	public Socket openSocket(int port) throws IOException {
+		if (Configuration.web_bridge_enabled) {
+			String bridgeUrl = Configuration.resolveBridgeUrlForPort(port);
+			if (bridgeUrl != null) {
+				return new WebBridgeSocket(bridgeUrl);
+			}
+		}
 		return new Socket(InetAddress.getByName(server), port);
 	}
 
@@ -4251,6 +4290,22 @@ public class Client extends GameApplet {
 		ObjectDefinition.lowMemory = false;
 	}
 
+	public static void launchWebClient() {
+		try {
+			nodeID = 10;
+			portOffset = 0;
+			setHighMem();
+			isMembers = true;
+			SignLink.storeid = 32;
+			frameMode(ScreenMode.FIXED);
+			instance = new Client();
+			SignLink.startpriv(InetAddress.getLoopbackAddress());
+			instance.createClientFrame(frameWidth, frameHeight);
+		} catch (Exception exception) {
+			throw new IllegalStateException("Failed to launch Mystic web client", exception);
+		}
+	}
+
 	public static void main(String args[]) {
 		try {
 			nodeID = 10;
@@ -5127,7 +5182,7 @@ public class Client extends GameApplet {
 		}
 
 		// Retry cache download once (no recursion) for local-cache mode.
-		if(buffer == null && !Configuration.JAGCACHED_ENABLED) {
+		if(buffer == null && !Configuration.JAGCACHED_ENABLED && !Configuration.web_bridge_enabled) {
 			CacheDownloader.init(false);
 			try {
 				if (indices[0] != null) {
@@ -5466,13 +5521,13 @@ public class Client extends GameApplet {
 						updateChatbox = true;
 						break;
 
-					case 42501:
-						frameMode(ScreenMode.FIXED);
-						break;
+				case 44501:
+					frameMode(ScreenMode.FIXED);
+					break;
 
-					case 42504:
-						frameMode(ScreenMode.RESIZABLE);
-						break;
+				case 44504:
+					frameMode(ScreenMode.RESIZABLE);
+					break;
 
 					case 40500:
 					case 40501:
@@ -8919,6 +8974,7 @@ public class Client extends GameApplet {
 				anInt1226 = 0;
 				// sendConfiguration(429, 1);
 				this.stopMidi();
+				savePlayerData();
 				setupGameplayScreen();
 
 				return;
@@ -9624,7 +9680,7 @@ public class Client extends GameApplet {
 
 			if (Configuration.JAGCACHED_ENABLED) {
 				JagGrab.onStart();
-			} else {
+			} else if (!Configuration.web_bridge_enabled) {
 				CacheDownloader.init(false);
 			}
 
@@ -16780,6 +16836,16 @@ public class Client extends GameApplet {
 	private ProducingGraphicsBuffer minimapImageProducer;
 	private static ProducingGraphicsBuffer gameScreenImageProducer;
 	private static ProducingGraphicsBuffer chatboxImageProducer;
+
+	static void paintGameScreen(Graphics g) {
+		if (gameScreenImageProducer != null) {
+			gameScreenImageProducer.drawGraphics(
+					frameMode == ScreenMode.FIXED ? 4 : 0, g,
+					frameMode == ScreenMode.FIXED ? 4 : 0);
+		} else if (instance != null && instance.fullGameScreen != null) {
+			instance.fullGameScreen.drawGraphics(0, g, 0);
+		}
+	}
 	private int daysSinceRecovChange;
 	private BufferedConnection socketStream;
 	private int privateMessageCount;
