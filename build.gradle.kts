@@ -4,5 +4,7 @@ subprojects {
 
     repositories {
         mavenCentral()
+        maven(url = "https://repo.runelite.net")
+        maven(url = "https://jitpack.io")
     }
 }
