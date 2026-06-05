@@ -40,7 +40,7 @@ This is a document designed to explain some terms to prevent confusion about the
 
 ### Project Root <small>_(`/`)_</small>
 
-This is the root directory of the project, and in this directory you'll among other things find these folders: `docs`, `game-server`, `mystic-updatedclient`, and `game-launcher`.
+This is the root directory of the project, and in this directory you'll among other things find these folders: `docs`, `game-server`, `game-client`, and `mystic-updatedclient`.
 
 ### Game Server Root:** <small>_(`/game-server`)_</small>
 
