@@ -81,9 +81,9 @@ public class ObjectInteractionListener implements PacketListener {
             return;
         }
 
-        final int objectId = decoded.objectId;
-        final int objectX = decoded.objectX;
-        final int objectY = decoded.objectY;
+        final int objectId = decoded.objectId();
+        final int objectX = decoded.objectX();
+        final int objectY = decoded.objectY();
         if (!isValidObjectClick(objectId, objectX, objectY)) {
             PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.INVALID_COORDINATE);
             logger.debug(
@@ -302,6 +302,27 @@ public class ObjectInteractionListener implements PacketListener {
         }
     }
 
-    private record DecodedObjectClick(int objectId, int objectX, int objectY) {
+    private static final class DecodedObjectClick {
+        private final int objectId;
+        private final int objectX;
+        private final int objectY;
+
+        private DecodedObjectClick(int objectId, int objectX, int objectY) {
+            this.objectId = objectId;
+            this.objectX = objectX;
+            this.objectY = objectY;
+        }
+
+        private int objectId() {
+            return objectId;
+        }
+
+        private int objectX() {
+            return objectX;
+        }
+
+        private int objectY() {
+            return objectY;
+        }
     }
 }

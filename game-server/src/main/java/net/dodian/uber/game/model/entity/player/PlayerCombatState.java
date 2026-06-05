@@ -228,7 +228,8 @@ class PlayerCombatState {
     }
 
     private Entity.damageType inferDamageType(Entity attacker) {
-        if (attacker instanceof Client player) {
+        if (attacker instanceof Client) {
+            Client player = (Client) attacker;
             int style = PlayerAttackCombatKt.getAttackStyle(player);
             if (style == 1) {
                 return Entity.damageType.RANGED;

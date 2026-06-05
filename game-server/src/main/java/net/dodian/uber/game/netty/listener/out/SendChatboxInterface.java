@@ -14,15 +14,23 @@ import net.dodian.uber.game.netty.codec.MessageType;
  * - Opcode: 164 (variable short - interface display packet)
  * - Frame: 2 bytes (interface ID to display)
  */
-public record SendChatboxInterface(int frame) implements OutgoingPacket {
+public final class SendChatboxInterface implements OutgoingPacket {
+
+    private final int frame;
+
+    public SendChatboxInterface(int frame) {
+        this.frame = frame;
+    }
+
+    public int frame() {
+        return frame;
+    }
+
     /**
      * Creates a new SendFrame164 packet.
      *
      * @param frame The frame parameter
      */
-    public SendChatboxInterface {
-    }
-
     @Override
     public void send(Client client) {
         // Client's method434() reads exactly 2 bytes in little-endian format

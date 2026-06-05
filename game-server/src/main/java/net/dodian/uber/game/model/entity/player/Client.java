@@ -603,16 +603,70 @@ public class Client extends Player implements Runnable {
 
     }
 
-    public record InboundProcessResult(int processedPackets, int walkPacketsProcessed, int mousePacketsProcessed,
-                                       int walkPacketsReplaced, int mousePacketsReplaced, int fifoPacketsDropped) {
+    public static final class InboundProcessResult {
+        private final int processedPackets;
+        private final int walkPacketsProcessed;
+        private final int mousePacketsProcessed;
+        private final int walkPacketsReplaced;
+        private final int mousePacketsReplaced;
+        private final int fifoPacketsDropped;
+
+        public InboundProcessResult(int processedPackets, int walkPacketsProcessed, int mousePacketsProcessed,
+                                    int walkPacketsReplaced, int mousePacketsReplaced, int fifoPacketsDropped) {
+            this.processedPackets = processedPackets;
+            this.walkPacketsProcessed = walkPacketsProcessed;
+            this.mousePacketsProcessed = mousePacketsProcessed;
+            this.walkPacketsReplaced = walkPacketsReplaced;
+            this.mousePacketsReplaced = mousePacketsReplaced;
+            this.fifoPacketsDropped = fifoPacketsDropped;
+        }
+
+        public int processedPackets() {
+            return processedPackets;
+        }
+
+        public int walkPacketsProcessed() {
+            return walkPacketsProcessed;
+        }
+
+        public int mousePacketsProcessed() {
+            return mousePacketsProcessed;
+        }
+
+        public int walkPacketsReplaced() {
+            return walkPacketsReplaced;
+        }
+
+        public int mousePacketsReplaced() {
+            return mousePacketsReplaced;
+        }
+
+        public int fifoPacketsDropped() {
+            return fifoPacketsDropped;
+        }
     }
 
-    public record OutboundFlushStats(int flushedMessages, int flushedBytes) {
+    public static final class OutboundFlushStats {
+        private final int flushedMessages;
+        private final int flushedBytes;
+
+        public OutboundFlushStats(int flushedMessages, int flushedBytes) {
+            this.flushedMessages = flushedMessages;
+            this.flushedBytes = flushedBytes;
+        }
+
+        public int flushedMessages() {
+            return flushedMessages;
+        }
+
+        public int flushedBytes() {
+            return flushedBytes;
+        }
 
         public static OutboundFlushStats empty() {
-                return new OutboundFlushStats(0, 0);
-            }
+            return new OutboundFlushStats(0, 0);
         }
+    }
 
     @Override
     public void destruct() {
@@ -4709,16 +4763,19 @@ public class Client extends Player implements Runnable {
         if (decision instanceof TravelDecision.Ignored) {
             return;
         }
-        if (decision instanceof TravelDecision.Rejected rejected) {
+        if (decision instanceof TravelDecision.Rejected) {
+            TravelDecision.Rejected rejected = (TravelDecision.Rejected) decision;
             send(new SendMessage(rejected.getMessage()));
             return;
         }
-        if (decision instanceof TravelDecision.RequireUnlockDialogue unlockDialogue) {
+        if (decision instanceof TravelDecision.RequireUnlockDialogue) {
+            TravelDecision.RequireUnlockDialogue unlockDialogue = (TravelDecision.RequireUnlockDialogue) decision;
             DialogueService.setDialogueId(this, unlockDialogue.getDialogueId());
             DialogueService.setDialogueSent(this, false);
             return;
         }
-        if (decision instanceof TravelDecision.Approved approved) {
+        if (decision instanceof TravelDecision.Approved) {
+            TravelDecision.Approved approved = (TravelDecision.Approved) decision;
             varbit(153, approved.getVarbitValue());
             travelInitiate = true;
             Position destination = approved.getDestination();

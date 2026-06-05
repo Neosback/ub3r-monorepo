@@ -1504,27 +1504,28 @@ public abstract class Player extends Entity {
         return ((Client) this).getItemName(getEquipment(slot));
     }
     public boolean armourSet(String armourName) {
-        return switch (armourName) {
-            case "ahrim" ->
-                    getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Ahrim") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Ahrim") &&
-                            getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Ahrim") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Ahrim");
-            case "karil" ->
-                    getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Karil") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Karil") &&
-                            getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Karil") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Karil");
-            case "verac" ->
-                    getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Verac") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Verac") &&
-                            getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Verac") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Verac");
-            case "dharok" ->
-                    getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Dharok") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Dharok") &&
-                            getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Dharok") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Dharok");
-            case "torag" ->
-                    getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Torag") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Torag") &&
-                            getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Torag") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Torag");
-            case "guthan" ->
-                    getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Guthan") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Guthan") &&
-                            getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Guthan") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Guthan");
-            default -> false;
-        };
+        switch (armourName) {
+            case "ahrim":
+                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Ahrim") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Ahrim") &&
+                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Ahrim") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Ahrim");
+            case "karil":
+                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Karil") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Karil") &&
+                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Karil") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Karil");
+            case "verac":
+                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Verac") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Verac") &&
+                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Verac") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Verac");
+            case "dharok":
+                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Dharok") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Dharok") &&
+                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Dharok") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Dharok");
+            case "torag":
+                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Torag") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Torag") &&
+                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Torag") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Torag");
+            case "guthan":
+                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Guthan") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Guthan") &&
+                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Guthan") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Guthan");
+            default:
+                return false;
+        }
     }
     public boolean checkObsidianBonus(int id) {
         int[] acceptedItems = {

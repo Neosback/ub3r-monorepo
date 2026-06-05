@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:11-jre
 
 EXPOSE 43594
 EXPOSE 8080

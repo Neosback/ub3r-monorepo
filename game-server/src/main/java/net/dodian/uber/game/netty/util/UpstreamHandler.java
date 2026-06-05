@@ -64,7 +64,8 @@ public class UpstreamHandler extends ChannelInboundHandlerAdapter {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         // If this channel had an active Client linked, remove it from the server.
         Object attr = ctx.channel().attr(AttributeKey.valueOf("activeClient")).getAndSet(null);
-        if (attr instanceof Client client) {
+        if (attr instanceof Client) {
+            Client client = (Client) attr;
             if ("unknown".equals(client.getLastDisconnectReason())) {
                 client.noteDisconnectReason("channel-inactive");
             }

@@ -646,12 +646,27 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         return PlayerVisibilityRules.isVisibleTo(viewer, other);
     }
 
-    private record PlayerVisibilitySignature(int count, int hash) {
+    private static final class PlayerVisibilitySignature {
+        private final int count;
+        private final int hash;
+
+        private PlayerVisibilitySignature(int count, int hash) {
+            this.count = count;
+            this.hash = hash;
+        }
+
+        private int count() {
+            return count;
+        }
+
+        private int hash() {
+            return hash;
+        }
 
         private boolean matches(PlayerVisibilitySignature other) {
-                return other != null && count == other.count && hash == other.hash;
-            }
+            return other != null && count == other.count && hash == other.hash;
         }
+    }
 
     public PlayerSyncTemplateKey buildPlayerSyncTemplateKey(Player viewer) {
         int[] localSlots = new int[viewer.playerListSize];

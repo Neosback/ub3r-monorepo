@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
 plugins {
     kotlin("jvm") version "1.6.21"
     id("application")
@@ -9,8 +11,12 @@ application {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.release.set(11)
 }
 
 val syncTestSourceSet = sourceSets.create("syncTest") {
@@ -72,7 +78,7 @@ dependencies {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "17"
+        jvmTarget = "11"
     }
 }
 
@@ -97,5 +103,3 @@ tasks.register<JavaExec>("runSyncBenchmark") {
     classpath = syncTestSourceSet.runtimeClasspath
     mainClass.set("net.dodian.uber.game.runtime.sync.SyncPipelineBenchmark")
 }
-
-
