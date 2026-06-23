@@ -13,10 +13,12 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.skill.farming.FarmingData.patches
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.api.content.ContentRuntimeApi
+import net.dodian.uber.game.api.content.dialogue.DialogueOption
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.bindObjectContentUseItem
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.util.Misc
 
 class Farming {
@@ -209,10 +211,52 @@ class Farming {
                     if((FarmingData.compostState.FILLED.toString() == farmCompost.get(1).asString || FarmingData.compostState.EMPTY.toString() == farmCompost.get(1).asString) && farmCompost.get(2).asInt < 15) {
                         //TODO: Fix a loop of inputting items to the bin!
                         if(FarmingData.compostState.EMPTY.toString() != farmCompost.get(1).asString && farmData.checkSuperCompost(itemId) && farmCompost.get(0).asString != FarmingData.compost.SUPERCOMPOST.toString()) {
-                            send(SendMessage("This will be redundant if you use super compost item on a regular compost."))
+                            DialogueService.start(this) {
+                                options(
+                                    title = "You wish to convert to use this item for regular compost",
+                                    DialogueOption("Yes") {
+                                        action {
+                                            for(compost in FarmingData.compostBin.values()) {
+                                                if (objectId == compost.objectId) {
+                                                    val farmCompost = farmingJson.getCompostData().get(compost.name).asJsonArray
+                                                    deleteItem(itemId, 1)
+                                                    farmCompost.set(2, JsonPrimitive(farmCompost.get(2).asInt + 1))
+                                                    farmCompost.set(1, JsonPrimitive(FarmingData.compostState.FILLED.toString()))
+                                                    farmCompost.set(0, JsonPrimitive(FarmingData.compost.COMPOST.toString()))
+                                                    checkItemUpdate()
+                                                    updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
+                                                }
+                                            }
+                                        }
+                                    },
+                                    DialogueOption("No") { } //We leaving empty for the no option!
+                                )
+                                finish()
+                            }
                             return true
                         }  else if(farmData.checkRegularCompost(itemId) && farmCompost.get(0).asString == FarmingData.compost.SUPERCOMPOST.toString()) {
-                            send(SendMessage("You cant do this as it will convert to regular compost!"))
+                            DialogueService.start(this) {
+                                options(
+                                    title = "You wish to convert to regular compost?",
+                                    DialogueOption("Yes") {
+                                        action {
+                                            for(compost in FarmingData.compostBin.values()) {
+                                                if (objectId == compost.objectId) {
+                                                    val farmCompost = farmingJson.getCompostData().get(compost.name).asJsonArray
+                                                    deleteItem(itemId, 1)
+                                                    farmCompost.set(2, JsonPrimitive(farmCompost.get(2).asInt + 1))
+                                                    farmCompost.set(1, JsonPrimitive(FarmingData.compostState.FILLED.toString()))
+                                                    farmCompost.set(0, JsonPrimitive(FarmingData.compost.COMPOST.toString()))
+                                                    checkItemUpdate()
+                                                    updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
+                                                }
+                                            }
+                                        }
+                                    },
+                                    DialogueOption("No") { } //We leaving empty for the no option!
+                                )
+                                finish()
+                            }
                             return true
                         }
                         deleteItem(itemId, 1)
@@ -378,8 +422,27 @@ class Farming {
                     } else send(SendMessage("You are missing a bucket to be filled with compost."))
                 }
             } else if (objectId == compost.objectId && option == 5) {
-                //TODO: Fix a compost dump message!
-                send(SendMessage("You dump all the content inside the bin!"))
+                DialogueService.start(this) { //Dump msg!
+                    options(
+                        title = "You wish to empty the compost bin?",
+                        DialogueOption("Yes") {
+                            action { c ->
+                                for(compost in FarmingData.compostBin.values()) {
+                                    if (objectId == compost.objectId) {
+                                        val farmCompost = farmingJson.getCompostData().get(compost.name).asJsonArray
+                                        farmCompost.set(0, JsonPrimitive(FarmingData.compost.NONE.toString()))
+                                        farmCompost.set(1, JsonPrimitive(FarmingData.compostState.EMPTY.toString()))
+                                        farmCompost.set(3, JsonPrimitive(0))
+                                        updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
+                                        c.send(SendMessage("You dump all the content inside the bin!"))
+                                    }
+                                }
+                            }
+                        },
+                        DialogueOption("No") { } //We leaving empty for the no option!
+                    )
+                    finish()
+                }
             }
         }
     }
