@@ -14,16 +14,17 @@ import org.slf4j.LoggerFactory;
  * Native Netty listener for the "change appearance" packet.
  * Migrates the legacy {@code ChangeAppearance} Stream-based handler to Netty.
  */
-@PacketHandler(opcode = 11)
+@PacketHandler(opcode = 101)
 public class ChangeAppearanceListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ChangeAppearanceListener.class);
 
     /*
-     * Register explicitly so the LegacyBridgeListener does not claim opcode 11.
+     * Register explicitly so the LegacyBridgeListener does not claim opcode 11 and 101.
      */
     static {
         PacketListenerManager.register(11, new ChangeAppearanceListener());
+        PacketListenerManager.register(101, new ChangeAppearanceListener());
     }
 
     // Packet is a fixed 13 bytes (each a signed byte in legacy stream)

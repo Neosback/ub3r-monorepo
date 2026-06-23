@@ -95,12 +95,81 @@ final class PlayerMovementState {
         int absX = owner.getPosition().getX();
         int absY = owner.getPosition().getY();
         int z = owner.getPosition().getZ();
+
+        net.dodian.uber.game.engine.systems.interaction.InteractionIntent pending = owner.getPendingInteraction();
+        if (pending != null) {
+            int targetX = -1;
+            int targetY = -1;
+            int targetSize = 1;
+            if (pending instanceof net.dodian.uber.game.engine.systems.interaction.NpcInteractionIntent) {
+                int npcIndex = ((net.dodian.uber.game.engine.systems.interaction.NpcInteractionIntent) pending).getNpcIndex();
+                net.dodian.uber.game.model.entity.npc.Npc npc = net.dodian.uber.game.Server.npcManager.getNpcMap().get(npcIndex);
+                if (npc != null) {
+                    targetX = npc.getPosition().getX();
+                    targetY = npc.getPosition().getY();
+                    targetSize = npc.getSize();
+                }
+            } else if (pending instanceof net.dodian.uber.game.engine.systems.interaction.ItemOnNpcIntent) {
+                int npcIndex = ((net.dodian.uber.game.engine.systems.interaction.ItemOnNpcIntent) pending).getNpcIndex();
+                net.dodian.uber.game.model.entity.npc.Npc npc = net.dodian.uber.game.Server.npcManager.getNpcMap().get(npcIndex);
+                if (npc != null) {
+                    targetX = npc.getPosition().getX();
+                    targetY = npc.getPosition().getY();
+                    targetSize = npc.getSize();
+                }
+            } else if (pending instanceof net.dodian.uber.game.engine.systems.interaction.MagicOnNpcIntent) {
+                int npcIndex = ((net.dodian.uber.game.engine.systems.interaction.MagicOnNpcIntent) pending).getNpcIndex();
+                net.dodian.uber.game.model.entity.npc.Npc npc = net.dodian.uber.game.Server.npcManager.getNpcMap().get(npcIndex);
+                if (npc != null) {
+                    targetX = npc.getPosition().getX();
+                    targetY = npc.getPosition().getY();
+                    targetSize = npc.getSize();
+                }
+            } else if (pending instanceof net.dodian.uber.game.engine.systems.interaction.PlayerInteractionIntent) {
+                int playerIndex = ((net.dodian.uber.game.engine.systems.interaction.PlayerInteractionIntent) pending).getPlayerIndex();
+                Client targetPlr = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(playerIndex);
+                if (targetPlr != null) {
+                    targetX = targetPlr.getPosition().getX();
+                    targetY = targetPlr.getPosition().getY();
+                    targetSize = targetPlr.getSize();
+                }
+            } else if (pending instanceof net.dodian.uber.game.engine.systems.interaction.MagicOnPlayerIntent) {
+                int playerIndex = ((net.dodian.uber.game.engine.systems.interaction.MagicOnPlayerIntent) pending).getVictimIndex();
+                Client targetPlr = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(playerIndex);
+                if (targetPlr != null) {
+                    targetX = targetPlr.getPosition().getX();
+                    targetY = targetPlr.getPosition().getY();
+                    targetSize = targetPlr.getSize();
+                }
+            } else if (pending instanceof net.dodian.uber.game.engine.systems.interaction.AttackPlayerIntent) {
+                int playerIndex = ((net.dodian.uber.game.engine.systems.interaction.AttackPlayerIntent) pending).getVictimIndex();
+                Client targetPlr = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(playerIndex);
+                if (targetPlr != null) {
+                    targetX = targetPlr.getPosition().getX();
+                    targetY = targetPlr.getPosition().getY();
+                    targetSize = targetPlr.getSize();
+                }
+            }
+
+            if (targetX != -1 && targetY != -1) {
+                int nextX = absX + deltaX;
+                int nextY = absY + deltaY;
+                if (nextX >= targetX && nextX < targetX + targetSize &&
+                    nextY >= targetY && nextY < targetY + targetSize) {
+                    resetWalkingQueue();
+                    return -1;
+                }
+            }
+        }
+
+        /* Bypassed to make client pathfinding authoritative
         if (!CollisionManager.global().traversable(absX + deltaX, absY + deltaY, z, deltaX, deltaY) &&
             !PersonalPassageService.canTraverse(owner, absX, absY, absX + deltaX, absY + deltaY, z)) {
             logBlockedStep(absX + deltaX, absY + deltaY, z);
             resetWalkingQueue();
             return -1;
         }
+        */
 
         Position newPos = new Position(absX, absY, z);
         currentX += deltaX;
