@@ -524,6 +524,10 @@ public class Client extends Player implements Runnable {
         send(new SetScrollPosition(id));
     }
 
+    public void sendScrollbar(int scrollbar, int size) {
+        send(new SendScrollbar(scrollbar, size));
+    }
+
     public void clearQuestInterface() {
         for (int j : QuestInterface)
             send(new SendString("", j));

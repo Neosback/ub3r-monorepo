@@ -162,14 +162,12 @@ final class PlayerMovementState {
             }
         }
 
-        /* Bypassed to make client pathfinding authoritative
         if (!CollisionManager.global().traversable(absX + deltaX, absY + deltaY, z, deltaX, deltaY) &&
             !PersonalPassageService.canTraverse(owner, absX, absY, absX + deltaX, absY + deltaY, z)) {
             logBlockedStep(absX + deltaX, absY + deltaY, z);
             resetWalkingQueue();
             return -1;
         }
-        */
 
         Position newPos = new Position(absX, absY, z);
         currentX += deltaX;

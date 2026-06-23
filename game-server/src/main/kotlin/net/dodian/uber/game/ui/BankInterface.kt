@@ -5,10 +5,9 @@ import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
 
 object BankInterface : InterfaceButtonContent {
-    private const val INTERFACE_ID = 5292
+    private const val INTERFACE_ID = 60000
 
-    private val depositInventoryButtons = intArrayOf(89223, 50004)
-    private val depositWornItemsButtons = intArrayOf(50007)
+    private val depositInventoryButtons = intArrayOf(89223)
     private val withdrawAsNoteButtons = intArrayOf(21011, 5387)
     private val withdrawAsItemButtons = intArrayOf(21010, 5386)
     private val searchButtons = intArrayOf(50010)
@@ -31,32 +30,6 @@ object BankInterface : InterfaceButtonContent {
                         }
                     }
                     client.sendMessage("You deposit all your items.")
-                    client.checkItemUpdate()
-                    true
-                },
-            )
-            add(
-                buttonBinding(
-                    interfaceId = INTERFACE_ID,
-                    componentId = 1,
-                    componentKey = "bank.deposit_equipment",
-                    rawButtonIds = depositWornItemsButtons,
-                    requiredInterfaceId = INTERFACE_ID,
-                ) { client, _ ->
-                    if (!client.IsBanking) return@buttonBinding true
-                    val equipment = client.equipment
-                    val equipmentN = client.equipmentN
-                    for (i in equipment.indices) {
-                        val equipId = equipment[i]
-                        val equipAmount = equipmentN[i]
-                        if (equipId > 0 && equipAmount > 0 && client.hasSpace()) {
-                            if (client.remove(i, false)) {
-                                client.addItem(equipId, equipAmount)
-                                client.bankItem(equipId, client.getItemSlot(equipId), equipAmount)
-                            }
-                        }
-                    }
-                    client.sendMessage("You deposit your worn items.")
                     client.checkItemUpdate()
                     true
                 },

@@ -23,6 +23,8 @@ object UiInterface : InterfaceButtonContent {
     private val logoutButtons = intArrayOf(2458, 9154)
     private val morphButtons = intArrayOf(23132)
     private val ignoredButtons = intArrayOf(26076, 4130, 130, 3014, 3016, 3017)
+    private val sharedDepositOrChatButtons = intArrayOf(50004)
+    private val sharedDepositOrRunButtons = intArrayOf(50007)
 
     override val bindings =
         listOf(
@@ -131,6 +133,42 @@ object UiInterface : InterfaceButtonContent {
                 true
             },
             buttonBinding(-1, 10, "ui.ignored", ignoredButtons) { _, _ ->
+                true
+            },
+            buttonBinding(-1, 11, "ui.shared.deposit_or_chat", sharedDepositOrChatButtons) { client, _ ->
+                if (client.IsBanking) {
+                    for (i in client.playerItems.indices) {
+                        if (client.playerItems[i] > 0) {
+                            client.bankItem(client.playerItems[i] - 1, i, client.playerItemsN[i])
+                        }
+                    }
+                    client.sendMessage("You deposit all your items.")
+                    client.checkItemUpdate()
+                } else {
+                    client.setSidebarInterface(11, 50200)
+                    client.varbit(980, 2)
+                }
+                true
+            },
+            buttonBinding(-1, 12, "ui.shared.deposit_or_run", sharedDepositOrRunButtons) { client, _ ->
+                if (client.IsBanking) {
+                    val equipment = client.equipment
+                    val equipmentN = client.equipmentN
+                    for (i in equipment.indices) {
+                        val equipId = equipment[i]
+                        val equipAmount = equipmentN[i]
+                        if (equipId > 0 && equipAmount > 0 && client.hasSpace()) {
+                            if (client.remove(i, false)) {
+                                client.addItem(equipId, equipAmount)
+                                client.bankItem(equipId, client.getItemSlot(equipId), equipAmount)
+                            }
+                        }
+                    }
+                    client.sendMessage("You deposit your worn items.")
+                    client.checkItemUpdate()
+                } else {
+                    client.buttonOnRun = !client.buttonOnRun
+                }
                 true
             },
         )

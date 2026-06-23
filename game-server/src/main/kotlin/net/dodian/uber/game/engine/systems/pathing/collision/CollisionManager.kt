@@ -127,10 +127,11 @@ class CollisionManager(
         val destinationY = currentY + stepY
 
         if (stepX != 0 && stepY != 0) {
-            if (!canStep(currentX, currentY, z, stepX, 0, xLength, yLength)) {
-                return false
-            }
-            if (!canStep(currentX, currentY, z, 0, stepY, xLength, yLength)) {
+            val horizontalFirst = canStep(currentX, currentY, z, stepX, 0, xLength, yLength)
+                    && canStep(currentX + stepX, currentY, z, 0, stepY, xLength, yLength)
+            val verticalFirst = canStep(currentX, currentY, z, 0, stepY, xLength, yLength)
+                    && canStep(currentX, currentY + stepY, z, stepX, 0, xLength, yLength)
+            if (!horizontalFirst && !verticalFirst) {
                 return false
             }
             if (isAnyFullBlocked(destinationX, destinationY, z, xLength, yLength)) {

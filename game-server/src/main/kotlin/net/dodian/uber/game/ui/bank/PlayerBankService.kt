@@ -55,7 +55,7 @@ object PlayerBankService {
         client.previousBankTab = 0
         sendBankStyleViewContainers(client)
         client.resetItems(5064)
-        client.send(InventoryInterface(5292, 5063))
+        client.send(InventoryInterface(60000, 5063))
     }
 
     @JvmStatic
@@ -145,13 +145,13 @@ object PlayerBankService {
                     client.send(SendCurrentBankTab(client.currentBankTab))
                 }
                 client.resetItems(5064)
-                client.send(InventoryInterface(5292, 5063))
+                client.send(InventoryInterface(60000, 5063))
             }
 
             client.bankStyleViewOpen -> {
                 sendBankStyleViewContainers(client)
                 client.resetItems(5064)
-                client.send(InventoryInterface(5292, 5063))
+                client.send(InventoryInterface(60000, 5063))
             }
 
             client.isPartyInterface -> {
