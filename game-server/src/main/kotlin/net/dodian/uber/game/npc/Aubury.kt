@@ -8,7 +8,7 @@ internal object Aubury : NpcModule {
 
     val entries: List<NpcSpawnDef> =
         spawnEntries(
-            npcId = 637,
+            npcId = 10681,
             point(2594, 3104),
             point(3253, 3402),
         )

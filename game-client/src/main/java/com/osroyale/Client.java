@@ -5115,8 +5115,18 @@ public class Client extends GameEngine
                     int tabSlot = 0;
                     int heightShift = 0;
 
+                    // When the bank is searching, ignore tab offsets entirely (mirror the bank
+                    // draw loop) so the hover/menu slot maps 1:1 onto the filtered bankInvTemp.
+                    // This guarantees the right item is withdrawn regardless of the active tab.
+                    boolean bankSearching = child.contentType == 206
+                            && RSInterface.interfaceCache[60019] != null
+                            && RSInterface.interfaceCache[60019].disabledMessage != null
+                            && RSInterface.interfaceCache[60019].disabledMessage.length() > 0
+                            && !RSInterface.interfaceCache[60019].defaultInputFieldText
+                                    .equalsIgnoreCase(RSInterface.interfaceCache[60019].disabledMessage);
+
                     int newSlot = 0;
-                    if (child.contentType == 206 && settings[211] != 0) {
+                    if (child.contentType == 206 && settings[211] != 0 && !bankSearching) {
                         for (int tab = 0; tab < tabAmounts.length; tab++) {
                             if (tab == settings[211]) {
                                 break;
@@ -5131,7 +5141,7 @@ public class Client extends GameEngine
                         for (int i3 = 0; i3 < child.width; i3++) {
                             int j3 = xBounds + i3 * (32 + child.invSpritePadX);
                             int k3 = yBounds + l2 * (32 + child.invSpritePadY) + heightShift;
-                            if (child.contentType == 206) {
+                            if (child.contentType == 206 && !bankSearching) {
                                 if (settings[211] == 0) {
                                     if (itemSlot >= tabAm) {
                                         if (tabSlot + 1 < tabAmounts.length) {
@@ -8944,10 +8954,18 @@ public class Client extends GameEngine
                 int i2 = class9_2.scripts[0][1];
                 if (settings[i2] != class9_2.requiredValues[0]) {
                     if (class9_2.updateConfig) {
-                        Settings.config(this, second);
-                        settings[i2] = class9_2.requiredValues[0];
+                        // Bank tab buttons drive config 211. Don't locally switch into an empty
+                        // tab: the server rejects it (and reverts via varbit), so applying it here
+                        // first just flashes the empty tab open for a frame.
+                        int target = class9_2.requiredValues[0];
+                        boolean emptyBankTab = i2 == 211 && target > 0
+                                && (target >= tabAmounts.length || tabAmounts[target] <= 0);
+                        if (!emptyBankTab) {
+                            Settings.config(this, second);
+                            settings[i2] = class9_2.requiredValues[0];
 //                        System.out.println("setting: " + settings[i2] + " value=" + i2);
-                        method33(i2);
+                            method33(i2);
+                        }
                     }
                 }
             }
@@ -18315,6 +18333,10 @@ public class Client extends GameEngine
                 case 53: {//senditemoninterface
                     int interfaceID = incoming.readInt();
                     int length = incoming.readUnsignedShort();
+                    int tabLength = 0;
+                    if (interfaceID == 5382) {
+                        tabLength = incoming.readUnsignedShort();
+                    }
 
                     RSInterface rsinterface = RSInterface.interfaceCache[interfaceID];
                     if (rsinterface == null) {
@@ -18323,6 +18345,9 @@ public class Client extends GameEngine
                             if (amount != 0) {
                                 incoming.readUnsignedShort();
                             }
+                        }
+                        for (int index = 0; index < tabLength; index++) {
+                            incoming.readInt();
                         }
                         opcode = -1;
                         return true;
@@ -18344,6 +18369,41 @@ public class Client extends GameEngine
                     for (int index = length; index < rsinterface.inv.length; index++) {
                         rsinterface.inv[index] = 0;
                         rsinterface.invStackSizes[index] = 0;
+                    }
+
+                    if (interfaceID == 5382 && tabLength > 0) {
+                        for (int index = 0; index < tabLength; index++) {
+                            int tabAm = incoming.readInt();
+                            if (index < tabAmounts.length) {
+                                tabAmounts[index] = tabAm;
+                            }
+                        }
+                    }
+
+                    // If the bank is in search mode, rebuild bankInvTemp from the freshly-updated
+                    // bank.inv[] so that withdrawals during search refresh the display immediately.
+                    if (interfaceID == 5382) {
+                        RSInterface searchField = RSInterface.interfaceCache[60019];
+                        if (searchField != null && searchField.disabledMessage != null
+                                && searchField.disabledMessage.length() > 0
+                                && !searchField.defaultInputFieldText.equalsIgnoreCase(searchField.disabledMessage)) {
+                            Arrays.fill(bankInvTemp, 0);
+                            Arrays.fill(bankStackTemp, 0);
+                            int bankSlot = 0;
+                            for (int slot = 0; slot < rsinterface.inv.length; slot++) {
+                                if (rsinterface.inv[slot] - 1 > 0) {
+                                    ItemDefinition def = ItemDefinition.lookup(rsinterface.inv[slot] - 1);
+                                    if (def == null || def.name == null) continue;
+                                    if (def.name.toLowerCase().contains(searchField.disabledMessage.toLowerCase())) {
+                                        bankInvTemp[bankSlot] = rsinterface.inv[slot];
+                                        bankStackTemp[bankSlot++] = rsinterface.invStackSizes[slot];
+                                    }
+                                }
+                            }
+                            if (RSInterface.interfaceCache[5385] != null) {
+                                RSInterface.interfaceCache[5385].scrollMax = (int) Math.ceil(bankSlot / 9.0) * 36;
+                            }
+                        }
                     }
 
                     try {

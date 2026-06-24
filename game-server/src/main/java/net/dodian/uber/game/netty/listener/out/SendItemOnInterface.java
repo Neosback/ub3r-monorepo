@@ -27,20 +27,13 @@ public class SendItemOnInterface implements OutgoingPacket {
         ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
         message.putInt(interfaceId);
         message.putShort(itemIds.length);
-        message.putShort(0); // tab amount length
         for (int i = 0; i < itemIds.length; i++) {
             int itemId = itemIds[i];
             int amount = amounts[i];
-            if (amount > 254) {
-                message.put(255);
-                message.putInt(amount);
-            } else {
-                message.put(amount);
-            }
-            if (itemId >= 0) {
-                message.putShort(itemId + 1, ByteOrder.BIG);
-            } else {
-                message.putShort(0, ByteOrder.BIG);
+            message.putInt(amount);
+            if (amount != 0) {
+                int containerId = itemId >= 0 ? itemId + 1 : 0;
+                message.putShort(containerId, ByteOrder.BIG);
             }
         }
         client.send(message);

@@ -22,6 +22,9 @@ object PacketInterfaceCloseService {
     fun handle(client: Client) {
         if (client.IsBanking) {
             client.IsBanking = false
+            client.bankSearchActive = false
+            client.bankSearchPendingInput = false
+            client.bankSearchQuery = ""
             client.checkItemUpdate()
             client.send(RemoveInterfaces())
         }

@@ -10,6 +10,7 @@ data class ItemSlotEntry(
     val slot: Int,
     val itemId: Int,
     val amount: Int,
+    val tab: Int = 0,
 )
 
 data class NamedCountEntry(
@@ -90,10 +91,17 @@ data class PlayerSaveEnvelope(
                     )
             }
             if (has(PlayerSaveSegment.BANK)) {
-                segments +=
-                    BankSegmentSnapshot(
-                        collectSlots(client.bankItems.clone(), client.bankItemsN.clone()) { rawId -> rawId - 1 },
-                    )
+                val bankIds = client.bankItems.clone()
+                val bankAmts = client.bankItemsN.clone()
+                val bankTabs = client.bankSlotTabs
+                val bankEntries = ArrayList<ItemSlotEntry>(bankIds.size)
+                for (slot in bankIds.indices) {
+                    val rawId = bankIds[slot]
+                    if (rawId <= 0) continue
+                    val tab = if (bankTabs != null && slot < bankTabs.size) bankTabs[slot] else 0
+                    bankEntries += ItemSlotEntry(slot = slot, itemId = rawId - 1, amount = bankAmts[slot], tab = tab)
+                }
+                segments += BankSegmentSnapshot(bankEntries)
             }
             if (has(PlayerSaveSegment.EQUIPMENT)) {
                 segments +=

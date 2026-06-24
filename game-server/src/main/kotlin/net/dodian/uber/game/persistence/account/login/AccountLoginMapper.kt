@@ -194,6 +194,10 @@ internal object AccountLoginMapper {
         if (bank.isEmpty()) {
             return
         }
+        val size = player.bankSize()
+        if (player.bankSlotTabs == null || player.bankSlotTabs.size != size) {
+            player.bankSlotTabs = IntArray(size)
+        }
         for (entry in bank.split(" ")) {
             val parse = entry.split("-")
             if (parse.size <= 2) {
@@ -202,9 +206,11 @@ internal object AccountLoginMapper {
             val slot = parse[0].toInt()
             val id = parse[1].toInt()
             val amount = parse[2].toInt()
-            if (id < 66600) {
+            val tab = if (parse.size >= 4) parse[3].toIntOrNull()?.coerceIn(0, 9) ?: 0 else 0
+            if (id < 66600 && slot >= 0 && slot < size) {
                 player.bankItems[slot] = id + 1
                 player.bankItemsN[slot] = amount
+                player.bankSlotTabs[slot] = tab
             }
         }
     }

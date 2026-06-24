@@ -4,7 +4,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.InventoryInterface
 import net.dodian.uber.game.netty.listener.out.SendBankItems
-import net.dodian.uber.game.netty.listener.out.SendCurrentBankTab
+import net.dodian.uber.game.netty.listener.out.SetVarbit
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
 import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
@@ -127,6 +127,8 @@ object PlayerBankService {
         client.IsBanking = true
         client.checkBankInterface = false
         clearBankStyleView(client)
+        // Reset the client-side search field to its placeholder so a previous search doesn't persist.
+        client.sendString("Search...", 60019)
         checkItemUpdate(client)
     }
 
@@ -142,7 +144,7 @@ object PlayerBankService {
                 client.resetBank()
                 if (client.IsBanking) {
                     refreshBankHeader(client)
-                    client.send(SendCurrentBankTab(client.currentBankTab))
+                    client.send(SetVarbit(211, client.currentBankTab))
                 }
                 client.resetItems(5064)
                 client.send(InventoryInterface(60000, 5063))
@@ -182,7 +184,10 @@ object PlayerBankService {
         client.previousBankTab = clampNormalTab(if (client.currentBankTab in 0..9) client.currentBankTab else 0)
         client.bankSearchActive = true
         client.bankSearchQuery = normalized
-        client.currentBankTab = 10
+        // Keep currentBankTab=0 so the client gets SetVarbit(211,0) → settings[211]=0 →
+        // newSlot=0, and bankInvTemp[0..N-1] renders the search results at the right position.
+        // (Using tab 10 caused settings[211]=10 → newSlot=total items → wrong slot resolution.)
+        client.currentBankTab = 0
         checkItemUpdate(client)
     }
 
@@ -213,25 +218,42 @@ object PlayerBankService {
     fun sendBankContainers(client: Client) {
         rebuildBankContainers(client)
         val size = client.bankSize()
-        var tab = 0
-        while (tab < 11) {
-            val ids = ArrayList<Int>(size)
-            val amounts = ArrayList<Int>(size)
+        val ids = ArrayList<Int>()
+        val amounts = ArrayList<Int>()
+        val tabAmounts = IntArray(10)
+
+        if (client.bankSearchActive) {
+            var count = 0
             var localSlot = 0
             while (localSlot < size) {
-                val globalSlot = client.bankContainerSlotMap[tab][localSlot]
+                val globalSlot = client.bankContainerSlotMap[10][localSlot]
                 if (globalSlot >= 0) {
                     ids.add(client.bankItems[globalSlot] - 1)
                     amounts.add(client.bankItemsN[globalSlot])
-                } else {
-                    ids.add(0)
-                    amounts.add(0)
+                    count++
                 }
                 localSlot++
             }
-            client.send(SendBankItems(ids, amounts, 50300 + tab))
-            tab++
+            tabAmounts[0] = count
+        } else {
+            var tab = 0
+            while (tab < 10) {
+                var count = 0
+                var localSlot = 0
+                while (localSlot < size) {
+                    val globalSlot = client.bankContainerSlotMap[tab][localSlot]
+                    if (globalSlot >= 0) {
+                        ids.add(client.bankItems[globalSlot] - 1)
+                        amounts.add(client.bankItemsN[globalSlot])
+                        count++
+                    }
+                    localSlot++
+                }
+                tabAmounts[tab] = count
+                tab++
+            }
         }
+        client.send(SendBankItems(ids, amounts, 5382, tabAmounts))
     }
 
     @JvmStatic
@@ -239,26 +261,26 @@ object PlayerBankService {
         rebuildBankStyleViewContainers(client)
         val size = client.bankSize()
         client.sendString(client.bankStyleViewTitle, 5383)
-        client.send(SendCurrentBankTab(0))
-        var tab = 0
-        while (tab < 11) {
-            val ids = ArrayList<Int>(size)
-            val amounts = ArrayList<Int>(size)
-            var localSlot = 0
-            while (localSlot < size) {
-                val viewSlot = client.bankStyleViewSlotMap[tab][localSlot]
-                if (viewSlot >= 0) {
-                    ids.add(client.bankStyleViewIds[viewSlot])
-                    amounts.add(client.bankStyleViewAmounts[viewSlot])
-                } else {
-                    ids.add(0)
-                    amounts.add(0)
-                }
-                localSlot++
+        client.send(SetVarbit(211, 0))
+        
+        val ids = ArrayList<Int>()
+        val amounts = ArrayList<Int>()
+        val tabAmounts = IntArray(10)
+        
+        var count = 0
+        var localSlot = 0
+        while (localSlot < size) {
+            val viewSlot = client.bankStyleViewSlotMap[0][localSlot]
+            if (viewSlot >= 0) {
+                ids.add(client.bankStyleViewIds[viewSlot])
+                amounts.add(client.bankStyleViewAmounts[viewSlot])
+                count++
             }
-            client.send(SendBankItems(ids, amounts, 50300 + tab))
-            tab++
+            localSlot++
         }
+        tabAmounts[0] = count
+        
+        client.send(SendBankItems(ids, amounts, 5382, tabAmounts))
     }
 
     @JvmStatic
@@ -266,11 +288,44 @@ object PlayerBankService {
         if (containerSlot < 0) {
             return -1
         }
-        if (client.bankStyleViewOpen && interfaceId in 50300..50310) {
+        if (client.bankStyleViewOpen && (interfaceId == 5382 || interfaceId in 50300..50310)) {
             return -1
         }
         if (interfaceId == 5382) {
-            return if (containerSlot < client.bankSize()) containerSlot else -1
+            rebuildBankContainers(client)
+            val size = client.bankSize()
+            if (client.bankSearchActive) {
+                var currentVisualSlot = 0
+                var localSlot = 0
+                while (localSlot < size) {
+                    val globalSlot = client.bankContainerSlotMap[10][localSlot]
+                    if (globalSlot >= 0) {
+                        if (currentVisualSlot == containerSlot) {
+                            return globalSlot
+                        }
+                        currentVisualSlot++
+                    }
+                    localSlot++
+                }
+            } else {
+                var currentVisualSlot = 0
+                var tab = 0
+                while (tab < 10) {
+                    var localSlot = 0
+                    while (localSlot < size) {
+                        val globalSlot = client.bankContainerSlotMap[tab][localSlot]
+                        if (globalSlot >= 0) {
+                            if (currentVisualSlot == containerSlot) {
+                                return globalSlot
+                            }
+                            currentVisualSlot++
+                        }
+                        localSlot++
+                    }
+                    tab++
+                }
+            }
+            return -1
         }
         if (interfaceId !in 50300..50310) {
             return containerSlot
@@ -294,6 +349,97 @@ object PlayerBankService {
         }
     }
 
+    /**
+     * Finds the physical bank slot holding [itemId], ignoring any display/container slot.
+     *
+     * Bank items are unique (each item id occupies at most one bank slot), so the id alone
+     * unambiguously identifies the slot. This mirrors Tarnish's `withdraw()` which recomputes
+     * the slot via `computeIndexForId(itemId)` rather than trusting the slot the client sent —
+     * it is the key to correct withdrawals while searching (the client sends a filtered display
+     * index, but the item id it sends is always the real one shown in the search results).
+     *
+     * Returns -1 if the item is not present in the bank.
+     */
+    @JvmStatic
+    fun resolveBankSlotByItemId(client: Client, itemId: Int): Int {
+        if (itemId < 0) return -1
+        val size = client.bankSize()
+        var i = 0
+        while (i < size) {
+            if (client.bankItems[i] - 1 == itemId && client.bankItemsN[i] > 0) {
+                return i
+            }
+            i++
+        }
+        return -1
+    }
+
+    /**
+     * Compacts bank tab numbers so that occupied tabs are always 0, 1, 2, … with no gaps.
+     *
+     * This is the ub3r equivalent of Tarnish's collapse/shift: when the last item leaves a tab,
+     * the higher tabs slide left to fill the gap. Crucially it also pulls the lowest occupied
+     * tab down to **tab 0** — the Tarnish bank client's tab renderer assumes `tabAmounts[0]` is
+     * never 0 while the bank holds items (it computes `itemSlot = tabAm - tabAmounts[i]`, which
+     * goes negative and throws if tab 0 is empty), producing the disappearing-icon / gap bugs.
+     * Keeping the lowest group in tab 0 mirrors Tarnish, where emptying the main tab pulls the
+     * next tab down into it.
+     *
+     * ub3r tags each slot with its tab rather than physically reordering, so this runs at render
+     * time (it is idempotent) to keep the numbering canonical regardless of which operation
+     * changed it, and remaps the current/previous tab pointers to match.
+     */
+    @JvmStatic
+    fun normalizeBankTabs(client: Client) {
+        val size = client.bankSize()
+        val tabs = client.bankSlotTabs ?: return
+        val occupied = BooleanArray(10)
+        var slot = 0
+        while (slot < size) {
+            if (client.bankItems[slot] > 0 && client.bankItemsN[slot] > 0) {
+                val t = tabs[slot]
+                if (t in 0..9) occupied[t] = true
+            }
+            slot++
+        }
+        // Assign sequential numbers (0,1,2,…) to occupied tabs in ascending order. The lowest
+        // occupied tab becomes tab 0 so the "view all" group is always populated.
+        val remap = IntArray(10) { -1 }
+        var next = 0
+        for (t in 0..9) {
+            if (occupied[t]) {
+                remap[t] = next++
+            }
+        }
+        var changed = false
+        for (t in 0..9) {
+            if (occupied[t] && remap[t] != t) {
+                changed = true
+                break
+            }
+        }
+        if (changed) {
+            slot = 0
+            while (slot < size) {
+                if (client.bankItems[slot] > 0 && client.bankItemsN[slot] > 0) {
+                    val t = tabs[slot]
+                    if (t in 0..9) tabs[slot] = remap[t]
+                } else {
+                    tabs[slot] = 0
+                }
+                slot++
+            }
+        }
+        // Remap the current/previous tab pointers against the new numbering. A pointer at a tab
+        // that is now empty collapses to the "view all" tab (0), matching Tarnish's collapse().
+        if (client.currentBankTab in 1..9) {
+            client.currentBankTab = if (occupied[client.currentBankTab]) remap[client.currentBankTab] else 0
+        }
+        if (client.previousBankTab in 1..9) {
+            client.previousBankTab = if (occupied[client.previousBankTab]) remap[client.previousBankTab] else 0
+        }
+    }
+
     @JvmStatic
     fun assignBankSlotToTab(client: Client, bankSlot: Int, tab: Int) {
         if (client.bankStyleViewOpen) {
@@ -311,7 +457,22 @@ object PlayerBankService {
         if (itemId == 995 && currentTab in 1..9 && tab in 1..9 && currentTab != tab && !hasBankTabItems(client, tab)) {
             return
         }
-        val targetTab = clampOwnedTab(tab)
+        // Clamp the destination so a new tab can only ever be the next sequential one.
+        // Without this, dragging onto a far-right "+" would create e.g. tab 5 while only tab 1
+        // exists, leaving gaps the client can't render. The highest used tab (excluding this
+        // item's own slot) + 1 is the furthest a drag may create.
+        var highestUsed = 0
+        var i = 0
+        val size = client.bankSize()
+        while (i < size) {
+            if (i != bankSlot && client.bankItems[i] > 0 && client.bankItemsN[i] > 0) {
+                val t = client.bankSlotTabs[i]
+                if (t in 1..9 && t > highestUsed) highestUsed = t
+            }
+            i++
+        }
+        val maxAssignable = (highestUsed + 1).coerceAtMost(9)
+        val targetTab = clampOwnedTab(tab).coerceAtMost(maxAssignable)
         client.bankSlotTabs[bankSlot] = targetTab
         if (client.currentBankTab == 10) {
             client.bankSearchActive = false
@@ -331,6 +492,9 @@ object PlayerBankService {
         ensureBankTabState(client)
         if (tab in 1..9 && !hasBankTabItems(client, tab)) {
             client.sendMessage("To create a new tab, drag an item onto this tab.")
+            // The tab button is a client-side config button that locally sets settings[211]=tab.
+            // Send SetVarbit(211, currentBankTab) to revert the client's local change.
+            client.send(SetVarbit(211, client.currentBankTab))
             return
         }
         if (tab != 10 && client.bankSearchActive) {
@@ -404,6 +568,34 @@ object PlayerBankService {
         return false
     }
 
+    /**
+     * Directly deposits [itemId] x [amount] into the bank without going through inventory.
+     * Used by "Deposit worn items" so equipment can be banked even when inventory is full.
+     * Returns false if the bank is full and the deposit could not be completed.
+     */
+    @JvmStatic
+    fun depositItemToBank(client: Client, itemId: Int, amount: Int): Boolean {
+        if (itemId < 0 || amount <= 0) return true
+        ensureBankTabState(client)
+        val unnotedId = client.getUnnotedItem(itemId).takeIf { it != 0 } ?: itemId
+        var bankSlot = -1
+        for (i in 0 until client.bankSize()) {
+            if (client.bankItems[i] - 1 == unnotedId) { bankSlot = i; break }
+        }
+        if (bankSlot == -1) {
+            for (i in 0 until client.bankSize()) {
+                if (client.bankItems[i] <= 0) { bankSlot = i; break }
+            }
+        }
+        if (bankSlot == -1) return false
+        client.bankItems[bankSlot] = unnotedId + 1
+        client.bankItemsN[bankSlot] = (client.bankItemsN[bankSlot].toLong() + amount).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        if (client.bankSlotTabs[bankSlot] == 0 && client.currentBankTab in 1..9 && !client.bankSearchActive) {
+            client.bankSlotTabs[bankSlot] = client.currentBankTab
+        }
+        return true
+    }
+
     @JvmStatic
     fun refreshBankHeader(client: Client) {
         var used = 0
@@ -421,6 +613,7 @@ object PlayerBankService {
 
     private fun rebuildBankContainers(client: Client) {
         ensureBankTabState(client)
+        normalizeBankTabs(client)
         var tab = 0
         while (tab < client.bankContainerSlotMap.size) {
             Arrays.fill(client.bankContainerSlotMap[tab], -1)

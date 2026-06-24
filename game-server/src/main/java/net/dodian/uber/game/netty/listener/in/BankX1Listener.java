@@ -22,7 +22,7 @@ public class BankX1Listener implements PacketListener {
     static { PacketListenerManager.register(135, new BankX1Listener()); }
 
     private static final Logger logger = LoggerFactory.getLogger(BankX1Listener.class);
-    private static final int MIN_PAYLOAD_BYTES = 8;
+    private static final int MIN_PAYLOAD_BYTES = 6;
 
     @Override
     public void handle(Client client, GamePacket packet) {
@@ -31,8 +31,12 @@ public class BankX1Listener implements PacketListener {
             return;
         }
 
-        int interfaceId = ByteBufReader.readInt(buf);
+        // Client wire layout (Client.java action 53):
+        //   writeLEShort(slot)        -> LITTLE endian, normal
+        //   writeShortA(interfaceId)  -> BIG endian, +128 on low byte (ValueType.ADD)
+        //   writeLEShort(itemId)      -> LITTLE endian, normal
         int slot = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
+        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         int itemId = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
 
         if (logger.isTraceEnabled()) {

@@ -1760,6 +1760,10 @@ public class Client extends Player implements Runnable {
         return PlayerBankService.resolveBankItemId(this, interfaceId, containerSlot, fallbackItemId);
     }
 
+    public int resolveBankSlotByItemId(int itemId) {
+        return PlayerBankService.resolveBankSlotByItemId(this, itemId);
+    }
+
     public void assignBankSlotToTab(int bankSlot, int tab) {
         PlayerBankService.assignBankSlotToTab(this, bankSlot, tab);
     }

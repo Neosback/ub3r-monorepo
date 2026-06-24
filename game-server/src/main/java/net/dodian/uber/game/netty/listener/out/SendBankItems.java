@@ -23,6 +23,25 @@ public class SendBankItems implements OutgoingPacket {
     private final List<Integer> itemIds;
     private final List<Integer> amounts;
     private final int interfaceId;
+    private final int[] tabAmounts;
+
+    /**
+     * Creates a new SendBankItems packet with the specified item IDs, amounts, and tab amounts.
+     * 
+     * @param itemIds List of item IDs to send
+     * @param amounts List of corresponding item amounts
+     * @param interfaceId The interface ID to update (default is 5382 for bank)
+     * @param tabAmounts The bank tab amounts array
+     */
+    public SendBankItems(List<Integer> itemIds, List<Integer> amounts, int interfaceId, int[] tabAmounts) {
+        this.itemIds = new ArrayList<>(itemIds);
+        this.amounts = new ArrayList<>(amounts);
+        this.interfaceId = interfaceId;
+        this.tabAmounts = tabAmounts != null ? tabAmounts.clone() : null;
+        if (matchesTraceSubset(this.itemIds, this.amounts, interfaceId)) {
+            logger.info("SendBankItems: for npc {} , {} , {}", this.itemIds, this.amounts, interfaceId);
+        }
+    }
 
     /**
      * Creates a new SendBankItems packet with the specified item IDs and amounts.
@@ -32,12 +51,7 @@ public class SendBankItems implements OutgoingPacket {
      * @param interfaceId The interface ID to update (default is 5382 for bank)
      */
     public SendBankItems(List<Integer> itemIds, List<Integer> amounts, int interfaceId) {
-        this.itemIds = new ArrayList<>(itemIds);
-        this.amounts = new ArrayList<>(amounts);
-        this.interfaceId = interfaceId;
-        if (matchesTraceSubset(this.itemIds, this.amounts, interfaceId)) {
-            logger.info("SendBankItems: for npc {} , {} , {}", this.itemIds, this.amounts, interfaceId);
-        }
+        this(itemIds, amounts, interfaceId, null);
     }
 
     /**
@@ -58,6 +72,12 @@ public class SendBankItems implements OutgoingPacket {
         }
 
         int size = 4 + 2;
+        if (interfaceId == 5382) {
+            size += 2; // tab length short
+            if (tabAmounts != null) {
+                size += tabAmounts.length * 4; // tab amounts ints
+            }
+        }
         for (int i = 0; i < itemIds.size(); i++) {
             size += 4;
             if (amounts.get(i) != 0) {
@@ -72,6 +92,9 @@ public class SendBankItems implements OutgoingPacket {
 
         message.putInt(interfaceId);            // interface ID as int
         message.putShort(itemIds.size());       // number of items
+        if (interfaceId == 5382) {
+            message.putShort(tabAmounts != null ? tabAmounts.length : 0);
+        }
 
         for (int i = 0; i < itemIds.size(); i++) {
             int itemId = itemIds.get(i);
@@ -83,6 +106,12 @@ public class SendBankItems implements OutgoingPacket {
             if (amount != 0) {
                 int containerId = itemId + 1;  // container value (id + 1)
                 message.putShort(containerId, ByteOrder.BIG);
+            }
+        }
+
+        if (interfaceId == 5382 && tabAmounts != null) {
+            for (int amount : tabAmounts) {
+                message.putInt(amount);
             }
         }
 

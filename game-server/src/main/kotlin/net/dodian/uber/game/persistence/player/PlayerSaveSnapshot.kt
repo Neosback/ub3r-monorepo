@@ -69,7 +69,8 @@ data class PlayerSaveSnapshot(
             }
             for (i in client.bankItems.indices) {
                 if (client.bankItems[i] > 0) {
-                    bank.append(i).append('-').append(client.bankItems[i] - 1).append('-').append(client.bankItemsN[i]).append(' ')
+                    val tab = if (client.bankSlotTabs != null && i < client.bankSlotTabs.size) client.bankSlotTabs[i] else 0
+                    bank.append(i).append('-').append(client.bankItems[i] - 1).append('-').append(client.bankItemsN[i]).append('-').append(tab).append(' ')
                 }
             }
             for (i in client.equipment.indices) {

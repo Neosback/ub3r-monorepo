@@ -1,0 +1,39 @@
+package net.dodian.uber.game.netty.listener.in;
+
+import io.netty.buffer.ByteBuf;
+import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.game.GamePacket;
+import net.dodian.uber.game.netty.listener.PacketListener;
+import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.engine.systems.net.PacketBankingService;
+
+/**
+ * Netty port of the legacy "Withdraw-All but one" packet (opcode 140).
+ * Client wire layout (see Client.java action 291 / Buffer writers):
+ *   writeShortA(slot)        -> BIG endian, +128 on low byte (ValueType.ADD)
+ *   writeShort(interfaceId)  -> BIG endian, normal
+ *   writeShortA(itemId)      -> BIG endian, +128 on low byte (ValueType.ADD)
+ */
+public class BankAllButOneListener implements PacketListener {
+
+    static { PacketListenerManager.register(140, new BankAllButOneListener()); }
+
+    private static final int MIN_PAYLOAD_BYTES = 6;
+
+    @Override
+    public void handle(Client client, GamePacket packet) {
+        ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
+
+        int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.NORMAL);
+        int removeId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+
+        PacketBankingService.handleAllButOneDecoded(client, interfaceId, removeSlot, removeId);
+    }
+}

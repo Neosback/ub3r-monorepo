@@ -48,7 +48,7 @@ object PacketBankingService {
     @JvmStatic
     fun handleTabCreation(client: Client, fromInterface: Int, dragFromSlot: Int, toTab: Int) {
         if (!client.IsBanking || client.bankStyleViewOpen) return
-        if (fromInterface < 50300 || fromInterface > 50310) return
+        if (fromInterface != 5382 && (fromInterface < 50300 || fromInterface > 50310)) return
         val clampedTab = toTab.coerceIn(0, 10)
         val bankSlot = client.resolveBankSlot(fromInterface, dragFromSlot)
         if (bankSlot < 0) return
@@ -79,7 +79,10 @@ object PacketBankingService {
                 }
             }
             interfaceId == 5382 || interfaceId in 50300..50310 -> {
-                bankSlot = client.resolveBankSlot(interfaceId, removeSlot)
+                // Resolve by the item id the client reported (unique in the bank) rather than the
+                // display slot, so withdrawals are correct while searching / across tabs.
+                val byId = client.resolveBankSlotByItemId(removeId)
+                bankSlot = if (byId >= 0) byId else client.resolveBankSlot(interfaceId, removeSlot)
                 if (bankSlot >= 0 && bankSlot < client.bankItems.size && client.bankItems[bankSlot] > 0) {
                     resolvedItemId = client.bankItems[bankSlot] - 1
                 }
@@ -103,8 +106,9 @@ object PacketBankingService {
         var bankSlot = removeSlot
         var resolvedItemId = removeId
         if (interfaceId == 5382 || interfaceId in 50300..50310) {
-            bankSlot = client.resolveBankSlot(interfaceId, removeSlot)
-            resolvedItemId = client.resolveBankItemId(interfaceId, removeSlot, removeId)
+            val byId = client.resolveBankSlotByItemId(removeId)
+            bankSlot = if (byId >= 0) byId else client.resolveBankSlot(interfaceId, removeSlot)
+            resolvedItemId = if (bankSlot >= 0 && client.bankItems[bankSlot] > 0) client.bankItems[bankSlot] - 1 else removeId
         }
         handleFixedAmount(client, interfaceId, resolvedItemId, removeSlot, bankSlot, amount)
     }
@@ -123,9 +127,10 @@ object PacketBankingService {
         var resolvedSlot = slot
         var resolvedItemId = itemId
         if (interfaceId == 5382 || interfaceId in 50300..50310) {
-            resolvedItemId = client.resolveBankItemId(interfaceId, slot, itemId)
-            resolvedSlot = client.resolveBankSlot(interfaceId, slot)
+            val byId = client.resolveBankSlotByItemId(itemId)
+            resolvedSlot = if (byId >= 0) byId else client.resolveBankSlot(interfaceId, slot)
             if (resolvedSlot < 0) return
+            resolvedItemId = if (client.bankItems[resolvedSlot] > 0) client.bankItems[resolvedSlot] - 1 else itemId
         }
         handleXPrompt(client, interfaceId, resolvedSlot, resolvedItemId)
     }
@@ -144,10 +149,32 @@ object PacketBankingService {
         var bankSlot = removeSlot
         var resolvedItemId = removeID
         if (interfaceId == 5382 || interfaceId in 50300..50310) {
-            bankSlot = client.resolveBankSlot(interfaceId, removeSlot)
-            resolvedItemId = client.resolveBankItemId(interfaceId, removeSlot, removeID)
+            val byId = client.resolveBankSlotByItemId(removeID)
+            bankSlot = if (byId >= 0) byId else client.resolveBankSlot(interfaceId, removeSlot)
+            resolvedItemId = if (bankSlot >= 0 && client.bankItems[bankSlot] > 0) client.bankItems[bankSlot] - 1 else removeID
         }
         handleRemoveItem(client, interfaceId, removeSlot, resolvedItemId, bankSlot)
+    }
+
+    // -------------------------------------------------------------------------
+    // Decoded entry-point for "Withdraw-All but one" (opcode 140)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Resolves the bank slot by item id, then withdraws (stack count - 1).
+     * Only meaningful for the bank interface; ignored elsewhere.
+     */
+    @JvmStatic
+    fun handleAllButOneDecoded(client: Client, interfaceId: Int, removeSlot: Int, removeId: Int) {
+        if (interfaceId != 5382 && interfaceId !in 50300..50310) return
+        if (client.bankStyleViewOpen) return
+        val byId = client.resolveBankSlotByItemId(removeId)
+        val bankSlot = if (byId >= 0) byId else client.resolveBankSlot(interfaceId, removeSlot)
+        if (bankSlot < 0 || bankSlot >= client.bankItems.size || client.bankItems[bankSlot] <= 0) return
+        val resolvedItemId = client.bankItems[bankSlot] - 1
+        val amount = client.bankItemsN[bankSlot] - 1
+        if (amount < 1) return
+        handleFixedAmount(client, interfaceId, resolvedItemId, removeSlot, bankSlot, amount)
     }
 
     @JvmStatic

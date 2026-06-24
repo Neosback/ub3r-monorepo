@@ -1,0 +1,45 @@
+package net.dodian.uber.game.netty.listener.in;
+
+import io.netty.buffer.ByteBuf;
+import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.game.GamePacket;
+import net.dodian.uber.game.netty.listener.PacketListener;
+import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.engine.systems.net.PacketBankingService;
+
+/**
+ * Netty port of the legacy "Withdraw-{remembered X}" packet (opcode 141).
+ * Sent when the player picks the cached custom-X amount on a bank item.
+ * Client wire layout (see Client.java action 300 / Buffer writers):
+ *   writeShortA(slot)        -> BIG endian, +128 on low byte (ValueType.ADD)
+ *   writeShort(interfaceId)  -> BIG endian, normal
+ *   writeShortA(itemId)      -> BIG endian, +128 on low byte (ValueType.ADD)
+ *   writeDWord(amount)       -> BIG endian int
+ */
+public class BankWithdrawRememberedXListener implements PacketListener {
+
+    static { PacketListenerManager.register(141, new BankWithdrawRememberedXListener()); }
+
+    private static final int MIN_PAYLOAD_BYTES = 10;
+
+    @Override
+    public void handle(Client client, GamePacket packet) {
+        ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
+
+        int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.NORMAL);
+        int removeId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int amount = buf.readInt();
+        if (amount < 1) {
+            return;
+        }
+
+        PacketBankingService.handleFixedAmountDecoded(client, interfaceId, removeId, removeSlot, amount);
+    }
+}

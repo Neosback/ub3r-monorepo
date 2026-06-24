@@ -179,7 +179,10 @@ class PlayerSaveSqlRepository(
     }
 
     private fun encodeItemSlots(entries: List<ItemSlotEntry>): String =
-        entries.joinToString(" ") { entry -> "${entry.slot}-${entry.itemId}-${entry.amount}" }
+        entries.joinToString(" ") { entry ->
+            if (entry.tab != 0) "${entry.slot}-${entry.itemId}-${entry.amount}-${entry.tab}"
+            else "${entry.slot}-${entry.itemId}-${entry.amount}"
+        }
 
     private fun encodeNamedCounts(entries: List<NamedCountEntry>, kvSeparator: String, entrySeparator: String): String =
         entries.joinToString(entrySeparator) { entry -> "${entry.name}$kvSeparator${entry.count}" }

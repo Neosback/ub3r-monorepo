@@ -92,6 +92,8 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.Bank5Listener");     // opcode 117
             Class.forName("net.dodian.uber.game.netty.listener.in.BankX1Listener");    // opcode 135
             Class.forName("net.dodian.uber.game.netty.listener.in.BankX2Listener");    // opcode 208
+            Class.forName("net.dodian.uber.game.netty.listener.in.BankAllButOneListener");          // opcode 140
+            Class.forName("net.dodian.uber.game.netty.listener.in.BankWithdrawRememberedXListener"); // opcode 141
             
             // Load MagicOnNpcListener for opcode 131
             Class.forName("net.dodian.uber.game.netty.listener.in.MagicOnNpcListener");
@@ -102,6 +104,7 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.MoveItemsListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.UpdateChatListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.SyntaxInputListener");
+            Class.forName("net.dodian.uber.game.netty.listener.in.InputFieldListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.BankTabCreationListener");
             
             // Register no-op handlers for unused opcodes
