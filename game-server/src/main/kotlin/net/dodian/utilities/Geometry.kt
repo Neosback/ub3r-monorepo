@@ -1,7 +1,7 @@
 package net.dodian.utilities
 
 import net.dodian.cache.objects.GameObjectDef
-import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditStore
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.objects.DoorRegistry
 
@@ -95,14 +95,18 @@ object Geometry {
         y: Int,
         h: Int,
     ): GameObjectDef? {
+        // Doors are runtime-mutated (opened/closed), so they win over the static cache.
         for (i in DoorRegistry.doorId.indices) {
             if (DoorRegistry.doorId[i] == objectId && DoorRegistry.doorX[i] == x && DoorRegistry.doorY[i] == y) {
                 return GameObjectDef(objectId, 2, 0, Position(x, y))
             }
         }
-        for (obj in Server.objects) {
-            if (obj.id == objectId && obj.x == x && obj.y == y) {
-                return GameObjectDef(objectId, obj.type, 0, Position(x, y))
+        // Source type + rotation from the decoded cache (matches the client world), not the stale
+        // MySQL game_object_definitions table. The cache carries the real type and rotation/face,
+        // which the interaction reach (InteractionReachService) needs to compute valid faces.
+        for (obj in CacheCollisionAuditStore.objectsForTile(x, y)) {
+            if (obj.objectId == objectId && obj.x == x && obj.y == y && obj.plane == h) {
+                return GameObjectDef(objectId, obj.type, obj.rotation, Position(x, y))
             }
         }
         return null

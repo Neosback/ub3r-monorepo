@@ -13,7 +13,10 @@ class CacheBootstrapService(
     private val collisionBuildService = CollisionBuildService(CollisionManager.global())
 
     fun bootstrap(): MapIndexTable {
-        CacheUpdateService(cachePath).updateIfNecessary()
+        // Auto-download disabled: the server now uses the local tarnish-218 cache (matching the
+        // client). CacheUpdateService re-downloads the legacy dodian cache from exorth.net, which
+        // overwrites the tarnish-218 main_file_cache and desyncs server collision from the client.
+        // CacheUpdateService(cachePath).updateIfNecessary()
         val store = CacheStore(cachePath).open()
         return try {
             val objectDefinitions = ObjectDefinitionDecoder.decode(store)

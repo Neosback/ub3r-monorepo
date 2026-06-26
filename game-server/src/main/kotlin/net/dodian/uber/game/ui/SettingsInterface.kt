@@ -11,8 +11,9 @@ object SettingsInterface : InterfaceButtonContent {
     private const val SETTINGS_TAB_ID = 44500
     private const val MORE_SETTINGS_TAB_ID = 23000
 
-    private val openMoreSettingsButtons = intArrayOf(44511)
-    private val closeMoreSettingsButtons = intArrayOf(23020)
+    // 44511 and 23020 were old client buttons; no longer present in new client.
+    // 50040 is "Advanced options" toggle within ROOT 50020 — handled client-side, server acks only.
+    private val advancedOptionsAckButtons = intArrayOf(50040)
     private val pinHelpButtons = intArrayOf(58073)
     private val bossYellEnableButtons = intArrayOf(24136)
     private val bossYellDisableButtons = intArrayOf(24137)
@@ -31,12 +32,7 @@ object SettingsInterface : InterfaceButtonContent {
 
     override val bindings =
         listOf(
-            buttonBinding(-1, 0, "settings.open_more", openMoreSettingsButtons) { client, _ ->
-                client.setSidebarInterface(11, MORE_SETTINGS_TAB_ID)
-                true
-            },
-            buttonBinding(-1, 1, "settings.close_more", closeMoreSettingsButtons) { client, _ ->
-                client.setSidebarInterface(11, SETTINGS_TAB_ID)
+            buttonBinding(-1, 0, "settings.advanced_options_ack", advancedOptionsAckButtons) { _, _ ->
                 true
             },
             buttonBinding(-1, 2, "settings.pin_help", pinHelpButtons) { client, _ ->

@@ -21,21 +21,38 @@ object ObjectDefinitionDecoder {
         }
 
         val idxReader = CacheBuffer(locIdx)
-        val count = idxReader.readUnsignedShort()
-        val indices = IntArray(count)
-        var offset = 2
-        for (id in 0 until count) {
+        // Index convention matches the client (ObjectDefinition.unpackConfig): the first short is the
+        // highest file id, data offsets accumulate from 0, and a 65535 size terminates the table.
+        val highestFileId = idxReader.readUnsignedShort()
+        val indices = IntArray(highestFileId + 1)
+        var present = 0
+        var offset = 0
+        for (id in 0..highestFileId) {
+            val size = idxReader.readUnsignedShort()
+            if (size == 65535) {
+                break
+            }
             indices[id] = offset
-            offset += idxReader.readUnsignedShort()
+            offset += size
+            present = id + 1
         }
 
         val dataReader = CacheBuffer(locDat)
-        val definitions = HashMap<Int, GameObjectData>(count)
+        val definitions = HashMap<Int, GameObjectData>(present)
         var interactiveCount = 0
         var blockingCount = 0
-        for (id in 0 until count) {
+        var failed = 0
+        for (id in 0 until present) {
             dataReader.seek(indices[id])
-            val definition = decodeEntry(id, dataReader)
+            val definition =
+                try {
+                    decodeEntry(id, dataReader)
+                } catch (ex: RuntimeException) {
+                    // Skip an individual malformed/unused definition rather than aborting the whole
+                    // bootstrap (mirrors the client, which simply never decodes such entries).
+                    failed++
+                    continue
+                }
             definitions[id] = definition
             if (definition.hasActions()) {
                 interactiveCount++
@@ -43,6 +60,10 @@ object ObjectDefinitionDecoder {
             if (definition.blockWalk() != 0) {
                 blockingCount++
             }
+        }
+        if (failed > 0) {
+            org.slf4j.LoggerFactory.getLogger(ObjectDefinitionDecoder::class.java)
+                .warn("Skipped {} malformed object definitions during decode", failed)
         }
 
         return Result(
@@ -54,7 +75,7 @@ object ObjectDefinitionDecoder {
 
     private fun decodeEntry(id: Int, data: CacheBuffer): GameObjectData {
         var name = "null"
-        var description = "null"
+        val description = "null" // not stored in tarnish-218 cache (opcode 3 is a no-op)
         var sizeX = 1
         var sizeY = 1
         var solid = true
@@ -122,8 +143,11 @@ object ObjectDefinitionDecoder {
                     }
                 }
 
+                // tarnish-218 cache uses null-terminated (byte 0) strings, matching the client's
+                // ObjectDefinition.decode (readStringCp1252NullTerminated). Opcode 3 carries no
+                // payload in this cache (the client reads nothing for it).
                 2 -> name = data.readStringNullTerminated()
-                3 -> description = data.readStringNullTerminated()
+                3 -> Unit
                 5 -> {
                     val amount = data.readUnsignedByte()
                     if (amount > 0) {

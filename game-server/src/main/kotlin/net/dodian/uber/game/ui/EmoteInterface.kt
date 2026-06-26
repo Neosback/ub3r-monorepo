@@ -11,15 +11,19 @@ import net.dodian.uber.game.model.item.Equipment
 
 object EmoteInterface : InterfaceButtonContent {
     private val standardEmoteButtons: IntArray = Emotes.values().map { it.buttonId }.toIntArray()
-    private val goblinBowButtons = intArrayOf(88060)
-    private val goblinSaluteButtons = intArrayOf(88061)
-    private val glassBoxButtons = intArrayOf(88062)
-    private val climbRopeButtons = intArrayOf(88063)
-    private val leanButtons = intArrayOf(59062)
-    private val glassWallButtons = intArrayOf(72254)
-    private val ideaButtons = intArrayOf(72033)
-    private val stompButtons = intArrayOf(72032)
-    private val skillcapeButtons = intArrayOf(74108)
+    // Old IDs (all wrong — from stale pre-client-update values):
+    //   goblinBow=88060, goblinSalute=88061, glassBox=88062, climbRope=88063,
+    //   lean=59062, glassWall=72254, idea=72033, stomp=72032, skillcape=74108
+    // New IDs from dump ROOT 147:
+    private val goblinBowButtons = intArrayOf(13383)
+    private val goblinSaluteButtons = intArrayOf(13384)
+    private val glassBoxButtons = intArrayOf(667)
+    private val climbRopeButtons = intArrayOf(6503)
+    private val leanButtons = intArrayOf(6506)
+    private val glassWallButtons = intArrayOf(666)
+    private val ideaButtons = intArrayOf(18700)
+    private val stompButtons = intArrayOf(18701)
+    private val skillcapeButtons = intArrayOf(19052)
 
     override val bindings =
         listOf(
@@ -76,6 +80,45 @@ object EmoteInterface : InterfaceButtonContent {
                 } else {
                     client.sendMessage("You need to be wearing a skillcape to do that!")
                 }
+                true
+            },
+            // Unlockable emotes present in ROOT 147 that had no handler (buttons from new client).
+            // Animation IDs from Tarnish Emote.java.
+            buttonBinding(-1, 10, "emotes.special.scared", intArrayOf(15166)) { client, _ ->
+                client.performAnimation(2836, 0)
+                true
+            },
+            buttonBinding(-1, 11, "emotes.special.zombie_walk", intArrayOf(18464)) { client, _ ->
+                client.performAnimation(3544, 0)
+                true
+            },
+            buttonBinding(-1, 12, "emotes.special.zombie_dance", intArrayOf(18465)) { client, _ ->
+                client.performAnimation(3543, 0)
+                true
+            },
+            buttonBinding(-1, 13, "emotes.special.bunny_hop", intArrayOf(18686)) { client, _ ->
+                client.performAnimation(6111, 0)
+                true
+            },
+            buttonBinding(-1, 14, "emotes.special.sit_up", intArrayOf(22588)) { client, _ ->
+                client.performAnimation(2763, 0)
+                true
+            },
+            buttonBinding(-1, 15, "emotes.special.push_up", intArrayOf(22589)) { client, _ ->
+                client.performAnimation(2756, 0)
+                true
+            },
+            buttonBinding(-1, 16, "emotes.special.star_jump", intArrayOf(22590)) { client, _ ->
+                client.performAnimation(2761, 0)
+                true
+            },
+            buttonBinding(-1, 17, "emotes.special.jog", intArrayOf(22591)) { client, _ ->
+                client.performAnimation(2764, 0)
+                true
+            },
+            buttonBinding(-1, 18, "emotes.special.zombie_hand", intArrayOf(22593)) { client, _ ->
+                client.performAnimation(4513, 0)
+                client.gfx0(320)
                 true
             },
         )

@@ -139,7 +139,11 @@ class CollisionManager(
                     && canStep(currentX + stepX, currentY, z, 0, stepY, xLength, yLength)
             val verticalFirst = canStep(currentX, currentY, z, 0, stepY, xLength, yLength)
                     && canStep(currentX, currentY + stepY, z, stepX, 0, xLength, yLength)
-            if (!horizontalFirst && !verticalFirst) {
+            // Require BOTH orthogonal neighbours clear (no corner-cutting), matching the client's
+            // diagonal mask and Tarnish TraversalMap.isTraversableNorthEast/…. Previously used `&&`
+            // on the negations (allowed if EITHER L-path was clear), which let players noclip
+            // through wall corners on interpolated/two-click diagonal steps.
+            if (!horizontalFirst || !verticalFirst) {
                 return false
             }
             if (isAnyFullBlocked(destinationX, destinationY, z, xLength, yLength)) {
