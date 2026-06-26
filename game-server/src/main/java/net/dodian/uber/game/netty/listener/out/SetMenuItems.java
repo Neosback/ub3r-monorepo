@@ -24,13 +24,11 @@ public class SetMenuItems implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage msg = ByteMessage.message(53, MessageType.VAR_SHORT);
-        msg.putInt(8847);                       // interface id
-        // Write item count as short (2 bytes) - matches client's incoming.readShort()
+        msg.putInt(8847);                      
         msg.putShort(items.length);
         // Write each item
         for (int id : items) {
             msg.putInt(1);
-            // Item id as big-endian short - matches client's incoming.readShort()
             msg.putShort(id + 1);
         }
         client.send(msg);

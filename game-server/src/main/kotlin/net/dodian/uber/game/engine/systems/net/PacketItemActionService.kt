@@ -11,10 +11,8 @@ import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 /**
- * Kotlin service for item-interaction packet side-effects that must be kept
  * out of the Netty listener layer.
  *
- * Covers:
  * - WearItem (opcode 41)
  * - ClickItem2 / ClickItem3 / UseItemOnNpc validation disconnects
  * - UseItemOnPlayer / Christmas cracker (opcode 14)
@@ -62,7 +60,6 @@ object PacketItemActionService {
     }
 
     /**
-     * Processes a first-click item action (opcode 122) after slot validation.
      * Enforces duel-rules guards and dispatches via ItemDispatcher.
      */
     @JvmStatic
@@ -86,7 +83,6 @@ object PacketItemActionService {
     }
 
     /**
-     * Handles a Use-Item-On-Player action (opcode 14).
      * Currently supports the Christmas cracker (item 962) and the hot-potato
      * internal mini-game (item 5733).
      */

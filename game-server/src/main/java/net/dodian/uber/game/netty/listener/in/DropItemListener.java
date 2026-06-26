@@ -14,9 +14,7 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty port of legacy DropItem (opcode 87).
- */
+
 public class DropItemListener implements PacketListener {
 
     static { PacketListenerManager.register(87, new DropItemListener()); }

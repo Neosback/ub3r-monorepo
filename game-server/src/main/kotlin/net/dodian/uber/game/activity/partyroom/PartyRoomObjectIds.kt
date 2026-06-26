@@ -14,4 +14,3 @@ object PartyRoomObjectIds {
     val allObjects: IntArray
         get() = allObjectIds
 }
-

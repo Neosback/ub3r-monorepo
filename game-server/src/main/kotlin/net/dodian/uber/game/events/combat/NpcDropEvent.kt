@@ -16,4 +16,3 @@ data class NpcDropEvent(
     val drops: List<GameItem>,
     val position: Position,
 ) : GameEvent
-

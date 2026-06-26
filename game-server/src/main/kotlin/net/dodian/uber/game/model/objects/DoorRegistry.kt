@@ -74,4 +74,3 @@ class DoorRegistry @JvmOverloads constructor(
         var doorState: IntArray = IntArray(DEFAULT_CAPACITY)
     }
 }
-

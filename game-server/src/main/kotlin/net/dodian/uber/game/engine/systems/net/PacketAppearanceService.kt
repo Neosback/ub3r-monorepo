@@ -21,4 +21,3 @@ object PacketAppearanceService {
         client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
     }
 }
-

@@ -22,9 +22,7 @@ import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 /**
- * Kotlin service for magic-packet side-effects.
  *
- * Covers:
  * - MagicOnPlayer (opcode 249)
  * - MagicOnNpc (opcode 131)
  * - NpcAttack magicId reset in NpcInteractionListener
@@ -126,7 +124,6 @@ object PacketMagicService {
      */
     @JvmStatic
     fun handleMagicOnItem(client: Client, castOnSlot: Int, castOnItem: Int, castSpell: Int) {
-        // Validate slot bounds — disconnect on tampered packet
         if (castOnSlot < 0 || castOnSlot > 28) {
             client.disconnected = true
             return
@@ -253,4 +250,3 @@ object PacketMagicService {
         client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
     }
 }
-

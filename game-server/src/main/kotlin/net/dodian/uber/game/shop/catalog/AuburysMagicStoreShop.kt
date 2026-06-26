@@ -20,4 +20,3 @@ object AuburysMagicStoreShop : ShopPlugin {
             item(4097, 10)
         }.definition
 }
-

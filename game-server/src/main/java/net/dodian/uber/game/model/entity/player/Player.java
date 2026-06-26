@@ -74,7 +74,7 @@ public abstract class Player extends Entity {
     public boolean premium = false, randomed = false, genieCombatFlag = false;
     public int playerGroup = 3, latestNews = 0, dbId = -1, questPage = 0, playerRights; //Online stuff!
     public int[] playerLooks = new int[13];
-    public boolean saveNeeded = true, lookNeeded = false, discord = false;
+    public boolean saveNeeded = true, lookNeeded = false, discord = false, lockExperience = false;
     private final PlayerAccountState accountState = new PlayerAccountState(this);
     private final PlayerInteractionState interactionState = new PlayerInteractionState();
     private final PlayerMovementState movementState = new PlayerMovementState(this);
@@ -157,12 +157,7 @@ public abstract class Player extends Entity {
     private long walkBlockUntilCycle = -1L;
     public boolean xLog = false;
     public ArrayList<PartyRoomRewardItem> offeredPartyItems = new ArrayList<>();
-    /*
-     Entity(1 = player, 2 = npc, 3 = object, 4 = itemInv)
-     slot
-     id
-     functionId (1 = use item on entity, 2 = click entity)
-     */
+    
     public ArrayList<Integer> playerPotato = new ArrayList<>();
     //Herblore service
     public int herbMaking = -1;
@@ -1925,11 +1920,7 @@ public abstract class Player extends Entity {
             this.name = name;
             this.coordValue = coordValue;
         }
-	  /*
-	  2619, 3073
-	  2539, 3073
-	  2539, 3108
-	  */ //Test Yanille coords.
+	   //Test Yanille coords.
     }
 
     private static final positions[] POSITION_VALUES = positions.values();

@@ -263,4 +263,3 @@ object TeleportObjectContent : ObjectContent {
         return false
     }
 }
-

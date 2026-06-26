@@ -21,4 +21,3 @@ object NpcDropMath {
         return if (minAmount == maxAmount) minAmount else minAmount + Misc.random(maxAmount - minAmount)
     }
 }
-

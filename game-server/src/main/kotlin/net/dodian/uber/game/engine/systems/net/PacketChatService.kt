@@ -9,7 +9,6 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ChatLog
 
 /**
- * Kotlin service for public-chat packet side-effects (opcode 4).
  *
  * Moves all [Client.setChatText*], [Client.invalidateCachedUpdateBlock] and
  * guard-message sends out of ChatListener, leaving the listener as a

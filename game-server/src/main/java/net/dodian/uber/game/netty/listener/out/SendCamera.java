@@ -38,7 +38,6 @@ public class SendCamera implements OutgoingPacket {
         ByteMessage message = null;
         switch (mode) {
             case "update":
-                // SPIN_CAMERA (opcode 166): x, y, height, speed, angle
                 message = ByteMessage.message(166);
                 message.put(x / 64);
                 message.put(y / 64);
@@ -47,7 +46,6 @@ public class SendCamera implements OutgoingPacket {
                 message.put(angle);
                 break;
             case "rotation":
-                // MOVE_CAMERA (opcode 177): x, y, height, speed1, speed2
                 message = ByteMessage.message(177);
                 message.put(x);
                 message.put(y);
@@ -56,10 +54,8 @@ public class SendCamera implements OutgoingPacket {
                 message.put(sp2);
                 break;
             case "location":
-                // This mode was not implemented in the legacy code.
                 break;
             case "spin":
-                // SPIN_CAMERA (opcode 166): x, y, height, speed, angle
                 message = ByteMessage.message(166);
                 message.put(x / 64);
                 message.put(y / 64);

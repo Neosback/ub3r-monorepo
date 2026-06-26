@@ -142,4 +142,3 @@ object FletchingItemCombinations {
         return false
     }
 }
-

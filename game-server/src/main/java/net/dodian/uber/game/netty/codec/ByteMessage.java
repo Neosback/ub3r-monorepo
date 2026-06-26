@@ -129,19 +129,12 @@ public final class ByteMessage extends DefaultByteBufHolder {
     private int bitIndex = -1;
 
     static {
-        // Initialize bit masks.
         for (int i = 0; i < BIT_MASK.length; i++) {
             BIT_MASK[i] = (1 << i) - 1;
         }
     }
 
-    /**
-     * Creates a new {@link ByteMessage}.
-     *
-     * @param buf The backing buffer.
-     * @param opcode The opcode.
-     * @param type The header type.
-     */
+    
     private ByteMessage(ByteBuf buf, int opcode, MessageType type) {
         super(buf);
         this.buf = buf;

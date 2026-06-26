@@ -30,7 +30,7 @@ public class ItemOnGroundItemListener implements PacketListener {
             return;
         }
 
-        int unknown1 = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL); // interface id of item
+        int unknown1 = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
         int unknown2 = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);   // item in bag id
         int floorID = buf.readUnsignedByte();
         int floorY = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);

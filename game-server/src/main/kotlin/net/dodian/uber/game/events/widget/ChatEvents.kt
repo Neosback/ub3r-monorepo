@@ -21,4 +21,3 @@ data class PrivateMessageEvent(
     val targetName: String,
     val message: String,
 ) : GameEvent
-

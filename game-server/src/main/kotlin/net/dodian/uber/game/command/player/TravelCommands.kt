@@ -62,4 +62,3 @@ private fun handlePosition(context: CommandContext): Boolean {
     }
     return false
 }
-

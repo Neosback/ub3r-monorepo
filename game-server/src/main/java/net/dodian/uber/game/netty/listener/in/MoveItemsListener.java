@@ -31,7 +31,6 @@ public class MoveItemsListener implements PacketListener {
         }
 
         int interfaceId = ByteBufReader.readInt(buf);
-        // Client writes writeNegatedByte(mode) = (byte)(-mode); recover original mode.
         int rawModeByte = buf.readUnsignedByte();
         int mode = (-rawModeByte) & 0xFF;
         int itemFrom = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
@@ -43,7 +42,6 @@ public class MoveItemsListener implements PacketListener {
 
         logger.debug("MoveItems: iface={} mode={} from={} to={}", interfaceId, mode, itemFrom, itemTo);
 
-        // mode=2 means the player dragged a bank item onto a tab button; itemTo is the tab index.
         if (mode == 2) {
             PacketBankingService.handleTabCreation(client, interfaceId, itemFrom, itemTo);
             return;

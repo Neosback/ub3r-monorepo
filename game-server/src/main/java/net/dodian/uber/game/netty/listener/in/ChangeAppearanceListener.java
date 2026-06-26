@@ -27,7 +27,6 @@ public class ChangeAppearanceListener implements PacketListener {
         PacketListenerManager.register(101, new ChangeAppearanceListener());
     }
 
-    // Packet is a fixed 13 bytes (each a signed byte in legacy stream)
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
@@ -44,4 +43,3 @@ public class ChangeAppearanceListener implements PacketListener {
         PacketAppearanceService.handleAppearanceChange(client, looks);
     }
 }
-

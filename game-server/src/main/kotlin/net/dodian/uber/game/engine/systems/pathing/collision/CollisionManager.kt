@@ -85,6 +85,14 @@ class CollisionManager(
 
     fun traversable(x: Int, y: Int, z: Int, dx: Int, dy: Int): Boolean = canStep(x - dx, y - dy, z, dx, dy, 1, 1)
 
+    fun projectileTraversable(x: Int, y: Int, z: Int, dx: Int, dy: Int): Boolean {
+        if (matrix.hasAllFlags(x, y, z, CollisionFlag.FULL_PROJECTILE_BLOCK)) {
+            return false
+        }
+        val flags = matrix.getFlags(x, y, z)
+        return flags and CollisionFlag.projectileApproachMask(dx, dy) == 0
+    }
+
     fun getFlags(x: Int, y: Int, z: Int): Int = matrix.getFlags(x, y, z)
 
     fun isTileBlocked(x: Int, y: Int, z: Int): Boolean = matrix.hasAllFlags(x, y, z, CollisionFlag.FULL_MOB_BLOCK)

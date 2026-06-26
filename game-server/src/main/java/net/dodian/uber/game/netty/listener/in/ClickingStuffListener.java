@@ -9,10 +9,7 @@ import net.dodian.uber.game.engine.systems.net.PacketInterfaceCloseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty implementation of the miscellaneous interface-click packet (opcode 130).
- * Decodes payload then delegates all state logic to PacketInterfaceCloseService.
- */
+
 public class ClickingStuffListener implements PacketListener {
 
     static { PacketListenerManager.register(130, new ClickingStuffListener()); }

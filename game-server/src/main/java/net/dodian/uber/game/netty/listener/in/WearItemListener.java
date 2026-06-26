@@ -12,10 +12,7 @@ import net.dodian.uber.game.engine.systems.net.PacketItemActionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty implementation for opcode 41 (wear/equip item).
- * Decodes packet fields and delegates to PacketItemActionService.
- */
+
 public class WearItemListener implements PacketListener {
 
     static { PacketListenerManager.register(41, new WearItemListener()); }
@@ -39,4 +36,3 @@ public class WearItemListener implements PacketListener {
         PacketItemActionService.handleWear(client, wearId, wearSlot, interfaceId);
     }
 }
-

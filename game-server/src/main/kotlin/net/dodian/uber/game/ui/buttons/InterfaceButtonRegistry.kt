@@ -38,10 +38,11 @@ object InterfaceButtonRegistry {
     fun resolve(client: Client, rawButtonId: Int, opIndex: Int): InterfaceButtonBinding? {
         bootstrap()
         val table = byRawButtonId
-        if (rawButtonId < 0 || rawButtonId >= table.size) {
+        val normalizedId = if (rawButtonId in -32768..-1) rawButtonId + 65536 else rawButtonId
+        if (normalizedId < 0 || normalizedId >= table.size) {
             return null
         }
-        val bindings = table[rawButtonId] ?: return null
+        val bindings = table[normalizedId] ?: return null
         val opMatches = bindings.filter { it.opIndex == null || it.opIndex == opIndex }
         return opMatches.firstOrNull { it.requiredInterfaceId == -1 || it.requiredInterfaceId == client.activeInterfaceId }
             ?: opMatches.firstOrNull()

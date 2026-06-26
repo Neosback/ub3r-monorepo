@@ -27,4 +27,3 @@ object RangeStoreShop : ShopPlugin {
             item(886, 2000)
         }.definition
 }
-

@@ -10,15 +10,7 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketBankingService;
 
-/**
- * Netty port of the legacy "Withdraw-{remembered X}" packet (opcode 141).
- * Sent when the player picks the cached custom-X amount on a bank item.
- * Client wire layout (see Client.java action 300 / Buffer writers):
- *   writeShortA(slot)        -> BIG endian, +128 on low byte (ValueType.ADD)
- *   writeShort(interfaceId)  -> BIG endian, normal
- *   writeShortA(itemId)      -> BIG endian, +128 on low byte (ValueType.ADD)
- *   writeDWord(amount)       -> BIG endian int
- */
+
 public class BankWithdrawRememberedXListener implements PacketListener {
 
     static { PacketListenerManager.register(141, new BankWithdrawRememberedXListener()); }

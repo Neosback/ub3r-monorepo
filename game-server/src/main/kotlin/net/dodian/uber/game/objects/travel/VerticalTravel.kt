@@ -39,4 +39,3 @@ object VerticalTravel {
         return true
     }
 }
-

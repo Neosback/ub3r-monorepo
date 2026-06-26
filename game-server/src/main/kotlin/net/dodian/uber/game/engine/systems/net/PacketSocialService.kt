@@ -7,7 +7,6 @@ import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 import net.dodian.uber.game.engine.systems.interaction.commands.CommandDispatcher
 
 /**
- * Kotlin service for social/chat-command packet side-effects that must stay
  * out of Netty inbound listeners.
  */
 object PacketSocialService {
@@ -50,4 +49,3 @@ object PacketSocialService {
         client.removeIgnore(encodedName)
     }
 }
-

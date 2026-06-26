@@ -61,4 +61,3 @@ object StaffToolItemContent : ItemContent {
         return true
     }
 }
-

@@ -5,9 +5,7 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.MessageType;
 
-/**
- * Outgoing packet 196 – sends a private message to another player.
- */
+
 public class PrivateMessage implements OutgoingPacket {
 
     private final long recipient;
@@ -33,7 +31,7 @@ public class PrivateMessage implements OutgoingPacket {
         for (int i = 0; i < size; i++) {
             msg.put(message[i]);
         }
-        msg.put(10);  // String terminator - client expects readString()
+        msg.put(10); 
         client.send(msg);
     }
 }

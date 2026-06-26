@@ -68,4 +68,3 @@ class SlotSpin(
 
     fun getWinnings(): Int = payout
 }
-

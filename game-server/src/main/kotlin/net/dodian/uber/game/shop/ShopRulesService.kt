@@ -53,4 +53,3 @@ object ShopRulesService {
     @JvmStatic
     fun isShopCurrency(itemId: Int): Boolean = ShopCatalog.all().any { it.currencyItemId == itemId }
 }
-

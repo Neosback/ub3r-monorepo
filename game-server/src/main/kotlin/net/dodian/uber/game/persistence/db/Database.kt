@@ -37,34 +37,24 @@ private fun createDataSource(): HikariDataSource {
         username = databaseUsername
         password = databasePassword
         driverClassName = "com.mysql.cj.jdbc.Driver"
-
-        // Pool configuration
         minimumIdle = databasePoolMinSize
         maximumPoolSize = databasePoolMaxSize
         connectionTimeout = databasePoolConnectionTimeout
         idleTimeout = databasePoolIdleTimeout
         maxLifetime = databasePoolMaxLifetime
 
-        // Connection properties
         addDataSourceProperty("autoReconnect", "true")
         addDataSourceProperty("serverTimezone", "UTC")
 
-        // Pool name for monitoring
         poolName = "DodianDB-Pool"
 
-        // Validation
         connectionTestQuery = "SELECT 1"
         validationTimeout = 5000
 
-        // Leak detection (warn after 30 seconds)
-        // This is a key feature. Hikari will log a warning with the stack trace
-        // of where the connection was acquired if it's not closed within this time.
         leakDetectionThreshold = 30000
 
-        // Enable JMX monitoring
         isRegisterMbeans = true
 
-        // Connection init SQL for debugging
         connectionInitSql = "SELECT 1"
     }
 
@@ -80,7 +70,6 @@ private fun createDataSource(): HikariDataSource {
         logger.info("  - Connection proxy: disabled")
         logger.info("  - Database: ${config.jdbcUrl}")
 
-        // Start pool monitoring
         startPoolMonitoring(hikariDataSource)
     }
 }
@@ -111,13 +100,11 @@ private fun startPoolMonitoring(hikariDataSource: HikariDataSource) {
         try {
             val poolStats = hikariDataSource.hikariPoolMXBean
 
-            // Warn if pool utilization is high
             val utilizationPercent = (poolStats.activeConnections.toDouble() / databasePoolMaxSize) * 100
             if (utilizationPercent > 80) {
                 logger.warn("[Pool Monitor] High pool utilization: ${utilizationPercent.toInt()}% (${poolStats.activeConnections}/${databasePoolMaxSize})")
             }
 
-            // Warn if threads are waiting
             if (poolStats.threadsAwaitingConnection > 0) {
                 logger.warn("[Pool Monitor] ${poolStats.threadsAwaitingConnection} threads waiting for connections!")
             }
@@ -136,7 +123,6 @@ fun closeConnectionPool() {
 
     logger.info("Shutting down connection pool...")
 
-    // Stop monitoring
     if (schedulerLazy.isInitialized()) {
         val scheduler = schedulerLazy.value
         scheduler.shutdown()
@@ -149,7 +135,6 @@ fun closeConnectionPool() {
         }
     }
 
-    // Close pool
     val dataSource = dataSourceLazy.value
     val poolStats = dataSource.hikariPoolMXBean
     logger.info("Final pool stats - Active: ${poolStats.activeConnections}, Idle: ${poolStats.idleConnections}, Total: ${poolStats.totalConnections}")

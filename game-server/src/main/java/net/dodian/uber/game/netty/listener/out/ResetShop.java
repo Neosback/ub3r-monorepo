@@ -24,15 +24,12 @@ public class ResetShop implements OutgoingPacket {
         // int interfaceId, short itemCount, then for each slot:
         //   int amount, and if amount != 0 then short id (container value)
 
-        // Interface ID for shop items container
-        message.putInt(3900); // matches client.readInt()
-        // Number of shop slots we are sending
+        message.putInt(3900);
         message.putShort(ShopManager.MaxShopItems);
 
         for (int i = 0; i < ShopManager.MaxShopItems; i++) {
             int amount = ShopManager.ShopItemsN[shopId][i];
 
-            // Write amount as full int to match incoming.readInt()
             message.putInt(amount);
 
             if (amount != 0) {
@@ -40,7 +37,6 @@ public class ResetShop implements OutgoingPacket {
                 if (itemId < 0) {
                     itemId = 0;
                 }
-                // Item id as big-endian short, matching incoming.readShort()
                 message.putShort(itemId, ByteOrder.BIG);
             }
         }

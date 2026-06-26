@@ -9,9 +9,7 @@ import net.dodian.uber.game.engine.systems.net.PacketSocialService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty port of AddFriend (opcode 188).
- */
+
 public class AddFriendListener implements PacketListener {
 
     static { PacketListenerManager.register(188, new AddFriendListener()); }
@@ -21,7 +19,7 @@ public class AddFriendListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
-        long friend = buf.readLong(); // big-endian QWord
+        long friend = buf.readLong();
         logger.debug("AddFriendListener: {} adds {}", client.getPlayerName(), friend);
         PacketSocialService.handleAddFriend(client, friend);
     }

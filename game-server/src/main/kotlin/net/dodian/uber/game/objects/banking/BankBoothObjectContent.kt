@@ -41,4 +41,3 @@ object BankBoothObjectContent : ObjectContent {
         return true
     }
 }
-

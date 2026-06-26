@@ -9,4 +9,3 @@ interface ItemContent {
     fun onSecondClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean = false
     fun onThirdClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean = false
 }
-

@@ -26,4 +26,3 @@ object ChristmasEventStoreShop : ShopPlugin {
             item(12854, 1000)
         }.definition
 }
-

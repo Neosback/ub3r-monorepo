@@ -87,4 +87,3 @@ enum class Skillcape(
         }
     }
 }
-

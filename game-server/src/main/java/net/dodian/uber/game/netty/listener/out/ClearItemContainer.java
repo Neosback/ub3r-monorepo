@@ -22,12 +22,7 @@ public class ClearItemContainer implements OutgoingPacket {
     private final int interfaceId;
     private final int slotCount;
 
-    /**
-     * Creates a new ClearItemContainer packet.
-     * 
-     * @param interfaceId The interface ID to clear
-     * @param slotCount The number of slots to clear (typically 28)
-     */
+    
     public ClearItemContainer(int interfaceId, int slotCount) {
         this.interfaceId = interfaceId;
         this.slotCount = slotCount;

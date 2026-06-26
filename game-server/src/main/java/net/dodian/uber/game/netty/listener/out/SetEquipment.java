@@ -7,22 +7,14 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
 import net.dodian.uber.game.ui.combat.CombatStyleService;
 
-/**
- * Sent to update a player's equipment in a specific slot.
- */
+
 public class SetEquipment implements OutgoingPacket {
 
     private final int wearId;
     private final int amount;
     private final int targetSlot;
 
-    /**
-     * Creates a new SetEquipment packet.
-     * 
-     * @param wearId The ID of the item to equip (0 to clear the slot)
-     * @param amount The amount/stack size of the item
-     * @param targetSlot The equipment slot to update
-     */
+    
     public SetEquipment(int wearId, int amount, int targetSlot) {
         this.wearId = wearId;
         this.amount = amount;
@@ -34,8 +26,8 @@ public class SetEquipment implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(34, MessageType.VAR_SHORT);
-        message.putShort(1688);            // interface ID (equipment interface)
-        message.put(targetSlot);           // equipment slot
+        message.putShort(1688);           
+        message.put(targetSlot);          
 
         // Client expects: amount (int), then item id (short)
         message.putInt(amount);            // stack size

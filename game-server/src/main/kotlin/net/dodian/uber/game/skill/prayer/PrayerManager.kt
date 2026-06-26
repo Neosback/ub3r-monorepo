@@ -187,4 +187,3 @@ class PrayerManager(player: Player) {
     }
 }
 
-

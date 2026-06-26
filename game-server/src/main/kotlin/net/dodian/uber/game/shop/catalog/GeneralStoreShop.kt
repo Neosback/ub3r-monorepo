@@ -20,4 +20,3 @@ object GeneralStoreShop : ShopPlugin {
             item(1925, 1337)
         }.definition
 }
-

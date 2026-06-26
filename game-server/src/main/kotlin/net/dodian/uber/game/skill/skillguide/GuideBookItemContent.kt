@@ -11,4 +11,3 @@ object GuideBookItemContent : ItemContent {
         return true
     }
 }
-

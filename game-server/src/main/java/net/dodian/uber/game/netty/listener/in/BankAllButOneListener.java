@@ -10,13 +10,7 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketBankingService;
 
-/**
- * Netty port of the legacy "Withdraw-All but one" packet (opcode 140).
- * Client wire layout (see Client.java action 291 / Buffer writers):
- *   writeShortA(slot)        -> BIG endian, +128 on low byte (ValueType.ADD)
- *   writeShort(interfaceId)  -> BIG endian, normal
- *   writeShortA(itemId)      -> BIG endian, +128 on low byte (ValueType.ADD)
- */
+
 public class BankAllButOneListener implements PacketListener {
 
     static { PacketListenerManager.register(140, new BankAllButOneListener()); }

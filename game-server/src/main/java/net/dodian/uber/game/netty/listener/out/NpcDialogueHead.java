@@ -19,8 +19,6 @@ public class NpcDialogueHead implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(75);
-        // Client reads: readLEUShortA() for npcId, readLEUShortA() for interfaceId
-        // LEUShortA = Little-Endian Unsigned Short with ADD transform on low byte
         message.putShort(mainFrame, ByteOrder.LITTLE, ValueType.ADD);
         message.putShort(subFrame, ByteOrder.LITTLE, ValueType.ADD);
         client.send(message);

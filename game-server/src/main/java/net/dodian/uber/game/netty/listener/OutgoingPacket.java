@@ -2,13 +2,7 @@ package net.dodian.uber.game.netty.listener;
 
 import net.dodian.uber.game.model.entity.player.Client;
 
-/**
- * Modern Netty-based outgoing packet interface for pure Netty implementation.
- * Designed for performance and simplicity with zero-copy principles.
- * 
- * All outgoing packets should implement this interface and create ByteMessage
- * objects to send through the pure Netty pipeline.
- */
+
 @FunctionalInterface
 public interface OutgoingPacket {
     

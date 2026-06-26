@@ -53,4 +53,3 @@ fun shop(name: String, shopId: Int, block: ShopPluginBuilder.() -> Unit): ShopPl
 
 fun shop(shopId: ShopId, block: ShopPluginBuilder.() -> Unit): ShopPlugin =
     shop(name = shopId.displayName, shopId = shopId.id, block = block)
-

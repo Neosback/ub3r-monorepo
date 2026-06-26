@@ -115,4 +115,3 @@ fun MapIndexTable.withDecodedData(
         summary = regions.toSummary(tileGrids, objects),
     )
 
-

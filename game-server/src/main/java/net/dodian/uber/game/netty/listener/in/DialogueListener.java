@@ -8,10 +8,7 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.events.widget.DialogueContinueEvent;
 
-/**
- * Netty implementation of legacy {@code Dialogue} (opcode 40).
- * The packet carries no useful payload; behaviour depends solely on client state fields.
- */
+
 public class DialogueListener implements PacketListener {
 
     static { PacketListenerManager.register(40, new DialogueListener()); }

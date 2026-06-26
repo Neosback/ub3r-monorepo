@@ -65,6 +65,19 @@ object CollisionFlag {
             else -> 0
         }
 
+    fun projectileApproachMask(dx: Int, dy: Int): Int =
+        when {
+            dx == -1 && dy == 1 -> PROJECTILE_SOUTH_EAST or PROJECTILE_SOUTH or PROJECTILE_EAST
+            dx == 0 && dy == 1 -> PROJECTILE_SOUTH
+            dx == 1 && dy == 1 -> PROJECTILE_SOUTH_WEST or PROJECTILE_SOUTH or PROJECTILE_WEST
+            dx == -1 && dy == 0 -> PROJECTILE_EAST
+            dx == 1 && dy == 0 -> PROJECTILE_WEST
+            dx == -1 && dy == -1 -> PROJECTILE_NORTH_EAST or PROJECTILE_NORTH or PROJECTILE_EAST
+            dx == 0 && dy == -1 -> PROJECTILE_NORTH
+            dx == 1 && dy == -1 -> PROJECTILE_NORTH_WEST or PROJECTILE_NORTH or PROJECTILE_WEST
+            else -> 0
+        }
+
     fun singleDirectionFlag(dx: Int, dy: Int, projectile: Boolean = false): Int {
         val flags = if (projectile) PROJECTILES else MOBS
         return when {

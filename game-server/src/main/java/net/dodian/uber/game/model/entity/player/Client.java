@@ -1127,7 +1127,6 @@ public class Client extends Player implements Runnable {
                 p.DuelVictory();
             }
         }
-        // TODO: Look into improving this, and potentially a system to configure player saving per world id...
         if ((getServerEnv().equals("prod") && getGameWorldId() < 2) || getServerEnv().equals("dev") || getPlayerName().toLowerCase().startsWith("pro noob")) {
             try {
                 AccountPersistenceService.requestSave(this, reason, updateProgress, logout);
@@ -2390,11 +2389,9 @@ public class Client extends Player implements Runnable {
     public boolean DeleteArrow() {
         int arrowSlot = Equipment.Slot.ARROWS.getId();
         if (getEquipmentN()[arrowSlot] > 0) {
-            // Decrement arrow count
             getEquipmentN()[arrowSlot] -= 1;
             int remainingAmount = getEquipmentN()[arrowSlot];
             
-            // Get the current arrow item ID (or -1 if no arrows left)
             int arrowId = getEquipment()[arrowSlot];
             if (remainingAmount < 1) {
                 getEquipment()[arrowSlot] = -1;
@@ -3134,10 +3131,8 @@ public class Client extends Player implements Runnable {
             return;
         }
         
-        // Send our offered items to interface 6669
         send(new DuelItemsUpdate(6669, offeredItems, true));
         
-        // Send other player's offered items to interface 6670  
         send(new DuelItemsUpdate(6670, other.offeredItems, true));
     }
 
@@ -4189,7 +4184,6 @@ public class Client extends Player implements Runnable {
         if (level != lastWildLevelSent) {
             send(new SetWildernessLevel(level));
             lastWildLevelSent = level;
-            // The wilderness overlay uses walkable interface id 197.
             // Keep the cached walkable-interface state in sync so that
             // setWalkableInterface(6673) can properly restore the normal UI.
             currentWalkableInterface = 197;
@@ -4352,7 +4346,6 @@ public class Client extends Player implements Runnable {
      * @param c The client to send the equipment to
      */
     public void sendDuelArmour(Client c) {
-        // Create and send a new DuelArmourUpdate packet with the current equipment
         c.send(new DuelArmourUpdate(getEquipment(), getEquipmentN()));
     }
 

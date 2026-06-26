@@ -11,9 +11,7 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.utilities.Utils;
 
-/**
- * Netty implementation of private-message send (opcode 126).
- */
+
 @PacketHandler(opcode = 126)
 public class SendPrivateMessageListener implements PacketListener {
 

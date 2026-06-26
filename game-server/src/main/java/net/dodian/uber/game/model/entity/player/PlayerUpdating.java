@@ -58,22 +58,18 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         try {
             sendServerUpdateIfNeeded(player);
 
-            // Ensure the player is registered in the chunk index before discovery.
             player.syncChunkMembership();
 
             boolean localPlayerUpdateRequired = hasUpdatesForPhase(player, UpdatePhase.UPDATE_SELF);
             updateLocalPlayerMovement(player, stream, localPlayerUpdateRequired);
 
-            // Handle teleportation - clear player list but continue to local player discovery
             if (player.didTeleport()) {
-                // Clear existing player list when teleporting (similar to Hyperion's approach)
                 if (player.playerListSize > 0 || !player.playersUpdating.isEmpty()) {
                     player.bumpLocalPlayerMembershipRevision();
                 }
                 java.util.Arrays.fill(player.playerList, 0, player.playerListSize, null);
                 player.playerListSize = 0;
                 player.playersUpdating.clear();
-                // Don't return early - allow local player discovery to happen
             }
 
             appendBlockUpdate(player, updateBlock, UpdatePhase.UPDATE_SELF);
@@ -118,7 +114,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             if (updateBlock.getBuffer().writerIndex() > 0) {
                 stream.putBytes(updateBlock);
             }
-            // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
 
             if (DEBUG_REGION_UPDATES && logger.isTraceEnabled()) {
                 int rx = player.getPosition().getX() >> 6;
@@ -436,12 +431,10 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     public void updateLocalPlayerMovement(Player player, ByteMessage stream, boolean localPlayerUpdateRequired) {
         /* Noob! */
         if(player.didMapRegionChange()) {
-            // Send map region change as separate packet (73)
             ((Client) player).send(new net.dodian.uber.game.netty.listener.out.MapRegionUpdate(player.mapRegionX, player.mapRegionY));
             ((Client) player).updateGroundItems();
             StaticObjectOverrides.replayTo((Client) player);
         }
-        // This should match the original: createFrameVarSizeWord(81) + initBitAccess()
         // But we're doing this in the packet wrapper instead
         stream.startBitAccess();
         if (player.didTeleport()) {
@@ -746,7 +739,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     @Override
     public void appendAnimationRequest(Player player, ByteMessage buf) {
-        buf.putShort(player.getAnimationId(), ByteOrder.LITTLE); // writeWordBigEndian is actually little-endian!
+        buf.putShort(player.getAnimationId(), ByteOrder.LITTLE);
         buf.put(player.getAnimationDelay(), ValueType.NEGATE); // writeByteC = -value, not 128-value
     }
 

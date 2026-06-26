@@ -11,10 +11,7 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketBankingService;
 
-/**
- * Netty version of legacy {@code RemoveItem} (opcode 145).
- * Decodes packet fields then delegates to PacketBankingService.handleRemoveItemDecoded.
- */
+
 @PacketHandler(opcode = 145)
 public class RemoveItemListener implements PacketListener {
 

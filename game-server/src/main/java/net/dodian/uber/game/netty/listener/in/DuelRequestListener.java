@@ -9,10 +9,7 @@ import net.dodian.uber.game.engine.systems.net.PacketInteractionRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty port of DuelRequest (opcode 153).
- * Decodes pid, then delegates all logic to PacketInteractionRequestService.
- */
+
 public class DuelRequestListener implements PacketListener {
 
     static { PacketListenerManager.register(153, new DuelRequestListener()); }

@@ -205,4 +205,3 @@ private class PlaneStaticObjectOverrideBuilder(
         replaceObject(3284, 2809, newObjectId = 20391, face = 2, objectType = 0)
     }
 }
-

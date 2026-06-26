@@ -16,4 +16,3 @@ object JatixHerbloreStoreShop : ShopPlugin {
             item(11879, 100)
         }.definition
 }
-

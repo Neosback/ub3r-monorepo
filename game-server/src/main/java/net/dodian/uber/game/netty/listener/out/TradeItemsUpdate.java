@@ -8,29 +8,13 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 
 import java.util.Collection;
 
-/**
- * Updates trade interface with items.
- * This replaces the legacy resetTItems() and resetOTItems() methods with proper Netty implementation.
- *
- * Packet structure (must match mystic client's SEND_UPDATE_ITEMS handler):
- * - Opcode: 53 (variable size word)
- * - Interface ID: 4 bytes (int)
- * - Item count: 2 bytes (short)
- * - For each item:
- *   - Amount: 4 bytes (int)
- *   - Item ID: 2 bytes (short) - only if amount > 0
- */
+
 public class TradeItemsUpdate implements OutgoingPacket {
 
     private final int interfaceId;
     private final Collection<GameItem> items;
 
-    /**
-     * Creates a new TradeItemsUpdate packet.
-     *
-     * @param interfaceId The interface ID (WriteFrame parameter)
-     * @param items The collection of items to display
-     */
+    
     public TradeItemsUpdate(int interfaceId, Collection<GameItem> items) {
         this.interfaceId = interfaceId;
         this.items = items;

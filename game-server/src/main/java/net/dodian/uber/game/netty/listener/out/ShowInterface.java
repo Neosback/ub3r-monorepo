@@ -4,11 +4,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 
-/**
- * Sends interface opcode (97) to open a specific interface on the client.
- * This replaces the legacy client.openInterface(int) implementation
- * and uses the complete Netty pipeline (ByteMessage -> ByteMessageEncoder -> GamePacketEncoder).
- */
+
 public final class ShowInterface implements OutgoingPacket {
 
     private final int interfaceId;

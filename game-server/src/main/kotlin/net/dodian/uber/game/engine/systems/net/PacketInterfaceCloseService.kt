@@ -6,7 +6,6 @@ import net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 
 /**
- * Kotlin service for the miscellaneous interface-close packet (opcode 130).
  *
  * Moves all [Client] state mutations (banking, shop, duel, trade closures) and
  * [RemoveInterfaces] sends out of [ClickingStuffListener], leaving that listener
@@ -15,7 +14,6 @@ import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionServic
 object PacketInterfaceCloseService {
 
     /**
-     * Handles the full close-interfaces packet logic.
      * Called after the single-byte payload is consumed by the listener.
      */
     @JvmStatic
@@ -67,7 +65,7 @@ object PacketInterfaceCloseService {
             TradeDuelSessionService.closeOpenTrade(client)
         }
         if (client.currentSkill >= 0) {
-            client.currentSkill = -1 // Close skill menu interface
+            client.currentSkill = -1
         }
     }
 }

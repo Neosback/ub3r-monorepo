@@ -84,4 +84,3 @@ private fun ResultSet.toDoorDefinition(): DoorDefinition =
         face = getInt("doorFace"),
         state = getInt("doorState"),
     )
-

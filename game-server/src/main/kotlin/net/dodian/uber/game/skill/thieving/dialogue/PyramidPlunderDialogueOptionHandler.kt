@@ -19,4 +19,3 @@ object PyramidPlunderDialogueOptionHandler {
         return true
     }
 }
-

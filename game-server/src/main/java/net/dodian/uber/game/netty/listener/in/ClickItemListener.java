@@ -33,12 +33,10 @@ public class ClickItemListener implements PacketListener {
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
 
-        // Faithful replication of legacy decoding order with the corrected item ID read.
         int interfaceId = buf.readUnsignedShort();
         int itemId = buf.readUnsignedShort();
         int itemSlot = buf.readUnsignedShort();
 
-        // Debug line to confirm packet data is now being read correctly.
         logger.debug("ClickItem: [interface={}, slot={}, id={}] for player {}", interfaceId, itemSlot, itemId, client.getPlayerName());
 
         if (Runecrafting.fillPouch(client, itemId)) {

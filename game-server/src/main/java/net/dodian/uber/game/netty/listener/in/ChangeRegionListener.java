@@ -10,10 +10,7 @@ import net.dodian.uber.game.engine.systems.net.PacketConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty replacement for legacy ChangeRegion packet (opcodes 121, 210).
- * Packet has no payload; behaviour is identical to legacy handler.
- */
+
 @PacketHandler(opcode = 121) // primary opcode (loads new area)
 public class ChangeRegionListener implements PacketListener {
 
@@ -36,4 +33,3 @@ public class ChangeRegionListener implements PacketListener {
         PacketConnectionService.handleRegionChange(client, packet.opcode() == 121);
     }
 }
-

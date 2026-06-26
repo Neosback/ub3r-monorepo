@@ -11,7 +11,6 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 
 /**
- * Kotlin service for ground-item pickup packet logic (opcode 236).
  *
  * The full business logic — guard messages, action cancellation, ground-item
  * lookup, pickup scheduling — lives here rather than in the listener.
@@ -21,7 +20,6 @@ object PacketPickupService {
         LocalDate.of(2024, 6, 1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 
     /**
-     * Processes a pick-up-ground-item request after the listener has decoded
      * item id and world coordinates and passed throttle checks.
      *
      * @param client the requesting player

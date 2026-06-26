@@ -37,4 +37,3 @@ class PartyRoomRewardItem {
         this.itemPos = pos
     }
 }
-

@@ -12,4 +12,3 @@ object GlobalPulseService {
         return cycle % pulseTicks == 0L
     }
 }
-

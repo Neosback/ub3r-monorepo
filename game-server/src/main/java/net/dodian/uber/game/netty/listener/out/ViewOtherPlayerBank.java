@@ -9,20 +9,13 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Sent to allow staff members to view another player's bank contents.
- */
+
 public class ViewOtherPlayerBank implements OutgoingPacket {
 
     private final int interfaceId;
     private final List<GameItem> bankItems;
 
-    /**
-     * Creates a new ViewOtherPlayerBank packet.
-     * 
-     * @param interfaceId The interface ID to display the bank in
-     * @param bankItems The list of GameItems in the other player's bank
-     */
+    
     public ViewOtherPlayerBank(int interfaceId, List<GameItem> bankItems) {
         this.interfaceId = interfaceId;
         this.bankItems = new ArrayList<>(bankItems);

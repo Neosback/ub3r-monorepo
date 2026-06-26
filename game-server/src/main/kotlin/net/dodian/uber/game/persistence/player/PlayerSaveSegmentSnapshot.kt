@@ -90,4 +90,3 @@ data class MetaSegmentSnapshot(
 ) : PlayerSaveSegmentSnapshot {
     override val segment: PlayerSaveSegment = PlayerSaveSegment.META
 }
-

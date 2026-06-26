@@ -55,4 +55,48 @@ object DialogueUi {
         }
         sendChatboxInterface(base)
     }
+
+    @JvmStatic
+    fun showStatement(client: Client, text: Array<String>) = with(client) {
+        when (text.size) {
+            1 -> {
+                send(SendString(text[0], 357))
+                sendChatboxInterface(356)
+            }
+            2 -> {
+                send(SendString(text[0], 360))
+                send(SendString(text[1], 361))
+                sendChatboxInterface(359)
+            }
+            3 -> {
+                send(SendString(text[0], 364))
+                send(SendString(text[1], 365))
+                send(SendString(text[2], 366))
+                sendChatboxInterface(363)
+            }
+            4 -> {
+                send(SendString(text[0], 369))
+                send(SendString(text[1], 370))
+                send(SendString(text[2], 371))
+                send(SendString(text[3], 372))
+                sendChatboxInterface(368)
+            }
+            5 -> {
+                send(SendString(text[0], 375))
+                send(SendString(text[1], 376))
+                send(SendString(text[2], 377))
+                send(SendString(text[3], 378))
+                send(SendString(text[4], 379))
+                sendChatboxInterface(374)
+            }
+            else -> {
+                send(SendString(text[0], 375))
+                send(SendString(text[1], 376))
+                send(SendString(text[2], 377))
+                send(SendString(text[3], 378))
+                send(SendString(text[4], 379))
+                sendChatboxInterface(374)
+            }
+        }
+    }
 }

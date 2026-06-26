@@ -29,7 +29,7 @@ public class UseItemOnPlayerListener implements PacketListener {
         if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
             return;
         }
-        ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD); // unused index – matches legacy discard
+        ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
         int playerSlot = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.NORMAL);
         int itemId = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.NORMAL);
         int crackerSlot = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);

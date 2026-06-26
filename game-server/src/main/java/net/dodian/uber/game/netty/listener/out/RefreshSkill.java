@@ -17,14 +17,7 @@ public class RefreshSkill implements OutgoingPacket {
     private final int maxLevel;
     private final int experience;
 
-    /**
-     * Creates a new RefreshSkill packet.
-     * 
-     * @param skill The skill to refresh
-     * @param level The current level to display (including boosts)
-     * @param maxLevel The maximum level in this skill
-     * @param experience The current experience in the skill
-     */
+    
     public RefreshSkill(Skill skill, int level, int maxLevel, int experience) {
         this.skill = skill;
         this.level = level;

@@ -18,7 +18,6 @@ public final class KeepAliveListener implements PacketListener {
     private static final Logger logger = LoggerFactory.getLogger(KeepAliveListener.class);
 
     static {
-        // Manual registration until reflection-based auto register is built
         PacketListenerManager.register(0, new KeepAliveListener());
     }
 
@@ -27,4 +26,3 @@ public final class KeepAliveListener implements PacketListener {
         PacketConnectionService.handleKeepAlive(client);
     }
 }
-

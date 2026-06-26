@@ -9,9 +9,7 @@ import net.dodian.uber.game.engine.systems.net.PacketSocialService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty port of RemoveIgnore (opcode 74).
- */
+
 public class RemoveIgnoreListener implements PacketListener {
 
     static { PacketListenerManager.register(74, new RemoveIgnoreListener()); }

@@ -9,16 +9,16 @@ package net.dodian.uber.game.api.plugin.dsl
  * Inspired by Luna's `PluginBuilderReceiver`.
  */
 class PluginMetadata {
-    /** The display name of the plugin. */
+    
     var name: String? = null
 
-    /** A short description of what this plugin does. */
+    
     var description: String? = null
 
-    /** The version of this plugin. */
+    
     var version: String = "1.0.0"
 
-    /** The owner of this plugin module (team, org, or individual). */
+    
     var owner: String? = null
 
     /**

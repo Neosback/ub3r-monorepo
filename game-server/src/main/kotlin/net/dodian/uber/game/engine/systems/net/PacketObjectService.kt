@@ -11,12 +11,10 @@ import net.dodian.uber.game.engine.systems.interaction.scheduler.ObjectInteracti
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 /**
- * Kotlin service for object-interaction packet side-effects that must stay out
  * of Netty inbound listeners.
  */
 object PacketObjectService {
     /**
-     * Processes an object-click packet after the listener has decoded the click
      * option and object coordinates/id.
      */
     @JvmStatic
@@ -46,7 +44,6 @@ object PacketObjectService {
     }
 
     /**
-     * Processes an item-on-object packet after the listener has decoded packet
      * fields.
      */
     @JvmStatic
@@ -80,5 +77,4 @@ object PacketObjectService {
         InteractionTaskScheduler.schedule(client, intent, ObjectInteractionTask(client, intent))
     }
 }
-
 

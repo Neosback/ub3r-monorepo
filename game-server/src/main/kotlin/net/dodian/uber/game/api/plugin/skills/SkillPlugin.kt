@@ -111,4 +111,3 @@ fun SkillObjectClickBinding.objectPolicy() = UnifiedPolicyDsl.toObjectPolicy(pre
 fun SkillItemOnObjectBinding.objectPolicy() = UnifiedPolicyDsl.toObjectPolicy(preset)
 
 fun SkillMagicOnObjectBinding.objectPolicy() = UnifiedPolicyDsl.toObjectPolicy(preset)
-

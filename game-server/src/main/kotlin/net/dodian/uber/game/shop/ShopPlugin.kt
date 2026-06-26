@@ -14,4 +14,3 @@ interface ShopPlugin : PluginModuleMetadataProvider {
             owner = "commerce",
         )
 }
-

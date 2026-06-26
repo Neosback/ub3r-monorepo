@@ -208,7 +208,6 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         sendLoginSuccess(ctx, client.playerRights);
 
         // CRITICAL: Setup game pipeline BEFORE PlayerInitializer sends packets
-        // Remove handshake & login-specific decoders first
         if (ctx.pipeline().get(net.dodian.uber.game.netty.login.LoginPayloadDecoder.class) != null) {
             ctx.pipeline().remove(net.dodian.uber.game.netty.login.LoginPayloadDecoder.class);
         }

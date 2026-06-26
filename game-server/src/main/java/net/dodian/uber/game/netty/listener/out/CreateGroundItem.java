@@ -23,7 +23,7 @@ public class CreateGroundItem implements OutgoingPacket {
         ByteMessage message = ByteMessage.message(44);
         message.putShort(item.getId(), ByteOrder.LITTLE, ValueType.ADD);
         message.putShort(item.getAmount());
-        message.put(0); // offset byte (0 since SetMap already set exact position)
+        message.put(0);
         client.send(message);
     }
 

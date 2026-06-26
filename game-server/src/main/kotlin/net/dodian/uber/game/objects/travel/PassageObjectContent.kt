@@ -147,4 +147,3 @@ object PassageObjectContent : ObjectContent {
         }
     }
 }
-

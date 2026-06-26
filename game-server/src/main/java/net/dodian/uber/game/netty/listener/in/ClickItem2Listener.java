@@ -52,4 +52,3 @@ public class ClickItem2Listener implements PacketListener {
         }
     }
 }
-

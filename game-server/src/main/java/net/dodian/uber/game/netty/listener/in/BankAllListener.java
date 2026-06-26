@@ -10,10 +10,7 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketBankingService;
 
-/**
- * Netty port of legacy BankAll packet (opcode 129).
- * Decodes packet fields, then delegates to PacketBankingService.handleBankAllDecoded.
- */
+
 public class BankAllListener implements PacketListener {
 
     static { PacketListenerManager.register(129, new BankAllListener()); }

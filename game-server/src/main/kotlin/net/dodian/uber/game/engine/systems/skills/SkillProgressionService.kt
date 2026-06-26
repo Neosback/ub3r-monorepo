@@ -72,6 +72,11 @@ object SkillProgressionService {
     }
 
     private fun applyGainXp(client: Client, request: SkillProgressionRequest): SkillProgressionResult {
+        if (client.lockExperience) {
+            val xp = client.getExperience(request.skill)
+            val level = Skills.getLevelForExperience(xp)
+            return SkillProgressionResult(false, request.mode, request.skill, xp, xp, level, level, 0)
+        }
         if (request.amount < 1) {
             val xp = client.getExperience(request.skill)
             val level = Skills.getLevelForExperience(xp)

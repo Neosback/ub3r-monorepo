@@ -9,9 +9,7 @@ import net.dodian.uber.game.engine.systems.net.PacketSocialService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty port of RemoveFriend (opcode 215).
- */
+
 public class RemoveFriendListener implements PacketListener {
 
     static { PacketListenerManager.register(215, new RemoveFriendListener()); }
@@ -21,7 +19,7 @@ public class RemoveFriendListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
-        long friend = buf.readLong(); // big-endian qword
+        long friend = buf.readLong();
         logger.debug("RemoveFriendListener: {} removes {}", client.getPlayerName(), friend);
         PacketSocialService.handleRemoveFriend(client, friend);
     }

@@ -21,7 +21,7 @@ object PacketBankingService {
     // Bank search (SyntaxInputListener opcode 60)
     // -------------------------------------------------------------------------
 
-    /** Returns true when the client has a pending bank search input to process. */
+    
     @JvmStatic
     fun hasPendingBankSearch(client: Client): Boolean = client.bankSearchPendingInput
 
@@ -66,7 +66,6 @@ object PacketBankingService {
      */
     @JvmStatic
     fun handleBankAllDecoded(client: Client, interfaceId: Int, removeSlot: Int, removeId: Int) {
-        // Guard: cannot interact while the styled bank view is open
         if ((interfaceId == 5382 || interfaceId in 50300..50310) && client.bankStyleViewOpen) return
 
         var bankSlot = removeSlot

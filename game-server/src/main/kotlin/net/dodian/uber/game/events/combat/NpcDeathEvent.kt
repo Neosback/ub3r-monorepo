@@ -13,4 +13,3 @@ data class NpcDeathEvent(
     val killer: Client?,
     val cycle: Long,
 ) : GameEvent
-

@@ -13,4 +13,3 @@ data class WalkEvent(
     val client: Client,
     val destination: Position,
 ) : GameEvent
-

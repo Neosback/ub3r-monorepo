@@ -17,4 +17,3 @@ object NpcUpdateMaskCalculator {
         return updateMask
     }
 }
-

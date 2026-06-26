@@ -7,9 +7,7 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
 import net.dodian.uber.game.netty.codec.ValueType;
 
-/**
- * Sent to update the client's bank interface with the current bank contents.
- */
+
 public class ResetBank implements OutgoingPacket {
 
     @Override

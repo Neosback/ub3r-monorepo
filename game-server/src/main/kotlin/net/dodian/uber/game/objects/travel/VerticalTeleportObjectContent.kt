@@ -125,4 +125,3 @@ object VerticalTeleportObjectContent : VerticalTravelDslObjectContent(
         }
     },
 )
-

@@ -10,10 +10,7 @@ import net.dodian.uber.game.engine.systems.net.PacketPickupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty port of PickUpGroundItem (opcode 236).
- * Decodes coordinates, applies throttle, then delegates to PacketPickupService.
- */
+
 public class PickUpGroundItemListener implements PacketListener {
 
     static { PacketListenerManager.register(236, new PickUpGroundItemListener()); }

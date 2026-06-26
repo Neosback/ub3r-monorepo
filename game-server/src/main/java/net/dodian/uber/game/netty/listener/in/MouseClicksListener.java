@@ -8,10 +8,7 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty implementation of legacy MouseClicks packet (opcode 241).
- * Just consumes an int click-id and optionally logs it when SERVER_ENV=dev.
- */
+
 public class MouseClicksListener implements PacketListener {
 
     static { PacketListenerManager.register(241, new MouseClicksListener()); }

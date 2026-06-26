@@ -21,12 +21,10 @@ import net.dodian.uber.game.engine.systems.interaction.scheduler.PlayerInteracti
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 /**
- * Kotlin service for player-interaction packet side-effects that must stay out
  * of Netty inbound listeners.
  */
 object PacketInteractionService {
     /**
-     * Processes an attack-player packet after the listener has decoded the
      * victim slot.
      */
     @JvmStatic
@@ -56,7 +54,6 @@ object PacketInteractionService {
     }
 
     /**
-     * Processes a use-item-on-NPC packet after the listener has decoded the
      * packet values and validated the inventory slot/item match.
      */
     @JvmStatic
@@ -69,7 +66,6 @@ object PacketInteractionService {
     }
 
     /**
-     * Processes an NPC click packet after the listener has decoded the target
      * index and recorded decode-time metrics.
      */
     @JvmStatic
@@ -100,7 +96,6 @@ object PacketInteractionService {
     }
 
     /**
-     * Processes an NPC attack packet after the listener has decoded the target
      * index and recorded decode-time metrics.
      */
     @JvmStatic

@@ -9,10 +9,7 @@ import net.dodian.uber.game.engine.systems.net.PacketInteractionRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty port of legacy TradeRequest packet (opcode 128).
- * Decodes target slot then delegates to PacketInteractionRequestService.
- */
+
 public class TradeRequestListener implements PacketListener {
 
     static { PacketListenerManager.register(128, new TradeRequestListener()); }

@@ -37,4 +37,3 @@ object EssenceMineTravel {
         return true
     }
 }
-

@@ -366,4 +366,3 @@ object ConsoleAuditLog {
             ?: "shop#$shopId"
 }
 
-

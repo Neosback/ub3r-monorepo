@@ -6,7 +6,7 @@ import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.item.ItemDropEvent
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
-/** Handles item-drop gameplay logic wired from the ItemDropEvent. */
+
 object ItemDropBootstrap {
     @JvmStatic
     fun bootstrap() {
@@ -61,4 +61,3 @@ object ItemDropBootstrap {
         }
     }
 }
-

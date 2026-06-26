@@ -106,4 +106,3 @@ object GlobalObject {
         return deltaX <= 64 && deltaX >= -64 && deltaY <= 64 && deltaY >= -64
     }
 }
-

@@ -85,7 +85,6 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             } else {
                 stream.endBitAccess();
             }
-            // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
 
             if (DEBUG_NPC_MOVEMENT_WRITES && movementWrites > 0 && logger.isDebugEnabled()) {
                 logger.debug("npcMovementWrites viewer={} count={}", player.getPlayerName(), movementWrites);

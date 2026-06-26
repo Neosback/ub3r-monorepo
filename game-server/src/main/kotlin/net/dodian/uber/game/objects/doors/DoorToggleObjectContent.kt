@@ -102,4 +102,3 @@ object DoorToggleObjectContent : ObjectContent {
     }
 }
 
-

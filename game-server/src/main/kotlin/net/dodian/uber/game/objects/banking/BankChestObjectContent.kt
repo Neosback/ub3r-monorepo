@@ -31,4 +31,3 @@ object BankChestObjectContent : ObjectContent {
         return true
     }
 }
-

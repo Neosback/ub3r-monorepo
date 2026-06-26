@@ -36,4 +36,3 @@ object TravelObjectIds {
 
     val webObstacleObjects = intArrayOf(733)
 }
-

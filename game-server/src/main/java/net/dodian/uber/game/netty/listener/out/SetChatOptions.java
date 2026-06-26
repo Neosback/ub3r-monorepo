@@ -5,22 +5,14 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.MessageType;
 
-/**
- * Sent to update a player's chat options (public chat, private chat, trade block).
- */
+
 public class SetChatOptions implements OutgoingPacket {
 
     private final int publicChat;
     private final int privateChat;
     private final int tradeBlock;
 
-    /**
-     * Creates a new SetChatOptions packet.
-     * 
-     * @param publicChat The public chat setting (0-2)
-     * @param privateChat The private chat setting (0-2)
-     * @param tradeBlock The trade block setting (0-1)
-     */
+    
     public SetChatOptions(int publicChat, int privateChat, int tradeBlock) {
         this.publicChat = publicChat;
         this.privateChat = privateChat;

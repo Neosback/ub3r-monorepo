@@ -4,7 +4,7 @@ import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.widget.DialogueContinueEvent
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 
-/** Handles dialogue-continue clicks wired from DialogueContinueEvent. */
+
 object DialogueContinueBootstrap {
     @JvmStatic
     fun bootstrap() {
@@ -16,4 +16,3 @@ object DialogueContinueBootstrap {
         }
     }
 }
-

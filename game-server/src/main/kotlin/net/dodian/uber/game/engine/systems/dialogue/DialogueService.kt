@@ -256,6 +256,12 @@ object DialogueService {
                     return
                 }
 
+                is DialogueStep.Statement -> {
+                    DialogueUi.showStatement(client, step.lines.toTypedArray())
+                    session.awaiting = Awaiting.CONTINUE
+                    return
+                }
+
                 is DialogueStep.Options -> {
                     val payload = ArrayList<String>(1 + step.options.size)
                     payload.add(step.title)
@@ -360,6 +366,7 @@ object DialogueService {
 sealed interface DialogueStep {
     data class NpcChat(val npcId: Int, val emote: Int, val text: String) : DialogueStep
     data class PlayerChat(val emote: Int, val text: String) : DialogueStep
+    data class Statement(val lines: List<String>) : DialogueStep
 
     data class Options(
         val title: String,

@@ -75,16 +75,12 @@ public class UpstreamHandler extends ChannelInboundHandlerAdapter {
                     client.getPlayerName(),
                     client.connectionHealthSummary()
             );
-            // Mark disconnected immediately (Netty thread) so the game thread stops processing this client ASAP.
             client.disconnected = true;
-            // Remove the stale online entry promptly to avoid "already logged in" false-positives during relog.
             try {
                 long key = Utils.playerNameToLong(client.getPlayerName());
                 PlayerRegistry.playersOnline.remove(key, client);
             } catch (Exception ignored) {
-                // If the name isn't available yet, removal will happen during game-thread cleanup.
             }
-            // Enqueue removal onto the game thread to avoid mutating PlayerRegistry state off-thread.
             GameThreadTaskQueue.submit(() -> {
                 PlayerRegistry.removePlayer(client);
             });

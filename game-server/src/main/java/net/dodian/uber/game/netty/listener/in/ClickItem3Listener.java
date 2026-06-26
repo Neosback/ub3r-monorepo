@@ -45,4 +45,3 @@ public class ClickItem3Listener implements PacketListener {
         ItemDispatcher.tryHandle(client, 3, itemId, itemSlot, interfaceId);
     }
 }
-

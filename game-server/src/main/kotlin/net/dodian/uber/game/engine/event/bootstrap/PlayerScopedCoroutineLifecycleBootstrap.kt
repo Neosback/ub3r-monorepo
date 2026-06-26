@@ -4,7 +4,7 @@ import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.engine.tasking.PlayerScopedCoroutineService
 import net.dodian.uber.game.events.player.PlayerLogoutEvent
 
-/** Cancels player-scoped async jobs when a player leaves the world. */
+
 object PlayerScopedCoroutineLifecycleBootstrap {
     @JvmStatic
     fun bootstrap() {

@@ -9,9 +9,7 @@ import net.dodian.uber.game.engine.systems.net.PacketSocialService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty port of AddIgnore (opcode 133).
- */
+
 public class AddIgnoreListener implements PacketListener {
 
     static { PacketListenerManager.register(133, new AddIgnoreListener()); }

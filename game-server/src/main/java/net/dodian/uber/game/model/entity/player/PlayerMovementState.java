@@ -90,7 +90,6 @@ final class PlayerMovementState {
         int deltaX = Utils.directionDeltaX[dir];
         int deltaY = Utils.directionDeltaY[dir];
 
-        // Per-step collision validation: stop if the next tile is blocked or
         // a wall prevents movement in this direction.
         int absX = owner.getPosition().getX();
         int absY = owner.getPosition().getY();

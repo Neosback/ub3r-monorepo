@@ -15,4 +15,3 @@ object DialogueGateItemCombinations {
         return true
     }
 }
-

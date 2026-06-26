@@ -14,10 +14,7 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty implementation of the walking packet handler (opcodes 248, 164, 98).
- * Closely mirrors legacy logic in model/player/packets/incoming/Walking.java.
- */
+
 @net.dodian.uber.game.netty.listener.PacketHandler(opcode = 248)
 public final class WalkingListener implements PacketListener {
 

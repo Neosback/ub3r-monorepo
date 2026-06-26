@@ -27,4 +27,3 @@ object WebObstacleObjectContent : ObjectContent {
         return true
     }
 }
-

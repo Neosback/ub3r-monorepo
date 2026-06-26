@@ -5,7 +5,7 @@ import net.dodian.uber.game.events.GameEvent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 
-/** Fired when a player casts a spell on a world object. */
+
 data class MagicOnObjectEvent(
     val client: Client,
     val objectId: Int,
@@ -13,4 +13,3 @@ data class MagicOnObjectEvent(
     val obj: GameObjectData?,
     val spellId: Int,
 ) : GameEvent
-

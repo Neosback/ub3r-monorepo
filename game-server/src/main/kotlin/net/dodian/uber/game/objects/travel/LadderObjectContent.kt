@@ -47,4 +47,3 @@ object LadderObjectContent : VerticalTravelDslObjectContent(
         ladderDown(1739, option = 3) { _, _, position, _ -> position.offset(dz = -1) }
     },
 )
-

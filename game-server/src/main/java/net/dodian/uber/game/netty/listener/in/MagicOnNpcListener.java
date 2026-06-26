@@ -12,10 +12,7 @@ import net.dodian.uber.game.engine.systems.net.PacketMagicService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty implementation of legacy {@code MagicOnNpc} (opcode 131).
- * Decodes then delegates to PacketMagicService.
- */
+
 public class MagicOnNpcListener implements PacketListener {
 
     static { PacketListenerManager.register(131, new MagicOnNpcListener()); }

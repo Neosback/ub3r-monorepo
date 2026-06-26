@@ -325,4 +325,3 @@ class SlotMachine {
     fun playSlots(client: Client, times: Int) = playSlotMachine(client, times)
 }
 
-

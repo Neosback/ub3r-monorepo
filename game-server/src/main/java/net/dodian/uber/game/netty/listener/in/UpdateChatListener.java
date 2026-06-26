@@ -12,9 +12,7 @@ import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty port of UpdateChat (opcode 95) – adjusts private chat mode and refreshes friends lists.
- */
+
 public class UpdateChatListener implements PacketListener {
 
     static { PacketListenerManager.register(95, new UpdateChatListener()); }
@@ -44,4 +42,3 @@ public class UpdateChatListener implements PacketListener {
         logger.debug("UpdateChatListener: {} set private chat={} and refreshed friends", client.getPlayerName(), priv);
     }
 }
-

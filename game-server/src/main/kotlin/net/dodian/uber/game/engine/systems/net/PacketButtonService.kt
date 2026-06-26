@@ -4,7 +4,6 @@ import net.dodian.uber.game.skill.smithing.SmithingData
 import net.dodian.uber.game.model.entity.player.Client
 
 /**
- * Kotlin service for button-click packet state mutations (opcodes 185, 186).
  *
  * Moves [Client.lastButtonActionIndex], [Client.actionButtonId] assignments
  * and [Client.resetAction] calls out of the Netty listener layer.
@@ -50,4 +49,3 @@ object PacketButtonService {
         }
     }
 }
-

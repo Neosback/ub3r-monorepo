@@ -33,7 +33,7 @@ public class UseItemOnNpcListener implements PacketListener {
         int itemId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         int npcIndex = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         int slot = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
-        ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD); // discarded value, matches legacy behaviour
+        ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
 
         if (logger.isTraceEnabled()) {
             logger.trace("UseItemOnNpc item={} slot={} npcIndex={} player={}", itemId, slot, npcIndex, client.getPlayerName());

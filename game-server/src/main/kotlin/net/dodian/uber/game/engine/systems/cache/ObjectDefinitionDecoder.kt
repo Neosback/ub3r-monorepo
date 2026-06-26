@@ -72,8 +72,12 @@ object ObjectDefinitionDecoder {
         var childIds: IntArray? = null
         val interactions = arrayOfNulls<String>(9)
 
+        val startPos = data.position
+        val opcodesRead = ArrayList<Int>()
         while (true) {
-            when (val opcode = data.readUnsignedByte()) {
+            val opcode = data.readUnsignedByte()
+            opcodesRead.add(opcode)
+            when (opcode) {
                 0 -> {
                     if (supportItems == -1) {
                         supportItems = if (solid) 1 else 0
@@ -118,8 +122,8 @@ object ObjectDefinitionDecoder {
                     }
                 }
 
-                2 -> name = data.readString()
-                3 -> description = data.readString()
+                2 -> name = data.readStringNullTerminated()
+                3 -> description = data.readStringNullTerminated()
                 5 -> {
                     val amount = data.readUnsignedByte()
                     if (amount > 0) {
@@ -147,7 +151,7 @@ object ObjectDefinitionDecoder {
                 69 -> interactionFaceMask = data.readUnsignedByte()
                 75, 81 -> supportItems = data.readUnsignedByte()
                 in 30..38 -> {
-                    val action = data.readString()
+                    val action = data.readStringNullTerminated()
                     interactions[opcode - 30] = action.takeUnless { it.equals("hidden", ignoreCase = true) }
                 }
 
@@ -210,14 +214,37 @@ object ObjectDefinitionDecoder {
                         val isString = data.readUnsignedByte() == 1
                         data.skip(3)
                         if (isString) {
-                            data.readString()
+                            data.readStringNullTerminated()
                         } else {
                             data.skip(4)
                         }
                     }
                 }
 
-                else -> throw IllegalArgumentException("Unsupported loc.dat opcode $opcode for object $id")
+                100 -> {
+                    data.readUnsignedByte()
+                    data.readUnsignedShort()
+                }
+                101 -> {
+                    data.readUnsignedByte()
+                }
+                102 -> {
+                    data.readUnsignedShort()
+                }
+                103 -> {
+                    data.readUnsignedShort()
+                }
+                104 -> {
+                    data.readUnsignedByte()
+                }
+                105 -> {
+                    data.readUnsignedShort()
+                }
+
+                else -> {
+                    println("Object $id starting at $startPos failed at opcode $opcode at current pos ${data.position}. Opcodes read: $opcodesRead")
+                    throw IllegalArgumentException("Unsupported loc.dat opcode $opcode for object $id")
+                }
             }
         }
     }
@@ -226,4 +253,3 @@ object ObjectDefinitionDecoder {
     private const val CONFIG_ARCHIVE = 2
     private val EMPTY_RESULT = Result(emptyMap(), interactiveCount = 0, blockingCount = 0)
 }
-

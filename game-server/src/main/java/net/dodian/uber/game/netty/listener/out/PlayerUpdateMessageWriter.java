@@ -6,9 +6,7 @@ import net.dodian.uber.game.model.entity.player.PlayerUpdating;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.MessageType;
 
-/**
- * Stateless pooled writer for player update packets.
- */
+
 final class PlayerUpdateMessageWriter {
 
     ByteMessage write(Player player, ByteBuf pooledBuffer) {

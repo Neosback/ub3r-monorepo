@@ -36,8 +36,6 @@ object InteractionReachService {
 
             var packedDirections = definition.interactionFaceMask
             if (rotation != 0) {
-                // Bitwise rotate based on face (0=WEST, 1=NORTH, 2=EAST, 3=SOUTH)
-                // Note: Standard RS2 opcode 69 is NESW (1, 2, 4, 8)
                 packedDirections = ((packedDirections shl rotation) and 0xF) or (packedDirections shr (4 - rotation))
             }
 

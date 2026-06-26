@@ -5,7 +5,6 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.*;
 
 /**
- * Handles object replacement on the client side.
  * Emits the legacy opcodes 101 (remove/clear) and 151 (place) replicating
  * Stream.writeByteC / writeByteS semantics.
  */
@@ -27,16 +26,19 @@ public class ReplaceObject implements OutgoingPacket {
 
         // First packet (opcode 101)
         ByteMessage remove = ByteMessage.message(101);
-        remove.put(config, ValueType.NEGATE); // equivalent to writeByteC
-        remove.put(0);                        // writeByte(0)
+        remove.put(config, ValueType.NEGATE);
+
+        remove.put(0);
+
         client.send(remove);
 
         // Second packet (opcode 151) if placing a new object
         if (newObjectId != -1) {
             ByteMessage place = ByteMessage.message(151);
-            place.put(0, ValueType.ADD);                      // offset byte with ADD transformation
-            place.putShort(newObjectId, ByteOrder.LITTLE);    // object ID (little-endian)
-            place.put(config, ValueType.SUBTRACT);            // objectTypeFace with SUBTRACT transformation
+            place.put(0, ValueType.ADD);                     
+            place.putShort(newObjectId, ByteOrder.LITTLE);   
+            place.put(config, ValueType.SUBTRACT);
+
             client.send(place);
         }
     }

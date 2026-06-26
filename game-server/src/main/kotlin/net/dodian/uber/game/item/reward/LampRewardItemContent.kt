@@ -18,4 +18,3 @@ object LampRewardItemContent : ItemContent {
         return true
     }
 }
-

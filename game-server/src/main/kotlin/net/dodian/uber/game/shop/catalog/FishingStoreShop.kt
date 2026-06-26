@@ -16,4 +16,3 @@ object FishingStoreShop : ShopPlugin {
             item(317, 0)
         }.definition
 }
-

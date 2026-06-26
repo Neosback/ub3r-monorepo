@@ -10,10 +10,7 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketBankingService;
 
-/**
- * Netty implementation of legacy Bank5 packet (opcode 117).
- * Decodes packet data then delegates to PacketBankingService.handleFixedAmountDecoded.
- */
+
 public class Bank5Listener implements PacketListener {
 
     static { PacketListenerManager.register(117, new Bank5Listener()); }

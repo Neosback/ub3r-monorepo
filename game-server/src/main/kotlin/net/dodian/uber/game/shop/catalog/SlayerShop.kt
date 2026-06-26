@@ -21,4 +21,3 @@ object SlayerShop : ShopPlugin {
             item(6585, 100)
         }.definition
 }
-

@@ -22,11 +22,7 @@ public class ItemsToVScreen implements OutgoingPacket {
 
     private final Collection<GameItem> items;
 
-    /**
-     * Creates a new ItemsToVScreen packet.
-     * 
-     * @param items The collection of items to display
-     */
+    
     public ItemsToVScreen(Collection<GameItem> items) {
         this.items = items;
     }

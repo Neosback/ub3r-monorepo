@@ -32,7 +32,7 @@ object ContentModuleIndex {
         FROZEN,
     }
 
-    /** Canonical roots for adapted-Luna packaging. */
+    
     private val CANONICAL_SCAN_PACKAGES = listOf(
         "net.dodian.uber.game.api.plugin",
         "net.dodian.uber.game.skill",

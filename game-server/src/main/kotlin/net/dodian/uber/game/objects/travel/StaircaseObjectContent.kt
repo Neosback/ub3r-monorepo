@@ -73,4 +73,3 @@ object StaircaseObjectContent : VerticalTravelDslObjectContent(
         stairsDown(1723) { _, _, position, _ -> position.stairsOffset(dy = -4, dz = -1) }
     },
 )
-

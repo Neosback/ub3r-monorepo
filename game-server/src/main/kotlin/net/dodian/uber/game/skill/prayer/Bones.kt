@@ -33,4 +33,3 @@ enum class Bones(
         fun getBone(itemId: Int): Bones? = values().firstOrNull { it.boneItemId == itemId }
     }
 }
-

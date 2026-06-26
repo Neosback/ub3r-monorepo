@@ -11,4 +11,3 @@ data class ButtonClickRequest(
     val componentId: Int,
     val componentKey: String,
 )
-

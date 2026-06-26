@@ -8,22 +8,13 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 
 import net.dodian.uber.game.netty.codec.ByteOrder;
 
-/**
- * Handles showing or hiding an interface
- * 
- * @author Dashboard
- */
+
 public class InterfaceStatus implements OutgoingPacket {
 
     private final int interfaceId;
     private final boolean show;
 
-    /**
-     * Creates a new interface status packet
-     * 
-     * @param interfaceId the interface ID to show/hide
-     * @param show whether to show (true) or hide (false) the interface
-     */
+    
     public InterfaceStatus(int interfaceId, boolean show) {
         this.interfaceId = interfaceId;
         this.show = show;

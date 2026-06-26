@@ -23,4 +23,3 @@ object PartyRoomObjectContent : ObjectContent {
         return false
     }
 }
-

@@ -91,4 +91,3 @@ object ContentPredef {
         DialogueService.start(player, block)
     }
 }
-

@@ -45,4 +45,3 @@ object ContentEvents {
 		GameEventBus.addFilter(clazz, filter)
 	}
 }
-

@@ -11,4 +11,3 @@ enum class HeadIcon(private val headIconId: Int) {
 
     fun asInt(): Int = headIconId
 }
-

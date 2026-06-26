@@ -12,10 +12,7 @@ import net.dodian.uber.game.engine.systems.net.PacketMagicService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty implementation of MagicOnPlayer (opcode 249) incoming packet.
- * Decodes packet fields then delegates to PacketMagicService.
- */
+
 public class MagicOnPlayerListener implements PacketListener {
 
     static {

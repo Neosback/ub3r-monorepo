@@ -113,7 +113,6 @@ class Login {
                     }
                 }
             } catch (_: FileNotFoundException) {
-                // This file is often absent in local dev; ignore missing-file noise.
             } catch (exception: IOException) {
                 logger.error("Failed appending UUID bans.", exception)
             }

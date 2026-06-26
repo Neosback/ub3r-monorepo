@@ -241,4 +241,3 @@ object FollowRouting {
 
     private val CARDINAL_OFFSETS = listOf(-1 to 0, 1 to 0, 0 to 1, 0 to -1)
 }
-

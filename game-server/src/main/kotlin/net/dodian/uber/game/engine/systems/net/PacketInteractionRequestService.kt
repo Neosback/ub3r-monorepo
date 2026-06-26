@@ -8,10 +8,8 @@ import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardSer
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 
 /**
- * Kotlin service for player-to-player social interaction requests that have
  * been extracted from the Netty listener layer.
  *
- * Covers:
  * - Trade request (opcode 139)
  * - Duel request (opcode 153)
  * - Command invalid-client guard (opcode 103)
@@ -23,7 +21,6 @@ object PacketInteractionRequestService {
     // -------------------------------------------------------------------------
 
     /**
-     * Processes a trade-request packet after the target slot has been decoded
      * and the target player validated.
      *
      * All guard messages and the [Client.tradeReq] call live here rather than
@@ -59,7 +56,6 @@ object PacketInteractionRequestService {
     // -------------------------------------------------------------------------
 
     /**
-     * Processes a duel-request packet after the target pid has been decoded
      * and the target player validated.
      */
     @JvmStatic
@@ -100,7 +96,6 @@ object PacketInteractionRequestService {
     // -------------------------------------------------------------------------
 
     /**
-     * Processes the legacy trade-request packet (opcode 128) after the target
      * slot has been decoded and validated.
      *
      * If the player is holding a rubber chicken (item 4566 in weapon slot)
