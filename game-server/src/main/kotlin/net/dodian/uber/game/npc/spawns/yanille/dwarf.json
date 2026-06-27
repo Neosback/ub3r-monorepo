@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "family": "dwarf",
+  "groups": [
+    {
+      "npcId": 290,
+      "defaults": {
+        "attack": 8,
+        "attackAnimation": 99,
+        "deathAnimation": 102,
+        "defence": 5,
+        "hitpoints": 10,
+        "respawnTicks": 30,
+        "strength": 15
+      },
+      "spawns": [
+        {
+          "x": 2623,
+          "y": 3127,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2624,
+          "y": 3123,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2625,
+          "y": 3125,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2625,
+          "y": 3128,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2627,
+          "y": 3127,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2628,
+          "y": 3123,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

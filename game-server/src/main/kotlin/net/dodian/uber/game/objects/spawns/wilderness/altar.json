@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "region": "wilderness",
+  "objects": [
+    {
+      "id": 575,
+      "name": "Altar",
+      "x": 1801,
+      "y": 3547,
+      "z": 0,
+      "type": 10,
+      "rotation": "SOUTH"
+    },
+    {
+      "id": 0,
+      "name": "Altar",
+      "x": 2685,
+      "y": 3711,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    }
+  ]
+}

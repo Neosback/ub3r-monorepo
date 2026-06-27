@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "family": "mummy",
+  "groups": [
+    {
+      "npcId": 950,
+      "defaults": {
+        "attack": 75,
+        "attackAnimation": 5554,
+        "deathAnimation": 5555,
+        "defence": 75,
+        "hitpoints": 100,
+        "respawnTicks": 40,
+        "strength": 90
+      },
+      "spawns": [
+        {
+          "x": 2575,
+          "y": 9500,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2577,
+          "y": 9498,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2577,
+          "y": 9502,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2579,
+          "y": 9500,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2579,
+          "y": 9504,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2580,
+          "y": 9497,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2581,
+          "y": 9503,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2582,
+          "y": 9499,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2583,
+          "y": 9501,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2584,
+          "y": 9497,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2586,
+          "y": 9500,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2588,
+          "y": 9498,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

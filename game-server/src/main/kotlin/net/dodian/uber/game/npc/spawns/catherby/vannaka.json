@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "vannaka",
+  "groups": [
+    {
+      "npcId": 403,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2798,
+          "y": 3441,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

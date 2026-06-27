@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "family": "dwarf_gang_member",
+  "groups": [
+    {
+      "npcId": 1356,
+      "defaults": {
+        "attack": 33,
+        "attackAnimation": 99,
+        "deathAnimation": 102,
+        "defence": 32,
+        "hitpoints": 50,
+        "respawnTicks": 35,
+        "strength": 40
+      },
+      "spawns": [
+        {
+          "x": 2555,
+          "y": 3087,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2555,
+          "y": 3091,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2556,
+          "y": 3089,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2557,
+          "y": 3086,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2558,
+          "y": 3092,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2560,
+          "y": 3087,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2560,
+          "y": 3090,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

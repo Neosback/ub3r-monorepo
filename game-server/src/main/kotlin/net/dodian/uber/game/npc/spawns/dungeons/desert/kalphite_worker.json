@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "family": "kalphite_worker",
+  "groups": [
+    {
+      "npcId": 1153,
+      "defaults": {
+        "attack": 15,
+        "attackAnimation": 6224,
+        "deathAnimation": 6228,
+        "defence": 10,
+        "hitpoints": 22,
+        "respawnTicks": 30,
+        "strength": 15
+      },
+      "spawns": [
+        {
+          "x": 3494,
+          "y": 9509,
+          "plane": 2,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

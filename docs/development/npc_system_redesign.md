@@ -315,7 +315,177 @@ trees, or cutscene DSL. MVP proves exactly one pipeline:
 
 ---
 
-## 17. TL;DR
+## 17. Data migration — MySQL → JSON
+
+The ub3r server currently stores NPC definitions and spawns in MySQL tables
+(`uber3_npcs`, etc.). These have been exported to JSON files for review and will need
+migration work to align with the new JSONC-based system.
+
+### Exported data files
+
+| File | Source | Contents |
+|------|--------|----------|
+| `scripts/npc_Def.json` | MySQL `uber3_npcs` | All NPC definitions: id, name, examine, combat, emotes, hitpoints, respawn, size, stats |
+| `scripts/npc_Spawn.json` | MySQL `uber3_npc_spawns` | All spawn locations: npcId, x, y, height, face, hitpoints, movechance |
+| `data/def/monsters-json/<id>.json` | MySQL/NpcDropStore | Per-monster drop tables (3,248 files) |
+| `data/def/items-json/<id>.json` | MySQL | Item definitions (26,990 files) |
+| `data/def/npc/` | Kotlin sources | Generated NPC module Kotlin files |
+
+### What needs migration
+
+**Phase 1 — Audit the exported data:**
+- `npc_Def.json` has ~8,000 entries — many have `hitpoints: 0` or `combat: 0` (incomplete)
+- `npc_Spawn.json` has spawn data that needs to be converted to the new JSONC spawn schema
+- Some spawns reference NPCs that don't exist in `npc_Def.json`
+
+**Phase 2 — Convert to new schema:**
+- NPC definitions → Kotlin `NpcTemplateModule` files (per §4 authoring surface)
+- Spawn data → JSONC spawn files (per §7 spawn schema)
+- Drop data → `drops {}` blocks in templates (per §10 drops)
+
+**Phase 3 — Validate and load:**
+- Server should validate all JSONC on boot (per §12 validation)
+- Load NPC definitions from Kotlin modules (not MySQL)
+- Load spawns from JSONC files (not MySQL)
+- Load drops from templates (not NpcDropStore/monsters-json)
+
+**Phase 4 — Deprecate MySQL:**
+- Remove `uber3_npcs` table reads
+- Remove `uber3_npc_spawns` table reads
+- Keep MySQL for player data only
+
+### Import tool
+
+`scripts/import_tarnish_data.py` already handles:
+- Parsing Tarnish server's Kotlin `NpcSpawnDef` format
+- Converting facing constants to names
+- Generating JSONC spawn files
+
+This tool can be extended to handle the ub3r MySQL exports.
+
+### Key migration decisions for senior dev
+
+1. **Which NPCs get Kotlin modules?** → Complex NPCs (shops, quest, bosses) first
+2. **Which NPCs stay as JSONC-only?** → Generic mobs (Man, Guard, Rat) that need no behavior
+3. **How to handle the `hitpoints: 0` entries?** → Some are intentionally 0 (non-combat NPCs)
+4. **How to handle duplicate NPC IDs?** → Different spawns may use same NPC ID
+5. **What about the `monsters-json` drop files?** → Migrate into template `drops {}` blocks
+
+---
+
+## 18. Object Content — parallel system to NPC content
+
+**Status:** high-level overview — senior dev designs final draft.
+
+The server has a parallel content system for **game objects** (banks, ranges, altars,
+doors, portals, stalls, etc.) that mirrors the NPC content system. When a player clicks
+an object, the engine looks up a registered `ObjectContent` handler for that object ID.
+
+### How it works today
+
+1. **ObjectInteractionListener** (opcode 132) receives the click
+2. **ObjectInteractionService** resolves the handler via `ObjectContentRegistry`
+3. **ObjectClickLoggingService** logs "OBJECT UNHANDLED" if no handler is found
+4. **ObjectClipService** handles collision/pathfinding overlays
+
+### Current object content handlers
+
+Registered via `ObjectContent` interface + `ObjectBinding` matchers:
+
+- **Agility courses** — `FirstClickDslObjectContent` (gnome, barbarian, wilderness, werewolf)
+- **Cooking ranges** — `RangeObjectContent` (use-item-on-object for cooking)
+- **Smithing anvils** — `AnvilObjectContent` (click + use-item + magic)
+- **Smithing furnaces** — `FurnaceObjectContent` (click + use-item + magic)
+- **Prayer altars** — `AltarObjectContent` (click + use-item for prayer)
+- **Thieving stalls** — `StallObjectContent` (click to thieve)
+- **Thieving chests** — `ChestObjectContent` (click to thieve)
+- **Thieving plunder** — `PlunderObjectContent` (pyramid plunder)
+
+### What's MISSING (the "OBJECT UNHANDLED" problem)
+
+The error logs show objects like **Bank booth (10355)** are unhandled because no
+`ObjectContent` handler is registered. These are the missing categories:
+
+**High priority (banking, core gameplay):**
+- Bank booths — click to open bank (object IDs: 10355, 24009, 3193, etc.)
+- Bank deposit boxes — click to deposit (object ID: 10529)
+- Bank deposit chests — click to deposit (various IDs)
+
+**Medium priority (skilling, portals):**
+- Fairy rings — click to use (various IDs)
+- Portal nexus — click to teleport (various IDs)
+- Ladders/stairs — click to climb (various IDs)
+- Doors — click to open/close (various IDs)
+- Obstacles — click to pass (agility shortcuts)
+
+**Low priority (decoration, misc):**
+- Spinning wheels — use-item-on-object
+- Looms — use-item-on-object
+- Crafting benches — use-item-on-object
+- Fishing spots — already handled via NPC system
+- Mining rocks — already handled via NPC system
+
+### Object content registration pattern
+
+```kotlin
+// In a skill file (e.g., Smithing.kt):
+object BankBoothContent : ObjectContent {
+    override fun bindings() = listOf(
+        ObjectBinding(
+            objectId = 10355,
+            matcher = PositionMatcher.all(), // or specific positions
+            handler = { ctx ->
+                ctx.client.openBank()
+                true
+            }
+        )
+    )
+}
+
+// Auto-registered via classpath scan in ContentModuleIndex
+```
+
+### Key difference from NPC content
+
+- NPCs have dialogue, shops, drops — complex behavior
+- Objects have simpler behavior — click to open, use-item to skill
+- Object content is registered by **object ID** (not NPC ID)
+- Object content supports **position matchers** (same object at different positions)
+- Object content supports **interaction types**: CLICK, ITEM_ON_OBJECT, MAGIC
+
+### What the senior dev needs to design
+
+1. **Bank booth handler** — most critical, opens bank interface
+2. **Bank deposit handler** — deposits items from inventory
+3. **Portal/ladder/door handlers** — teleportation and navigation
+4. **Obstacle handlers** — agility shortcut pass-through
+5. **Stall/chest/thieving handlers** — extend existing thieving system
+
+### Reference: ObjectContent interface
+
+```kotlin
+interface ObjectContent {
+    fun bindings(): List<ObjectBinding>
+    fun clickInteractionPolicy(option: Int, objectId: Int, pos: Position, obj: GameObjectData?): ContentObjectInteractionPolicy?
+    fun itemOnObjectInteractionPolicy(objectId: Int, pos: Position, obj: GameObjectData?, itemId: Int, itemSlot: Int, interfaceId: Int): ContentObjectInteractionPolicy?
+    fun magicOnObjectInteractionPolicy(objectId: Int, pos: Position, obj: GameObjectData?, spellId: Int): ContentObjectInteractionPolicy?
+}
+```
+
+### Reference: ObjectBinding
+
+```kotlin
+data class ObjectBinding(
+    val objectId: Int,
+    val matcher: PositionMatcher,
+    val priority: Int = 0,
+    val handler: (ObjectClickContext) -> Boolean,
+)
+```
+
+---
+
+## 19. TL;DR
 
 Kotlin modules own behavior, dialogue, and drops. JSONC owns bulk coordinates and
 conditional placement. Typed slots are the *only* per-spawn customization in MVP. The
@@ -323,3 +493,12 @@ engine refuses to boot on a broken reference and runs every interaction inside a
 paranoid `ActiveNpcSession`. Ship behind a legacy bridge, port Aubury first, and migrate
 NPC-by-NPC until the old engine is deletable. Build the validator test before the
 compiler. Lock in V4 — no V5.
+
+Object content follows the same pattern as NPC content: Kotlin handlers registered by
+object ID, auto-discovered via classpath scan. Most critical missing handlers are bank
+booths, deposit boxes, portals, and doors. Senior dev designs the final object content
+module structure.
+
+MySQL data (npc_Def.json, npc_Spawn.json, monsters-json/) needs migration to the new
+Kotlin module + JSONC spawn system. Audit exports, convert to new schema, validate on
+boot, then deprecate MySQL reads.

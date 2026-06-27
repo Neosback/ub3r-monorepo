@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "family": "ochre_blamish_snail",
+  "groups": [
+    {
+      "npcId": 1229,
+      "defaults": {
+        "deathAnimation": 2304,
+        "hitpoints": 20
+      },
+      "spawns": [
+        {
+          "x": 2984,
+          "y": 9639,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2985,
+          "y": 9632,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2985,
+          "y": 9633,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2985,
+          "y": 9635,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2988,
+          "y": 9640,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

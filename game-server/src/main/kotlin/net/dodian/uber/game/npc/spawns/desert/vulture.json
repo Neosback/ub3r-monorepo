@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "family": "vulture",
+  "groups": [
+    {
+      "npcId": 1267,
+      "defaults": {
+        "attack": 25,
+        "attackAnimation": 2018,
+        "deathAnimation": 2021,
+        "defence": 25,
+        "hitpoints": 30,
+        "magic": 1,
+        "ranged": 1,
+        "strength": 25
+      },
+      "spawns": [
+        {
+          "x": 3262,
+          "y": 2969,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3264,
+          "y": 2974,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3265,
+          "y": 2964,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3266,
+          "y": 2969,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3268,
+          "y": 2965,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3271,
+          "y": 2973,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3272,
+          "y": 2969,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3273,
+          "y": 2964,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3276,
+          "y": 2974,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3277,
+          "y": 2967,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3279,
+          "y": 2971,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "family": "black_dragon",
+  "groups": [
+    {
+      "npcId": 252,
+      "defaults": {
+        "attack": 190,
+        "attackAnimation": 91,
+        "deathAnimation": 92,
+        "defence": 190,
+        "hitpoints": 200,
+        "respawnTicks": 40,
+        "strength": 210
+      },
+      "spawns": [
+        {
+          "x": 3208,
+          "y": 9349,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3211,
+          "y": 9351,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3211,
+          "y": 9360,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3213,
+          "y": 9362,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3214,
+          "y": 9355,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3216,
+          "y": 9349,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3217,
+          "y": 9364,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

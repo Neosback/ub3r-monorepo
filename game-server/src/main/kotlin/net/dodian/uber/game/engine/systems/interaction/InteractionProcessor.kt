@@ -8,6 +8,7 @@ import net.dodian.uber.game.engine.systems.interaction.objects.ObjectContentRegi
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectClickLoggingService
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectInteractionService
 import net.dodian.uber.game.engine.systems.interaction.npcs.BankerApproachFallbackService
+import net.dodian.uber.game.engine.systems.follow.FollowRouting
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentDispatcher
 import net.dodian.uber.game.engine.systems.interaction.items.ItemOnNpcContentService
 import net.dodian.uber.game.engine.event.GameEventBus
@@ -193,6 +194,30 @@ object InteractionProcessor {
                 resolveDistanceMode(policy.distanceRule),
             ) == null
         ) {
+            // Not yet on a valid interaction tile. The client only parks the player on some adjacent
+            // tile (often a diagonal one the object can't be used from), so route server-side onto a
+            // real reach/face tile. Only act once the client's walk has settled, and re-route on each
+            // settle until reached or proven unreachable.
+            val objDef = routeSnapshot.objectDef
+            if (objDef != null) {
+                if (!isMovementSettled(player)) {
+                    // Still walking toward the object (client walk or a prior server route) — wait.
+                    return InteractionExecutionResult.WAITING
+                }
+                if (FollowRouting.routeToObjectInteraction(
+                        player,
+                        intent.objectId,
+                        targetPosition.x,
+                        targetPosition.y,
+                        targetPosition.z,
+                        objDef.type,
+                        objDef.face,
+                    )
+                ) {
+                    return InteractionExecutionResult.WAITING
+                }
+            }
+            // No cache def, or no reachable valid interaction tile -> genuine reject.
             if (objectDistanceRejectLogged.putIfAbsent(intent, true) == null) {
                 ObjectClickLoggingService.log(
                     context =
@@ -823,7 +848,13 @@ object InteractionProcessor {
         if (objectDef != null) {
             return true
         }
-        return GlobalObject.hasGlobalObject(WorldObject(objectId, position.x, position.y, position.z, 10))
+        if (GlobalObject.hasGlobalObject(WorldObject(objectId, position.x, position.y, position.z, 10))) {
+            return true
+        }
+        return net.dodian.uber.game.Server.objects.any { obj ->
+            obj.x == position.x && obj.y == position.y && obj.z == position.z &&
+            (obj.id == objectId || GameObjectData.forId(obj.id).childIds?.contains(objectId) == true)
+        }
     }
 
     private fun resolveDistanceMode(distanceRule: ObjectInteractionPolicy.DistanceRule): ObjectInteractionDistance.DistanceMode {

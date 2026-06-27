@@ -12,6 +12,15 @@ data class CacheNpcDefinition(
     var clockwiseTurnAnimation: Int = -1,
     var anticlockwiseTurnAnimation: Int = -1,
     var actions: Array<String?> = arrayOfNulls(5),
+    var attackAnimation: Int = 806,
+    var deathAnimation: Int = 836,
+    var respawnTicks: Int = 60,
+    var attack: Int = 0,
+    var strength: Int = 0,
+    var defence: Int = 0,
+    var hitpoints: Int = 0,
+    var ranged: Int = 0,
+    var magic: Int = 0,
 )
 
 object NpcCacheDefinitionDecoder {
@@ -22,10 +31,11 @@ object NpcCacheDefinitionDecoder {
         val index = CacheBuffer(idx)
         val count = index.readUnsignedShort()
         val offsets = IntArray(count)
-        var offset = 2
+        var offset = 0
         for (id in 0 until count) {
+            val size = index.readUnsignedShort()
             offsets[id] = offset
-            offset += index.readUnsignedShort()
+            offset += size
         }
 
         val data = CacheBuffer(dat)
@@ -63,10 +73,12 @@ object NpcCacheDefinitionDecoder {
                 }
                 40, 41 -> repeat(data.readUnsignedByte()) { data.skip(4) }
                 60 -> repeat(data.readUnsignedByte()) { data.skip(2) }
+                61, 62 -> repeat(data.readUnsignedByte()) { data.skip(4) }
+                74, 75, 76, 77, 78, 79 -> data.skip(2)
                 90, 91, 92 -> data.skip(2)
-                93, 99, 107, 109, 111 -> Unit
+                93, 99, 107, 109, 111, 122, 123, 129, 130, 145, 147, 189 -> Unit
                 95 -> definition.combatLevel = data.readUnsignedShort()
-                97, 98, 103, 114, 116 -> data.skip(2)
+                97, 98, 103, 114, 116, 124, 126, 146 -> data.skip(2)
                 100, 101 -> data.skip(1)
                 102 -> {
                     val bitfield = data.readUnsignedByte()
@@ -86,7 +98,10 @@ object NpcCacheDefinitionDecoder {
                     data.readMedium()
                     if (stringValue) data.readStringNullTerminated() else data.readInt()
                 }
-                else -> error("Unsupported npc.dat opcode $opcode for NPC $id (last=$lastOpcode)")
+                else -> {
+                    System.err.println("Unsupported npc.dat opcode $opcode for NPC $id (last=$lastOpcode)")
+                    return definition
+                }
             }
             lastOpcode = opcode
         }

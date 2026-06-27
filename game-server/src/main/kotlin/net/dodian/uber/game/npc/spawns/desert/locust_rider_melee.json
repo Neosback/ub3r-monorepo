@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "family": "locust_rider_melee",
+  "groups": [
+    {
+      "npcId": 795,
+      "defaults": {
+        "attack": 70,
+        "attackAnimation": 5450,
+        "deathAnimation": 5449,
+        "defence": 90,
+        "hitpoints": 110,
+        "ranged": 100,
+        "strength": 130
+      },
+      "spawns": [
+        {
+          "x": 3241,
+          "y": 2779,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    },
+    {
+      "npcId": 800,
+      "defaults": {
+        "attack": 50,
+        "attackAnimation": 5450,
+        "deathAnimation": 5449,
+        "defence": 60,
+        "hitpoints": 70,
+        "ranged": 70,
+        "respawnTicks": 30,
+        "strength": 70
+      },
+      "spawns": [
+        {
+          "x": 3241,
+          "y": 2775,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3317,
+          "y": 2828,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3319,
+          "y": 2825,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3321,
+          "y": 2828,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3322,
+          "y": 2823,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3326,
+          "y": 2821,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3326,
+          "y": 2827,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3328,
+          "y": 2824,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

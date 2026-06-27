@@ -81,13 +81,13 @@ object ObjectDefinitionDecoder {
         var solid = true
         var interactive = false
         var supportItems = -1
-        var obstructive = false
+        var decoration = false
         var blockWalk = 2
         var blockRange = true
         var breakRouteFinding = false
         var hasModelData = false
         var firstModelType: Int? = null
-        var interactionFaceMask = 0
+        var walkingFlag = 0
         var varbitId = -1
         var varpId = -1
         var childIds: IntArray? = null
@@ -115,14 +115,14 @@ object ObjectDefinitionDecoder {
                         sizeX = sizeX.coerceAtLeast(1),
                         sizeY = sizeY.coerceAtLeast(1),
                         solid = solid,
-                        walkable = !solid,
+                        impenetrable = blockRange,
                         hasActionsFlag = hasActions,
-                        unknownValue = obstructive,
+                        decoration = decoration,
                         walkType = supportItems,
                         blockWalk = blockWalk,
                         blockRange = blockRange,
                         breakRouteFinding = breakRouteFinding,
-                        interactionFaceMask = interactionFaceMask,
+                        walkingFlag = walkingFlag,
                         varbitId = varbitId,
                         varpId = varpId,
                         childIds = childIds,
@@ -172,7 +172,7 @@ object ObjectDefinitionDecoder {
                 27 -> blockWalk = 1
                 24 -> data.skip(2)
                 28, 29, 39 -> data.skip(1)
-                69 -> interactionFaceMask = data.readUnsignedByte()
+                69 -> walkingFlag = data.readUnsignedByte()
                 75, 81 -> supportItems = data.readUnsignedByte()
                 in 30..38 -> {
                     val action = data.readStringNullTerminated()
@@ -197,8 +197,13 @@ object ObjectDefinitionDecoder {
 
                 60, 61, 65, 66, 67, 68, 82 -> data.skip(2)
                 70, 71, 72 -> data.readShort()
-                73 -> obstructive = true
-                74 -> breakRouteFinding = true
+                73 -> decoration = true
+                74 -> {
+                    solid = false
+                    blockWalk = 0
+                    blockRange = false
+                    breakRouteFinding = false
+                }
 
                 77, 92 -> {
                     varbitId = data.readUnsignedShort()

@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "family": "vampyre",
+  "groups": [
+    {
+      "npcId": 3137,
+      "defaults": {
+        "attack": 60,
+        "attackAnimation": 1264,
+        "defence": 45,
+        "hitpoints": 85,
+        "strength": 78
+      },
+      "spawns": [
+        {
+          "x": 3544,
+          "y": 3499,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3545,
+          "y": 3503,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3546,
+          "y": 3496,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3548,
+          "y": 3500,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3549,
+          "y": 3505,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3550,
+          "y": 3495,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3552,
+          "y": 3501,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3553,
+          "y": 3498,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3553,
+          "y": 3506,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3556,
+          "y": 3500,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3556,
+          "y": 3503,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "gerrant",
+  "groups": [
+    {
+      "npcId": 1790,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2597,
+          "y": 3401,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

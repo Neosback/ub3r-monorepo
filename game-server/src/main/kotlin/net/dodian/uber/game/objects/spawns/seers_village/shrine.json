@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "region": "seers_village",
+  "objects": [
+    {
+      "id": 29088,
+      "name": "Shrine",
+      "x": 2728,
+      "y": 3477,
+      "z": 0,
+      "type": 10,
+      "rotation": "NORTH"
+    }
+  ]
+}

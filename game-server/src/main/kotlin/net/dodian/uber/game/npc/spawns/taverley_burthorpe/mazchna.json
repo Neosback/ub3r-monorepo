@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "mazchna",
+  "groups": [
+    {
+      "npcId": 402,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2885,
+          "y": 3450,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

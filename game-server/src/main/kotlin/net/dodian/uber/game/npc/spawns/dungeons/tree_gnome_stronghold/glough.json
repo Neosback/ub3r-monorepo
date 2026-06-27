@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "family": "glough",
+  "groups": [
+    {
+      "npcId": 7102,
+      "spawns": [
+        {
+          "x": 2392,
+          "y": 9903,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

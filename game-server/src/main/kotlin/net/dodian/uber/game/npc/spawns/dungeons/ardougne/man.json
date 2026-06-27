@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "family": "man",
+  "groups": [
+    {
+      "npcId": 1,
+      "defaults": {
+        "deathAnimation": 2304,
+        "hitpoints": 7,
+        "respawnTicks": 1
+      },
+      "spawns": [
+        {
+          "x": 2574,
+          "y": 9625,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

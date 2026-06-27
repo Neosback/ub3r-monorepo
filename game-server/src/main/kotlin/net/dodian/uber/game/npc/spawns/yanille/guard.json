@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "family": "guard",
+  "groups": [
+    {
+      "npcId": 3094,
+      "defaults": {
+        "attack": 10,
+        "attackAnimation": 412,
+        "deathAnimation": 2304,
+        "defence": 15,
+        "hitpoints": 20,
+        "respawnTicks": 30,
+        "strength": 22
+      },
+      "spawns": [
+        {
+          "x": 2615,
+          "y": 3103,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2615,
+          "y": 3106,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2617,
+          "y": 3104,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2617,
+          "y": 3106,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2619,
+          "y": 3104,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2620,
+          "y": 3106,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

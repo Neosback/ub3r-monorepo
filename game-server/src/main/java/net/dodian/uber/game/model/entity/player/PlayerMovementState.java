@@ -357,7 +357,7 @@ final class PlayerMovementState {
         boolean passageReverse = PersonalPassageService.canTraverse(owner, blockedX, blockedY, fromX, fromY, z);
         logger.info(
             "Blocked movement player={} from=({}, {}, {}) blocked=({}, {}, {}) clickDest=({}, {}, {}) flags=0x{} [{}] fullBlocked={} " +
-                "objCurrent={} objLuna={} footprintMismatch={} likelyTerrainOrUnknown={} staticOverride={} runtimeOverlay={} objectOverlaps={} overlapDetails={}",
+                "objCurrent={} likelyTerrainOrUnknown={} staticOverride={} runtimeOverlay={} objectOverlaps={} overlapDetails={}",
             owner.getPlayerName(),
             fromX,
             fromY,
@@ -372,8 +372,6 @@ final class PlayerMovementState {
             ClipProbeService.formatFlags(probe.getRawFlags()),
             probe.getFullMobBlocked(),
             probe.getBlockedByCurrentObjects(),
-            probe.getBlockedByLunaObjects(),
-            probe.getLikelyFootprintMismatch(),
             probe.getLikelyTerrainOrUnknownSource(),
             probe.getStaticOverridePresent(),
             probe.getRuntimeOverlayPresent(),

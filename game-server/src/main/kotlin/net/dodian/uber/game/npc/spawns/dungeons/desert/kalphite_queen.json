@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "family": "kalphite_queen",
+  "groups": [
+    {
+      "npcId": 4303,
+      "defaults": {
+        "attack": 180,
+        "attackAnimation": 6241,
+        "deathAnimation": 6242,
+        "defence": 250,
+        "hitpoints": 900,
+        "ranged": 240,
+        "respawnTicks": 250,
+        "strength": 290
+      },
+      "spawns": [
+        {
+          "x": 3483,
+          "y": 9492,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

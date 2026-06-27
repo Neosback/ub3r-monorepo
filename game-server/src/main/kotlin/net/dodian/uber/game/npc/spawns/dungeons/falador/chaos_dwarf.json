@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "family": "chaos_dwarf",
+  "groups": [
+    {
+      "npcId": 291,
+      "defaults": {
+        "attack": 43,
+        "attackAnimation": 99,
+        "deathAnimation": 102,
+        "defence": 43,
+        "hitpoints": 62,
+        "respawnTicks": 35,
+        "strength": 43
+      },
+      "spawns": [
+        {
+          "x": 2955,
+          "y": 9775,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2955,
+          "y": 9794,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2961,
+          "y": 9780,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2961,
+          "y": 9785,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2966,
+          "y": 9775,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2966,
+          "y": 9794,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

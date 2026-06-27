@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "family": "kalphite_king",
+  "groups": [
+    {
+      "npcId": 4304,
+      "defaults": {
+        "attack": 1,
+        "attackAnimation": 6235,
+        "deathAnimation": 6233,
+        "defence": 250,
+        "hitpoints": 900,
+        "magic": 1666,
+        "ranged": 290,
+        "respawnTicks": 250,
+        "strength": 66
+      },
+      "spawns": [
+        {
+          "x": 1711,
+          "y": 9845,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

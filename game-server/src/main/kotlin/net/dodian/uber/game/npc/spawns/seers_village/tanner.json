@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "tanner",
+  "groups": [
+    {
+      "npcId": 5809,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2711,
+          "y": 3478,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

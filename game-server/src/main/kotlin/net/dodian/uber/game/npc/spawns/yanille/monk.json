@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "monk",
+  "groups": [
+    {
+      "npcId": 555,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2604,
+          "y": 3092,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

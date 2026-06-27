@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "family": "kalphite_worker",
+  "groups": [
+    {
+      "npcId": 1153,
+      "defaults": {
+        "attack": 15,
+        "attackAnimation": 6224,
+        "deathAnimation": 6228,
+        "defence": 10,
+        "hitpoints": 22,
+        "respawnTicks": 30,
+        "strength": 15
+      },
+      "spawns": [
+        {
+          "x": 3486,
+          "y": 9526,
+          "plane": 2,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3489,
+          "y": 9510,
+          "plane": 2,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3490,
+          "y": 9524,
+          "plane": 2,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3496,
+          "y": 9525,
+          "plane": 2,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3498,
+          "y": 9511,
+          "plane": 2,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3498,
+          "y": 9517,
+          "plane": 2,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3501,
+          "y": 9523,
+          "plane": 2,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3503,
+          "y": 9518,
+          "plane": 2,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3505,
+          "y": 9526,
+          "plane": 2,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3508,
+          "y": 9519,
+          "plane": 2,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3509,
+          "y": 9524,
+          "plane": 2,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

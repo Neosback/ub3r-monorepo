@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "fish_spot",
+  "groups": [
+    {
+      "npcId": 319,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 3245,
+          "y": 2789,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

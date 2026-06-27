@@ -2,12 +2,16 @@ package net.dodian.uber.game.engine.systems.follow
 
 import java.util.ArrayDeque
 import kotlin.math.abs
+import net.dodian.cache.objects.GameObjectData
+import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.model.objects.WorldObject
 import net.dodian.uber.game.engine.systems.pathing.AStarPathfindingAlgorithm
 import net.dodian.uber.game.engine.systems.pathing.Heuristic
 import net.dodian.uber.game.engine.systems.pathing.Node
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
+import net.dodian.uber.game.engine.systems.pathing.collision.InteractionReachService
 
 object FollowRouting {
     private val collisionManager: CollisionManager
@@ -50,6 +54,80 @@ object FollowRouting {
             if (!isValidBoundaryDestination(destination, targetX, targetY, normalizedTargetSize, z)) {
                 continue
             }
+            val searchStart = System.nanoTime()
+            val path = pathfinding.find(follower.position.x, follower.position.y, destination.first, destination.second, z)
+            FollowPathfindingTelemetry.recordSearch(
+                durationNanos = System.nanoTime() - searchStart,
+                foundPath = path.isNotEmpty(),
+            )
+            if (path.isEmpty()) {
+                continue
+            }
+            val validated = validatePath(follower.position.x, follower.position.y, z, path)
+            if (validated.isEmpty()) {
+                continue
+            }
+            applyRoute(follower, validated, running)
+            return true
+        }
+        return false
+    }
+
+    /**
+     * Routes [follower] onto a tile from which [InteractionReachService.reachedObject] is satisfied
+     * for the given object (i.e. a valid interaction face), using the server's clip data. The client
+     * only ever parks the player on "some" adjacent tile (often a diagonal one a booth can't be used
+     * from), so the server must route to a real face tile itself. Returns true if already on a valid
+     * face tile, or a route was applied; false if no reachable valid tile exists.
+     */
+    @JvmStatic
+    fun routeToObjectInteraction(
+        follower: Client,
+        objectId: Int,
+        objX: Int,
+        objY: Int,
+        z: Int,
+        type: Int,
+        rotation: Int,
+        running: Boolean = follower.buttonOnRun,
+    ): Boolean {
+        val definition = GameObjectData.forId(objectId)
+        val rot = rotation and 0x3
+        val sizeX = definition.getSizeX(rot).coerceAtLeast(1)
+        val sizeY = definition.getSizeY(rot).coerceAtLeast(1)
+        val worldObject = WorldObject(objectId, objX, objY, z, type, rotation)
+
+        // Already standing on a valid interaction face — nothing to route.
+        if (InteractionReachService.reachedObject(Position(follower.position.x, follower.position.y, z), worldObject)) {
+            return true
+        }
+
+        val minX = objX
+        val minY = objY
+        val maxX = objX + sizeX - 1
+        val maxY = objY + sizeY - 1
+
+        // Ring of tiles around the (rotated) footprint that are unblocked AND valid reach faces.
+        val candidates = ArrayList<Pair<Int, Int>>()
+        for (x in (minX - 1)..(maxX + 1)) {
+            for (y in (minY - 1)..(maxY + 1)) {
+                if (x in minX..maxX && y in minY..maxY) {
+                    continue
+                }
+                if (collisionManager.isTileBlocked(x, y, z)) {
+                    continue
+                }
+                if (InteractionReachService.reachedObject(Position(x, y, z), worldObject)) {
+                    candidates += x to y
+                }
+            }
+        }
+        if (candidates.isEmpty()) {
+            return false
+        }
+
+        val ordered = candidates.sortedBy { abs(it.first - follower.position.x) + abs(it.second - follower.position.y) }
+        for (destination in ordered) {
             val searchStart = System.nanoTime()
             val path = pathfinding.find(follower.position.x, follower.position.y, destination.first, destination.second, z)
             FollowPathfindingTelemetry.recordSearch(

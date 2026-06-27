@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "family": "bandit_boss",
+  "groups": [
+    {
+      "npcId": 690,
+      "defaults": {
+        "attack": 82,
+        "attackAnimation": 386,
+        "deathAnimation": 2304,
+        "defence": 85,
+        "hitpoints": 138,
+        "magic": 69,
+        "ranged": 69,
+        "respawnTicks": 155,
+        "strength": 110
+      },
+      "spawns": [
+        {
+          "x": 3177,
+          "y": 2987,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

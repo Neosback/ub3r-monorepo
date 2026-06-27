@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "family": "ogre_chieftain",
+  "groups": [
+    {
+      "npcId": 4362,
+      "spawns": [
+        {
+          "x": 2571,
+          "y": 9429,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2572,
+          "y": 9435,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2575,
+          "y": 9432,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2577,
+          "y": 9438,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2579,
+          "y": 9429,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2580,
+          "y": 9436,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2580,
+          "y": 9442,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2583,
+          "y": 9433,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2584,
+          "y": 9439,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

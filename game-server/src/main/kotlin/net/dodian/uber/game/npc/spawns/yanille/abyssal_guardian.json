@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "family": "abyssal_guardian",
+  "groups": [
+    {
+      "npcId": 2585,
+      "defaults": {
+        "attack": 80,
+        "attackAnimation": 2187,
+        "deathAnimation": 2189,
+        "defence": 130,
+        "hitpoints": 120,
+        "magic": 2650,
+        "respawnTicks": 90,
+        "strength": 65
+      },
+      "spawns": [
+        {
+          "x": 2627,
+          "y": 3082,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

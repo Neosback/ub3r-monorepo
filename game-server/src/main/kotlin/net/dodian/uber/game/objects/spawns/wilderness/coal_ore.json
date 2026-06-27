@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "region": "wilderness",
+  "objects": [
+    {
+      "id": 11367,
+      "name": "Coal Ore",
+      "x": 1813,
+      "y": 3567,
+      "z": 0,
+      "type": 10,
+      "rotation": "WEST"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "family": "moss_giant",
+  "groups": [
+    {
+      "npcId": 3851,
+      "defaults": {
+        "attack": 30,
+        "attackAnimation": 4652,
+        "deathAnimation": 4673,
+        "defence": 30,
+        "hitpoints": 47,
+        "respawnTicks": 35,
+        "strength": 40
+      },
+      "spawns": [
+        {
+          "x": 2572,
+          "y": 3088,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2573,
+          "y": 3082,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2574,
+          "y": 3079,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2575,
+          "y": 3086,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2576,
+          "y": 3076,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2576,
+          "y": 3089,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2578,
+          "y": 3079,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2579,
+          "y": 3083,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2579,
+          "y": 3089,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

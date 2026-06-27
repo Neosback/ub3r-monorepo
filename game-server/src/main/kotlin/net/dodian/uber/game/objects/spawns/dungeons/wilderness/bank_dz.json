@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "region": "dungeons/wilderness",
+  "objects": [
+    {
+      "id": 10583,
+      "name": "Bank dz",
+      "x": 2480,
+      "y": 10426,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    }
+  ]
+}

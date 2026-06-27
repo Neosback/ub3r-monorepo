@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "family": "chaos_druid",
+  "groups": [
+    {
+      "npcId": 520,
+      "defaults": {
+        "attack": 25,
+        "deathAnimation": 2304,
+        "defence": 20,
+        "hitpoints": 30,
+        "respawnTicks": 25,
+        "strength": 20
+      },
+      "spawns": [
+        {
+          "x": 2922,
+          "y": 3482,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2923,
+          "y": 3485,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2925,
+          "y": 3479,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2926,
+          "y": 3487,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2928,
+          "y": 3481,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2928,
+          "y": 3485,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

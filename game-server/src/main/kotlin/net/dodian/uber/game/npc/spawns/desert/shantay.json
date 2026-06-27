@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "family": "shantay",
+  "groups": [
+    {
+      "npcId": 4642,
+      "defaults": {
+        "attackAnimation": 0,
+        "deathAnimation": 0,
+        "respawnTicks": 0
+      },
+      "spawns": [
+        {
+          "x": 3311,
+          "y": 2802,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

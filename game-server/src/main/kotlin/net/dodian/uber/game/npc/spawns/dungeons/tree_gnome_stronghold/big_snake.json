@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "family": "big_snake",
+  "groups": [
+    {
+      "npcId": 2978,
+      "spawns": [
+        {
+          "x": 2392,
+          "y": 9873,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

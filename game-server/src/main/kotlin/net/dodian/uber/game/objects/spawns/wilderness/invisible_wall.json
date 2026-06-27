@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "region": "wilderness",
+  "objects": [
+    {
+      "id": 6951,
+      "name": "invisible wall",
+      "x": 1811,
+      "y": 3565,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 0,
+      "name": "invisible wall",
+      "x": 2680,
+      "y": 3711,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 0,
+      "name": "invisible wall",
+      "x": 2681,
+      "y": 3711,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 0,
+      "name": "invisible wall",
+      "x": 2682,
+      "y": 3711,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 0,
+      "name": "invisible wall",
+      "x": 2683,
+      "y": 3711,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 0,
+      "name": "invisible wall",
+      "x": 2684,
+      "y": 3711,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 0,
+      "name": "invisible wall",
+      "x": 2686,
+      "y": 3711,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 0,
+      "name": "invisible wall",
+      "x": 2687,
+      "y": 3711,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 0,
+      "name": "invisible wall",
+      "x": 2688,
+      "y": 3711,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 0,
+      "name": "invisible wall",
+      "x": 3417,
+      "y": 3539,
+      "z": 1,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 0,
+      "name": "invisible wall",
+      "x": 3417,
+      "y": 3540,
+      "z": 1,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 0,
+      "name": "invisible wall",
+      "x": 3417,
+      "y": 3541,
+      "z": 1,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 0,
+      "name": "invisible wall",
+      "x": 3417,
+      "y": 3542,
+      "z": 1,
+      "type": 10,
+      "rotation": "EAST"
+    }
+  ]
+}

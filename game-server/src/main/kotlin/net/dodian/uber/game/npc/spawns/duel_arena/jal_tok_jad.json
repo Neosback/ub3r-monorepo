@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "family": "jal_tok_jad",
+  "groups": [
+    {
+      "npcId": 7704,
+      "spawns": [
+        {
+          "x": 3326,
+          "y": 3333,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

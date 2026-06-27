@@ -1,0 +1,368 @@
+{
+  "schemaVersion": 1,
+  "family": "cave_horror",
+  "groups": [
+    {
+      "npcId": 1047,
+      "defaults": {
+        "attack": 80,
+        "attackAnimation": 4234,
+        "deathAnimation": 4233,
+        "defence": 55,
+        "hitpoints": 70,
+        "ranged": 140,
+        "strength": 95
+      },
+      "spawns": [
+        {
+          "x": 3718,
+          "y": 9419,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3718,
+          "y": 9425,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3720,
+          "y": 9430,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3721,
+          "y": 9436,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3722,
+          "y": 9427,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3723,
+          "y": 9439,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3724,
+          "y": 9418,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3725,
+          "y": 9442,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3726,
+          "y": 9448,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3726,
+          "y": 9458,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3727,
+          "y": 9439,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3728,
+          "y": 9426,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3728,
+          "y": 9453,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3730,
+          "y": 9420,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3730,
+          "y": 9463,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3731,
+          "y": 9430,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3731,
+          "y": 9441,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3732,
+          "y": 9458,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3733,
+          "y": 9454,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3734,
+          "y": 9443,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3735,
+          "y": 9423,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3735,
+          "y": 9462,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3736,
+          "y": 9431,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3737,
+          "y": 9441,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3737,
+          "y": 9446,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3738,
+          "y": 9436,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3738,
+          "y": 9451,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3739,
+          "y": 9454,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3740,
+          "y": 9425,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3741,
+          "y": 9429,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3743,
+          "y": 9462,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3744,
+          "y": 9424,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3745,
+          "y": 9436,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3746,
+          "y": 9451,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3748,
+          "y": 9422,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3749,
+          "y": 9446,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3749,
+          "y": 9460,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3750,
+          "y": 9428,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3751,
+          "y": 9437,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3751,
+          "y": 9451,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3751,
+          "y": 9455,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3753,
+          "y": 9425,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3754,
+          "y": 9439,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3754,
+          "y": 9446,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3754,
+          "y": 9459,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3758,
+          "y": 9428,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3758,
+          "y": 9439,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3758,
+          "y": 9446,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3758,
+          "y": 9457,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3759,
+          "y": 9423,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3760,
+          "y": 9442,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3761,
+          "y": 9453,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3762,
+          "y": 9439,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3762,
+          "y": 9449,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3763,
+          "y": 9431,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3764,
+          "y": 9426,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3766,
+          "y": 9436,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 3768,
+          "y": 9423,
+          "plane": 0,
+          "facing": "SOUTH"
+        }
+      ]
+    }
+  ]
+}

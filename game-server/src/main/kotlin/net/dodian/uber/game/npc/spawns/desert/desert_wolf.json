@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "family": "desert_wolf",
+  "groups": [
+    {
+      "npcId": 4649,
+      "defaults": {
+        "attack": 50,
+        "attackAnimation": 6559,
+        "deathAnimation": 6558,
+        "defence": 50,
+        "hitpoints": 66,
+        "strength": 60
+      },
+      "spawns": [
+        {
+          "x": 3314,
+          "y": 3032,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3316,
+          "y": 3029,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3316,
+          "y": 3035,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3319,
+          "y": 3027,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3319,
+          "y": 3038,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3319,
+          "y": 3043,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3321,
+          "y": 3030,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3323,
+          "y": 3037,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3324,
+          "y": 3042,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3325,
+          "y": 3032,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3327,
+          "y": 3027,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3328,
+          "y": 3040,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3329,
+          "y": 3035,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

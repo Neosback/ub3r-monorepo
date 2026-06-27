@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "wydin",
+  "groups": [
+    {
+      "npcId": 557,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 3256,
+          "y": 2780,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

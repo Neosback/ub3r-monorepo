@@ -9,27 +9,31 @@ class GameObjectData(
     val sizeX: Int,
     val sizeY: Int,
     private val solid: Boolean,
-    private val walkable: Boolean,
+    private val impenetrable: Boolean,
     private val hasActionsFlag: Boolean,
-    private val unknownValue: Boolean,
+    private val decoration: Boolean,
     private val walkType: Int,
     private val blockWalk: Int = if (solid) 2 else 0,
     private val blockRange: Boolean = blockWalk != 0,
     private val breakRouteFinding: Boolean = false,
-    val interactionFaceMask: Int = 0,
+    val walkingFlag: Int = 0,
     val varbitId: Int = -1,
     val varpId: Int = -1,
     val childIds: IntArray? = null,
 ) {
-    fun unknown(): Boolean = unknownValue
+    fun unknown(): Boolean = decoration
     fun getSizeX(rotation: Int): Int = if (rotation == 1 || rotation == 3) sizeY else sizeX
     fun getSizeY(rotation: Int): Int = if (rotation == 1 || rotation == 3) sizeX else sizeY
     fun isSolid(): Boolean = solid
-    fun isWalkable(): Boolean = walkable
+    fun isImpenetrable(): Boolean = impenetrable
+    fun isWalkable(): Boolean = !solid
+    fun isDecoration(): Boolean = decoration
     fun hasActions(): Boolean = hasActionsFlag
     fun blockWalk(): Int = blockWalk
     fun blockRange(): Boolean = blockRange
     fun breakRouteFinding(): Boolean = breakRouteFinding
+    val interactionFaceMask: Int
+        get() = walkingFlag
     fun getBiggestSize(): Int = maxOf(sizeX, sizeY)
     fun isRangeAble(): Boolean = walkType <= 1 || (walkType == 2 && !solid)
     fun canShootThru(): Boolean = !solid
@@ -81,14 +85,14 @@ class GameObjectData(
                 sizeX = 1,
                 sizeY = 1,
                 solid = false,
-                walkable = true,
+                impenetrable = false,
                 hasActionsFlag = true,
-                unknownValue = false,
+                decoration = false,
                 walkType = 2,
                 blockWalk = 0,
                 blockRange = false,
                 breakRouteFinding = false,
-                interactionFaceMask = 0,
+                walkingFlag = 0,
                 varbitId = -1,
                 varpId = -1,
                 childIds = null,

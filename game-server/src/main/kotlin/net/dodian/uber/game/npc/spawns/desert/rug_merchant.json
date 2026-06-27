@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "family": "rug_merchant",
+  "groups": [
+    {
+      "npcId": 17,
+      "defaults": {
+        "deathAnimation": 2304,
+        "hitpoints": 18
+      },
+      "spawns": [
+        {
+          "x": 3287,
+          "y": 2814,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    },
+    {
+      "npcId": 19,
+      "defaults": {
+        "deathAnimation": 2304,
+        "hitpoints": 52
+      },
+      "spawns": [
+        {
+          "x": 3181,
+          "y": 3045,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    },
+    {
+      "npcId": 20,
+      "defaults": {
+        "deathAnimation": 2304,
+        "hitpoints": 99,
+        "respawnTicks": 10
+      },
+      "spawns": [
+        {
+          "x": 3348,
+          "y": 3002,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    },
+    {
+      "npcId": 22,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 3401,
+          "y": 2918,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

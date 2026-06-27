@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "escaping_slave",
+  "groups": [
+    {
+      "npcId": 826,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2526,
+          "y": 4778,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

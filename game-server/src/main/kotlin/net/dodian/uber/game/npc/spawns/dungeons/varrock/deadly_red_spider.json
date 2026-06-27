@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "family": "deadly_red_spider",
+  "groups": [
+    {
+      "npcId": 63,
+      "defaults": {
+        "deathAnimation": 2304,
+        "hitpoints": 60
+      },
+      "spawns": [
+        {
+          "x": 3210,
+          "y": 9897,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3213,
+          "y": 9890,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

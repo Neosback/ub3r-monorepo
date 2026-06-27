@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "family": "ogre_shaman",
+  "groups": [
+    {
+      "npcId": 4382,
+      "spawns": [
+        {
+          "x": 2577,
+          "y": 9463,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2581,
+          "y": 9465,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2585,
+          "y": 9462,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2589,
+          "y": 9464,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2608,
+          "y": 9461,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

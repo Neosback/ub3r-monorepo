@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "family": "sand_crab",
+  "groups": [
+    {
+      "npcId": 5935,
+      "defaults": {
+        "attack": 1,
+        "defence": 1,
+        "hitpoints": 45,
+        "magic": 1,
+        "ranged": 1,
+        "strength": 1
+      },
+      "spawns": [
+        {
+          "x": 2789,
+          "y": 3222,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

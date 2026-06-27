@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "family": "elder_werewolf",
+  "groups": [
+    {
+      "npcId": 5928,
+      "spawns": [
+        {
+          "x": 3542,
+          "y": 3463,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "family": "wolf",
+  "groups": [
+    {
+      "npcId": 106,
+      "defaults": {
+        "attack": 30,
+        "attackAnimation": 6559,
+        "deathAnimation": 6558,
+        "defence": 30,
+        "hitpoints": 70,
+        "strength": 30
+      },
+      "spawns": [
+        {
+          "x": 2839,
+          "y": 3503,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2840,
+          "y": 3466,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2842,
+          "y": 3490,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2843,
+          "y": 3464,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2846,
+          "y": 3490,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2846,
+          "y": 3497,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2848,
+          "y": 3478,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

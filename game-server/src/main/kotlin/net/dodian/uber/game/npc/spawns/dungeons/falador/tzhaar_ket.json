@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "family": "tzhaar_ket",
+  "groups": [
+    {
+      "npcId": 2173,
+      "defaults": {
+        "attack": 100,
+        "attackAnimation": 2609,
+        "deathAnimation": 2608,
+        "defence": 100,
+        "hitpoints": 155,
+        "respawnTicks": 35,
+        "strength": 120
+      },
+      "spawns": [
+        {
+          "x": 2900,
+          "y": 9764,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

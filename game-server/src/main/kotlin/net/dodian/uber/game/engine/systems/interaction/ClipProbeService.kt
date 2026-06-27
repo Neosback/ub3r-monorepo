@@ -20,12 +20,10 @@ object ClipProbeService {
         val hasActions: Boolean,
         val blockWalk: Int,
         val blockRange: Boolean,
-        val breakRouteFinding: Boolean,
         val sizeX: Int,
         val sizeY: Int,
         val blocksByTypeRule: Boolean,
         val overlapsCurrent: Boolean,
-        val overlapsLuna: Boolean,
         val directionalContact: Boolean,
         val reasonTags: List<String>,
     )
@@ -43,10 +41,6 @@ object ClipProbeService {
     ) {
         val blockedByCurrentObjects: Boolean =
             objectMatches.any { it.blocksByTypeRule && it.overlapsCurrent }
-        val blockedByLunaObjects: Boolean =
-            objectMatches.any { it.blocksByTypeRule && it.overlapsLuna }
-        val likelyFootprintMismatch: Boolean =
-            blockedByCurrentObjects && !blockedByLunaObjects
         val likelyTerrainOrUnknownSource: Boolean =
             fullMobBlocked && !blockedByCurrentObjects && !runtimeOverlayPresent
     }
@@ -68,7 +62,6 @@ object ClipProbeService {
                 .mapNotNull { obj ->
                     val definition = GameObjectData.forId(obj.objectId)
                     val blocksByTypeRule =
-                        !CollisionBuildService.ignoredObjectIds.contains(obj.objectId) &&
                         CollisionBuildService.isTypeWalkBlocking(
                             type = obj.type,
                             solid = definition.isSolid(),
@@ -85,19 +78,6 @@ object ClipProbeService {
                             rotation = obj.rotation,
                             sizeX = definition.sizeX,
                             sizeY = definition.sizeY,
-                            mode = CollisionBuildService.FootprintMode.ROTATED,
-                        )
-                    val overlapsLuna =
-                        CollisionBuildService.occupiesTile(
-                            objectX = obj.x,
-                            objectY = obj.y,
-                            tileX = x,
-                            tileY = y,
-                            type = obj.type,
-                            rotation = obj.rotation,
-                            sizeX = definition.sizeX,
-                            sizeY = definition.sizeY,
-                            mode = CollisionBuildService.FootprintMode.LUNA_UNROTATED_INTERACTABLE,
                         )
                     val directionalContact =
                         obj.type in 0..3 &&
@@ -112,7 +92,7 @@ object ClipProbeService {
                     } else if (blocksByTypeRule) {
                         reasonTags += "full_tile_block"
                     }
-                    if (!overlapsCurrent && !overlapsLuna && !directionalContact) {
+                    if (!overlapsCurrent && !directionalContact) {
                         null
                     } else {
                         ObjectProbe(
@@ -127,12 +107,10 @@ object ClipProbeService {
                             hasActions = definition.hasActions(),
                             blockWalk = definition.blockWalk(),
                             blockRange = definition.blockRange(),
-                            breakRouteFinding = definition.breakRouteFinding(),
                             sizeX = definition.sizeX,
                             sizeY = definition.sizeY,
                             blocksByTypeRule = blocksByTypeRule,
                             overlapsCurrent = overlapsCurrent,
-                            overlapsLuna = overlapsLuna,
                             directionalContact = directionalContact,
                             reasonTags = reasonTags,
                         )
@@ -170,18 +148,17 @@ object ClipProbeService {
     @JvmStatic
     fun formatFlags(rawFlags: Int): String {
         val tags = ArrayList<String>(12)
-        if (rawFlags and CollisionFlag.FULL_MOB_BLOCK == CollisionFlag.FULL_MOB_BLOCK) {
-            tags += "FULL_MOB_BLOCK"
-        }
-        if (rawFlags and CollisionFlag.MOB_NORTH != 0) tags += "N"
-        if (rawFlags and CollisionFlag.MOB_SOUTH != 0) tags += "S"
-        if (rawFlags and CollisionFlag.MOB_EAST != 0) tags += "E"
-        if (rawFlags and CollisionFlag.MOB_WEST != 0) tags += "W"
-        if (rawFlags and CollisionFlag.MOB_NORTH_EAST != 0) tags += "NE"
-        if (rawFlags and CollisionFlag.MOB_NORTH_WEST != 0) tags += "NW"
-        if (rawFlags and CollisionFlag.MOB_SOUTH_EAST != 0) tags += "SE"
-        if (rawFlags and CollisionFlag.MOB_SOUTH_WEST != 0) tags += "SW"
-        if (rawFlags and CollisionFlag.ROUTE_BLOCKER != 0) tags += "ROUTE"
+        if (rawFlags and CollisionFlag.BLOCKED != 0) tags += "BLOCKED"
+        if (rawFlags and CollisionFlag.IMPENETRABLE_BLOCKED != 0) tags += "IMP_BLOCKED"
+        if (rawFlags and CollisionFlag.BRIDGE != 0) tags += "BRIDGE"
+        if (rawFlags and CollisionFlag.WALL_NORTH != 0) tags += "N"
+        if (rawFlags and CollisionFlag.WALL_SOUTH != 0) tags += "S"
+        if (rawFlags and CollisionFlag.WALL_EAST != 0) tags += "E"
+        if (rawFlags and CollisionFlag.WALL_WEST != 0) tags += "W"
+        if (rawFlags and CollisionFlag.WALL_NORTH_EAST != 0) tags += "NE"
+        if (rawFlags and CollisionFlag.WALL_NORTH_WEST != 0) tags += "NW"
+        if (rawFlags and CollisionFlag.WALL_SOUTH_EAST != 0) tags += "SE"
+        if (rawFlags and CollisionFlag.WALL_SOUTH_WEST != 0) tags += "SW"
         return if (tags.isEmpty()) "none" else tags.joinToString(",")
     }
 
@@ -196,8 +173,8 @@ object ClipProbeService {
                 "id=${match.objectId},type=${match.type},rot=${match.rotation},anchor=${match.anchorX},${match.anchorY}," +
                     "name=${match.objectName}," +
                     "size=${match.sizeX}x${match.sizeY},solid=${match.solid},walkable=${match.walkable},actions=${match.hasActions}," +
-                    "blockWalk=${match.blockWalk},blockRange=${match.blockRange},breakRoute=${match.breakRouteFinding}," +
-                    "ovCurrent=${match.overlapsCurrent},ovLuna=${match.overlapsLuna},dirContact=${match.directionalContact}," +
+                    "blockWalk=${match.blockWalk},blockRange=${match.blockRange}," +
+                    "overlaps=${match.overlapsCurrent},dirContact=${match.directionalContact}," +
                     "reasons=${match.reasonTags.joinToString("+")}"
             }
         val omitted = probe.objectMatches.size - capped.size

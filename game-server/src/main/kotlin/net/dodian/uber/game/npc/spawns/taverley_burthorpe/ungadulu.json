@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "family": "ungadulu",
+  "groups": [
+    {
+      "npcId": 3957,
+      "defaults": {
+        "attack": 110,
+        "attackAnimation": 406,
+        "deathAnimation": 2304,
+        "defence": 90,
+        "hitpoints": 120,
+        "ranged": 180,
+        "respawnTicks": 180,
+        "strength": 80
+      },
+      "spawns": [
+        {
+          "x": 2889,
+          "y": 3424,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

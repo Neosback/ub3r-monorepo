@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "family": "giant_rat",
+  "groups": [
+    {
+      "npcId": 2856,
+      "defaults": {
+        "attack": 5,
+        "attackAnimation": 4933,
+        "deathAnimation": 4935,
+        "defence": 1,
+        "hitpoints": 6,
+        "respawnTicks": 20,
+        "strength": 8
+      },
+      "spawns": [
+        {
+          "x": 3240,
+          "y": 9867,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

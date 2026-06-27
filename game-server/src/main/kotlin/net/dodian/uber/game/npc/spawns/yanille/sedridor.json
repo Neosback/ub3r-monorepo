@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "sedridor",
+  "groups": [
+    {
+      "npcId": 5034,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2590,
+          "y": 3086,
+          "plane": 0,
+          "facing": "EAST"
+        }
+      ]
+    }
+  ]
+}

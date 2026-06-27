@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "family": "kalphite_guardian",
+  "groups": [
+    {
+      "npcId": 1157,
+      "defaults": {
+        "attack": 80,
+        "attackAnimation": 6224,
+        "deathAnimation": 6228,
+        "defence": 80,
+        "hitpoints": 95,
+        "respawnTicks": 70,
+        "strength": 90
+      },
+      "spawns": [
+        {
+          "x": 3510,
+          "y": 9502,
+          "plane": 2,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "family": "unknown_npc556_shop",
+  "groups": [
+    {
+      "npcId": 556,
+      "spawns": [
+        {
+          "x": 3205,
+          "y": 3417,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

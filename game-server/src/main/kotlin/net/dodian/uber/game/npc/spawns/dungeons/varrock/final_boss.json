@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "family": "final_boss",
+  "groups": [
+    {
+      "npcId": 47,
+      "defaults": {
+        "attackAnimation": 2705,
+        "deathAnimation": 2707,
+        "hitpoints": 2,
+        "strength": 1
+      },
+      "spawns": [
+        {
+          "x": 3172,
+          "y": 9884,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3177,
+          "y": 9895,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3178,
+          "y": 9881,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3184,
+          "y": 9891,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3210,
+          "y": 9903,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3210,
+          "y": 9910,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3224,
+          "y": 9907,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3227,
+          "y": 9905,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3231,
+          "y": 9908,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3236,
+          "y": 9867,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

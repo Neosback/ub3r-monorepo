@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "shop_keeper",
+  "groups": [
+    {
+      "npcId": 2813,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2595,
+          "y": 3104,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

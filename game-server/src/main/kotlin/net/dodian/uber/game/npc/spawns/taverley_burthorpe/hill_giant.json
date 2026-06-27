@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "family": "hill_giant",
+  "groups": [
+    {
+      "npcId": 2098,
+      "defaults": {
+        "attack": 20,
+        "attackAnimation": 4652,
+        "deathAnimation": 4653,
+        "defence": 20,
+        "hitpoints": 35,
+        "respawnTicks": 30,
+        "strength": 20
+      },
+      "spawns": [
+        {
+          "x": 2879,
+          "y": 3470,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2882,
+          "y": 3461,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2883,
+          "y": 3466,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2883,
+          "y": 3473,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2885,
+          "y": 3469,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2886,
+          "y": 3463,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2886,
+          "y": 3474,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

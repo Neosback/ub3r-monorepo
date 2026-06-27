@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "family": "customs_officer",
+  "groups": [
+    {
+      "npcId": 3648,
+      "defaults": {
+        "attackAnimation": 0,
+        "deathAnimation": 0,
+        "respawnTicks": 0
+      },
+      "spawns": [
+        {
+          "x": 3274,
+          "y": 2797,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

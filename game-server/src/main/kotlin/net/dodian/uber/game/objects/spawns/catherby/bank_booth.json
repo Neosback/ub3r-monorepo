@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "region": "catherby",
+  "objects": [
+    {
+      "id": 10355,
+      "name": "bank booth",
+      "x": 2810,
+      "y": 3442,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    }
+  ]
+}

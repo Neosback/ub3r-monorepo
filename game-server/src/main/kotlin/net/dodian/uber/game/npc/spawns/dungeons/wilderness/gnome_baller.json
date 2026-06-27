@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "family": "gnome_baller",
+  "groups": [
+    {
+      "npcId": 626,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 3215,
+          "y": 9935,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3216,
+          "y": 9931,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3216,
+          "y": 9939,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3220,
+          "y": 9929,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3222,
+          "y": 9939,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3223,
+          "y": 9928,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3226,
+          "y": 9932,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3226,
+          "y": 9936,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "ian",
+  "groups": [
+    {
+      "npcId": 1779,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 1934,
+          "y": 4458,
+          "plane": 2,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

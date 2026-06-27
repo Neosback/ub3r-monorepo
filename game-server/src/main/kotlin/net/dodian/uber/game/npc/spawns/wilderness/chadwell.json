@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "chadwell",
+  "groups": [
+    {
+      "npcId": 971,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2913,
+          "y": 4385,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

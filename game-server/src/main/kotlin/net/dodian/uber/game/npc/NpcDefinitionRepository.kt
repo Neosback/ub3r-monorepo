@@ -6,7 +6,7 @@ import net.dodian.uber.game.engine.systems.cache.NpcCacheDefinitionDecoder
 import net.dodian.uber.game.engine.systems.cache.CacheNpcDefinition
 
 object NpcDefinitionRepository {
-    fun load(cachePath: Path, defPath: Path): Map<Int, CacheNpcDefinition> {
+    fun load(cachePath: Path): Map<Int, CacheNpcDefinition> {
         val store = CacheStore(cachePath)
         return NpcCacheDefinitionDecoder.decode(store)
     }

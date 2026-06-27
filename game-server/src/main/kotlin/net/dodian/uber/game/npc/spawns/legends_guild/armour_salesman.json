@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "armour_salesman",
+  "groups": [
+    {
+      "npcId": 6059,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2725,
+          "y": 3369,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

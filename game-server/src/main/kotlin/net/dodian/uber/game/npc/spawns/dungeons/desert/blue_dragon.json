@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "family": "blue_dragon",
+  "groups": [
+    {
+      "npcId": 265,
+      "defaults": {
+        "attack": 90,
+        "attackAnimation": 91,
+        "deathAnimation": 92,
+        "defence": 90,
+        "hitpoints": 110,
+        "respawnTicks": 40,
+        "strength": 95
+      },
+      "spawns": [
+        {
+          "x": 3229,
+          "y": 9368,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3234,
+          "y": 9370,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3236,
+          "y": 9374,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3237,
+          "y": 9387,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3238,
+          "y": 9380,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3239,
+          "y": 9385,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3242,
+          "y": 9371,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3242,
+          "y": 9383,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3247,
+          "y": 9360,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3247,
+          "y": 9368,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

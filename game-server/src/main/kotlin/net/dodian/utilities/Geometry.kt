@@ -1,6 +1,7 @@
 package net.dodian.utilities
 
 import net.dodian.cache.objects.GameObjectDef
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditStore
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.objects.DoorRegistry
@@ -97,7 +98,9 @@ object Geometry {
     ): GameObjectDef? {
         // Doors are runtime-mutated (opened/closed), so they win over the static cache.
         for (i in DoorRegistry.doorId.indices) {
-            if (DoorRegistry.doorId[i] == objectId && DoorRegistry.doorX[i] == x && DoorRegistry.doorY[i] == y) {
+            val doorId = DoorRegistry.doorId[i]
+            val matches = doorId == objectId || GameObjectData.forId(doorId).childIds?.contains(objectId) == true
+            if (matches && DoorRegistry.doorX[i] == x && DoorRegistry.doorY[i] == y) {
                 return GameObjectDef(objectId, 2, 0, Position(x, y))
             }
         }
@@ -105,7 +108,9 @@ object Geometry {
         // MySQL game_object_definitions table. The cache carries the real type and rotation/face,
         // which the interaction reach (InteractionReachService) needs to compute valid faces.
         for (obj in CacheCollisionAuditStore.objectsForTile(x, y)) {
-            if (obj.objectId == objectId && obj.x == x && obj.y == y && obj.plane == h) {
+            val baseId = obj.objectId
+            val matches = baseId == objectId || GameObjectData.forId(baseId).childIds?.contains(objectId) == true
+            if (matches && obj.x == x && obj.y == y && obj.plane == h) {
                 return GameObjectDef(objectId, obj.type, obj.rotation, Position(x, y))
             }
         }

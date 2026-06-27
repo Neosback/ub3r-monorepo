@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "family": "plague_warning",
+  "groups": [
+    {
+      "npcId": 4218,
+      "spawns": [
+        {
+          "x": 2771,
+          "y": 3140,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

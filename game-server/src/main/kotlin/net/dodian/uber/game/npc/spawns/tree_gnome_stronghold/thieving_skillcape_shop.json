@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "family": "thieving_skillcape_shop",
+  "groups": [
+    {
+      "npcId": 4965,
+      "spawns": [
+        {
+          "x": 2447,
+          "y": 3431,
+          "plane": 1,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

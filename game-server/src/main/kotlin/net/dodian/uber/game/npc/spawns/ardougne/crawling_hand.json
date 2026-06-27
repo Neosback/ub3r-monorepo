@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "family": "crawling_hand",
+  "groups": [
+    {
+      "npcId": 449,
+      "defaults": {
+        "attack": 15,
+        "attackAnimation": 1592,
+        "deathAnimation": 1590,
+        "defence": 8,
+        "hitpoints": 16,
+        "respawnTicks": 30,
+        "strength": 8
+      },
+      "spawns": [
+        {
+          "x": 2527,
+          "y": 3297,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2529,
+          "y": 3287,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2529,
+          "y": 3294,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2529,
+          "y": 3300,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2530,
+          "y": 3290,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2531,
+          "y": 3298,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2534,
+          "y": 3297,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2538,
+          "y": 3295,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2540,
+          "y": 3287,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2540,
+          "y": 3298,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2541,
+          "y": 3291,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2542,
+          "y": 3295,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2544,
+          "y": 3286,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2544,
+          "y": 3290,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2546,
+          "y": 3305,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2547,
+          "y": 3294,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2548,
+          "y": 3303,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2548,
+          "y": 3308,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2550,
+          "y": 3303,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2551,
+          "y": 3305,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2552,
+          "y": 3303,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2561,
+          "y": 3300,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

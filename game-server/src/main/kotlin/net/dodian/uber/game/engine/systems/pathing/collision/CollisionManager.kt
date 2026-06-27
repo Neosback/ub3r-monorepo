@@ -4,75 +4,74 @@ class CollisionManager(
     private val matrix: CollisionMatrix = CollisionMatrix(),
 ) {
     fun flagWall(x: Int, y: Int, z: Int, eastBlocked: Boolean) {
-        if (!eastBlocked) {
-            return
+        if (eastBlocked) {
+            wall(x, y, z, CollisionDirection.EAST)
         }
+    }
 
-        wall(x, y, z, CollisionDirection.EAST)
+    fun setFlag(x: Int, y: Int, z: Int, flag: Int) {
+        matrix.flag(x, y, z, flag)
+    }
+
+    fun unsetFlag(x: Int, y: Int, z: Int, flag: Int) {
+        matrix.clear(x, y, z, flag)
     }
 
     fun flagSolid(x: Int, y: Int, z: Int, impenetrable: Boolean = true) {
-        matrix.flag(x, y, z, CollisionFlag.fullTile(impenetrable))
+        markOccupant(z, x, y, 1, 1, impenetrable, add = true)
     }
 
     fun clearSolid(x: Int, y: Int, z: Int, impenetrable: Boolean = true) {
-        matrix.clear(x, y, z, CollisionFlag.fullTile(impenetrable))
+        markOccupant(z, x, y, 1, 1, impenetrable, add = false)
     }
 
-    fun flagRouteBlocker(x: Int, y: Int, z: Int) {
-        matrix.flag(x, y, z, CollisionFlag.ROUTE_BLOCKER)
+    fun markOccupant(height: Int, x: Int, y: Int, width: Int, length: Int, impenetrable: Boolean, add: Boolean) {
+        val flag = CollisionFlag.BLOCKED or if (impenetrable) CollisionFlag.IMPENETRABLE_BLOCKED else 0
+        for (xPos in x until x + width) {
+            for (yPos in y until y + length) {
+                if (add) {
+                    setFlag(xPos, yPos, height, flag)
+                } else {
+                    unsetFlag(xPos, yPos, height, flag)
+                }
+            }
+        }
     }
 
-    fun clearRouteBlocker(x: Int, y: Int, z: Int) {
-        matrix.clear(x, y, z, CollisionFlag.ROUTE_BLOCKER)
+    fun markBridge(height: Int, x: Int, y: Int) {
+        setFlag(x, y, height, CollisionFlag.BRIDGE)
     }
 
     fun wall(x: Int, y: Int, z: Int, direction: CollisionDirection, impenetrable: Boolean = true) {
-        tile(x, y, z, setOf(direction), impenetrable)
-        tile(x + direction.dx, y + direction.dy, z, setOf(direction.opposite()), impenetrable)
+        markWall(direction, z, x, y, STRAIGHT_WALL, impenetrable)
     }
 
     fun clearWall(x: Int, y: Int, z: Int, direction: CollisionDirection, impenetrable: Boolean = true) {
-        clearTile(x, y, z, setOf(direction), impenetrable)
-        clearTile(x + direction.dx, y + direction.dy, z, setOf(direction.opposite()), impenetrable)
+        unmarkWall(direction, z, x, y, STRAIGHT_WALL, impenetrable)
     }
 
     fun largeCornerWall(x: Int, y: Int, z: Int, direction: CollisionDirection, impenetrable: Boolean = true) {
-        val components = CollisionDirection.diagonalComponents(direction)
-        tile(x, y, z, components.toSet(), impenetrable)
-        for (component in components) {
-            tile(x + component.dx, y + component.dy, z, setOf(component.opposite()), impenetrable)
-        }
+        markWall(direction, z, x, y, ENTIRE_WALL, impenetrable)
     }
 
     fun clearLargeCornerWall(x: Int, y: Int, z: Int, direction: CollisionDirection, impenetrable: Boolean = true) {
-        val components = CollisionDirection.diagonalComponents(direction)
-        clearTile(x, y, z, components.toSet(), impenetrable)
-        for (component in components) {
-            clearTile(x + component.dx, y + component.dy, z, setOf(component.opposite()), impenetrable)
+        unmarkWall(direction, z, x, y, ENTIRE_WALL, impenetrable)
+    }
+
+    fun markWall(orientation: CollisionDirection, height: Int, x: Int, y: Int, type: Int, impenetrable: Boolean) {
+        when (type) {
+            STRAIGHT_WALL -> markStraightWall(orientation, height, x, y, impenetrable, add = true)
+            ENTIRE_WALL -> markEntireWall(orientation, height, x, y, impenetrable, add = true)
+            DIAGONAL_CORNER_WALL, WALL_CORNER -> markDiagonalCornerWall(orientation, height, x, y, impenetrable, add = true)
         }
     }
 
-    fun tile(x: Int, y: Int, z: Int, directions: Set<CollisionDirection>, impenetrable: Boolean = true) {
-        var flags = 0
-        for (direction in directions) {
-            flags = flags or CollisionFlag.singleDirectionFlag(direction.dx, direction.dy)
-            if (impenetrable) {
-                flags = flags or CollisionFlag.singleDirectionFlag(direction.dx, direction.dy, projectile = true)
-            }
+    fun unmarkWall(orientation: CollisionDirection, height: Int, x: Int, y: Int, type: Int, impenetrable: Boolean) {
+        when (type) {
+            STRAIGHT_WALL -> markStraightWall(orientation, height, x, y, impenetrable, add = false)
+            ENTIRE_WALL -> markEntireWall(orientation, height, x, y, impenetrable, add = false)
+            DIAGONAL_CORNER_WALL, WALL_CORNER -> markDiagonalCornerWall(orientation, height, x, y, impenetrable, add = false)
         }
-        matrix.flag(x, y, z, flags)
-    }
-
-    fun clearTile(x: Int, y: Int, z: Int, directions: Set<CollisionDirection>, impenetrable: Boolean = true) {
-        var flags = 0
-        for (direction in directions) {
-            flags = flags or CollisionFlag.singleDirectionFlag(direction.dx, direction.dy)
-            if (impenetrable) {
-                flags = flags or CollisionFlag.singleDirectionFlag(direction.dx, direction.dy, projectile = true)
-            }
-        }
-        matrix.clear(x, y, z, flags)
     }
 
     fun apply(update: CollisionUpdate) {
@@ -83,19 +82,26 @@ class CollisionManager(
         matrix.clearAll()
     }
 
-    fun traversable(x: Int, y: Int, z: Int, dx: Int, dy: Int): Boolean = canStep(x - dx, y - dy, z, dx, dy, 1, 1)
+    fun traversable(x: Int, y: Int, z: Int, dx: Int, dy: Int): Boolean {
+        val direction = CollisionDirection.fromDelta(dx, dy)
+        if (direction == CollisionDirection.NONE) {
+            return true
+        }
+        return isTraversable(z, x - dx, y - dy, direction, 1)
+    }
 
     fun projectileTraversable(x: Int, y: Int, z: Int, dx: Int, dy: Int): Boolean {
-        if (matrix.hasAllFlags(x, y, z, CollisionFlag.FULL_PROJECTILE_BLOCK)) {
-            return false
+        val direction = CollisionDirection.fromDelta(dx, dy)
+        if (direction == CollisionDirection.NONE) {
+            return true
         }
-        val flags = matrix.getFlags(x, y, z)
-        return flags and CollisionFlag.projectileApproachMask(dx, dy) == 0
+        return isTraversable(z, x - dx, y - dy, direction, impenetrable = true) &&
+            isTraversable(z, x, y, direction.opposite(), impenetrable = true)
     }
 
     fun getFlags(x: Int, y: Int, z: Int): Int = matrix.getFlags(x, y, z)
 
-    fun isTileBlocked(x: Int, y: Int, z: Int): Boolean = matrix.hasAllFlags(x, y, z, CollisionFlag.FULL_MOB_BLOCK)
+    fun isTileBlocked(x: Int, y: Int, z: Int): Boolean = matrix.hasFlags(x, y, z, CollisionFlag.BLOCKED)
 
     fun canMove(
         startX: Int,
@@ -108,121 +114,321 @@ class CollisionManager(
     ): Boolean {
         var currentX = startX
         var currentY = startY
+        val size = maxOf(xLength, yLength)
 
         while (currentX != endX || currentY != endY) {
             val stepX = Integer.compare(endX, currentX)
             val stepY = Integer.compare(endY, currentY)
-            val nextX = if (currentX != endX) currentX + stepX else currentX
-            val nextY = if (currentY != endY) currentY + stepY else currentY
-
-            if (!canStep(currentX, currentY, z, stepX, stepY, xLength, yLength)) {
+            val direction = CollisionDirection.fromDelta(stepX, stepY)
+            if (direction == CollisionDirection.NONE) {
+                return true
+            }
+            if (!isTraversable(z, currentX, currentY, direction, size)) {
                 return false
             }
-
-            currentX = nextX
-            currentY = nextY
+            currentX += stepX
+            currentY += stepY
         }
 
         return true
     }
 
-    private fun canStep(currentX: Int, currentY: Int, z: Int, stepX: Int, stepY: Int, xLength: Int, yLength: Int): Boolean {
-        if (stepX == 0 && stepY == 0) {
-            return true
-        }
-
-        val destinationX = currentX + stepX
-        val destinationY = currentY + stepY
-
-        if (stepX != 0 && stepY != 0) {
-            val horizontalFirst = canStep(currentX, currentY, z, stepX, 0, xLength, yLength)
-                    && canStep(currentX + stepX, currentY, z, 0, stepY, xLength, yLength)
-            val verticalFirst = canStep(currentX, currentY, z, 0, stepY, xLength, yLength)
-                    && canStep(currentX, currentY + stepY, z, stepX, 0, xLength, yLength)
-            // Require BOTH orthogonal neighbours clear (no corner-cutting), matching the client's
-            // diagonal mask and Tarnish TraversalMap.isTraversableNorthEast/…. Previously used `&&`
-            // on the negations (allowed if EITHER L-path was clear), which let players noclip
-            // through wall corners on interpolated/two-click diagonal steps.
-            if (!horizontalFirst || !verticalFirst) {
-                return false
-            }
-            if (isAnyFullBlocked(destinationX, destinationY, z, xLength, yLength)) {
-                return false
-            }
-            for (dx in 0 until xLength) {
-                for (dy in 0 until yLength) {
-                    if (isApproachBlocked(destinationX + dx, destinationY + dy, z, stepX, stepY)) {
-                        return false
-                    }
-                }
-            }
-            return true
-        }
-
-        if (isAnyFullBlocked(destinationX, destinationY, z, xLength, yLength)) {
-            return false
-        }
-
-        when {
-            stepX > 0 -> {
-                val edgeX = destinationX + xLength - 1
-                for (dy in 0 until yLength) {
-                    if (isApproachBlocked(edgeX, destinationY + dy, z, stepX, 0)) {
-                        return false
-                    }
-                }
-            }
-
-            stepX < 0 -> {
-                val edgeX = destinationX
-                for (dy in 0 until yLength) {
-                    if (isApproachBlocked(edgeX, destinationY + dy, z, stepX, 0)) {
-                        return false
-                    }
-                }
-            }
-
-            stepY > 0 -> {
-                val edgeY = destinationY + yLength - 1
-                for (dx in 0 until xLength) {
-                    if (isApproachBlocked(destinationX + dx, edgeY, z, 0, stepY)) {
-                        return false
-                    }
-                }
-            }
-
-            else -> {
-                val edgeY = destinationY
-                for (dx in 0 until xLength) {
-                    if (isApproachBlocked(destinationX + dx, edgeY, z, 0, stepY)) {
-                        return false
-                    }
+    fun isTraversable(height: Int, x: Int, y: Int, direction: CollisionDirection, size: Int): Boolean {
+        for (offsetX in 0 until size) {
+            for (offsetY in 0 until size) {
+                if (!isTraversable(height, x + offsetX, y + offsetY, direction, impenetrable = false)) {
+                    return false
                 }
             }
         }
-
         return true
     }
 
-    private fun isAnyFullBlocked(baseX: Int, baseY: Int, z: Int, xLength: Int, yLength: Int): Boolean {
-        for (dx in 0 until xLength) {
-            for (dy in 0 until yLength) {
-                val x = baseX + dx
-                val y = baseY + dy
-                if (matrix.hasAllFlags(x, y, z, CollisionFlag.FULL_MOB_BLOCK)) {
-                    return true
+    fun isTraversable(height: Int, x: Int, y: Int, direction: CollisionDirection, impenetrable: Boolean): Boolean =
+        when (direction) {
+            CollisionDirection.NORTH -> isTraversableNorth(height, x, y, impenetrable)
+            CollisionDirection.SOUTH -> isTraversableSouth(height, x, y, impenetrable)
+            CollisionDirection.EAST -> isTraversableEast(height, x, y, impenetrable)
+            CollisionDirection.WEST -> isTraversableWest(height, x, y, impenetrable)
+            CollisionDirection.NORTH_EAST -> isTraversableNorthEast(height, x, y, impenetrable)
+            CollisionDirection.NORTH_WEST -> isTraversableNorthWest(height, x, y, impenetrable)
+            CollisionDirection.SOUTH_EAST -> isTraversableSouthEast(height, x, y, impenetrable)
+            CollisionDirection.SOUTH_WEST -> isTraversableSouthWest(height, x, y, impenetrable)
+            CollisionDirection.NONE -> true
+        }
+
+    private fun markStraightWall(
+        orientation: CollisionDirection,
+        height: Int,
+        x: Int,
+        y: Int,
+        impenetrable: Boolean,
+        add: Boolean,
+    ) {
+        when (orientation) {
+            CollisionDirection.WEST -> {
+                update(height, x, y, CollisionFlag.WALL_WEST, add)
+                update(height, x - 1, y, CollisionFlag.WALL_EAST, add)
+                if (impenetrable) {
+                    update(height, x, y, CollisionFlag.IMPENETRABLE_WALL_WEST, add)
+                    update(height, x - 1, y, CollisionFlag.IMPENETRABLE_WALL_EAST, add)
                 }
             }
+            CollisionDirection.NORTH -> {
+                update(height, x, y, CollisionFlag.WALL_NORTH, add)
+                update(height, x, y + 1, CollisionFlag.WALL_SOUTH, add)
+                if (impenetrable) {
+                    update(height, x, y, CollisionFlag.IMPENETRABLE_WALL_NORTH, add)
+                    update(height, x, y + 1, CollisionFlag.IMPENETRABLE_WALL_SOUTH, add)
+                }
+            }
+            CollisionDirection.EAST -> {
+                update(height, x, y, CollisionFlag.WALL_EAST, add)
+                update(height, x + 1, y, CollisionFlag.WALL_WEST, add)
+                if (impenetrable) {
+                    update(height, x, y, CollisionFlag.IMPENETRABLE_WALL_EAST, add)
+                    update(height, x + 1, y, CollisionFlag.IMPENETRABLE_WALL_WEST, add)
+                }
+            }
+            CollisionDirection.SOUTH -> {
+                update(height, x, y, CollisionFlag.WALL_SOUTH, add)
+                update(height, x, y - 1, CollisionFlag.WALL_NORTH, add)
+                if (impenetrable) {
+                    update(height, x, y, CollisionFlag.IMPENETRABLE_WALL_SOUTH, add)
+                    update(height, x, y - 1, CollisionFlag.IMPENETRABLE_WALL_NORTH, add)
+                }
+            }
+            else -> Unit
         }
-        return false
     }
 
-    private fun isApproachBlocked(x: Int, y: Int, z: Int, dx: Int, dy: Int): Boolean {
-        val flags = matrix.getFlags(x, y, z)
-        return flags and CollisionFlag.approachMask(dx, dy) != 0
+    private fun markEntireWall(
+        orientation: CollisionDirection,
+        height: Int,
+        x: Int,
+        y: Int,
+        impenetrable: Boolean,
+        add: Boolean,
+    ) {
+        when (orientation) {
+            CollisionDirection.WEST -> {
+                update(height, x, y, CollisionFlag.WALL_WEST or CollisionFlag.WALL_NORTH, add)
+                update(height, x - 1, y, CollisionFlag.WALL_EAST, add)
+                update(height, x, y + 1, CollisionFlag.WALL_SOUTH, add)
+                if (impenetrable) {
+                    update(height, x, y, CollisionFlag.IMPENETRABLE_WALL_WEST or CollisionFlag.IMPENETRABLE_WALL_NORTH, add)
+                    update(height, x - 1, y, CollisionFlag.IMPENETRABLE_WALL_EAST, add)
+                    update(height, x, y + 1, CollisionFlag.IMPENETRABLE_WALL_SOUTH, add)
+                }
+            }
+            CollisionDirection.NORTH -> {
+                update(height, x, y, CollisionFlag.WALL_EAST or CollisionFlag.WALL_NORTH, add)
+                update(height, x, y + 1, CollisionFlag.WALL_SOUTH, add)
+                update(height, x + 1, y, CollisionFlag.WALL_WEST, add)
+                if (impenetrable) {
+                    update(height, x, y, CollisionFlag.IMPENETRABLE_WALL_EAST or CollisionFlag.IMPENETRABLE_WALL_NORTH, add)
+                    update(height, x, y + 1, CollisionFlag.IMPENETRABLE_WALL_SOUTH, add)
+                    update(height, x + 1, y, CollisionFlag.IMPENETRABLE_WALL_WEST, add)
+                }
+            }
+            CollisionDirection.EAST -> {
+                update(height, x, y, CollisionFlag.WALL_EAST or CollisionFlag.WALL_SOUTH, add)
+                update(height, x + 1, y, CollisionFlag.WALL_WEST, add)
+                update(height, x, y - 1, CollisionFlag.WALL_NORTH, add)
+                if (impenetrable) {
+                    update(height, x, y, CollisionFlag.IMPENETRABLE_WALL_EAST or CollisionFlag.IMPENETRABLE_WALL_SOUTH, add)
+                    update(height, x + 1, y, CollisionFlag.IMPENETRABLE_WALL_WEST, add)
+                    update(height, x, y - 1, CollisionFlag.IMPENETRABLE_WALL_NORTH, add)
+                }
+            }
+            CollisionDirection.SOUTH -> {
+                update(height, x, y, CollisionFlag.WALL_WEST or CollisionFlag.WALL_SOUTH, add)
+                update(height, x - 1, y, CollisionFlag.WALL_EAST, add)
+                update(height, x, y - 1, CollisionFlag.WALL_NORTH, add)
+                if (impenetrable) {
+                    update(height, x, y, CollisionFlag.IMPENETRABLE_WALL_WEST or CollisionFlag.IMPENETRABLE_WALL_SOUTH, add)
+                    update(height, x - 1, y, CollisionFlag.IMPENETRABLE_WALL_EAST, add)
+                    update(height, x, y - 1, CollisionFlag.IMPENETRABLE_WALL_NORTH, add)
+                }
+            }
+            else -> Unit
+        }
     }
+
+    private fun markDiagonalCornerWall(
+        orientation: CollisionDirection,
+        height: Int,
+        x: Int,
+        y: Int,
+        impenetrable: Boolean,
+        add: Boolean,
+    ) {
+        when (orientation) {
+            CollisionDirection.WEST -> {
+                update(height, x, y, CollisionFlag.WALL_NORTH_WEST, add)
+                update(height, x - 1, y + 1, CollisionFlag.WALL_SOUTH_EAST, add)
+                if (impenetrable) {
+                    update(height, x, y, CollisionFlag.IMPENETRABLE_WALL_NORTH_WEST, add)
+                    update(height, x - 1, y + 1, CollisionFlag.IMPENETRABLE_WALL_SOUTH_EAST, add)
+                }
+            }
+            CollisionDirection.NORTH -> {
+                update(height, x, y, CollisionFlag.WALL_NORTH_EAST, add)
+                update(height, x + 1, y + 1, CollisionFlag.WALL_SOUTH_WEST, add)
+                if (impenetrable) {
+                    update(height, x, y, CollisionFlag.IMPENETRABLE_WALL_NORTH_EAST, add)
+                    update(height, x + 1, y + 1, CollisionFlag.IMPENETRABLE_WALL_SOUTH_WEST, add)
+                }
+            }
+            CollisionDirection.EAST -> {
+                update(height, x, y, CollisionFlag.WALL_SOUTH_EAST, add)
+                update(height, x + 1, y - 1, CollisionFlag.WALL_NORTH_WEST, add)
+                if (impenetrable) {
+                    update(height, x, y, CollisionFlag.IMPENETRABLE_WALL_SOUTH_EAST, add)
+                    update(height, x + 1, y - 1, CollisionFlag.IMPENETRABLE_WALL_NORTH_WEST, add)
+                }
+            }
+            CollisionDirection.SOUTH -> {
+                update(height, x, y, CollisionFlag.WALL_SOUTH_WEST, add)
+                update(height, x - 1, y - 1, CollisionFlag.WALL_NORTH_EAST, add)
+                if (impenetrable) {
+                    update(height, x, y, CollisionFlag.IMPENETRABLE_WALL_SOUTH_WEST, add)
+                    update(height, x - 1, y - 1, CollisionFlag.IMPENETRABLE_WALL_NORTH_EAST, add)
+                }
+            }
+            else -> Unit
+        }
+    }
+
+    private fun update(height: Int, x: Int, y: Int, flag: Int, add: Boolean) {
+        if (add) {
+            setFlag(x, y, height, flag)
+        } else {
+            unsetFlag(x, y, height, flag)
+        }
+    }
+
+    private fun isTraversableNorth(height: Int, x: Int, y: Int, impenetrable: Boolean): Boolean =
+        if (impenetrable) {
+            isInactive(height, x, y + 1, CollisionFlag.IMPENETRABLE_BLOCKED or CollisionFlag.IMPENETRABLE_WALL_SOUTH)
+        } else {
+            isInactive(height, x, y + 1, CollisionFlag.WALL_SOUTH or CollisionFlag.BLOCKED)
+        }
+
+    private fun isTraversableSouth(height: Int, x: Int, y: Int, impenetrable: Boolean): Boolean =
+        if (impenetrable) {
+            isInactive(height, x, y - 1, CollisionFlag.IMPENETRABLE_BLOCKED or CollisionFlag.IMPENETRABLE_WALL_NORTH)
+        } else {
+            isInactive(height, x, y - 1, CollisionFlag.WALL_NORTH or CollisionFlag.BLOCKED)
+        }
+
+    private fun isTraversableEast(height: Int, x: Int, y: Int, impenetrable: Boolean): Boolean =
+        if (impenetrable) {
+            isInactive(height, x + 1, y, CollisionFlag.IMPENETRABLE_BLOCKED or CollisionFlag.IMPENETRABLE_WALL_WEST)
+        } else {
+            isInactive(height, x + 1, y, CollisionFlag.WALL_WEST or CollisionFlag.BLOCKED)
+        }
+
+    private fun isTraversableWest(height: Int, x: Int, y: Int, impenetrable: Boolean): Boolean =
+        if (impenetrable) {
+            isInactive(height, x - 1, y, CollisionFlag.IMPENETRABLE_BLOCKED or CollisionFlag.IMPENETRABLE_WALL_EAST)
+        } else {
+            isInactive(height, x - 1, y, CollisionFlag.WALL_EAST or CollisionFlag.BLOCKED)
+        }
+
+    private fun isTraversableNorthEast(height: Int, x: Int, y: Int, impenetrable: Boolean): Boolean =
+        if (impenetrable) {
+            isInactive(
+                height,
+                x + 1,
+                y + 1,
+                CollisionFlag.IMPENETRABLE_WALL_WEST or CollisionFlag.IMPENETRABLE_WALL_SOUTH or CollisionFlag.IMPENETRABLE_WALL_SOUTH_WEST,
+            ) &&
+                isInactive(height, x + 1, y, CollisionFlag.IMPENETRABLE_WALL_WEST or CollisionFlag.IMPENETRABLE_BLOCKED) &&
+                isInactive(height, x, y + 1, CollisionFlag.IMPENETRABLE_WALL_SOUTH or CollisionFlag.IMPENETRABLE_BLOCKED)
+        } else {
+            isInactive(
+                height,
+                x + 1,
+                y + 1,
+                CollisionFlag.WALL_WEST or CollisionFlag.WALL_SOUTH or CollisionFlag.WALL_SOUTH_WEST or CollisionFlag.BLOCKED,
+            ) &&
+                isInactive(height, x + 1, y, CollisionFlag.WALL_WEST or CollisionFlag.BLOCKED) &&
+                isInactive(height, x, y + 1, CollisionFlag.WALL_SOUTH or CollisionFlag.BLOCKED)
+        }
+
+    private fun isTraversableNorthWest(height: Int, x: Int, y: Int, impenetrable: Boolean): Boolean =
+        if (impenetrable) {
+            isInactive(
+                height,
+                x - 1,
+                y + 1,
+                CollisionFlag.IMPENETRABLE_WALL_EAST or CollisionFlag.IMPENETRABLE_WALL_SOUTH or CollisionFlag.IMPENETRABLE_WALL_SOUTH_EAST,
+            ) &&
+                isInactive(height, x - 1, y, CollisionFlag.IMPENETRABLE_WALL_EAST or CollisionFlag.IMPENETRABLE_BLOCKED) &&
+                isInactive(height, x, y + 1, CollisionFlag.IMPENETRABLE_WALL_SOUTH or CollisionFlag.IMPENETRABLE_BLOCKED)
+        } else {
+            isInactive(
+                height,
+                x - 1,
+                y + 1,
+                CollisionFlag.WALL_EAST or CollisionFlag.WALL_SOUTH or CollisionFlag.WALL_SOUTH_EAST or CollisionFlag.BLOCKED,
+            ) &&
+                isInactive(height, x - 1, y, CollisionFlag.WALL_EAST or CollisionFlag.BLOCKED) &&
+                isInactive(height, x, y + 1, CollisionFlag.WALL_SOUTH or CollisionFlag.BLOCKED)
+        }
+
+    private fun isTraversableSouthEast(height: Int, x: Int, y: Int, impenetrable: Boolean): Boolean =
+        if (impenetrable) {
+            isInactive(
+                height,
+                x + 1,
+                y - 1,
+                CollisionFlag.IMPENETRABLE_WALL_WEST or CollisionFlag.IMPENETRABLE_WALL_NORTH or CollisionFlag.IMPENETRABLE_WALL_NORTH_WEST,
+            ) &&
+                isInactive(height, x + 1, y, CollisionFlag.IMPENETRABLE_WALL_WEST or CollisionFlag.IMPENETRABLE_BLOCKED) &&
+                isInactive(height, x, y - 1, CollisionFlag.IMPENETRABLE_WALL_NORTH or CollisionFlag.IMPENETRABLE_BLOCKED)
+        } else {
+            isInactive(
+                height,
+                x + 1,
+                y - 1,
+                CollisionFlag.WALL_WEST or CollisionFlag.WALL_NORTH or CollisionFlag.WALL_NORTH_WEST or CollisionFlag.BLOCKED,
+            ) &&
+                isInactive(height, x + 1, y, CollisionFlag.WALL_WEST or CollisionFlag.BLOCKED) &&
+                isInactive(height, x, y - 1, CollisionFlag.WALL_NORTH or CollisionFlag.BLOCKED)
+        }
+
+    private fun isTraversableSouthWest(height: Int, x: Int, y: Int, impenetrable: Boolean): Boolean =
+        if (impenetrable) {
+            isInactive(
+                height,
+                x - 1,
+                y - 1,
+                CollisionFlag.IMPENETRABLE_WALL_EAST or CollisionFlag.IMPENETRABLE_WALL_NORTH or CollisionFlag.IMPENETRABLE_WALL_NORTH_EAST,
+            ) &&
+                isInactive(height, x - 1, y, CollisionFlag.IMPENETRABLE_WALL_EAST or CollisionFlag.IMPENETRABLE_BLOCKED) &&
+                isInactive(height, x, y - 1, CollisionFlag.IMPENETRABLE_WALL_NORTH or CollisionFlag.IMPENETRABLE_BLOCKED)
+        } else {
+            isInactive(
+                height,
+                x - 1,
+                y - 1,
+                CollisionFlag.WALL_EAST or CollisionFlag.WALL_NORTH or CollisionFlag.WALL_NORTH_EAST or CollisionFlag.BLOCKED,
+            ) &&
+                isInactive(height, x - 1, y, CollisionFlag.WALL_EAST or CollisionFlag.BLOCKED) &&
+                isInactive(height, x, y - 1, CollisionFlag.WALL_NORTH or CollisionFlag.BLOCKED)
+        }
+
+    private fun isInactive(height: Int, x: Int, y: Int, flag: Int): Boolean =
+        matrix.getFlags(x, y, height) and flag == 0
 
     companion object {
+        private const val STRAIGHT_WALL = 0
+        private const val DIAGONAL_CORNER_WALL = 1
+        private const val ENTIRE_WALL = 2
+        private const val WALL_CORNER = 3
+
         private val GLOBAL = CollisionManager()
 
         @JvmStatic

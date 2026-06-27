@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "family": "menaphite_thug_boss",
+  "groups": [
+    {
+      "npcId": 3551,
+      "defaults": {
+        "attack": 75,
+        "attackAnimation": 401,
+        "defence": 75,
+        "hitpoints": 122,
+        "respawnTicks": 155,
+        "strength": 110
+      },
+      "spawns": [
+        {
+          "x": 3350,
+          "y": 2949,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "family": "ogre_trader",
+  "groups": [
+    {
+      "npcId": 4401,
+      "spawns": [
+        {
+          "x": 2614,
+          "y": 9421,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

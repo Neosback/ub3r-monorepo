@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "family": "ancestral_glyph",
+  "groups": [
+    {
+      "npcId": 7707,
+      "spawns": [
+        {
+          "x": 3329,
+          "y": 3337,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

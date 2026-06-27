@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "family": "dagannoth",
+  "groups": [
+    {
+      "npcId": 2265,
+      "defaults": {
+        "attack": 255,
+        "attackAnimation": 2853,
+        "deathAnimation": 2856,
+        "defence": 128,
+        "hitpoints": 255,
+        "ranged": 255,
+        "strength": 255
+      },
+      "spawns": [
+        {
+          "x": 3251,
+          "y": 2794,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    },
+    {
+      "npcId": 2267,
+      "defaults": {
+        "attack": 255,
+        "attackAnimation": 2853,
+        "deathAnimation": 2856,
+        "defence": 255,
+        "hitpoints": 255,
+        "ranged": 255,
+        "strength": 255
+      },
+      "spawns": [
+        {
+          "x": 3248,
+          "y": 2794,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

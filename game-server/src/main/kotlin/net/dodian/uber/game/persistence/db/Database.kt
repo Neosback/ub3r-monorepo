@@ -170,7 +170,6 @@ enum class DbTables(val table: String) {
     GAME_DOOR_DEFINITIONS("uber3_doors"),
     GAME_ITEM_DEFINITIONS("uber3_items"),
     GAME_NPC_DEFINITIONS("uber3_npcs"),
-    GAME_OBJECT_DEFINITIONS("uber3_objects"),
 
     GAME_REFUND_ITEMS("uber3_refunds"),
 

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "family": "venenati",
+  "groups": [
+    {
+      "npcId": 6610,
+      "defaults": {
+        "attack": 160,
+        "attackAnimation": 5322,
+        "deathAnimation": 5329,
+        "defence": 250,
+        "hitpoints": 900,
+        "magic": 666,
+        "ranged": 1,
+        "respawnTicks": 250,
+        "strength": 170
+      },
+      "spawns": [
+        {
+          "x": 3220,
+          "y": 9933,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

@@ -157,15 +157,7 @@ object CommandDbService {
         it.setString(6, rareShout)
     }
 
-    @JvmStatic @Throws(Exception::class)
-    fun insertObjectDefinition(id: Int, x: Int, y: Int, type: Int): CommandWriteResult = executeWrite(
-        "INSERT INTO ${DbTables.GAME_OBJECT_DEFINITIONS} (id, x, y, type) VALUES (?, ?, ?, ?)",
-    ) {
-        it.setInt(1, id)
-        it.setInt(2, x)
-        it.setInt(3, y)
-        it.setInt(4, type)
-    }
+
 
     @JvmStatic
     fun parseContainerEntries(text: String?): ArrayList<ContainerEntry> {

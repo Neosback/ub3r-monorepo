@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "family": "banker_spawn_entries",
+  "groups": [
+    {
+      "npcId": 1613,
+      "defaults": {
+        "deathAnimation": 2304,
+        "respawnTicks": 0
+      },
+      "spawns": [
+        {
+          "x": 2807,
+          "y": 3443,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 2809,
+          "y": 3443,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 2810,
+          "y": 3443,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 2811,
+          "y": 3443,
+          "plane": 0,
+          "facing": "SOUTH"
+        }
+      ]
+    }
+  ]
+}

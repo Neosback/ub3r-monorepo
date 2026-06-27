@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "family": "sand_snake_hard",
+  "groups": [
+    {
+      "npcId": 7894,
+      "spawns": [
+        {
+          "x": 2391,
+          "y": 9877,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2442,
+          "y": 9881,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2445,
+          "y": 9892,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

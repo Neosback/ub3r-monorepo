@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "family": "dagannoth",
+  "groups": [
+    {
+      "npcId": 1338,
+      "defaults": {
+        "deathAnimation": 2304,
+        "hitpoints": 71
+      },
+      "spawns": [
+        {
+          "x": 1842,
+          "y": 4494,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

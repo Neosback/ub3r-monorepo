@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "family": "green_dragon",
+  "groups": [
+    {
+      "npcId": 260,
+      "defaults": {
+        "attack": 65,
+        "attackAnimation": 91,
+        "deathAnimation": 92,
+        "defence": 60,
+        "hitpoints": 80,
+        "respawnTicks": 40,
+        "strength": 70
+      },
+      "spawns": [
+        {
+          "x": 3233,
+          "y": 9358,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3235,
+          "y": 9353,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3235,
+          "y": 9361,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3238,
+          "y": 9350,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3250,
+          "y": 9362,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3250,
+          "y": 9371,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3251,
+          "y": 9357,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3251,
+          "y": 9367,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

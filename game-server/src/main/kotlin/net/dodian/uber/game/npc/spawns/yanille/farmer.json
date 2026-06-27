@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "farmer",
+  "groups": [
+    {
+      "npcId": 3086,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2590,
+          "y": 3102,
+          "plane": 0,
+          "facing": "SOUTH"
+        }
+      ]
+    }
+  ]
+}

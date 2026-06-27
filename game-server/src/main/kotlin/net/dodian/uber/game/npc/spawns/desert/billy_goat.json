@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "family": "billy_goat",
+  "groups": [
+    {
+      "npcId": 1794,
+      "defaults": {
+        "attack": 40,
+        "attackAnimation": 4936,
+        "deathAnimation": 253,
+        "defence": 40,
+        "hitpoints": 42,
+        "respawnTicks": 150,
+        "strength": 40
+      },
+      "spawns": [
+        {
+          "x": 3160,
+          "y": 3043,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

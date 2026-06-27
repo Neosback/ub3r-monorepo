@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "region": "dungeons/wilderness",
+  "objects": [
+    {
+      "id": 29241,
+      "name": "ornate dzone",
+      "x": 2480,
+      "y": 10439,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    }
+  ]
+}

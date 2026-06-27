@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "family": "legends_guard",
+  "groups": [
+    {
+      "npcId": 3951,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2727,
+          "y": 3349,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 2730,
+          "y": 3349,
+          "plane": 0,
+          "facing": "SOUTH"
+        }
+      ]
+    }
+  ]
+}

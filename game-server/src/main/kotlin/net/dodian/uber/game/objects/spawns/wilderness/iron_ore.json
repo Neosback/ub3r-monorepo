@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "region": "wilderness",
+  "objects": [
+    {
+      "id": 11365,
+      "name": "Iron Ore",
+      "x": 1814,
+      "y": 3569,
+      "z": 0,
+      "type": 10,
+      "rotation": "WEST"
+    }
+  ]
+}

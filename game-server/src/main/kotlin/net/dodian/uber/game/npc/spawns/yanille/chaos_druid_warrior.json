@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "family": "chaos_druid_warrior",
+  "groups": [
+    {
+      "npcId": 532,
+      "defaults": {
+        "attack": 18,
+        "attackAnimation": 401,
+        "deathAnimation": 2304,
+        "defence": 22,
+        "hitpoints": 24,
+        "respawnTicks": 30,
+        "strength": 32
+      },
+      "spawns": [
+        {
+          "x": 2577,
+          "y": 3103,
+          "plane": 0,
+          "facing": "EAST"
+        },
+        {
+          "x": 2578,
+          "y": 3106,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 2579,
+          "y": 3101,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 2579,
+          "y": 3104,
+          "plane": 0,
+          "facing": "WEST"
+        },
+        {
+          "x": 2581,
+          "y": 3100,
+          "plane": 0,
+          "facing": "SOUTH"
+        },
+        {
+          "x": 2581,
+          "y": 3103,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 2581,
+          "y": 3106,
+          "plane": 0,
+          "facing": "SOUTH_WEST"
+        }
+      ]
+    }
+  ]
+}

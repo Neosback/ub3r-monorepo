@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "family": "ice_giant",
+  "groups": [
+    {
+      "npcId": 2085,
+      "defaults": {
+        "attack": 45,
+        "attackAnimation": 4672,
+        "deathAnimation": 4653,
+        "defence": 35,
+        "hitpoints": 70,
+        "respawnTicks": 30,
+        "strength": 45
+      },
+      "spawns": [
+        {
+          "x": 2863,
+          "y": 9951,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2864,
+          "y": 9937,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2867,
+          "y": 9934,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2867,
+          "y": 9946,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2868,
+          "y": 9940,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2868,
+          "y": 9952,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2870,
+          "y": 9949,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2871,
+          "y": 9938,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2874,
+          "y": 9945,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

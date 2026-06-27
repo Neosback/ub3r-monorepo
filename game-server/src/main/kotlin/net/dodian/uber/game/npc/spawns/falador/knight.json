@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "family": "knight",
+  "groups": [
+    {
+      "npcId": 5793,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 3042,
+          "y": 3378,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3043,
+          "y": 3378,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3044,
+          "y": 3378,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3045,
+          "y": 3378,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3046,
+          "y": 3378,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3047,
+          "y": 3378,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3048,
+          "y": 3378,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 3049,
+          "y": 3378,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

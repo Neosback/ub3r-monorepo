@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "family": "river_troll",
+  "groups": [
+    {
+      "npcId": 1618,
+      "defaults": {
+        "attack": 90,
+        "deathAnimation": 2304,
+        "defence": 70,
+        "hitpoints": 180,
+        "respawnTicks": 30,
+        "strength": 120
+      },
+      "spawns": [
+        {
+          "x": 3174,
+          "y": 3028,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "family": "gnome_trainer",
+  "groups": [
+    {
+      "npcId": 6080,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2474,
+          "y": 3439,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2475,
+          "y": 3428,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2486,
+          "y": 3430,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2487,
+          "y": 3423,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2476,
+          "y": 3423,
+          "plane": 1,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2475,
+          "y": 3419,
+          "plane": 2,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2485,
+          "y": 3421,
+          "plane": 2,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

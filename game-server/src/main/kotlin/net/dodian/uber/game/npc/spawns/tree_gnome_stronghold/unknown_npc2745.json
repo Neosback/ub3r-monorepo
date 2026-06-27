@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "family": "unknown_npc2745",
+  "groups": [
+    {
+      "npcId": 2745,
+      "spawns": [
+        {
+          "x": 2480,
+          "y": 3428,
+          "plane": 2,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

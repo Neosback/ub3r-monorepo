@@ -18,8 +18,8 @@ class CacheIntegrationTest {
         CacheManifestValidator.validateOrThrow(cache, server.resolve("data/def/cache-manifest.json"))
         CacheStore(cache).open().use { store ->
             val objects = ObjectDefinitionDecoder.decode(store)
-            assertEquals(50_046, objects.definitionCount)
-            assertEquals(50_046, objects.definitions.size)
+            assertEquals(50_047, objects.definitionCount)
+            assertEquals(50_047, objects.definitions.size)
             assertTrue(NpcCacheDefinitionDecoder.decode(store).size >= 11_000)
             assertTrue(ItemCacheDefinitionDecoder.decode(store).size >= 28_000)
             assertTrue(AnimationDefinitionDecoder.decode(store).isNotEmpty())

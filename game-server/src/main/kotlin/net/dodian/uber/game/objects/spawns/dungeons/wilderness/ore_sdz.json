@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "region": "dungeons/wilderness",
+  "objects": [
+    {
+      "id": 11375,
+      "name": "ore SDZ",
+      "x": 2420,
+      "y": 10436,
+      "z": 0,
+      "type": 10,
+      "rotation": "NORTH"
+    },
+    {
+      "id": 11377,
+      "name": "ore SDZ",
+      "x": 2422,
+      "y": 10436,
+      "z": 0,
+      "type": 10,
+      "rotation": "NORTH"
+    },
+    {
+      "id": 11367,
+      "name": "ore SDZ",
+      "x": 2423,
+      "y": 10432,
+      "z": 0,
+      "type": 10,
+      "rotation": "NORTH"
+    },
+    {
+      "id": 11380,
+      "name": "ore SDZ",
+      "x": 2423,
+      "y": 10434,
+      "z": 0,
+      "type": 10,
+      "rotation": "NORTH"
+    }
+  ]
+}

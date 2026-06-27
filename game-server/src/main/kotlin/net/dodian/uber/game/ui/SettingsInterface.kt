@@ -32,7 +32,8 @@ object SettingsInterface : InterfaceButtonContent {
 
     override val bindings =
         listOf(
-            buttonBinding(-1, 0, "settings.advanced_options_ack", advancedOptionsAckButtons) { _, _ ->
+            buttonBinding(-1, 0, "settings.advanced_options_ack", advancedOptionsAckButtons) { client, _ ->
+                client.send(ShowInterface(28500))
                 true
             },
             buttonBinding(-1, 2, "settings.pin_help", pinHelpButtons) { client, _ ->

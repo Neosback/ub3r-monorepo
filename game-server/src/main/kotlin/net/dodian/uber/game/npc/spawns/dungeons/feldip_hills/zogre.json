@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "family": "zogre",
+  "groups": [
+    {
+      "npcId": 867,
+      "defaults": {
+        "deathAnimation": 2304,
+        "hitpoints": 50
+      },
+      "spawns": [
+        {
+          "x": 2465,
+          "y": 9444,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2467,
+          "y": 9438,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2467,
+          "y": 9442,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2468,
+          "y": 9446,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2470,
+          "y": 9443,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2473,
+          "y": 9439,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2475,
+          "y": 9445,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2476,
+          "y": 9441,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

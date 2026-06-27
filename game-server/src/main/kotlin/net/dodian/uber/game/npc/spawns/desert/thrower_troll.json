@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "family": "thrower_troll",
+  "groups": [
+    {
+      "npcId": 1103,
+      "defaults": {
+        "deathAnimation": 2304,
+        "hitpoints": 96
+      },
+      "spawns": [
+        {
+          "x": 3229,
+          "y": 3108,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

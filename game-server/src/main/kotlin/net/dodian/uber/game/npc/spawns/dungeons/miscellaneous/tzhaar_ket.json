@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "family": "tzhaar_ket",
+  "groups": [
+    {
+      "npcId": 2173,
+      "defaults": {
+        "attack": 100,
+        "attackAnimation": 2609,
+        "deathAnimation": 2608,
+        "defence": 100,
+        "hitpoints": 155,
+        "respawnTicks": 35,
+        "strength": 120
+      },
+      "spawns": [
+        {
+          "x": 2883,
+          "y": 9768,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2887,
+          "y": 9768,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2890,
+          "y": 9770,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2892,
+          "y": 9768,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2893,
+          "y": 9772,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2894,
+          "y": 9779,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2895,
+          "y": 9769,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2895,
+          "y": 9776,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2897,
+          "y": 9766,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2897,
+          "y": 9772,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

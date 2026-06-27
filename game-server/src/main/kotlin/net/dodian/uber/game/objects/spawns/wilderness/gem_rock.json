@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "region": "wilderness",
+  "objects": [
+    {
+      "id": 11380,
+      "name": "Gem Rock",
+      "x": 1812,
+      "y": 3564,
+      "z": 0,
+      "type": 10,
+      "rotation": "WEST"
+    }
+  ]
+}

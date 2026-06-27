@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "saniboch",
+  "groups": [
+    {
+      "npcId": 2345,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2743,
+          "y": 3150,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

@@ -20,7 +20,7 @@ object ItemCacheDefinitionDecoder {
         val index = CacheBuffer(idx)
         val count = index.readUnsignedShort()
         val offsets = IntArray(count)
-        var offset = 2
+        var offset = 0
         repeat(count) { id -> offsets[id] = offset; offset += index.readUnsignedShort() }
         val data = CacheBuffer(dat)
         return (0 until count).associateWithTo(LinkedHashMap()) { id ->

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "family": "mithril_dragon",
+  "groups": [
+    {
+      "npcId": 2919,
+      "defaults": {
+        "attack": 200,
+        "attackAnimation": 91,
+        "deathAnimation": 92,
+        "defence": 220,
+        "hitpoints": 250,
+        "respawnTicks": 40,
+        "strength": 230
+      },
+      "spawns": [
+        {
+          "x": 2656,
+          "y": 9828,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2660,
+          "y": 9820,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2661,
+          "y": 9823,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2665,
+          "y": 9832,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2666,
+          "y": 9825,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

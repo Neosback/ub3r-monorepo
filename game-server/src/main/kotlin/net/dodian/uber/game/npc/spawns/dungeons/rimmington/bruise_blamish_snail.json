@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "family": "bruise_blamish_snail",
+  "groups": [
+    {
+      "npcId": 1230,
+      "defaults": {
+        "deathAnimation": 2304,
+        "hitpoints": 13
+      },
+      "spawns": [
+        {
+          "x": 2985,
+          "y": 9638,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2987,
+          "y": 9640,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2988,
+          "y": 9637,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2989,
+          "y": 9634,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "family": "unknown_npc4639",
+  "groups": [
+    {
+      "npcId": 4639,
+      "spawns": [
+        {
+          "x": 3165,
+          "y": 3044,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "pee_hat",
+  "groups": [
+    {
+      "npcId": 927,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2631,
+          "y": 3102,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

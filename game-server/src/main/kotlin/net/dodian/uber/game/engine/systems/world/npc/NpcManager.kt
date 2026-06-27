@@ -1,7 +1,10 @@
 package net.dodian.uber.game.engine.systems.world.npc
 
+import java.nio.file.Path
 import java.util.TreeMap
 import net.dodian.uber.game.npc.NpcSpawnDef
+import net.dodian.uber.game.npc.NpcDefinitionRepository
+import net.dodian.uber.game.npc.NpcSpawnRepository
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcData
@@ -24,11 +27,13 @@ class NpcManager {
     fun getNpcData(): Collection<NpcData> = data.values
 
     fun loadSpawns() {
-        logger.info("Loading NPC spawns from content registry modules")
-        val contentSpawns = NpcContentRegistry.allSpawns()
+        logger.info("Loading NPC spawns from JSONC files")
+        val cachePath = Path.of("data/cache")
+        val cacheDefs = NpcDefinitionRepository.load(cachePath)
+        val contentSpawns = NpcSpawnRepository.load(definitions = cacheDefs) { data.containsKey(it) }
         ensureDefinitionsForSpawnNpcIds(contentSpawns)
         val loaded = loadContentSpawns(contentSpawns)
-        logger.info("Loaded {} content NPC spawns from modules.", loaded)
+        logger.info("Loaded {} content NPC spawns from JSONC.", loaded)
     }
 
     private fun ensureDefinitionsForSpawnNpcIds(spawns: List<NpcSpawnDef>) {
@@ -41,27 +46,31 @@ class NpcManager {
         val stillMissing = ArrayList<Int>()
         for (npcId in missingIds) {
             try {
-                NpcDataRepository.insertDefaultDefinition(npcId)
-                val loaded = NpcDataRepository.loadDefinitionById(npcId)
-                if (loaded != null) {
-                    data[npcId] = loaded
-                    inserted++
-                } else {
-                    stillMissing += npcId
-                }
+                val dummy = NpcData(
+                    "Unknown NPC $npcId",
+                    "no examine",
+                    806,
+                    836,
+                    60,
+                    0,
+                    1,
+                    intArrayOf(0, 0, 0, 0, 0, 0, 0)
+                )
+                data[npcId] = dummy
+                inserted++
             } catch (e: RuntimeException) {
-                logger.error("Failed to upsert missing NPC definition for spawn npcId={}", npcId, e)
+                logger.error("Failed to create dummy NPC definition for spawn npcId={}", npcId, e)
                 stillMissing += npcId
             }
         }
 
         logger.warn(
-            "Auto-upserted {} missing NPC definitions for content spawns ({} requested).",
+            "Auto-created {} dummy NPC definitions for content spawns ({} requested).",
             inserted,
             missingIds.size,
         )
         if (stillMissing.isNotEmpty()) {
-            logger.error("NPC definitions still missing after auto-upsert attempt: {}", stillMissing.joinToString(","))
+            logger.error("NPC definitions still missing after auto-creation attempt: {}", stillMissing.joinToString(","))
         }
     }
 
@@ -110,6 +119,8 @@ class NpcManager {
                     spawn.hitpoints,
                     spawn.ranged,
                     spawn.magic,
+                    spawn.attackAnimation,
+                    spawn.deathAnimation,
                 )
                 npc.applySpawnBehaviorOverrides(
                     effectiveWalkRadius(spawn),
@@ -276,10 +287,31 @@ class NpcManager {
 
     fun loadData() {
         try {
-            val definitions = NpcDataRepository.loadDefinitions()
+            val cachePath = Path.of("data/cache")
+            val cacheDefs = NpcDefinitionRepository.load(cachePath)
+            val definitions = cacheDefs.mapValues { (_, def) ->
+                NpcData(
+                    def.name,
+                    def.examine,
+                    def.attackAnimation,
+                    def.deathAnimation,
+                    def.respawnTicks,
+                    def.combatLevel,
+                    def.size,
+                    intArrayOf(
+                        def.defence,
+                        def.attack,
+                        def.strength,
+                        def.hitpoints,
+                        def.ranged,
+                        0,
+                        def.magic
+                    )
+                )
+            }
             data.clear()
             data.putAll(definitions)
-            logger.info("Loaded {} Npc Definitions", definitions.size)
+            logger.info("Loaded {} Npc Definitions from Cache and Overrides", definitions.size)
         } catch (e: RuntimeException) {
             logger.error("Error loading NPC definitions", e)
         }

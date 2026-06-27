@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "family": "albino_bat",
+  "groups": [
+    {
+      "npcId": 1039,
+      "defaults": {
+        "attack": 50,
+        "attackAnimation": 4915,
+        "deathAnimation": 4917,
+        "defence": 35,
+        "hitpoints": 43,
+        "respawnTicks": 30,
+        "strength": 60
+      },
+      "spawns": [
+        {
+          "x": 3718,
+          "y": 9352,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3719,
+          "y": 9357,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3721,
+          "y": 9349,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3722,
+          "y": 9362,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3722,
+          "y": 9368,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3724,
+          "y": 9356,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3724,
+          "y": 9377,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3725,
+          "y": 9350,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3726,
+          "y": 9373,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3727,
+          "y": 9370,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3728,
+          "y": 9361,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3728,
+          "y": 9366,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3730,
+          "y": 9353,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3730,
+          "y": 9357,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3731,
+          "y": 9350,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3731,
+          "y": 9368,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3731,
+          "y": 9377,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3734,
+          "y": 9351,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3734,
+          "y": 9355,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3734,
+          "y": 9365,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3736,
+          "y": 9372,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3736,
+          "y": 9377,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3738,
+          "y": 9350,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3738,
+          "y": 9356,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3738,
+          "y": 9365,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3739,
+          "y": 9375,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        },
+        {
+          "x": 3741,
+          "y": 9353,
+          "plane": 0,
+          "facing": "SOUTH_EAST"
+        }
+      ]
+    }
+  ]
+}

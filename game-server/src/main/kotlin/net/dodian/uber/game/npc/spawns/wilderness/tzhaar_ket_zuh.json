@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "family": "tzhaar_ket_zuh",
+  "groups": [
+    {
+      "npcId": 7677,
+      "spawns": [
+        {
+          "x": 2443,
+          "y": 5179,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

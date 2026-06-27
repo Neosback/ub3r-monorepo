@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "jatix",
+  "groups": [
+    {
+      "npcId": 8532,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2897,
+          "y": 3428,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

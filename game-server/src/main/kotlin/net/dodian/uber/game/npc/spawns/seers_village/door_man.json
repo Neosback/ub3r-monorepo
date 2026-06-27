@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "family": "door_man",
+  "groups": [
+    {
+      "npcId": 33,
+      "defaults": {
+        "deathAnimation": 2304
+      },
+      "spawns": [
+        {
+          "x": 2763,
+          "y": 3507,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

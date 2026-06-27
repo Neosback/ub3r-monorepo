@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "family": "baba_yaga",
+  "groups": [
+    {
+      "npcId": 3837,
+      "defaults": {
+        "attackAnimation": 0,
+        "deathAnimation": 0,
+        "respawnTicks": 0
+      },
+      "spawns": [
+        {
+          "x": 2461,
+          "y": 3428,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

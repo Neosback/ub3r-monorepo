@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "family": "lesser_demon",
+  "groups": [
+    {
+      "npcId": 2005,
+      "defaults": {
+        "attack": 80,
+        "attackAnimation": 64,
+        "deathAnimation": 67,
+        "defence": 90,
+        "hitpoints": 110,
+        "respawnTicks": 35,
+        "strength": 90
+      },
+      "spawns": [
+        {
+          "x": 2928,
+          "y": 9804,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2931,
+          "y": 9795,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2933,
+          "y": 9810,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2937,
+          "y": 9793,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

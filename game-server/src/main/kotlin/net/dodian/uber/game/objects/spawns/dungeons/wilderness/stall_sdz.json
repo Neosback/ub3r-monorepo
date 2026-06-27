@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "region": "dungeons/wilderness",
+  "objects": [
+    {
+      "id": 4878,
+      "name": "stall (SDZ)",
+      "x": 2432,
+      "y": 10410,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 4877,
+      "name": "stall (SDZ)",
+      "x": 2433,
+      "y": 10410,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 4874,
+      "name": "stall (SDZ)",
+      "x": 2434,
+      "y": 10410,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 4876,
+      "name": "stall (SDZ)",
+      "x": 2435,
+      "y": 10410,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    },
+    {
+      "id": 4875,
+      "name": "stall (SDZ)",
+      "x": 2436,
+      "y": 10410,
+      "z": 0,
+      "type": 10,
+      "rotation": "EAST"
+    }
+  ]
+}

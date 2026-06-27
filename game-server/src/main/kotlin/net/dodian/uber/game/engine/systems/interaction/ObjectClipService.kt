@@ -5,7 +5,6 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.objects.DoorRegistry
 import net.dodian.uber.game.model.objects.WorldObject
 import net.dodian.uber.game.engine.systems.cache.CollisionBuildService
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionDirection
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
 import java.util.concurrent.ConcurrentHashMap
 import org.slf4j.LoggerFactory
@@ -85,7 +84,7 @@ object ObjectClipService {
     @JvmStatic
     fun applyDecodedObject(position: Position, objectId: Int, type: Int, direction: Int, obj: GameObjectData?) {
         removeDecodedObject(position)
-        if (obj == null || CollisionBuildService.ignoredObjectIds.contains(objectId)) {
+        if (obj == null) {
             return
         }
         appliedClips[key(position)] = AppliedClip(position.copy(), objectId, type, direction, obj.isSolid())
@@ -105,6 +104,8 @@ object ObjectClipService {
             blockWalk = obj.blockWalk(),
             blockRange = obj.blockRange(),
             breakRouteFinding = obj.breakRouteFinding(),
+            impenetrable = obj.isImpenetrable(),
+            decoration = obj.isDecoration(),
         )
     }
 
@@ -135,7 +136,6 @@ object ObjectClipService {
 
     private fun applyStaticOverride(override: StaticObjectOverride) {
         removeDecodedObject(override.position)
-        clearStaticCollisionBroadly(override.position)
         if (override.replacementObjectId >= 0) {
             applyDecodedObject(
                 position = override.position,
@@ -144,14 +144,6 @@ object ObjectClipService {
                 direction = override.replacementFace,
                 obj = GameObjectData.forId(override.replacementObjectId),
             )
-        }
-    }
-
-    private fun clearStaticCollisionBroadly(position: Position) {
-        val collision = CollisionManager.global()
-        collision.clearSolid(position.x, position.y, position.z)
-        for (direction in CollisionDirection.WNES) {
-            collision.clearWall(position.x, position.y, position.z, direction)
         }
     }
 
@@ -174,6 +166,8 @@ object ObjectClipService {
             blockWalk = definition.blockWalk(),
             blockRange = definition.blockRange(),
             breakRouteFinding = definition.breakRouteFinding(),
+            impenetrable = definition.isImpenetrable(),
+            decoration = definition.isDecoration(),
         )
     }
 

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "family": "myre_blamish_snail",
+  "groups": [
+    {
+      "npcId": 1227,
+      "defaults": {
+        "deathAnimation": 2304,
+        "hitpoints": 8
+      },
+      "spawns": [
+        {
+          "x": 2960,
+          "y": 9632,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2962,
+          "y": 9633,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2963,
+          "y": 9632,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2963,
+          "y": 9635,
+          "plane": 0,
+          "facing": "NORTH"
+        },
+        {
+          "x": 2964,
+          "y": 9636,
+          "plane": 0,
+          "facing": "NORTH"
+        }
+      ]
+    }
+  ]
+}

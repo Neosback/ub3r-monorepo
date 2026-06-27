@@ -868,7 +868,30 @@ public class Npc extends Entity {
         return combat;
     }
 
-    public void applySpawnOverrides(int respawnTicks, int attack, int defence, int strength, int hitpoints, int ranged, int magic) {
+    public void applySpawnOverrides(int respawnTicks, int attack, int defence, int strength, int hitpoints, int ranged, int magic, int attackAnim, int deathAnim) {
+        if (attackAnim >= 0 || deathAnim >= 0 || respawnTicks > 0 || defence >= 0 || attack >= 0 || strength >= 0 || ranged >= 0 || magic >= 0 || hitpoints > 0) {
+            int[] currentLevels = new int[7];
+            System.arraycopy(data.getLevel(), 0, currentLevels, 0, 7);
+            if (defence >= 0) currentLevels[0] = defence;
+            if (attack >= 0) currentLevels[1] = attack;
+            if (strength >= 0) currentLevels[2] = strength;
+            if (ranged >= 0) currentLevels[4] = ranged;
+            if (magic >= 0) currentLevels[6] = magic;
+
+            this.data = new NpcData(
+                data.getName(),
+                data.getExamine(),
+                attackAnim >= 0 ? attackAnim : data.getAttackEmote(),
+                deathAnim >= 0 ? deathAnim : data.getDeathEmote(),
+                respawnTicks > 0 ? respawnTicks : data.getRespawn(),
+                combat,
+                getSize(),
+                currentLevels
+            );
+            
+            deathEmote = data.getDeathEmote();
+            respawn = data.getRespawn();
+        }
         if (respawnTicks > 0) {
             respawn = respawnTicks;
         }
