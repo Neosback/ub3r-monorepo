@@ -5,9 +5,7 @@ package net.dodian.uber.game.npc
 internal object Nechryael : NpcModule {
     // Stats: 8: r=180 a=140 d=140 s=130 hp=350 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 8, x = 2698, y = 9773, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(

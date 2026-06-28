@@ -10,6 +10,6 @@ data class PacketRegistrationReport(
 
     companion object {
         @JvmField
-        val CRITICAL_OPCODES = intArrayOf(2, 17, 35, 70, 72, 132, 155, 192, 228, 230, 234, 252)
+        val CRITICAL_OPCODES = intArrayOf(150, 17, 35, 70, 72, 132, 155, 192, 228, 230, 234, 252)
     }
 }

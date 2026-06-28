@@ -11,14 +11,13 @@ import net.dodian.uber.game.netty.listener.out.SendFrame27
 internal object BabaYaga : NpcModule {
     // Stats: 3837: r=0 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 3837, x = 2461, y = 3428, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val npcIds: IntArray = intArrayOf(3837)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "BabaYaga",
         entries = entries,
         onFirstClick = ::onFirstClick,

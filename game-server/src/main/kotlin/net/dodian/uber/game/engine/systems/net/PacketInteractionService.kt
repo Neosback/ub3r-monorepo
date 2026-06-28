@@ -119,7 +119,7 @@ object PacketInteractionService {
         )) {
             Decision.ACCEPT -> {
                 GameEventBus.post(PlayerAttackEvent(client, npcIndex, false))
-                if (NpcContentRegistry.hasAttackHandler(npc.id)) {
+                if (NpcContentRegistry.hasAttackHandler(npc)) {
                     val intent = NpcInteractionIntent(opcode, PlayerRegistry.cycle.toLong(), npcIndex, 5)
                     InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
                 } else {

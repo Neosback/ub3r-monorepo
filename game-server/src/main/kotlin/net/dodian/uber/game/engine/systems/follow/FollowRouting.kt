@@ -12,8 +12,10 @@ import net.dodian.uber.game.engine.systems.pathing.Heuristic
 import net.dodian.uber.game.engine.systems.pathing.Node
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
 import net.dodian.uber.game.engine.systems.pathing.collision.InteractionReachService
+import org.slf4j.LoggerFactory
 
 object FollowRouting {
+    private val logger = LoggerFactory.getLogger(FollowRouting::class.java)
     private val collisionManager: CollisionManager
         get() = CollisionManager.global()
     private val pathfinding =
@@ -74,12 +76,69 @@ object FollowRouting {
     }
 
     /**
-     * Routes [follower] onto a tile from which [InteractionReachService.reachedObject] is satisfied
-     * for the given object (i.e. a valid interaction face), using the server's clip data. The client
-     * only ever parks the player on "some" adjacent tile (often a diagonal one a booth can't be used
-     * from), so the server must route to a real face tile itself. Returns true if already on a valid
-     * face tile, or a route was applied; false if no reachable valid tile exists.
+     * Routes [follower] as Tarnish does for object waypoints: search against the object as an
+     * interactable, then park on the closest reachable fallback tile when no strict interaction face
+     * can be reached. The result distinguishes those cases so content dispatch can stay reach-gated.
      */
+    @JvmStatic
+    fun routeToObjectApproach(
+        follower: Client,
+        objectId: Int,
+        objX: Int,
+        objY: Int,
+        z: Int,
+        type: Int,
+        rotation: Int,
+        running: Boolean = follower.buttonOnRun,
+    ): ObjectRouteResult {
+        val definition = GameObjectData.forId(objectId)
+        val rot = rotation and 0x3
+        val sizeX = definition.getSizeX(rot).coerceAtLeast(1)
+        val sizeY = definition.getSizeY(rot).coerceAtLeast(1)
+        val worldObject = WorldObject(objectId, objX, objY, z, type, rotation)
+
+        val alreadyReached = InteractionReachService.reachedObject(Position(follower.position.x, follower.position.y, z), worldObject)
+        logger.info(
+            "[ObjRoute] objectId={} obj=({},{},{}) size={}x{} type={} rot={} | player=({},{}) alreadyReached={}",
+            objectId, objX, objY, z, sizeX, sizeY, type, rotation,
+            follower.position.x, follower.position.y, alreadyReached,
+        )
+        if (alreadyReached) {
+            return ObjectRouteResult(ObjectRouteStatus.ALREADY_REACHED, follower.position.x, follower.position.y)
+        }
+
+        val searchStart = System.nanoTime()
+        val route = findObjectRoute(follower, worldObject, sizeX, sizeY)
+        FollowPathfindingTelemetry.recordSearch(
+            durationNanos = System.nanoTime() - searchStart,
+            foundPath = route.status != ObjectRouteStatus.UNREACHABLE,
+        )
+        logger.info(
+            "[ObjRoute] BFS result={} targetTile=({},{}) pathSize={}",
+            route.status, route.targetX, route.targetY, route.path.size,
+        )
+        if (route.status == ObjectRouteStatus.UNREACHABLE) {
+            return route
+        }
+        val validated = validatePath(follower.position.x, follower.position.y, z, route.path)
+        // Only reject the path if NO steps at all could be validated (first step is blocked).
+        // Tarnish trusts the pathfinder output and does not re-validate step-by-step — applying
+        // a partial path is better than reporting UNREACHABLE when the player is almost there.
+        logger.info(
+            "[ObjRoute] validated={}/{} firstStep={} lastStep={}",
+            validated.size, route.path.size,
+            validated.firstOrNull()?.let { "(${it.x},${it.y})" } ?: "none",
+            validated.lastOrNull()?.let { "(${it.x},${it.y})" } ?: "none",
+        )
+        if (validated.isEmpty()) {
+            logger.info("[ObjRoute] validated path empty — first step blocked; walk queue reset")
+            follower.resetWalkingQueue()
+            return route.copy(path = validated)
+        }
+        applyRoute(follower, validated, running)
+        return route.copy(path = validated)
+    }
+
     @JvmStatic
     fun routeToObjectInteraction(
         follower: Client,
@@ -91,60 +150,23 @@ object FollowRouting {
         rotation: Int,
         running: Boolean = follower.buttonOnRun,
     ): Boolean {
-        val definition = GameObjectData.forId(objectId)
-        val rot = rotation and 0x3
-        val sizeX = definition.getSizeX(rot).coerceAtLeast(1)
-        val sizeY = definition.getSizeY(rot).coerceAtLeast(1)
-        val worldObject = WorldObject(objectId, objX, objY, z, type, rotation)
+        val result = routeToObjectApproach(follower, objectId, objX, objY, z, type, rotation, running)
+        return result.status == ObjectRouteStatus.ALREADY_REACHED || result.status == ObjectRouteStatus.STRICT_REACHED
+    }
 
-        // Already standing on a valid interaction face — nothing to route.
-        if (InteractionReachService.reachedObject(Position(follower.position.x, follower.position.y, z), worldObject)) {
-            return true
-        }
-
-        val minX = objX
-        val minY = objY
-        val maxX = objX + sizeX - 1
-        val maxY = objY + sizeY - 1
-
-        // Ring of tiles around the (rotated) footprint that are unblocked AND valid reach faces.
-        val candidates = ArrayList<Pair<Int, Int>>()
-        for (x in (minX - 1)..(maxX + 1)) {
-            for (y in (minY - 1)..(maxY + 1)) {
-                if (x in minX..maxX && y in minY..maxY) {
-                    continue
-                }
-                if (collisionManager.isTileBlocked(x, y, z)) {
-                    continue
-                }
-                if (InteractionReachService.reachedObject(Position(x, y, z), worldObject)) {
-                    candidates += x to y
-                }
-            }
-        }
-        if (candidates.isEmpty()) {
-            return false
-        }
-
-        val ordered = candidates.sortedBy { abs(it.first - follower.position.x) + abs(it.second - follower.position.y) }
-        for (destination in ordered) {
-            val searchStart = System.nanoTime()
-            val path = pathfinding.find(follower.position.x, follower.position.y, destination.first, destination.second, z)
-            FollowPathfindingTelemetry.recordSearch(
-                durationNanos = System.nanoTime() - searchStart,
-                foundPath = path.isNotEmpty(),
-            )
-            if (path.isEmpty()) {
-                continue
-            }
-            val validated = validatePath(follower.position.x, follower.position.y, z, path)
-            if (validated.isEmpty()) {
-                continue
-            }
-            applyRoute(follower, validated, running)
-            return true
-        }
-        return false
+    /** Legacy boolean wrapper around [routeToObjectApproach] for older callers. */
+    @JvmStatic
+    fun routeToObjectVicinity(
+        follower: Client,
+        objectId: Int,
+        objX: Int,
+        objY: Int,
+        z: Int,
+        rotation: Int,
+        running: Boolean = follower.buttonOnRun,
+    ): Boolean {
+        val result = routeToObjectApproach(follower, objectId, objX, objY, z, DEFAULT_OBJECT_TYPE, rotation, running)
+        return result.status != ObjectRouteStatus.UNREACHABLE
     }
 
     @JvmStatic
@@ -317,5 +339,299 @@ object FollowRouting {
 
     private fun clamp(value: Int, min: Int, max: Int): Int = maxOf(min, minOf(max, value))
 
+    private fun findObjectRoute(
+        follower: Client,
+        worldObject: WorldObject,
+        sizeX: Int,
+        sizeY: Int,
+    ): ObjectRouteResult {
+        val z = worldObject.z
+        val baseX = follower.mapRegionX * 8
+        val baseY = follower.mapRegionY * 8
+        val srcLocalX = follower.position.x - baseX
+        val srcLocalY = follower.position.y - baseY
+        if (srcLocalX !in 0 until LOCAL_REGION_SIZE || srcLocalY !in 0 until LOCAL_REGION_SIZE) {
+            return ObjectRouteResult(ObjectRouteStatus.UNREACHABLE)
+        }
+
+        val target = findBestInside(follower.position.x, follower.position.y, worldObject.x, worldObject.y, sizeX, sizeY)
+        val targetLocalX = target.first - baseX
+        val targetLocalY = target.second - baseY
+        val via = IntArray(LOCAL_REGION_SIZE * LOCAL_REGION_SIZE)
+        val cost = IntArray(LOCAL_REGION_SIZE * LOCAL_REGION_SIZE)
+        val queueX = IntArray(MAX_OBJECT_ROUTE_TILES)
+        val queueY = IntArray(MAX_OBJECT_ROUTE_TILES)
+        var head = 0
+        var tail = 0
+        var foundIndex = -1
+        var foundStatus = ObjectRouteStatus.UNREACHABLE
+
+        val sourceIndex = localIndex(srcLocalX, srcLocalY)
+        via[sourceIndex] = SOURCE_VIA
+        cost[sourceIndex] = 1
+        queueX[tail] = srcLocalX
+        queueY[tail] = srcLocalY
+        tail++
+
+        while (head != tail && tail < MAX_OBJECT_ROUTE_TILES) {
+            val curX = queueX[head]
+            val curY = queueY[head]
+            head++
+            val curAbsX = baseX + curX
+            val curAbsY = baseY + curY
+            val currentIndex = localIndex(curX, curY)
+
+            if (InteractionReachService.reachedObject(Position(curAbsX, curAbsY, z), worldObject)) {
+                foundIndex = currentIndex
+                foundStatus = ObjectRouteStatus.STRICT_REACHED
+                break
+            }
+            if (curX == targetLocalX && curY == targetLocalY) {
+                foundIndex = currentIndex
+                foundStatus = ObjectRouteStatus.PARKED_CLOSEST
+                break
+            }
+
+            val nextCost = cost[currentIndex] + 2
+            for (step in OBJECT_ROUTE_STEPS) {
+                val nextX = curX + step.dx
+                val nextY = curY + step.dy
+                if (nextX !in 0 until LOCAL_REGION_SIZE || nextY !in 0 until LOCAL_REGION_SIZE) {
+                    continue
+                }
+                val nextIndex = localIndex(nextX, nextY)
+                if (via[nextIndex] != 0 || !isObjectRouteStepTraversable(curAbsX, curAbsY, z, step.dx, step.dy)) {
+                    continue
+                }
+                if (tail >= MAX_OBJECT_ROUTE_TILES) {
+                    break
+                }
+                queueX[tail] = nextX
+                queueY[tail] = nextY
+                tail++
+                via[nextIndex] = step.via
+                cost[nextIndex] = nextCost
+            }
+        }
+
+        if (foundIndex == -1) {
+            foundIndex = findClosestFallbackIndex(via, cost, baseX, baseY, worldObject.x, worldObject.y, sizeX, sizeY)
+            foundStatus = if (foundIndex == -1) ObjectRouteStatus.UNREACHABLE else ObjectRouteStatus.PARKED_CLOSEST
+        }
+        if (foundIndex == -1) {
+            logger.info("[ObjRoute BFS] UNREACHABLE for obj=({},{}) from player=({},{})",
+                worldObject.x, worldObject.y, follower.position.x, follower.position.y)
+            return ObjectRouteResult(ObjectRouteStatus.UNREACHABLE)
+        }
+
+        val parkedAbsX = baseX + foundIndex % LOCAL_REGION_SIZE
+        val parkedAbsY = baseY + foundIndex / LOCAL_REGION_SIZE
+        val reachedFromParked = InteractionReachService.reachedObject(Position(parkedAbsX, parkedAbsY, z), worldObject)
+        // If the fallback parked tile satisfies the reach check, treat it as STRICT_REACHED.
+        // The BFS may have exited via tile-limit before dequeuing adjacent tiles (they get queued
+        // late in BFS order), but findClosestFallbackIndex found the right tile — just upgrade
+        // the status so the interaction is not cancelled.
+        if (reachedFromParked && foundStatus == ObjectRouteStatus.PARKED_CLOSEST) {
+            foundStatus = ObjectRouteStatus.STRICT_REACHED
+        }
+        logger.info(
+            "[ObjRoute BFS] status={} target=({},{}) parked=({},{}) reachedFromParked={} obj=({},{}) player=({},{})",
+            foundStatus, targetLocalX + baseX, targetLocalY + baseY,
+            parkedAbsX, parkedAbsY, reachedFromParked,
+            worldObject.x, worldObject.y, follower.position.x, follower.position.y,
+        )
+
+        return ObjectRouteResult(
+            status = foundStatus,
+            targetX = parkedAbsX,
+            targetY = parkedAbsY,
+            path = buildObjectRoutePath(foundIndex, sourceIndex, via, baseX, baseY, z),
+        )
+    }
+
+    private fun isObjectRouteStepTraversable(x: Int, y: Int, z: Int, dx: Int, dy: Int): Boolean {
+        if (!collisionManager.traversable(x + dx, y + dy, z, dx, dy)) {
+            return false
+        }
+        if (dx != 0 && dy != 0) {
+            return collisionManager.traversable(x + dx, y, z, dx, 0) &&
+                collisionManager.traversable(x, y + dy, z, 0, dy)
+        }
+        return true
+    }
+
+    private fun findClosestFallbackIndex(
+        via: IntArray,
+        cost: IntArray,
+        baseX: Int,
+        baseY: Int,
+        objX: Int,
+        objY: Int,
+        sizeX: Int,
+        sizeY: Int,
+    ): Int {
+        var bestIndex = -1
+        var bestDistance = 1_000
+        var bestCost = 101
+        val maxX = objX + sizeX - 1
+        val maxY = objY + sizeY - 1
+        for (x in (objX - FALLBACK_RADIUS)..(maxX + FALLBACK_RADIUS)) {
+            for (y in (objY - FALLBACK_RADIUS)..(maxY + FALLBACK_RADIUS)) {
+                val localX = x - baseX
+                val localY = y - baseY
+                if (localX !in 0 until LOCAL_REGION_SIZE || localY !in 0 until LOCAL_REGION_SIZE) {
+                    continue
+                }
+                val index = localIndex(localX, localY)
+                if (via[index] == 0 || cost[index] == 0 || cost[index] >= 100) {
+                    continue
+                }
+                val distance = squaredDistanceToFootprint(x, y, objX, objY, maxX, maxY)
+                if (distance < bestDistance || (distance == bestDistance && cost[index] < bestCost)) {
+                    bestIndex = index
+                    bestDistance = distance
+                    bestCost = cost[index]
+                }
+            }
+        }
+        return bestIndex
+    }
+
+    private fun buildObjectRoutePath(
+        destination: Int,
+        source: Int,
+        via: IntArray,
+        baseX: Int,
+        baseY: Int,
+        z: Int,
+    ): ArrayDeque<Node> {
+        val reversed = ArrayDeque<Int>()
+        var cursor = destination
+        while (cursor != source && cursor >= 0) {
+            reversed.addFirst(cursor)
+            val flag = via[cursor]
+            if (flag == 0 || flag == SOURCE_VIA) {
+                return ArrayDeque()
+            }
+            val localX = cursor % LOCAL_REGION_SIZE
+            val localY = cursor / LOCAL_REGION_SIZE
+            var parentX = localX
+            var parentY = localY
+            if ((flag and VIA_WEST) != 0) {
+                parentX += 1
+            } else if ((flag and VIA_EAST) != 0) {
+                parentX -= 1
+            }
+            if ((flag and VIA_SOUTH) != 0) {
+                parentY += 1
+            } else if ((flag and VIA_NORTH) != 0) {
+                parentY -= 1
+            }
+            cursor = localIndex(parentX, parentY)
+        }
+        val path = ArrayDeque<Node>(reversed.size)
+        var parent: Node? = null
+        for (index in reversed) {
+            val node = Node(baseX + index % LOCAL_REGION_SIZE, baseY + index / LOCAL_REGION_SIZE, z, 0, 0, parent)
+            path.addLast(node)
+            parent = node
+        }
+        return path
+    }
+
+    private fun findBestInside(srcX: Int, srcY: Int, objX: Int, objY: Int, sizeX: Int, sizeY: Int): Pair<Int, Int> {
+        if (sizeX <= 1 || sizeY <= 1) {
+            return objX to objY
+        }
+        var bestX = objX
+        var bestY = objY
+        var bestDistance = Int.MAX_VALUE
+        for (x in objX until objX + sizeX) {
+            val southDistance = abs(srcX - x) + abs(srcY - objY)
+            if (southDistance < bestDistance) {
+                bestDistance = southDistance
+                bestX = x
+                bestY = objY
+            }
+            val northY = objY + sizeY - 1
+            val northDistance = abs(srcX - x) + abs(srcY - northY)
+            if (northDistance < bestDistance) {
+                bestDistance = northDistance
+                bestX = x
+                bestY = northY
+            }
+        }
+        for (y in objY until objY + sizeY) {
+            val westDistance = abs(srcX - objX) + abs(srcY - y)
+            if (westDistance < bestDistance) {
+                bestDistance = westDistance
+                bestX = objX
+                bestY = y
+            }
+            val eastX = objX + sizeX - 1
+            val eastDistance = abs(srcX - eastX) + abs(srcY - y)
+            if (eastDistance < bestDistance) {
+                bestDistance = eastDistance
+                bestX = eastX
+                bestY = y
+            }
+        }
+        // Return the actual closest footprint tile — matches tarnish Utility.findBestInside.
+        // For a 1×1 source (all players), source.transform(bestX - srcX, bestY - srcY) = bestX, bestY.
+        return bestX to bestY
+    }
+
+    private fun squaredDistanceToFootprint(x: Int, y: Int, minX: Int, minY: Int, maxX: Int, maxY: Int): Int {
+        val dx = when {
+            x < minX -> minX - x
+            x > maxX -> x - maxX
+            else -> 0
+        }
+        val dy = when {
+            y < minY -> minY - y
+            y > maxY -> y - maxY
+            else -> 0
+        }
+        return dx * dx + dy * dy
+    }
+
+    private fun localIndex(x: Int, y: Int): Int = y * LOCAL_REGION_SIZE + x
+
     private val CARDINAL_OFFSETS = listOf(-1 to 0, 1 to 0, 0 to 1, 0 to -1)
+    private const val DEFAULT_OBJECT_TYPE = 10
+    private const val LOCAL_REGION_SIZE = 104
+    private const val MAX_OBJECT_ROUTE_TILES = 4_096
+    private const val FALLBACK_RADIUS = 10
+    private const val SOURCE_VIA = 99
+    private const val VIA_SOUTH = 1
+    private const val VIA_WEST = 2
+    private const val VIA_NORTH = 4
+    private const val VIA_EAST = 8
+    private val OBJECT_ROUTE_STEPS =
+        listOf(
+            ObjectRouteStep(0, -1, VIA_SOUTH),
+            ObjectRouteStep(-1, 0, VIA_WEST),
+            ObjectRouteStep(0, 1, VIA_NORTH),
+            ObjectRouteStep(1, 0, VIA_EAST),
+            ObjectRouteStep(-1, -1, VIA_SOUTH or VIA_WEST),
+            ObjectRouteStep(-1, 1, VIA_NORTH or VIA_WEST),
+            ObjectRouteStep(1, -1, VIA_SOUTH or VIA_EAST),
+            ObjectRouteStep(1, 1, VIA_NORTH or VIA_EAST),
+        )
 }
+
+data class ObjectRouteResult(
+    val status: ObjectRouteStatus,
+    val targetX: Int? = null,
+    val targetY: Int? = null,
+    val path: ArrayDeque<Node> = ArrayDeque(),
+)
+
+enum class ObjectRouteStatus {
+    ALREADY_REACHED,
+    STRICT_REACHED,
+    PARKED_CLOSEST,
+    UNREACHABLE,
+}
+
+private data class ObjectRouteStep(val dx: Int, val dy: Int, val via: Int)

@@ -4,10 +4,10 @@ import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.npc.NO_CLICK_HANDLER
 import net.dodian.uber.game.npc.NpcContentDefinition
 import net.dodian.uber.game.npc.NpcInteractionSource
-import net.dodian.uber.game.npc.NpcSpawnDef
 import net.dodian.uber.game.npc.hasInteractionHandlers
 import net.dodian.uber.game.npc.optionLabel
 import net.dodian.uber.game.api.plugin.ContentBootstrap
+import net.dodian.uber.game.model.entity.npc.Npc
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -18,6 +18,8 @@ object NpcContentRegistry : ContentBootstrap {
     private val bootstrapped = AtomicBoolean(false)
     @Volatile
     private var byNpcId: Array<NpcContentDefinition?> = emptyArray()
+    @Volatile
+    private var byProfileAndNpcId: Map<String, NpcContentDefinition> = emptyMap()
     private val definitions = mutableListOf<NpcContentDefinition>()
 
     override fun bootstrap() {
@@ -39,7 +41,6 @@ object NpcContentRegistry : ContentBootstrap {
                 interactiveIds,
             )
             emitCapabilityReport()
-            emitSpawnDiagnostics()
         }
     }
 
@@ -53,14 +54,6 @@ object NpcContentRegistry : ContentBootstrap {
             "Duplicate npcIds in ${content.name}: ${localDuplicates.sorted()}"
         }
 
-        if (content.hasInteractionHandlers() && content.entries.isNotEmpty()) {
-            val entryNpcIds = content.entries.asSequence().map { it.npcId }.distinct().toSet()
-            val declaredNpcIds = content.npcIds.toSet()
-            val undeclaredEntryNpcIds = (entryNpcIds - declaredNpcIds).sorted()
-            require(undeclaredEntryNpcIds.isEmpty()) {
-                "NpcContent ${content.name} has entries for undeclared npcIds: ${undeclaredEntryNpcIds.joinToString(",")}"
-            }
-        }
         require(!content.hasInteractionHandlers() || content.npcIds.isNotEmpty()) {
             "NpcContent ${content.name} has click handlers but no declared npcIds."
         }
@@ -68,14 +61,11 @@ object NpcContentRegistry : ContentBootstrap {
             error("NpcContent ${content.name} must use DSL option bindings (definition/plugin).")
         }
 
-        if (content.ownsSpawnDefinitions && content.entries.isEmpty()) {
-            logger.warn("NpcContent {} owns spawn definitions but has no entries.", content.name)
-        }
-
         val existingNpcIds =
             definitions
                 .asSequence()
                 .filter { it.hasInteractionHandlers() }
+                .filter { it.profiles.isEmpty() && content.profiles.isEmpty() }
                 .flatMap { it.npcIds.asSequence() }
                 .toSet()
         val candidateNpcIds = if (content.hasInteractionHandlers()) content.npcIds.asList() else emptyList()
@@ -89,6 +79,7 @@ object NpcContentRegistry : ContentBootstrap {
         }
 
         definitions += content
+        rebuildLookupLocked()
     }
 
     @JvmStatic
@@ -98,37 +89,44 @@ object NpcContentRegistry : ContentBootstrap {
     }
 
     @JvmStatic
+    fun get(npc: Npc): NpcContentDefinition? {
+        bootstrap()
+        return get(npc.id, npc.interactionProfile)
+    }
+
+    internal fun get(npcId: Int, profile: String?): NpcContentDefinition? {
+        bootstrap()
+        if (!profile.isNullOrBlank()) {
+            byProfileAndNpcId[profileKey(profile, npcId)]?.let { return it }
+        }
+        return byNpcId.getOrNull(npcId)
+    }
+
+    @JvmStatic
+    fun hasAttackHandler(npc: Npc): Boolean {
+        bootstrap()
+        val definition = get(npc) ?: return false
+        return definition.onAttack !== NO_CLICK_HANDLER
+    }
+
+    @JvmStatic
     fun hasAttackHandler(npcId: Int): Boolean {
         bootstrap()
         val definition = byNpcId.getOrNull(npcId) ?: return false
         return definition.onAttack !== NO_CLICK_HANDLER
     }
 
-    @JvmStatic
-    fun allSpawns(): List<NpcSpawnDef> {
-        bootstrap()
-        return definitions.flatMap { it.entries }
-    }
-
-    @JvmStatic
-    fun spawnSourceNpcIds(): Set<Int> {
-        bootstrap()
-        return definitions
-            .asSequence()
-            .filter { it.ownsSpawnDefinitions }
-            .flatMap { it.npcIds.asSequence() }
-            .toSet()
-    }
-
     internal fun clearForTests() {
         bootstrapped.set(true)
         byNpcId = emptyArray()
+        byProfileAndNpcId = emptyMap()
         definitions.clear()
     }
 
     internal fun resetForTests() {
         bootstrapped.set(false)
         byNpcId = emptyArray()
+        byProfileAndNpcId = emptyMap()
         definitions.clear()
     }
 
@@ -140,7 +138,8 @@ object NpcContentRegistry : ContentBootstrap {
             .forEach { def ->
                 def.npcIds.sorted().forEach { npcId ->
                     val options = buildOptions(def)
-                    rows += "npc=$npcId source=kotlin module=${def.name} options=$options"
+                    val profile = def.profiles.sorted().joinToString("|").ifBlank { "global" }
+                    rows += "npc=$npcId profile=$profile source=kotlin module=${def.name} options=$options"
                 }
             }
         if (rows.isEmpty()) {
@@ -149,19 +148,6 @@ object NpcContentRegistry : ContentBootstrap {
         }
         logger.info("NPC capability report entries={}", rows.size)
         rows.sorted().forEach { logger.info("NPC capability {}", it) }
-    }
-
-    private fun emitSpawnDiagnostics() {
-        val banker = definitions.firstOrNull { it.name.equals("Banker", ignoreCase = true) } ?: return
-        val bankerEntries = banker.entries.filter { it.npcId in setOf(394, 395, 7677) }
-        val yanilleExpected = setOf(Pair(2615, 3094), Pair(2615, 3092), Pair(2615, 3091))
-        val yanilleFound = bankerEntries.filter { (it.x to it.y) in yanilleExpected }
-        logger.info(
-            "NPC spawn diagnostic family=Banker totalEntries={} bankerEntries={} yanilleBankers={}",
-            banker.entries.size,
-            bankerEntries.size,
-            yanilleFound.size,
-        )
     }
 
     private fun buildOptions(def: NpcContentDefinition): String {
@@ -177,9 +163,21 @@ object NpcContentRegistry : ContentBootstrap {
     private fun rebuildLookupLocked() {
         val maxNpcId = definitions.asSequence().flatMap { it.npcIds.asSequence() }.maxOrNull() ?: -1
         val rebuilt = arrayOfNulls<NpcContentDefinition>(maxNpcId + 1)
+        val profiled = HashMap<String, NpcContentDefinition>()
         for (definition in definitions) {
             for (npcId in definition.npcIds) {
                 if (npcId < 0) continue
+                if (definition.profiles.isNotEmpty()) {
+                    for (profile in definition.profiles) {
+                        val key = profileKey(profile, npcId)
+                        val existing = profiled.putIfAbsent(key, definition)
+                        require(existing == null || existing === definition) {
+                            "Duplicate profiled NpcContentDefinition for npcId=$npcId profile=$profile " +
+                                "(existing=${existing?.name}, new=${definition.name})"
+                        }
+                    }
+                    continue
+                }
                 val existing = rebuilt[npcId]
                 if (existing == null || existing === definition) {
                     rebuilt[npcId] = definition
@@ -202,6 +200,9 @@ object NpcContentRegistry : ContentBootstrap {
             }
         }
         byNpcId = rebuilt
+        byProfileAndNpcId = profiled
     }
+
+    private fun profileKey(profile: String, npcId: Int): String = "${NpcInteractionProfileRegistry.normalize(profile)}:$npcId"
 
 }

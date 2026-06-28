@@ -8,13 +8,12 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SetTabInterface
 
 internal object MakeoverMage : NpcModule {
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 1306, x = 2603, y = 3088, z = 0, face = 0),
-    )
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val entries: List<NpcSpawnDef> = emptyList()
+    val npcIds: IntArray = intArrayOf(1306)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "MakeoverMage",
         entries = entries,
         onFirstClick = ::onFirstClick,

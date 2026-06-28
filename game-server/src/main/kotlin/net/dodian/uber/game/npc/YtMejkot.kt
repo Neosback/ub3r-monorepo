@@ -5,16 +5,7 @@ package net.dodian.uber.game.npc
 internal object YtMejkot : NpcModule {
     // Stats: 3123: r=60 a=140 d=130 s=190 hp=150 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 3123, x = 2409, y = 5082, z = 0, face = 0),
-        NpcSpawnDef(npcId = 3123, x = 2396, y = 5078, z = 0, face = 0),
-        NpcSpawnDef(npcId = 3123, x = 2400, y = 5073, z = 0, face = 0),
-        NpcSpawnDef(npcId = 3123, x = 2403, y = 5076, z = 0, face = 0),
-        NpcSpawnDef(npcId = 3123, x = 2410, y = 5079, z = 0, face = 0),
-        NpcSpawnDef(npcId = 3123, x = 2409, y = 5074, z = 0, face = 0),
-        NpcSpawnDef(npcId = 3123, x = 2386, y = 5078, z = 0, face = 0),
-        NpcSpawnDef(npcId = 3123, x = 2391, y = 5074, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(

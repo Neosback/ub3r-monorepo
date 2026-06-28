@@ -5,9 +5,7 @@ package net.dodian.uber.game.npc
 internal object BanditBoss : NpcModule {
     // Stats: 690: r=155 a=82 d=85 s=110 hp=138 rg=69 mg=69
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 690, x = 3177, y = 2987, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(

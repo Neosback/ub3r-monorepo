@@ -7,17 +7,10 @@ import net.dodian.uber.game.shop.ShopId
 internal object ShopKeeper : NpcModule {
     // Stats: 506: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0; 555: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val npcIds: IntArray = npcIds(520, 506)
-
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 506, x = 2595, y = 3104, z = 0, face = 0),
-        NpcSpawnDef(npcId = 506, x = 3216, y = 3416, z = 0, face = 0),
-    )
+    val npcIds: IntArray = npcIds(520, 506, 2813)
     override val definition =
         npcPlugin("ShopKeeper") {
             ids(*npcIds)
-            spawns(entries)
-            ownsSpawns(true)
             options {
                 talkTo {
                     whenCondition(
@@ -49,5 +42,5 @@ internal object ShopKeeper : NpcModule {
                     openShop(ShopId.GENERAL_STORE)
                 }
             }
-        }.toContentDefinition("ShopKeeper", false)
+        }.toContentDefinition("ShopKeeper")
 }

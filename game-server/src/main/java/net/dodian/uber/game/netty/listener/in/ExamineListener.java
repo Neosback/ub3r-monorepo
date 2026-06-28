@@ -18,16 +18,14 @@ import org.slf4j.LoggerFactory;
 
 import static net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId;
 
-@PacketHandler(opcode = 2)
+@PacketHandler(opcode = 150)
 public final class ExamineListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ExamineListener.class);
-    private static final int EXPECTED_PAYLOAD_SIZE = 10;
-    private static final int MIN_COORD = -1;
-    private static final int MAX_COORD = 16382;
+    private static final int EXPECTED_PAYLOAD_SIZE = 7;
 
     static {
-        PacketListenerManager.register(2, new ExamineListener());
+        PacketListenerManager.register(150, new ExamineListener());
     }
 
     @Override
@@ -46,51 +44,35 @@ public final class ExamineListener implements PacketListener {
                 return;
             }
 
-            int slot = buf.readUnsignedShort();
-            int posX = buf.readInt();
-            int ID = buf.readShort();
-            int posY = buf.readShort();
-
-            if (slot < 0 || slot > 2) {
-                PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.INVALID_SLOT);
-                logger.debug("Rejected examine with invalid slot={} from {}", slot, client.getPlayerName());
-                return;
-            }
-            if (ID < 0) {
-                PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.INVALID_ID);
-                logger.debug("Rejected examine with invalid id={} from {}", ID, client.getPlayerName());
-                return;
-            }
-            if (posX < MIN_COORD || posX > MAX_COORD || posY < MIN_COORD || posY > MAX_COORD) {
-                PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.INVALID_COORDINATE);
-                logger.debug(
-                    "Rejected examine with invalid coordinates posX={} posY={} from {}",
-                    posX,
-                    posY,
-                    client.getPlayerName()
-                );
-                return;
-            }
+            int type = buf.readUnsignedByte();
+            int id = buf.readUnsignedShort();
+            int param1 = buf.readUnsignedShort();
+            int param2 = buf.readUnsignedShort();
 
             if (getGameWorldId() > 1) {
-                logger.debug("Examine: Slot={}, Id={}, posX={}, posY={}", slot, ID, posX, posY);
+                logger.debug("Examine: Type={}, Id={}, param1={}, param2={}", type, id, param1, param2);
             }
 
-            if (slot == 0) { //Item Examine
-                boolean handled = GameEventBus.postWithResult(new ItemExamineEvent(client, ID, posX));
+            if (type == 0) { // Interface Item Examine
+                boolean handled = GameEventBus.postWithResult(new ItemExamineEvent(client, param2, id));
                 if (!handled) {
-                    client.examineItem(client, ID, posX);
+                    client.examineItem(client, param2, id);
                 }
-            } else if (slot == 1) { //Npc Examine
-                boolean handled = GameEventBus.postWithResult(new NpcExamineEvent(client, ID));
+            } else if (type == 1) { // NPC Examine
+                boolean handled = GameEventBus.postWithResult(new NpcExamineEvent(client, id));
                 if (!handled) {
-                    client.examineNpc(client, ID);
+                    client.examineNpc(client, id);
                 }
-            } else if (slot == 2) { //Object Examine
-                Position objectPosition = new Position(posX, posY, client.getPosition().getZ());
-                boolean handled = GameEventBus.postWithResult(new ObjectExamineEvent(client, ID, objectPosition));
+            } else if (type == 2) { // Ground Item Examine
+                boolean handled = GameEventBus.postWithResult(new ItemExamineEvent(client, id, 1));
                 if (!handled) {
-                    client.examineObject(client, ID, objectPosition);
+                    client.examineItem(client, id, 1);
+                }
+            } else if (type == 3) { // Object Examine
+                Position objectPosition = client.getPosition();
+                boolean handled = GameEventBus.postWithResult(new ObjectExamineEvent(client, id, objectPosition));
+                if (!handled) {
+                    client.examineObject(client, id, objectPosition);
                 }
             }
         } catch (Exception e) {

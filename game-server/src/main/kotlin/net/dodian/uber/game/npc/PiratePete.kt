@@ -10,14 +10,13 @@ import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 internal object PiratePete : NpcModule {
     // Stats: 2825: r=0 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 2825, x = 2605, y = 3399, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val npcIds: IntArray = intArrayOf(2825)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "PiratePete",
         entries = entries,
         onFirstClick = ::onFirstClick,

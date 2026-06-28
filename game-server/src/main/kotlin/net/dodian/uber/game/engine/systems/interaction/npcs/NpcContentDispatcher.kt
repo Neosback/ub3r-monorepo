@@ -29,7 +29,7 @@ object NpcContentDispatcher {
         }
         var resolveNs = 0L
         val resolveStart = System.nanoTime()
-        val content = NpcContentRegistry.get(npc.id)
+        val content = NpcContentRegistry.get(npc)
         resolveNs += (System.nanoTime() - resolveStart)
         if (content == null) {
             return ContentDispatchTiming(false, resolveNs, 0L, null)
@@ -52,7 +52,7 @@ object NpcContentDispatcher {
     fun tryHandleAttackTimed(client: Client, npc: Npc): ContentDispatchTiming {
         var resolveNs = 0L
         val resolveStart = System.nanoTime()
-        val content = NpcContentRegistry.get(npc.id)
+        val content = NpcContentRegistry.get(npc)
         resolveNs += (System.nanoTime() - resolveStart)
         if (content == null) {
             return ContentDispatchTiming(false, resolveNs, 0L, null)

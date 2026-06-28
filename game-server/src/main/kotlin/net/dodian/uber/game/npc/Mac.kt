@@ -12,14 +12,13 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 internal object Mac : NpcModule {
     // Stats: 6481: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 6481, x = 2735, y = 3370, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val npcIds: IntArray = intArrayOf(6481)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "Mac",
         entries = entries,
         onFirstClick = ::onFirstClick,

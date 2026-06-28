@@ -9,6 +9,7 @@ import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
 
 class CollisionBuildService(
     private val collision: CollisionManager,
+    private val skippedObjectKeys: Set<Long> = emptySet(),
 ) {
     fun clear() {
         collision.clear()
@@ -27,6 +28,10 @@ class CollisionBuildService(
     }
 
     fun applyTerrain(grid: DecodedMapTileGrid) {
+        applyTerrain(grid, CollisionPlaneResolver.from(grid))
+    }
+
+    fun applyTerrain(grid: DecodedMapTileGrid, planeResolver: CollisionPlaneResolver) {
         for (plane in 0 until 4) {
             for (x in 0 until 64) {
                 for (y in 0 until 64) {
@@ -40,7 +45,7 @@ class CollisionBuildService(
                         continue
                     }
 
-                    val effectivePlane = effectivePlane(grid, x, y, plane)
+                    val effectivePlane = planeResolver.terrainPlane(x, y, plane)
                     if (effectivePlane < 0) {
                         continue
                     }
@@ -54,8 +59,13 @@ class CollisionBuildService(
     }
 
     fun applyObjects(table: MapIndexTable) {
+        val planeResolversByRegion = table.tileGrids.mapValues { (_, grid) -> CollisionPlaneResolver.from(grid) }
         for (obj in table.objects) {
-            applyObjectData(obj, GameObjectData.forId(obj.objectId), table.tileGrids[obj.regionId])
+            applyObjectDataResolved(
+                obj = obj,
+                definition = GameObjectData.forId(obj.objectId),
+                planeResolver = planeResolversByRegion[obj.regionId],
+            )
         }
     }
 
@@ -66,11 +76,19 @@ class CollisionBuildService(
     }
 
     fun applyObjectData(obj: DecodedMapObject, definition: GameObjectData, grid: DecodedMapTileGrid? = null) {
+        applyObjectDataResolved(obj, definition, grid?.let { CollisionPlaneResolver.from(it) })
+    }
+
+    fun applyObjectDataResolved(obj: DecodedMapObject, definition: GameObjectData, planeResolver: CollisionPlaneResolver?) {
+        val effectivePlane = adjustedPlane(obj.x, obj.y, obj.plane, planeResolver)
+        if (effectivePlane < 0 || isSkippedObject(obj.x, obj.y, effectivePlane)) {
+            return
+        }
         applyObject(
             id = obj.objectId,
             x = obj.x,
             y = obj.y,
-            z = adjustedPlane(obj.x, obj.y, obj.plane, grid),
+            z = effectivePlane,
             type = obj.type,
             rotation = obj.rotation,
             sizeX = definition.sizeX,
@@ -83,11 +101,12 @@ class CollisionBuildService(
     }
 
     fun applyTerrainAndObjects(grid: DecodedMapTileGrid?, objects: List<DecodedMapObject>) {
+        val planeResolver = grid?.let { CollisionPlaneResolver.from(it) }
         if (grid != null) {
-            applyTerrain(grid)
+            applyTerrain(grid, planeResolver!!)
         }
         for (obj in objects) {
-            applyObjectData(obj, GameObjectData.forId(obj.objectId), grid)
+            applyObjectDataResolved(obj, GameObjectData.forId(obj.objectId), planeResolver)
         }
     }
 
@@ -203,21 +222,48 @@ class CollisionBuildService(
         }
     }
 
+    fun auditObject(obj: DecodedMapObject, grid: DecodedMapTileGrid?): CacheCollisionAuditObject =
+        auditObjectResolved(obj, grid?.let { CollisionPlaneResolver.from(it) })
+
+    fun auditObjectResolved(obj: DecodedMapObject, planeResolver: CollisionPlaneResolver?): CacheCollisionAuditObject {
+        val effectivePlane = adjustedPlane(obj.x, obj.y, obj.plane, planeResolver)
+        val skippedReason =
+            when {
+                effectivePlane < 0 -> "plane_underflow"
+                isSkippedObject(obj.x, obj.y, effectivePlane) -> "tarnish_removed_object"
+                else -> null
+            }
+        return CacheCollisionAuditObject(
+            objectId = obj.objectId,
+            x = obj.x,
+            y = obj.y,
+            rawPlane = obj.plane,
+            effectivePlane = effectivePlane,
+            type = obj.type,
+            rotation = obj.rotation,
+            regionId = obj.regionId,
+            skippedReason = skippedReason,
+        )
+    }
+
     private fun adjustedPlane(x: Int, y: Int, plane: Int, grid: DecodedMapTileGrid?): Int {
-        if (plane <= 0 || grid == null) {
+        if (grid == null) {
+            return plane
+        }
+        return adjustedPlane(x, y, plane, CollisionPlaneResolver.from(grid))
+    }
+
+    private fun adjustedPlane(x: Int, y: Int, plane: Int, planeResolver: CollisionPlaneResolver?): Int {
+        if (planeResolver == null) {
             return plane
         }
         val localX = Math.floorMod(x, 64)
         val localY = Math.floorMod(y, 64)
-        return effectivePlane(grid, localX, localY, plane)
+        return planeResolver.objectPlane(localX, localY, plane)
     }
 
-    private fun effectivePlane(grid: DecodedMapTileGrid, localX: Int, localY: Int, plane: Int): Int =
-        if (grid.getTile(localX, localY, 1).isBridge() || grid.getTile(localX, localY, plane).isBridge()) {
-            plane - 1
-        } else {
-            plane
-        }
+    private fun isSkippedObject(x: Int, y: Int, z: Int): Boolean =
+        SkippedObjectRepository.key(x, y, z) in skippedObjectKeys
 
     companion object {
         @JvmStatic

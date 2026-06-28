@@ -1593,6 +1593,11 @@ public abstract class Player extends Entity {
         return movementState.didMapRegionChange();
     }
 
+    @Override
+    public boolean didMove() {
+        return getPrimaryDirection() != -1 || getSecondaryDirection() != -1 || movementState.didTeleport();
+    }
+
     public int getPrimaryDirection() {
         return movementState.getPrimaryDirection();
     }
@@ -2056,6 +2061,15 @@ public abstract class Player extends Entity {
     public void examineObject(Client c, int objectId, Position objPos) {
         //Do we handle objects?!
         c.farming.examineBin(c, objPos);
+        String examine = net.dodian.uber.game.engine.systems.objectexamines.ObjectExamines.getExamine(objectId);
+        if (examine != null && !examine.equals("null")) {
+            c.send(new SendMessage(examine));
+        } else {
+            net.dodian.cache.objects.GameObjectData def = net.dodian.cache.objects.GameObjectData.forId(objectId);
+            if (def != null && def.getName() != null && !def.getName().equalsIgnoreCase("null") && !def.getName().isEmpty()) {
+                c.send(new SendMessage("It's a " + def.getName().toLowerCase() + "."));
+            }
+        }
         if(objectId == 378 && objPos.getX() == 2593 && objPos.getY() == 3108 && objPos.getZ() == 1) { //Check timer on a object!
             long timeLeft = (long) Objects.requireNonNull(GlobalObject.getGlobalObject(objPos.getX(), objPos.getY())).getAttachment();
             int secondsLeft = (int)((timeLeft - System.currentTimeMillis()) / 1000L);

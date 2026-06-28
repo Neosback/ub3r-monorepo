@@ -27,7 +27,36 @@ object ObjectClickLoggingService {
         }
     }
 
-    private fun logUnhandledDetails(context: ObjectInteractionContext) {
+    @JvmStatic
+    fun logRouteReject(
+        context: ObjectInteractionContext,
+        status: String,
+    ) {
+        logUnhandledDetails(context, label = "OBJECT ROUTE_REJECT DETAIL", extra = "routeStatus=$status reached=false")
+        ConsoleAuditLog.objectInteraction(context, resolution = null, handled = false, handlerSource = "route_reject:$status")
+    }
+
+    @JvmStatic
+    fun logReachedNoHandler(context: ObjectInteractionContext) {
+        if (!logger.isDebugEnabled) return
+        val definition = context.obj ?: GameObjectData.forId(context.objectId)
+        logger.debug(
+            "OBJECT REACHED_NO_HANDLER | type={} option={} objectId={} pos={},{},{} hasActions={} reached=true",
+            context.type,
+            context.option ?: -1,
+            context.objectId,
+            context.position.x,
+            context.position.y,
+            context.position.z,
+            isCacheActionObject(definition),
+        )
+    }
+
+    private fun logUnhandledDetails(
+        context: ObjectInteractionContext,
+        label: String = "OBJECT UNHANDLED DETAIL",
+        extra: String = "reached=true",
+    ) {
         if (!logger.isWarnEnabled) return
         val definition = context.obj ?: GameObjectData.forId(context.objectId)
         val candidates = ObjectContentRegistry.resolveCandidates(context.objectId, context.position)
@@ -37,7 +66,7 @@ object ObjectClickLoggingService {
             CacheCollisionAuditStore
                 .objectsForTile(context.position.x, context.position.y)
                 .asSequence()
-                .filter { it.plane == context.position.z && it.objectId == context.objectId }
+                .filter { !it.skipped && it.effectivePlane == context.position.z && it.objectId == context.objectId }
                 .map { obj ->
                     val dx = abs(obj.x - context.position.x)
                     val dy = abs(obj.y - context.position.y)
@@ -49,9 +78,10 @@ object ObjectClickLoggingService {
                 .ifBlank { "none" }
         val overlapSummary = ClipProbeService.formatOverlapSummary(probe, 3)
         logger.warn(
-            "OBJECT UNHANDLED DETAIL | type={} option={} objectId={} pos={},{},{} " +
+            "{} | type={} option={} objectId={} pos={},{},{} " +
                 "| defName={} size={}x{} blockWalk={} blockRange={} solid={} walkable={} actions={} " +
-                "| contentCandidates={} matchingOverlaps={} nearbySameIdAnchors={} fullBlocked={} flags=0x{} [{}] overlaps={}",
+                "| contentCandidates={} matchingOverlaps={} nearbySameIdAnchors={} fullBlocked={} flags=0x{} [{}] {} overlaps={}",
+            label,
             context.type,
             context.option ?: -1,
             context.objectId,
@@ -72,7 +102,13 @@ object ObjectClickLoggingService {
             probe.fullMobBlocked,
             probe.rawFlags.toString(16),
             ClipProbeService.formatFlags(probe.rawFlags),
+            extra,
             overlapSummary,
         )
     }
+
+    fun isCacheActionObject(definition: GameObjectData): Boolean =
+        definition.hasActions() && definition.description != FALLBACK_DESCRIPTION
+
+    private const val FALLBACK_DESCRIPTION = "Legacy cache removed; fallback definition."
 }

@@ -14,6 +14,7 @@ import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationServic
 import net.dodian.uber.game.engine.systems.follow.FollowService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
+import net.dodian.uber.game.engine.systems.interaction.InteractionProcessor
 import net.dodian.uber.game.engine.state.GroundItemIntentStateAdapter
 import net.dodian.uber.game.engine.state.TeleportIntentStateAdapter
 import org.slf4j.LoggerFactory
@@ -87,41 +88,58 @@ object PacketWalkingService {
             return
         }
 
-        val firstStepX = request.firstStepXAbs - player.mapRegionX * 8
-        val firstStepY = request.firstStepYAbs - player.mapRegionY * 8
+        val eventDestination: Position
+        if (WalkingRouteService.isPlainWalkOpcode(request.opcode)) {
+            eventDestination = WalkingRouteService.destination(request, player.position.z)
+            if (!WalkingRouteService.routePlainWalk(player, request)) {
+                return
+            }
+            logger.debug(
+                "Routed walk steps {} destination {} {} running {}",
+                player.newWalkCmdSteps,
+                eventDestination.x,
+                eventDestination.y,
+                player.newWalkCmdIsRunning,
+            )
+        } else {
+            val firstStepX = request.firstStepXAbs - player.mapRegionX * 8
+            val firstStepY = request.firstStepYAbs - player.mapRegionY * 8
+            eventDestination = Position(request.firstStepXAbs, request.firstStepYAbs, player.position.z)
 
-        player.newWalkCmdSteps = stepCount
-        player.newWalkCmdIsRunning = request.running
-        player.newWalkCmdX[0] = 0
-        player.newWalkCmdY[0] = 0
-        player.tmpNWCX[0] = 0
-        player.tmpNWCY[0] = 0
+            player.newWalkCmdSteps = stepCount
+            player.newWalkCmdIsRunning = request.running
+            player.newWalkCmdX[0] = 0
+            player.newWalkCmdY[0] = 0
+            player.tmpNWCX[0] = 0
+            player.tmpNWCY[0] = 0
 
-        for (i in 1 until stepCount) {
-            player.newWalkCmdX[i] = request.deltasX[i]
-            player.newWalkCmdY[i] = request.deltasY[i]
-            player.tmpNWCX[i] = request.deltasX[i]
-            player.tmpNWCY[i] = request.deltasY[i]
-        }
+            for (i in 1 until stepCount) {
+                player.newWalkCmdX[i] = request.deltasX[i]
+                player.newWalkCmdY[i] = request.deltasY[i]
+                player.tmpNWCX[i] = request.deltasX[i]
+                player.tmpNWCY[i] = request.deltasY[i]
+            }
 
-        logger.debug(
-            "Walk steps {} firstX {} firstY {} running {}",
-            player.newWalkCmdSteps,
-            firstStepX,
-            firstStepY,
-            player.newWalkCmdIsRunning,
-        )
-        for (i in 0 until player.newWalkCmdSteps) {
-            player.newWalkCmdX[i] += firstStepX
-            player.newWalkCmdY[i] += firstStepY
+            logger.debug(
+                "Walk steps {} firstX {} firstY {} running {}",
+                player.newWalkCmdSteps,
+                firstStepX,
+                firstStepY,
+                player.newWalkCmdIsRunning,
+            )
+            for (i in 0 until player.newWalkCmdSteps) {
+                player.newWalkCmdX[i] += firstStepX
+                player.newWalkCmdY[i] += firstStepY
+            }
         }
 
         if (player.newWalkCmdSteps > 0) {
             DialogueService.closeBlockingDialogue(player, false)
 
-            // Manual click-walk should break follow intent (Luna parity).
+            // Manual click-walk should break follow intent (Luna parity) and object interaction.
             if (request.opcode == 164 || request.opcode == 248) {
                 FollowService.cancelFollowIntent(player)
+                InteractionProcessor.cancel(player)
             }
 
             if (player.inDuel) {
@@ -157,7 +175,7 @@ object PacketWalkingService {
         GameEventBus.post(
             WalkEvent(
                 player,
-                Position(request.firstStepXAbs, request.firstStepYAbs, player.position.z),
+                eventDestination,
             ),
         )
 

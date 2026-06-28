@@ -11,14 +11,13 @@ import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 internal object Jatix : NpcModule {
     // Stats: 1174: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 1174, x = 2897, y = 3428, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val npcIds: IntArray = intArrayOf(1174)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "Jatix",
         entries = entries,
         onFirstClick = ::onFirstClick,

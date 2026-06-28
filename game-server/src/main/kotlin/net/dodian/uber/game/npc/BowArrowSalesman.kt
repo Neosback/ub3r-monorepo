@@ -8,13 +8,12 @@ import net.dodian.uber.game.model.entity.player.Client
 internal object BowArrowSalesman : NpcModule {
     // Stats: 6060: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 6060, x = 2589, y = 3083, z = 0, face = 0),
-    )
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val entries: List<NpcSpawnDef> = emptyList()
+    val npcIds: IntArray = intArrayOf(6060)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "BowArrowSalesman",
         entries = entries,
         onSecondClick = ::onSecondClick,

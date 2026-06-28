@@ -5,12 +5,7 @@ package net.dodian.uber.game.npc
 internal object InfernalMage : NpcModule {
     // Stats: 443: r=60 a=60 d=45 s=55 hp=60 rg=60 mg=60
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 443, x = 2716, y = 9751, z = 0, face = 0),
-        NpcSpawnDef(npcId = 443, x = 2718, y = 9747, z = 0, face = 0),
-        NpcSpawnDef(npcId = 443, x = 2724, y = 9744, z = 0, face = 0),
-        NpcSpawnDef(npcId = 443, x = 2716, y = 9743, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(

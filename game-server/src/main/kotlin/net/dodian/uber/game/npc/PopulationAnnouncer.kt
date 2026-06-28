@@ -11,13 +11,12 @@ import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 internal object PopulationAnnouncer : NpcModule {
     // Stats: 3306: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 3306, x = 3086, y = 3506, z = 0, face = 0),
-    )
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val entries: List<NpcSpawnDef> = emptyList()
+    val npcIds: IntArray = intArrayOf(3306)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "PopulationAnnouncer",
         entries = entries,
         onFirstClick = ::onFirstClick,

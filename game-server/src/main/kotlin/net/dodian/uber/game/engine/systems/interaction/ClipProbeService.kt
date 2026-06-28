@@ -15,6 +15,8 @@ object ClipProbeService {
         val rotation: Int,
         val anchorX: Int,
         val anchorY: Int,
+        val rawPlane: Int,
+        val effectivePlane: Int,
         val solid: Boolean,
         val walkable: Boolean,
         val hasActions: Boolean,
@@ -58,7 +60,7 @@ object ClipProbeService {
             CacheCollisionAuditStore
                 .objectsForTile(x, y)
                 .asSequence()
-                .filter { it.plane == z }
+                .filter { !it.skipped && it.effectivePlane == z }
                 .mapNotNull { obj ->
                     val definition = GameObjectData.forId(obj.objectId)
                     val blocksByTypeRule =
@@ -102,6 +104,8 @@ object ClipProbeService {
                             rotation = obj.rotation,
                             anchorX = obj.x,
                             anchorY = obj.y,
+                            rawPlane = obj.rawPlane,
+                            effectivePlane = obj.effectivePlane,
                             solid = definition.isSolid(),
                             walkable = definition.isWalkable(),
                             hasActions = definition.hasActions(),
@@ -171,7 +175,7 @@ object ClipProbeService {
         val details =
             capped.joinToString(" | ") { match ->
                 "id=${match.objectId},type=${match.type},rot=${match.rotation},anchor=${match.anchorX},${match.anchorY}," +
-                    "name=${match.objectName}," +
+                    "plane=${match.rawPlane}->${match.effectivePlane},name=${match.objectName}," +
                     "size=${match.sizeX}x${match.sizeY},solid=${match.solid},walkable=${match.walkable},actions=${match.hasActions}," +
                     "blockWalk=${match.blockWalk},blockRange=${match.blockRange}," +
                     "overlaps=${match.overlapsCurrent},dirContact=${match.directionalContact}," +

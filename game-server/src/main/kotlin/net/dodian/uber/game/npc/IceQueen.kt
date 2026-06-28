@@ -5,9 +5,7 @@ package net.dodian.uber.game.npc
 internal object IceQueen : NpcModule {
     // Stats: 4922: r=180 a=95 d=115 s=135 hp=285 rg=0 mg=1200
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 4922, x = 2865, y = 9953, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(

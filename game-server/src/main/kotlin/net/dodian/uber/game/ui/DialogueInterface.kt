@@ -14,10 +14,10 @@ import net.dodian.uber.game.shop.ShopId
 object DialogueInterface : InterfaceButtonContent {
     private const val INTERFACE_ID = 0
 
-    private val optionOne = intArrayOf(2461, 9157, 9167, 9178, 9190)
-    private val optionTwo = intArrayOf(2462, 9158, 9168, 9179, 9191)
-    private val optionThree = intArrayOf(9169, 9180, 9192)
-    private val optionFour = intArrayOf(9181, 9193)
+    private val optionOne = intArrayOf(2461, 9157, 9167, 9178, 9190, 2482, 2471)
+    private val optionTwo = intArrayOf(2462, 9158, 9168, 9179, 9191, 2483, 2472)
+    private val optionThree = intArrayOf(9169, 9180, 9192, 2484, 2473)
+    private val optionFour = intArrayOf(9181, 9193, 2485)
     private val optionFive = intArrayOf(9194)
     private val toggleSpecialsButtons = intArrayOf(150)
     private val toggleBossYellButtons = intArrayOf(151)
@@ -52,6 +52,14 @@ object DialogueInterface : InterfaceButtonContent {
         )
 
     private fun handleOption(client: net.dodian.uber.game.model.entity.player.Client, rawButtonId: Int, optionIndex: Int): Boolean {
+        if (client.modcpDialogState != 0) {
+            client.handleModcpDialogue(optionIndex)
+            return true
+        }
+        if (client.accountServicesDialogState != 0) {
+            client.handleAccountServicesDialogue(optionIndex)
+            return true
+        }
         if (client.refundSlot != -1) {
             handleRefundMenu(client, optionIndex)
             return true

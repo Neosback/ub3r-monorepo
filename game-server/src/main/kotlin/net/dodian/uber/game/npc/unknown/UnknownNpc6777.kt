@@ -8,9 +8,7 @@ import net.dodian.uber.game.npc.NpcSpawnDef
 internal object UnknownNpc6777 : NpcModule {
     // Stats: 6777: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 6777, x = 3257, y = 2791, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(

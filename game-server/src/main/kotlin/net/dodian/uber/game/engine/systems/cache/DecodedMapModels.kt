@@ -16,7 +16,7 @@ data class DecodedMapTile(
     val attributes: Int,
     val underlay: Int,
 ) {
-    fun isBlocked(): Boolean = (attributes and BLOCKED) == BLOCKED || isWater()
+    fun isBlocked(): Boolean = (attributes and BLOCKED) == BLOCKED
 
     fun isWater(): Boolean = overlay == 6
 
@@ -37,6 +37,24 @@ data class DecodedMapObject(
     val rotation: Int,
     val regionId: Int,
 )
+
+data class CacheCollisionAuditObject(
+    val objectId: Int,
+    val x: Int,
+    val y: Int,
+    val rawPlane: Int,
+    val effectivePlane: Int,
+    val type: Int,
+    val rotation: Int,
+    val regionId: Int,
+    val skippedReason: String? = null,
+) {
+    val plane: Int
+        get() = effectivePlane
+
+    val skipped: Boolean
+        get() = skippedReason != null
+}
 
 data class DecodedMapTileGrid(
     val regionId: Int,
@@ -114,4 +132,3 @@ fun MapIndexTable.withDecodedData(
         objects = objects,
         summary = regions.toSummary(tileGrids, objects),
     )
-

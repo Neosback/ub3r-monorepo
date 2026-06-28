@@ -4,13 +4,12 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
 internal object Monk : NpcModule {
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 555, x = 2604, y = 3092, z = 0, face = 0),
-    )
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val entries: List<NpcSpawnDef> = emptyList()
+    val npcIds: IntArray = intArrayOf(555)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "Monk",
         entries = entries,
         onFirstClick = ::onFirstClick,

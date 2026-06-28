@@ -33,6 +33,50 @@ object InteractionTaskScheduler {
         InteractionSessionStateAdapter.schedule(player, intent)
         player.activeInteraction = null
         player.interactionEarliestCycle = GameCycleClock.currentCycle()
+
+        when (intent) {
+            is ObjectClickIntent -> player.setPersistedFaceCoord(intent.objectPosition.x, intent.objectPosition.y)
+            is ItemOnObjectIntent -> player.setPersistedFaceCoord(intent.objectPosition.x, intent.objectPosition.y)
+            is MagicOnObjectIntent -> player.setPersistedFaceCoord(intent.objectPosition.x, intent.objectPosition.y)
+            is NpcInteractionIntent -> {
+                val npc = net.dodian.uber.game.Server.npcManager.npcMap[intent.npcIndex]
+                if (npc != null) {
+                    player.setPersistedFaceCoord(npc.position.x, npc.position.y)
+                }
+            }
+            is ItemOnNpcIntent -> {
+                val npc = net.dodian.uber.game.Server.npcManager.npcMap[intent.npcIndex]
+                if (npc != null) {
+                    player.setPersistedFaceCoord(npc.position.x, npc.position.y)
+                }
+            }
+            is MagicOnNpcIntent -> {
+                val npc = net.dodian.uber.game.Server.npcManager.npcMap[intent.npcIndex]
+                if (npc != null) {
+                    player.setPersistedFaceCoord(npc.position.x, npc.position.y)
+                }
+            }
+            is AttackPlayerIntent -> {
+                val target = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[intent.victimIndex]
+                if (target != null) {
+                    player.setPersistedFaceCoord(target.position.x, target.position.y)
+                }
+            }
+            is MagicOnPlayerIntent -> {
+                val target = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[intent.victimIndex]
+                if (target != null) {
+                    player.setPersistedFaceCoord(target.position.x, target.position.y)
+                }
+            }
+            is PlayerInteractionIntent -> {
+                val target = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[intent.playerIndex]
+                if (target != null) {
+                    player.setPersistedFaceCoord(target.position.x, target.position.y)
+                }
+            }
+            is GroundItemInteractionIntent -> player.setPersistedFaceCoord(intent.x, intent.y)
+        }
+
         val handle =
             GameTaskRuntime.queuePlayer(player, TaskPriority.STANDARD) {
                 while (task.execute()) {

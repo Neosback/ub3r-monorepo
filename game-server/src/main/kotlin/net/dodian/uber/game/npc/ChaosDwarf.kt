@@ -5,14 +5,7 @@ package net.dodian.uber.game.npc
 internal object ChaosDwarf : NpcModule {
     // Stats: 291: r=35 a=43 d=43 s=43 hp=62 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 291, x = 2955, y = 9794, z = 0, face = 0),
-        NpcSpawnDef(npcId = 291, x = 2961, y = 9785, z = 0, face = 0),
-        NpcSpawnDef(npcId = 291, x = 2966, y = 9794, z = 0, face = 0),
-        NpcSpawnDef(npcId = 291, x = 2955, y = 9775, z = 0, face = 0),
-        NpcSpawnDef(npcId = 291, x = 2961, y = 9780, z = 0, face = 0),
-        NpcSpawnDef(npcId = 291, x = 2966, y = 9775, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(

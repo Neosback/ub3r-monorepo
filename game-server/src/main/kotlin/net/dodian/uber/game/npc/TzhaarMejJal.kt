@@ -15,14 +15,13 @@ internal object TzhaarMejJal : NpcModule {
     )
     // Stats: 2180: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 2180, x = 2849, y = 2991, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val npcIds: IntArray = intArrayOf(2180)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "TzhaarMejJal",
         entries = entries,
         onFirstClick = ::onFirstClick,

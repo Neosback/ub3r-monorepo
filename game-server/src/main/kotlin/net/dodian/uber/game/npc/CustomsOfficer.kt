@@ -9,18 +9,13 @@ import net.dodian.uber.game.model.entity.player.Client
 internal object CustomsOfficer : NpcModule {
     // Stats: 3648: r=0 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 3648, x = 3274, y = 2797, z = 0, face = 0),
-        NpcSpawnDef(npcId = 3648, x = 3511, y = 3505, z = 0, face = 0),
-        NpcSpawnDef(npcId = 3648, x = 2772, y = 3235, z = 0, face = 4),
-        NpcSpawnDef(npcId = 3648, x = 2804, y = 3421, z = 0, face = 6),
-        NpcSpawnDef(npcId = 3648, x = 2864, y = 2971, z = 0, face = 6),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val npcIds: IntArray = intArrayOf(3648)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "CustomsOfficer",
         entries = entries,
         onFirstClick = ::onFirstClick,

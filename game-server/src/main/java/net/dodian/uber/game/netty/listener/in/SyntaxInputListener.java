@@ -20,16 +20,33 @@ public class SyntaxInputListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        if (!PacketBankingService.hasPendingBankSearch(client)) {
-            return;
-        }
-
         ByteBuf buf = packet.payload();
-        if (!buf.isReadable()) {
+        if (buf.readableBytes() < 8) {
             return;
         }
 
-        String input = ByteBufReader.readTerminatedString(buf, 256).trim();
-        PacketBankingService.applyPendingBankSearch(client, input);
+        long nameLong = buf.readLong();
+        String input = net.dodian.utilities.Names.longToPlayerName(nameLong).trim();
+
+        if (client.accountPasswordState == 1) {
+            client.accountPasswordState = 0;
+            client.verifyCurrentPassword(input);
+            return;
+        }
+        if (client.accountPasswordState == 2) {
+            client.accountPasswordState = 0;
+            client.changePassword(input);
+            return;
+        }
+
+        if (client.modcpSearchPendingInput) {
+            client.modcpSearchPendingInput = false;
+            client.openModcp(input);
+            return;
+        }
+
+        if (PacketBankingService.hasPendingBankSearch(client)) {
+            PacketBankingService.applyPendingBankSearch(client, input);
+        }
     }
 }

@@ -118,6 +118,24 @@ class EntityProcessor : Runnable {
     fun runMovementFinalizePhase() {
         syncActivePlayerChunksForTick()
         consumeNpcDirectionsForTick()
+
+        // Apply persisted face focus for players and NPCs if they are stationary.
+        for (player in PlayerRegistry.playersOnline.values) {
+            if (player.isActive && !player.disconnected) {
+                if (!player.didMove() && player.hasPersistedFaceCoord()) {
+                    player.applyFocus(player.persistedFaceX, player.persistedFaceY)
+                    player.setPersistedFaceCoord(0, 0)
+                }
+            }
+        }
+        for (npc in Server.npcManager.getNpcs()) {
+            if (npc != null && npc.alive) {
+                if (!npc.didMove() && npc.hasPersistedFaceCoord()) {
+                    npc.applyFocus(npc.persistedFaceX, npc.persistedFaceY)
+                    npc.setPersistedFaceCoord(0, 0)
+                }
+            }
+        }
     }
 
     fun runHousekeepingPhase(now: Long) {

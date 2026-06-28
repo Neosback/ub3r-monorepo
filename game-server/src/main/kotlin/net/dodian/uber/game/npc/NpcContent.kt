@@ -43,8 +43,7 @@ fun npcIdsFromEntries(entries: List<NpcSpawnDef>, vararg additionalNpcIds: Int):
 data class NpcContentDefinition(
     val name: String,
     val npcIds: IntArray,
-    val ownsSpawnDefinitions: Boolean = false,
-    val entries: List<NpcSpawnDef> = emptyList(),
+    val profiles: Set<String> = emptySet(),
     val optionLabels: Map<Int, String> = emptyMap(),
     val interactionSource: NpcInteractionSource = NpcInteractionSource.DSL,
     val onFirstClick: NpcClickHandler = NO_CLICK_HANDLER,

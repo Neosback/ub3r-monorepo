@@ -1,6 +1,7 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
+import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
@@ -61,6 +62,16 @@ public class ClickingButtonsListener implements PacketListener {
 
         PacketButtonService.prepareAction(client, actionButton);
 
+        if (actionButton >= 36731 && actionButton <= 36769) {
+            int index = (actionButton - 36731) / 2;
+            if (client.viewingAccountServices) {
+                client.handleAccountServicesRowClick(index);
+            } else {
+                handleModcpRowClick(client, index);
+            }
+            return;
+        }
+
         InterfaceButtonBinding resolvedBinding = InterfaceButtonRegistry.INSTANCE.resolve(client, actionButton, actionIndex);
         ButtonClickRequest request = new ButtonClickRequest(
                 client,
@@ -93,5 +104,40 @@ public class ClickingButtonsListener implements PacketListener {
         }
 
         ButtonClickLoggingService.logClick(request, packet.opcode(), false);
+    }
+
+    private void handleModcpRowClick(Client client, int index) {
+        if (client.playerRights < 1) {
+            client.sendMessage("You do not have permission to execute this staff command.");
+            return;
+        }
+        if (index < 0 || index >= client.modcpPlayerList.size()) {
+            client.sendMessage("No player in this slot.");
+            return;
+        }
+        String targetName = client.modcpPlayerList.get(index);
+        client.managingName = targetName;
+
+        // Show player details on the right side of the interface
+        Client other = null;
+        for (int i = 0; i < net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players.length; i++) {
+            net.dodian.uber.game.model.entity.player.Player p = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
+            if (p != null && p.playerName.equalsIgnoreCase(targetName.trim())) {
+                other = (Client) p;
+                break;
+            }
+        }
+
+        client.loadAndShowModcpDetails(targetName, other != null, other != null ? other.connectedFrom : "Offline");
+
+        // Show player options dialogue
+        client.modcpDialogState = 1;
+        client.showPlayerOption(new String[]{
+            "Manage " + targetName,
+            "Teleport Actions",
+            "Moderator Actions",
+            "Check Containers",
+            "Cancel"
+        });
     }
 }

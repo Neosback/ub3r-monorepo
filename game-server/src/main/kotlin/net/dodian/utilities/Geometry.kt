@@ -108,6 +108,9 @@ object Geometry {
         // MySQL game_object_definitions table. The cache carries the real type and rotation/face,
         // which the interaction reach (InteractionReachService) needs to compute valid faces.
         for (obj in CacheCollisionAuditStore.objectsForTile(x, y)) {
+            if (obj.skipped) {
+                continue
+            }
             val baseId = obj.objectId
             val matches = baseId == objectId || GameObjectData.forId(baseId).childIds?.contains(objectId) == true
             if (matches && obj.x == x && obj.y == y && obj.plane == h) {

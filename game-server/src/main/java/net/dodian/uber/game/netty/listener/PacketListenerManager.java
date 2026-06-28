@@ -45,6 +45,7 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.FocusChangeListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.CommandsListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.ExamineListener");
+            Class.forName("net.dodian.uber.game.netty.listener.in.NpcDropTableListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.ClickingButtonsListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.AddFriendListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.AddIgnoreListener");

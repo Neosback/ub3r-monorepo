@@ -1,0 +1,19 @@
+// Mirrored NPC menu/name overrides for the client.
+// Keep action indices aligned with game-server/data/def/npc/overrides.jsonc.
+{
+  "schemaVersion": 1,
+  "npcs": [
+    {
+      "id": 10681,
+      "name": "Aubury",
+      "examine": "An expert in runes.",
+      "actions": [
+        "Talk-to",
+        null,
+        "Trade",
+        "Teleport",
+        null,
+      ],
+    },
+  ],
+}

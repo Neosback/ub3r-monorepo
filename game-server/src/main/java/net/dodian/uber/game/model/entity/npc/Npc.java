@@ -70,6 +70,7 @@ public class Npc extends Entity {
     private int spawnAttackRange = 6;
     private boolean spawnAlwaysActive = false;
     private Function1<Client, Boolean> spawnCondition = defaultSpawnCondition();
+    private String interactionProfile;
     private int pendingWalkingDirection = -1;
     private boolean walking = false;
     private Chunk currentChunk;
@@ -212,6 +213,11 @@ public class Npc extends Entity {
 
     public int getViewY() {
         return this.viewY;
+    }
+
+    @Override
+    public boolean didMove() {
+        return getDirection() != -1;
     }
 
     public int getDirection() {
@@ -926,6 +932,14 @@ public class Npc extends Entity {
         } else {
             spawnCondition = client -> Boolean.TRUE.equals(condition.invoke(client));
         }
+    }
+
+    public String getInteractionProfile() {
+        return interactionProfile;
+    }
+
+    public void setInteractionProfile(String interactionProfile) {
+        this.interactionProfile = interactionProfile == null || interactionProfile.isBlank() ? null : interactionProfile;
     }
 
     public boolean canBeSeenBy(Client client) {

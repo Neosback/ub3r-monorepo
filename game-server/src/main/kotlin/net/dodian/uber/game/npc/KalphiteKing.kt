@@ -5,9 +5,7 @@ package net.dodian.uber.game.npc
 internal object KalphiteKing : NpcModule {
     // Stats: 4304: r=250 a=1 d=250 s=66 hp=900 rg=290 mg=1666
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 4304, x = 1711, y = 9845, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(

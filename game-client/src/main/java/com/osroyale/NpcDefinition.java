@@ -1,6 +1,18 @@
 package com.osroyale;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class NpcDefinition {
 
@@ -415,7 +427,110 @@ public final class NpcDefinition {
                 break;
         }
 
+        applyExternalOverride(entityDef);
         return entityDef;
+    }
+
+    private static void applyExternalOverride(NpcDefinition definition) {
+        NpcDefinitionOverride override = externalOverrides().get(definition.npcId);
+        if (override == null) {
+            return;
+        }
+        if (override.name != null) {
+            definition.name = override.name;
+        }
+        if (override.examine != null) {
+            definition.description = override.examine.getBytes(StandardCharsets.UTF_8);
+        }
+        if (override.size != null) {
+            definition.size = override.size.byteValue();
+        }
+        if (override.combatLevel != null) {
+            definition.combatLevel = override.combatLevel;
+        }
+        if (override.standingAnimation != null) {
+            definition.standingAnimation = override.standingAnimation;
+        }
+        if (override.walkingAnimation != null) {
+            definition.walkingAnimation = override.walkingAnimation;
+        }
+        if (override.actions != null) {
+            definition.actions = Arrays.copyOf(override.actions, 5);
+        }
+    }
+
+    private static Map<Integer, NpcDefinitionOverride> externalOverrides() {
+        if (externalOverrides != null) {
+            return externalOverrides;
+        }
+        externalOverrides = loadExternalOverrides();
+        return externalOverrides;
+    }
+
+    private static Map<Integer, NpcDefinitionOverride> loadExternalOverrides() {
+        InputStream input = NpcDefinition.class.getResourceAsStream("/def/npc/overrides.jsonc");
+        if (input == null) {
+            return new HashMap<>();
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
+            StringBuilder builder = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                int commentIndex = line.indexOf("//");
+                builder.append(commentIndex >= 0 ? line.substring(0, commentIndex) : line).append('\n');
+            }
+            String json = builder.toString().replaceAll(",\\s*([}\\]])", "$1");
+            JsonObject root = new JsonParser().parse(json).getAsJsonObject();
+            JsonArray npcs = root.getAsJsonArray("npcs");
+            Map<Integer, NpcDefinitionOverride> overrides = new HashMap<>();
+            if (npcs == null) {
+                return overrides;
+            }
+            for (JsonElement element : npcs) {
+                JsonObject object = element.getAsJsonObject();
+                int id = object.get("id").getAsInt();
+                NpcDefinitionOverride override = new NpcDefinitionOverride();
+                override.name = optionalString(object, "name");
+                override.examine = optionalString(object, "examine");
+                override.size = optionalInt(object, "size");
+                override.combatLevel = optionalInt(object, "combatLevel");
+                override.standingAnimation = optionalInt(object, "standingAnimation");
+                override.walkingAnimation = optionalInt(object, "walkingAnimation");
+                JsonArray actions = object.getAsJsonArray("actions");
+                if (actions != null) {
+                    override.actions = new String[5];
+                    for (int index = 0; index < Math.min(5, actions.size()); index++) {
+                        JsonElement action = actions.get(index);
+                        override.actions[index] = action == null || action.isJsonNull() ? null : action.getAsString();
+                    }
+                }
+                overrides.put(id, override);
+            }
+            return overrides;
+        } catch (IOException | RuntimeException e) {
+            System.err.println("Failed loading NPC definition overrides: " + e.getMessage());
+            return new HashMap<>();
+        }
+    }
+
+    private static String optionalString(JsonObject object, String field) {
+        JsonElement element = object.get(field);
+        return element == null || element.isJsonNull() ? null : element.getAsString();
+    }
+
+    private static Integer optionalInt(JsonObject object, String field) {
+        JsonElement element = object.get(field);
+        return element == null || element.isJsonNull() ? null : element.getAsInt();
+    }
+
+    private static final class NpcDefinitionOverride {
+        private String name;
+        private String examine;
+        private Integer size;
+        private Integer combatLevel;
+        private Integer standingAnimation;
+        private Integer walkingAnimation;
+        private String[] actions;
     }
 
     public Model method160() {
@@ -887,6 +1002,7 @@ public final class NpcDefinition {
     public boolean isVisible;
     public int[] modelIds;
     public int interfaceZoom = 0;
+    private static Map<Integer, NpcDefinitionOverride> externalOverrides;
     public static Cache modelCache = new Cache(30);
 
     @Override

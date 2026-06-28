@@ -9,13 +9,12 @@ import net.dodian.uber.game.skill.thieving.Thieving
 internal object Farmer : NpcModule {
     // Stats: 3086: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 3086, x = 2590, y = 3102, z = 0, face = 4),
-    )
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val entries: List<NpcSpawnDef> = emptyList()
+    val npcIds: IntArray = intArrayOf(3086)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "Farmer",
         entries = entries,
         onSecondClick = ::onSecondClick,

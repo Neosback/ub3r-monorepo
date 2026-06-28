@@ -5,9 +5,7 @@ package net.dodian.uber.game.npc
 internal object PlaceholderDropNpc : NpcModule {
     // Stats: 1337: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 1337, x = 1811, y = 4495, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(

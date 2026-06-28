@@ -9,17 +9,12 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 internal object Sheep : NpcModule {
     // Stats: 2794: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 2794, x = 2460, y = 3436, z = 0, face = 0),
-        NpcSpawnDef(npcId = 2794, x = 2460, y = 3433, z = 0, face = 0),
-        NpcSpawnDef(npcId = 2794, x = 2462, y = 3434, z = 0, face = 0),
-        NpcSpawnDef(npcId = 2794, x = 2462, y = 3431, z = 0, face = 0),
-        NpcSpawnDef(npcId = 2794, x = 2458, y = 3431, z = 0, face = 0),
-    )
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val entries: List<NpcSpawnDef> = emptyList()
+    val npcIds: IntArray = intArrayOf(2794)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "Sheep",
         entries = entries,
         onFirstClick = ::onFirstClick,

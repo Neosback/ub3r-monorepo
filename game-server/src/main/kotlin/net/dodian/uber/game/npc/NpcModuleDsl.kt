@@ -6,12 +6,12 @@ fun simpleNpcDefinition(
 ): NpcContentDefinition =
     npcPlugin(name) {
         ids(*npcIdsFromEntries(entries))
-        spawns(entries)
-    }.toContentDefinition(name, false)
+    }.toContentDefinition(name)
 
 fun legacyNpcDefinition(
     name: String,
     entries: List<NpcSpawnDef>,
+    npcIds: IntArray = npcIdsFromEntries(entries),
     onFirstClick: NpcClickHandler = NO_CLICK_HANDLER,
     onSecondClick: NpcClickHandler = NO_CLICK_HANDLER,
     onThirdClick: NpcClickHandler = NO_CLICK_HANDLER,
@@ -20,8 +20,7 @@ fun legacyNpcDefinition(
 ): NpcContentDefinition {
     val plugin =
         npcPlugin(name) {
-            ids(*npcIdsFromEntries(entries))
-            spawns(entries)
+            ids(*npcIds)
             options {
                 if (onFirstClick !== NO_CLICK_HANDLER) {
                     first("first", onFirstClick)
@@ -40,5 +39,5 @@ fun legacyNpcDefinition(
                 }
             }
         }
-    return plugin.toContentDefinition(name, false)
+    return plugin.toContentDefinition(name)
 }

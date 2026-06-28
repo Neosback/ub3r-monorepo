@@ -8,15 +8,12 @@ import net.dodian.uber.game.model.entity.player.Client
 internal object Gerrant : NpcModule {
     // Stats: 1027: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 1027, x = 2871, y = 2968, z = 0, face = 0),
-        NpcSpawnDef(npcId = 1027, x = 2835, y = 3442, z = 0, face = 0),
-        NpcSpawnDef(npcId = 1027, x = 2597, y = 3401, z = 0, face = 0),
-    )
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val entries: List<NpcSpawnDef> = emptyList()
+    val npcIds: IntArray = intArrayOf(1027)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "Gerrant",
         entries = entries,
         onSecondClick = ::onSecondClick,

@@ -11,18 +11,12 @@ import java.util.Date
 internal object Cow : NpcModule {
     // Stats: 2805: r=30 a=1 d=1 s=1 hp=8 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 2805, x = 2604, y = 3114, z = 0, face = 0),
-        NpcSpawnDef(npcId = 2805, x = 2609, y = 3115, z = 0, face = 0),
-        NpcSpawnDef(npcId = 2805, x = 2608, y = 3112, z = 0, face = 0),
-        NpcSpawnDef(npcId = 2805, x = 2602, y = 3116, z = 0, face = 0),
-        NpcSpawnDef(npcId = 2805, x = 2601, y = 3113, z = 0, face = 0),
-        NpcSpawnDef(npcId = 2805, x = 2605, y = 3116, z = 0, face = 0),
-    )
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val entries: List<NpcSpawnDef> = emptyList()
+    val npcIds: IntArray = intArrayOf(2805)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "Cow",
         entries = entries,
         onFirstClick = ::onFirstClick,

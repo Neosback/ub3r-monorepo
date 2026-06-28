@@ -102,6 +102,7 @@ public class Server {
         clientHandler = new Server();
         login = new Login();
         GameObjectData.init();
+        net.dodian.uber.game.engine.systems.objectexamines.ObjectExamines.load();
         new CacheBootstrapService().bootstrap();
         loadObjects();
         new DoorRegistry();

@@ -194,6 +194,10 @@ object ObjectInteractionService {
             val candidates = ObjectContentRegistry.resolveCandidates(context.objectId, context.position)
             val resolveNs = System.nanoTime() - resolveStart
             if (candidates.isEmpty()) {
+                if (isReachedNoHandlerNoop(context)) {
+                    ObjectClickLoggingService.logReachedNoHandler(context)
+                    return DispatchTiming(true, resolveNs, 0L, CACHE_ACTION_NOOP)
+                }
                 ObjectClickLoggingService.log(context, resolution = null, handled = false)
                 return DispatchTiming(false, resolveNs, 0L, null)
             }
@@ -249,6 +253,10 @@ object ObjectInteractionService {
                     )
                 }
             }
+            if (isReachedNoHandlerNoop(context)) {
+                ObjectClickLoggingService.logReachedNoHandler(context)
+                return DispatchTiming(true, resolveNs, handlerNs, CACHE_ACTION_NOOP)
+            }
             ObjectClickLoggingService.log(context, resolution = candidates.firstOrNull(), handled = false)
             return DispatchTiming(false, resolveNs, handlerNs, handlerName)
         } finally {
@@ -257,6 +265,11 @@ object ObjectInteractionService {
                 reentrancyGuard.remove()
             }
         }
+    }
+
+    private fun isReachedNoHandlerNoop(context: ObjectInteractionContext): Boolean {
+        val definition = context.obj ?: GameObjectData.forId(context.objectId)
+        return ObjectClickLoggingService.isCacheActionObject(definition)
     }
 
     private fun buildReentrancyKey(context: ObjectInteractionContext): String {
@@ -276,4 +289,6 @@ object ObjectInteractionService {
             append(context.position.z)
         }
     }
+
+    private const val CACHE_ACTION_NOOP = "cache-action-noop"
 }

@@ -5,9 +5,7 @@ package net.dodian.uber.game.npc
 internal object JalTokJad : NpcModule {
     // Stats: 7704: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 7704, x = 3326, y = 3333, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(

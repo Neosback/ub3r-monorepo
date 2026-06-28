@@ -8,7 +8,6 @@ import net.dodian.uber.game.engine.systems.interaction.objects.ObjectContentRegi
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectClickLoggingService
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectInteractionService
 import net.dodian.uber.game.engine.systems.interaction.npcs.BankerApproachFallbackService
-import net.dodian.uber.game.engine.systems.follow.FollowRouting
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentDispatcher
 import net.dodian.uber.game.engine.systems.interaction.items.ItemOnNpcContentService
 import net.dodian.uber.game.engine.event.GameEventBus
@@ -45,6 +44,12 @@ object InteractionProcessor {
     private val logger = LoggerFactory.getLogger(InteractionProcessor::class.java)
     private val settledSinceCycle = IdentityHashMap<InteractionIntent, Long>()
     private val objectDistanceRejectLogged = IdentityHashMap<InteractionIntent, Boolean>()
+    /**
+     * Tracks the last position we routed to per intent — mirrors tarnish's [Waypoint.lastPosition].
+     * When a route is in progress and the target hasn't moved, we skip re-routing and let the
+     * walk queue drain naturally.
+     */
+    private val lastRoutePosition = IdentityHashMap<InteractionIntent, Position>()
 
     @JvmStatic
     fun process(player: Client): InteractionExecutionResult {
@@ -169,6 +174,15 @@ object InteractionProcessor {
                 fallbackDef = intent.objectDef,
             )
         val skillObjectBinding = PluginRegistry.currentSkills().objectBinding(intent.option, intent.objectId)
+        val clickContext =
+            ObjectInteractionContext.click(
+                client = player,
+                option = intent.option,
+                objectId = intent.objectId,
+                position = targetPosition,
+                obj = routeSnapshot.objectData,
+                packetOpcode = intent.opcode,
+            )
         val policy =
             SkillInteractionDispatcher.resolveObjectPolicy(
                 option = intent.option,
@@ -183,69 +197,47 @@ object InteractionProcessor {
                 obj = routeSnapshot.objectData,
             ) ?: ObjectInteractionPolicy.DEFAULT
 
-        val routeStart = System.nanoTime()
-        if (
-            ObjectInteractionDistance.resolveDistancePosition(
-                player,
-                targetPosition,
-                intent.objectId,
-                routeSnapshot.objectData,
-                routeSnapshot.objectDef,
-                resolveDistanceMode(policy.distanceRule),
-            ) == null
-        ) {
-            // Not yet on a valid interaction tile. The client only parks the player on some adjacent
-            // tile (often a diagonal one the object can't be used from), so route server-side onto a
-            // real reach/face tile. Only act once the client's walk has settled, and re-route on each
-            // settle until reached or proven unreachable.
-            val objDef = routeSnapshot.objectDef
-            if (objDef != null) {
-                if (!isMovementSettled(player)) {
-                    // Still walking toward the object (client walk or a prior server route) — wait.
-                    return InteractionExecutionResult.WAITING
-                }
-                if (FollowRouting.routeToObjectInteraction(
-                        player,
-                        intent.objectId,
-                        targetPosition.x,
-                        targetPosition.y,
-                        targetPosition.z,
-                        objDef.type,
-                        objDef.face,
-                    )
-                ) {
-                    return InteractionExecutionResult.WAITING
-                }
-            }
-            // No cache def, or no reachable valid interaction tile -> genuine reject.
-            if (objectDistanceRejectLogged.putIfAbsent(intent, true) == null) {
-                ObjectClickLoggingService.log(
-                    context =
-                        ObjectInteractionContext.click(
-                            client = player,
-                            option = intent.option,
-                            objectId = intent.objectId,
-                            position = targetPosition,
-                            obj = routeSnapshot.objectData,
-                            packetOpcode = intent.opcode,
-                        ),
-                    resolution = null,
-                    handled = false,
-                    handlerSource = "InteractionProcessor.distance_reject",
-                )
-            }
-            skillObjectBinding?.let {
-                SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.OBJECT, SkillPolicyResult.POLICY_REJECT)
-            }
-            return InteractionExecutionResult.WAITING
-        }
-        val routeNs = System.nanoTime() - routeStart
+        val hasObjectContent = ObjectContentRegistry.resolveCandidates(intent.objectId, targetPosition).isNotEmpty()
+        val cacheActionNoop = isCacheActionNoop(routeSnapshot.objectData)
+        val shouldRouteToObject =
+            skillObjectBinding != null ||
+                hasObjectContent ||
+                cacheActionNoop
 
-        if (!isSettleGateSatisfied(player, intent, policy)) {
-            skillObjectBinding?.let {
-                SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.OBJECT, SkillPolicyResult.SETTLE_WAIT)
+        val routeNs: Long
+        if (shouldRouteToObject) {
+            val approach =
+                ensureObjectApproached(
+                    player = player,
+                    intent = intent,
+                    objectId = intent.objectId,
+                    targetPosition = targetPosition,
+                    routeSnapshot = routeSnapshot,
+                    policy = policy,
+                    context = clickContext,
+                    allowClosestCompletion = skillObjectBinding == null && !hasObjectContent && cacheActionNoop,
+                ) {
+                    skillObjectBinding?.let {
+                        SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.OBJECT, SkillPolicyResult.POLICY_REJECT)
+                    }
+                }
+            approach.result?.let { return it }
+            routeNs = approach.routeNs
+            if (!isSettleGateSatisfied(player, intent, policy)) {
+                skillObjectBinding?.let {
+                    SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.OBJECT, SkillPolicyResult.SETTLE_WAIT)
+                }
+                return InteractionExecutionResult.WAITING
             }
-            return InteractionExecutionResult.WAITING
+        } else {
+            // No cache action and no server handler: trust the client's own pathing, then log as unhandled.
+            // Wait for movement to settle, then fall through so tryHandleTimed logs UNHANDLED.
+            routeNs = 0L
+            val settled =
+                player.primaryDirection == -1 &&
+                    player.secondaryDirection == -1 &&
+                    player.wQueueReadPtr == player.wQueueWritePtr
+            if (!settled) return InteractionExecutionResult.WAITING
         }
 
         if (intent.option == 1) {
@@ -372,6 +364,17 @@ object InteractionProcessor {
                 fallbackDef = intent.objectDef,
             )
         val skillItemOnObjectBinding = PluginRegistry.currentSkills().itemOnObjectBinding(intent.objectId, intent.itemId)
+        val itemOnObjectContext =
+            ObjectInteractionContext.useItem(
+                client = player,
+                objectId = intent.objectId,
+                position = targetPosition,
+                obj = routeSnapshot.objectData,
+                itemId = intent.itemId,
+                itemSlot = intent.itemSlot,
+                interfaceId = intent.interfaceId,
+                packetOpcode = intent.opcode,
+            )
         val policy =
             SkillInteractionDispatcher.resolveItemOnObjectPolicy(
                 objectId = intent.objectId,
@@ -386,31 +389,46 @@ object InteractionProcessor {
                 interfaceId = intent.interfaceId,
             ) ?: ObjectInteractionPolicy.DEFAULT
 
-        val routeStart = System.nanoTime()
-        if (
-            ObjectInteractionDistance.resolveDistancePosition(
-                player,
-                targetPosition,
-                intent.objectId,
-                routeSnapshot.objectData,
-                routeSnapshot.objectDef,
-                resolveDistanceMode(policy.distanceRule),
-            ) == null
-        ) {
-            skillItemOnObjectBinding?.let {
-                SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.ITEM_ON_OBJECT, SkillPolicyResult.POLICY_REJECT)
-            }
-            return InteractionExecutionResult.WAITING
-        }
-        val routeNs = System.nanoTime() - routeStart
+        val hasObjectContent = ObjectContentRegistry.resolveCandidates(intent.objectId, targetPosition).isNotEmpty()
+        val cacheActionNoop = isCacheActionNoop(routeSnapshot.objectData)
+        val shouldRouteToObject =
+            skillItemOnObjectBinding != null ||
+                hasObjectContent ||
+                cacheActionNoop
 
-        if (!isSettleGateSatisfied(player, intent, policy)) {
-            skillItemOnObjectBinding?.let {
-                SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.ITEM_ON_OBJECT, SkillPolicyResult.SETTLE_WAIT)
+        val routeNs: Long
+        if (shouldRouteToObject) {
+            val approach =
+                ensureObjectApproached(
+                    player = player,
+                    intent = intent,
+                    objectId = intent.objectId,
+                    targetPosition = targetPosition,
+                    routeSnapshot = routeSnapshot,
+                    policy = policy,
+                    context = itemOnObjectContext,
+                    allowClosestCompletion = skillItemOnObjectBinding == null && !hasObjectContent && cacheActionNoop,
+                ) {
+                    skillItemOnObjectBinding?.let {
+                        SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.ITEM_ON_OBJECT, SkillPolicyResult.POLICY_REJECT)
+                    }
+                }
+            approach.result?.let { return it }
+            routeNs = approach.routeNs
+            if (!isSettleGateSatisfied(player, intent, policy)) {
+                skillItemOnObjectBinding?.let {
+                    SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.ITEM_ON_OBJECT, SkillPolicyResult.SETTLE_WAIT)
+                }
+                return InteractionExecutionResult.WAITING
             }
-            return InteractionExecutionResult.WAITING
+        } else {
+            routeNs = 0L
+            val settled =
+                player.primaryDirection == -1 &&
+                    player.secondaryDirection == -1 &&
+                    player.wQueueReadPtr == player.wQueueWritePtr
+            if (!settled) return InteractionExecutionResult.WAITING
         }
-
         val dispatchSnapshot =
             resolveObjectSnapshot(
                 objectId = intent.objectId,
@@ -491,6 +509,15 @@ object InteractionProcessor {
                 fallbackDef = intent.objectDef,
             )
         val skillMagicOnObjectBinding = PluginRegistry.currentSkills().magicOnObjectBinding(intent.objectId, intent.spellId)
+        val magicOnObjectContext =
+            ObjectInteractionContext.magic(
+                client = player,
+                objectId = intent.objectId,
+                position = targetPosition,
+                obj = routeSnapshot.objectData,
+                spellId = intent.spellId,
+                packetOpcode = intent.opcode,
+            )
         val policy =
             SkillInteractionDispatcher.resolveMagicOnObjectPolicy(
                 objectId = intent.objectId,
@@ -503,31 +530,46 @@ object InteractionProcessor {
                 spellId = intent.spellId,
             ) ?: ObjectInteractionPolicy.DEFAULT
 
-        val routeStart = System.nanoTime()
-        if (
-            ObjectInteractionDistance.resolveDistancePosition(
-                player,
-                targetPosition,
-                intent.objectId,
-                routeSnapshot.objectData,
-                routeSnapshot.objectDef,
-                resolveDistanceMode(policy.distanceRule),
-            ) == null
-        ) {
-            skillMagicOnObjectBinding?.let {
-                SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.MAGIC_ON_OBJECT, SkillPolicyResult.POLICY_REJECT)
-            }
-            return InteractionExecutionResult.WAITING
-        }
-        val routeNs = System.nanoTime() - routeStart
+        val hasObjectContent = ObjectContentRegistry.resolveCandidates(intent.objectId, targetPosition).isNotEmpty()
+        val cacheActionNoop = isCacheActionNoop(routeSnapshot.objectData)
+        val shouldRouteToObject =
+            skillMagicOnObjectBinding != null ||
+                hasObjectContent ||
+                cacheActionNoop
 
-        if (!isSettleGateSatisfied(player, intent, policy)) {
-            skillMagicOnObjectBinding?.let {
-                SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.MAGIC_ON_OBJECT, SkillPolicyResult.SETTLE_WAIT)
+        val routeNs: Long
+        if (shouldRouteToObject) {
+            val approach =
+                ensureObjectApproached(
+                    player = player,
+                    intent = intent,
+                    objectId = intent.objectId,
+                    targetPosition = targetPosition,
+                    routeSnapshot = routeSnapshot,
+                    policy = policy,
+                    context = magicOnObjectContext,
+                    allowClosestCompletion = skillMagicOnObjectBinding == null && !hasObjectContent && cacheActionNoop,
+                ) {
+                    skillMagicOnObjectBinding?.let {
+                        SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.MAGIC_ON_OBJECT, SkillPolicyResult.POLICY_REJECT)
+                    }
+                }
+            approach.result?.let { return it }
+            routeNs = approach.routeNs
+            if (!isSettleGateSatisfied(player, intent, policy)) {
+                skillMagicOnObjectBinding?.let {
+                    SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.MAGIC_ON_OBJECT, SkillPolicyResult.SETTLE_WAIT)
+                }
+                return InteractionExecutionResult.WAITING
             }
-            return InteractionExecutionResult.WAITING
+        } else {
+            routeNs = 0L
+            val settled =
+                player.primaryDirection == -1 &&
+                    player.secondaryDirection == -1 &&
+                    player.wQueueReadPtr == player.wQueueWritePtr
+            if (!settled) return InteractionExecutionResult.WAITING
         }
-
         val dispatchSnapshot =
             resolveObjectSnapshot(
                 objectId = intent.objectId,
@@ -819,10 +861,16 @@ object InteractionProcessor {
         InteractionSessionStateAdapter.pending(player)?.let {
             settledSinceCycle.remove(it)
             objectDistanceRejectLogged.remove(it)
+            lastRoutePosition.remove(it)
         }
         InteractionSessionStateAdapter.clear(player)
         player.interactionEarliestCycle = 0
         player.interactionTaskHandle = null
+    }
+
+    @JvmStatic
+    fun cancel(player: Client) {
+        clear(player)
     }
 
     private fun resolveTargetPosition(objectPosition: Position, player: Client): Position {
@@ -855,6 +903,116 @@ object InteractionProcessor {
             obj.x == position.x && obj.y == position.y && obj.z == position.z &&
             (obj.id == objectId || GameObjectData.forId(obj.id).childIds?.contains(objectId) == true)
         }
+    }
+
+    private fun ensureObjectApproached(
+        player: Client,
+        intent: InteractionIntent,
+        objectId: Int,
+        targetPosition: Position,
+        routeSnapshot: ObjectSnapshot,
+        policy: ObjectInteractionPolicy,
+        context: ObjectInteractionContext,
+        allowClosestCompletion: Boolean,
+        recordReject: () -> Unit,
+    ): ObjectApproachCheck {
+        val routeStart = System.nanoTime()
+        if (isPolicyDistanceSatisfied(player, targetPosition, objectId, routeSnapshot, policy)) {
+            ObjectInteractionMovementSettleService.clearQueuedWalkIfReached(player, targetPosition, objectId, routeSnapshot.objectDef)
+            lastRoutePosition.remove(intent)
+            return ObjectApproachCheck(result = null, routeNs = System.nanoTime() - routeStart)
+        }
+
+        // Tarnish Waypoint.lastPosition guard: if the target hasn't moved and a walk is already
+        // in progress, skip re-routing and let the queue drain. Re-routing every tick would stomp
+        // the walk queue before the player reaches the object.
+        val walkInProgress = player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr
+        val lastRouted = lastRoutePosition[intent]
+        if (walkInProgress && lastRouted != null && lastRouted == targetPosition) {
+            return ObjectApproachCheck(result = InteractionExecutionResult.WAITING, routeNs = System.nanoTime() - routeStart)
+        }
+
+        val approach =
+            ObjectApproachRoutingService.ensureReached(
+                player = player,
+                objectId = objectId,
+                targetPosition = targetPosition,
+                objectData = routeSnapshot.objectData,
+                objectDef = routeSnapshot.objectDef,
+            )
+        val routeNs = System.nanoTime() - routeStart
+        return when (approach.status) {
+            ApproachStatus.REACHED -> {
+                lastRoutePosition.remove(intent)
+                ObjectApproachCheck(result = null, routeNs = routeNs)
+            }
+            ApproachStatus.ROUTED -> {
+                // Record that we just routed to this position so we don't re-route next tick.
+                lastRoutePosition[intent] = targetPosition
+                ObjectApproachCheck(result = InteractionExecutionResult.WAITING, routeNs = routeNs)
+            }
+            ApproachStatus.PARKED_CLOSEST -> {
+                lastRoutePosition.remove(intent)
+                if (allowClosestCompletion) {
+                    completeCacheActionNoop(player, context)
+                    ObjectApproachCheck(result = InteractionExecutionResult.COMPLETE, routeNs = routeNs)
+                } else {
+                    if (objectDistanceRejectLogged.putIfAbsent(intent, true) == null) {
+                        ObjectClickLoggingService.logRouteReject(
+                            context = context,
+                            status = approach.status.name,
+                        )
+                    }
+                    recordReject()
+                    clear(player)
+                    ObjectApproachCheck(result = InteractionExecutionResult.CANCELLED, routeNs = routeNs)
+                }
+            }
+            ApproachStatus.UNREACHABLE,
+            ApproachStatus.MISSING_OBJECT -> {
+                lastRoutePosition.remove(intent)
+                if (objectDistanceRejectLogged.putIfAbsent(intent, true) == null) {
+                    ObjectClickLoggingService.logRouteReject(
+                        context = context,
+                        status = approach.status.name,
+                    )
+                }
+                recordReject()
+                clear(player)
+                ObjectApproachCheck(result = InteractionExecutionResult.CANCELLED, routeNs = routeNs)
+            }
+        }
+    }
+
+    private fun isPolicyDistanceSatisfied(
+        player: Client,
+        targetPosition: Position,
+        objectId: Int,
+        routeSnapshot: ObjectSnapshot,
+        policy: ObjectInteractionPolicy,
+    ): Boolean {
+        if (policy.distanceRule == ObjectInteractionPolicy.DistanceRule.REACHABLE) {
+            return false
+        }
+        return ObjectInteractionDistance.resolveDistancePosition(
+            player,
+            targetPosition,
+            objectId,
+            routeSnapshot.objectData,
+            routeSnapshot.objectDef,
+            resolveDistanceMode(policy.distanceRule),
+        ) != null
+    }
+
+    private fun isCacheActionNoop(objectData: GameObjectData?): Boolean =
+        objectData != null && ObjectClickLoggingService.isCacheActionObject(objectData)
+
+    private fun completeCacheActionNoop(player: Client, context: ObjectInteractionContext) {
+        ObjectClickLoggingService.logReachedNoHandler(context)
+        if (player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr) {
+            player.resetWalkingQueue()
+        }
+        clear(player)
     }
 
     private fun resolveDistanceMode(distanceRule: ObjectInteractionPolicy.DistanceRule): ObjectInteractionDistance.DistanceMode {
@@ -966,5 +1124,10 @@ object InteractionProcessor {
     private data class ObjectSnapshot(
         val objectData: GameObjectData?,
         val objectDef: GameObjectDef?,
+    )
+
+    private data class ObjectApproachCheck(
+        val result: InteractionExecutionResult?,
+        val routeNs: Long,
     )
 }

@@ -5,22 +5,7 @@ package net.dodian.uber.game.npc
 internal object RockCrab : NpcModule {
     // Stats: 100: r=60 a=1 d=1 s=1 hp=40 rg=1 mg=1
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 100, x = 2794, y = 3210, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2798, y = 3209, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2796, y = 3212, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2783, y = 3218, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2785, y = 3215, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2789, y = 3213, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2793, y = 3213, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2791, y = 3210, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2780, y = 3219, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2788, y = 3209, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2785, y = 3210, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2784, y = 3212, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2781, y = 3213, z = 0, face = 0),
-        NpcSpawnDef(npcId = 100, x = 2780, y = 3216, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(

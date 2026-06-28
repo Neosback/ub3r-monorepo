@@ -45,6 +45,7 @@ object UiInterface : InterfaceButtonContent {
                 true
             },
             buttonBinding(-1, 4, "ui.tab.equipment_stats", tabInterfaceEquipmentButtons) { client, _ ->
+                client.writeOsrsBonuses()
                 client.send(SetTabInterface(15106, 3213))
                 true
             },

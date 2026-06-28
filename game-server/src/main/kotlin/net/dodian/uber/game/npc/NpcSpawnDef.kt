@@ -37,6 +37,7 @@ data class NpcSpawnDef(
     val magic: Int = MYSQL_DEFAULT_STAT,
     val attackAnimation: Int = MYSQL_DEFAULT_STAT,
     val deathAnimation: Int = MYSQL_DEFAULT_STAT,
+    val profile: String? = null,
 ) {
     fun withStatOverrides(
         respawnTicks: Int? = null,

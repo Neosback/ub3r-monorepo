@@ -8,13 +8,12 @@ import net.dodian.uber.game.model.entity.player.Client
 internal object Nathifa : NpcModule {
     // Stats: 3890: r=0 a=1 d=1 s=1 hp=0 rg=1 mg=1
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 3890, x = 3316, y = 2787, z = 0, face = 0),
-    )
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val entries: List<NpcSpawnDef> = emptyList()
+    val npcIds: IntArray = intArrayOf(3890)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "Nathifa",
         entries = entries,
         onSecondClick = ::onSecondClick,

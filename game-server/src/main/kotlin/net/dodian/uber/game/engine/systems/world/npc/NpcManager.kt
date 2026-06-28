@@ -11,6 +11,7 @@ import net.dodian.uber.game.model.entity.npc.NpcData
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.world.npc.NpcDataRepository
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentRegistry
+import net.dodian.uber.game.engine.systems.interaction.npcs.NpcInteractionProfileRegistry
 import org.slf4j.LoggerFactory
 
 class NpcManager {
@@ -27,10 +28,11 @@ class NpcManager {
     fun getNpcData(): Collection<NpcData> = data.values
 
     fun loadSpawns() {
-        logger.info("Loading NPC spawns from JSONC files")
+        val spawnRoot = NpcSpawnRepository.resolveSpawnsPath()
+        logger.info("Loading NPC spawns from JSONC files: {}", spawnRoot.toAbsolutePath().normalize())
         val cachePath = Path.of("data/cache")
         val cacheDefs = NpcDefinitionRepository.load(cachePath)
-        val contentSpawns = NpcSpawnRepository.load(definitions = cacheDefs) { data.containsKey(it) }
+        val contentSpawns = NpcSpawnRepository.load(spawnRoot, definitions = cacheDefs) { data.containsKey(it) }
         ensureDefinitionsForSpawnNpcIds(contentSpawns)
         val loaded = loadContentSpawns(contentSpawns)
         logger.info("Loaded {} content NPC spawns from JSONC.", loaded)
@@ -111,6 +113,8 @@ class NpcManager {
                     continue
                 }
                 val npc = createNpc(spawn.npcId, position, spawn.face)
+                NpcInteractionProfileRegistry.register(spawn.profile)
+                npc.interactionProfile = spawn.profile
                 npc.applySpawnOverrides(
                     spawn.respawnTicks,
                     spawn.attack,
@@ -309,9 +313,16 @@ class NpcManager {
                     )
                 )
             }
+            val dbDefs = try {
+                NpcDataRepository.loadDefinitions()
+            } catch (e: Exception) {
+                logger.error("Failed to load DB npc definitions, using cache defaults only", e)
+                emptyMap()
+            }
             data.clear()
             data.putAll(definitions)
-            logger.info("Loaded {} Npc Definitions from Cache and Overrides", definitions.size)
+            data.putAll(dbDefs)
+            logger.info("Loaded {} Npc Definitions from Cache and Overrides (DB overrides count: {})", definitions.size, dbDefs.size)
         } catch (e: RuntimeException) {
             logger.error("Error loading NPC definitions", e)
         }

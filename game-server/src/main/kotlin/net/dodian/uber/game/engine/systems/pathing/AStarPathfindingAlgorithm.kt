@@ -7,6 +7,7 @@ import kotlin.math.min
 class AStarPathfindingAlgorithm(
     private val collision: PathingCollision,
     private val heuristic: Heuristic = Heuristic.MANHATTAN,
+    private val maxExpansions: Int = MAX_EXPANSIONS,
 ) : PathfindingAlgorithm {
     override fun find(srcX: Int, srcY: Int, dstX: Int, dstY: Int, z: Int): ArrayDeque<Node> {
         if (srcX == dstX && srcY == dstY) {
@@ -33,10 +34,20 @@ class AStarPathfindingAlgorithm(
         workspace.visitedStamp[srcIndex] = searchId
         workspace.pushOpen(srcIndex, searchId)
         var expansions = 0
+        var bestIndex = srcIndex
+        var bestH = workspace.hCost[srcIndex]
 
         while (workspace.openSize > 0) {
-            if (expansions++ >= MAX_EXPANSIONS) {
-                return ArrayDeque()
+            if (expansions++ >= maxExpansions) {
+                return buildPath(
+                    endIndex = bestIndex,
+                    srcIndex = srcIndex,
+                    minX = minX,
+                    minY = minY,
+                    width = width,
+                    z = z,
+                    workspace = workspace,
+                )
             }
 
             val currentIndex = workspace.popOpen(searchId)
@@ -44,6 +55,13 @@ class AStarPathfindingAlgorithm(
                 continue
             }
             workspace.closedStamp[currentIndex] = searchId
+
+            val currentH = workspace.hCost[currentIndex]
+            if (currentH < bestH) {
+                bestH = currentH
+                bestIndex = currentIndex
+            }
+
             if (currentIndex == dstIndex) {
                 return buildPath(
                     endIndex = currentIndex,
@@ -98,7 +116,15 @@ class AStarPathfindingAlgorithm(
             }
         }
 
-        return ArrayDeque()
+        return buildPath(
+            endIndex = bestIndex,
+            srcIndex = srcIndex,
+            minX = minX,
+            minY = minY,
+            width = width,
+            z = z,
+            workspace = workspace,
+        )
     }
 
     private fun buildPath(

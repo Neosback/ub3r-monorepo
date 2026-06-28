@@ -1,11 +1,9 @@
 package net.dodian.uber.game.npc
 
 internal object Banker : NpcModule {
-    val entries: List<NpcSpawnDef> = BankerSpawnEntries.entries
-    val npcIds: IntArray = npcIdsFromEntries(entries, 3094, 395, 7677)
+    val npcIds: IntArray = npcIds(1613, 3094, 395, 7677)
     override val definition =
         npcPlugin("Banker") {
-            spawns(entries)
             ids(*npcIds)
             options {
                 talkTo {
@@ -26,5 +24,5 @@ internal object Banker : NpcModule {
                     openBank()
                 }
             }
-        }.toContentDefinition("Banker", false)
+        }.toContentDefinition("Banker")
 }

@@ -74,6 +74,10 @@ class MapDecoder(
 
         val archive = store.readStoreFile(MAP_STORE, region.landscapeArchiveId) ?: return null
         val data = CacheUtils.unzipGzip(archive)
+        return decodeTileGrid(region, data)
+    }
+
+    internal fun decodeTileGrid(region: MapIndexEntry, data: ByteArray): DecodedMapTileGrid {
         val reader = CacheBuffer(data)
         val tiles =
             Array(MAP_PLANES) { plane ->
@@ -121,7 +125,7 @@ class MapDecoder(
         var underlay = 0
 
         while (true) {
-            val opcode = reader.readUnsignedByte()
+            val opcode = reader.readUnsignedShort()
             when {
                 opcode == 0 -> {
                     height =
@@ -148,7 +152,7 @@ class MapDecoder(
                 }
 
                 opcode <= 49 -> {
-                    overlay = reader.readByte()
+                    overlay = reader.readUnsignedShort()
                     overlayType = (opcode - 2) / 4
                     overlayOrientation = (opcode - 2) and 0x3
                 }

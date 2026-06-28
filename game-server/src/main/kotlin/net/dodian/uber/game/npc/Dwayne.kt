@@ -5,9 +5,7 @@ package net.dodian.uber.game.npc
 internal object Dwayne : NpcModule {
     // Stats: 2261: r=180 a=120 d=150 s=140 hp=340 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 2261, x = 2778, y = 3208, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(

@@ -10,7 +10,8 @@ class CacheBootstrapService(
     private val cachePath: Path = Path.of("data/cache"),
 ) {
     private val logger = LoggerFactory.getLogger(CacheBootstrapService::class.java)
-    private val collisionBuildService = CollisionBuildService(CollisionManager.global())
+    private val skippedObjectKeys = SkippedObjectRepository.load()
+    private val collisionBuildService = CollisionBuildService(CollisionManager.global(), skippedObjectKeys)
 
     fun bootstrap(): MapIndexTable {
         val store = CacheStore(cachePath).open()
@@ -81,22 +82,24 @@ class CacheBootstrapService(
         var blockingObjects = 0
         var walkableObjects = 0
         val definitionCache = HashMap<Int, GameObjectData>(1024)
-        val regionObjects = HashMap<Int, MutableList<DecodedMapObject>>(regions.size)
+        val regionObjects = HashMap<Int, MutableList<CacheCollisionAuditObject>>(regions.size)
 
         for (region in regions) {
             val decoded = decoder.decodeRegion(region)
+            val planeResolver = decoded.tileGrid?.let { CollisionPlaneResolver.from(it) }
             decoded.tileGrid?.let { grid ->
                 tileGridsDecoded++
-                collisionBuildService.applyTerrain(grid)
+                collisionBuildService.applyTerrain(grid, planeResolver!!)
             }
 
             if (decoded.objects.isNotEmpty()) {
-                regionObjects.getOrPut(region.regionId) { ArrayList(decoded.objects.size) }.addAll(decoded.objects)
+                val auditObjects = regionObjects.getOrPut(region.regionId) { ArrayList(decoded.objects.size) }
+                decoded.objects.mapTo(auditObjects) { collisionBuildService.auditObjectResolved(it, planeResolver) }
             }
 
             for (obj in decoded.objects) {
                 val definition = definitionCache.getOrPut(obj.objectId) { GameObjectData.forId(obj.objectId) }
-                collisionBuildService.applyObjectData(obj, definition, decoded.tileGrid)
+                collisionBuildService.applyObjectDataResolved(obj, definition, planeResolver)
                 objectCount++
                 if (definition.isSolid()) {
                     blockingObjects++

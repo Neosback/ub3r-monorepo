@@ -82,11 +82,17 @@ public abstract class Entity {
         return getPosition().withinDistance(otherPosition, distance);
     }
 
+    public abstract boolean didMove();
+
     public int getSlot() {
         return slot;
     }
 
     public void setFocus(int focusPointX, int focusPointY) {
+        setPersistedFaceCoord(focusPointX, focusPointY);
+    }
+
+    public void applyFocus(int focusPointX, int focusPointY) {
         faceCoordinateX = encodeFaceCoordinate(focusPointX);
         faceCoordinateY = encodeFaceCoordinate(focusPointY);
         getUpdateFlags().setRequired(UpdateFlag.FACE_CHARACTER, false);

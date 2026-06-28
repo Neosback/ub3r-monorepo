@@ -8,9 +8,11 @@ import java.util.Locale
 import java.util.stream.Collectors
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.cache.CacheNpcDefinition
+import net.dodian.uber.game.engine.systems.interaction.npcs.NpcInteractionProfileRegistry
 
 data class NpcSpawnDefaultsJson(
     val facing: String? = null,
+    val profile: String? = null,
     val enabled: Boolean? = null,
     val walkRadius: Int? = null,
     val attackRange: Int? = null,
@@ -33,6 +35,7 @@ data class NpcSpawnJson(
     val y: Int,
     val plane: Int = 0,
     val facing: String? = null,
+    val profile: String? = null,
     val enabled: Boolean? = null,
     val walkRadius: Int? = null,
     val attackRange: Int? = null,
@@ -53,6 +56,7 @@ data class NpcSpawnJson(
 data class NpcSpawnGroupJson(
     val npcId: Int? = null,
     val name: String? = null,
+    val profile: String? = null,
     val defaults: NpcSpawnDefaultsJson = NpcSpawnDefaultsJson(),
     val spawns: List<NpcSpawnJson>,
 )
@@ -80,12 +84,15 @@ object NpcSpawnConditionRegistry {
 
 object NpcSpawnRepository {
     private val mapper = ObjectMapper().registerKotlinModule()
+        .enable(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_COMMENTS)
+        .enable(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_YAML_COMMENTS)
+        .enable(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_TRAILING_COMMA)
 
     @JvmStatic
     fun resolveSpawnsPath(): Path {
         val userDir = Path.of(System.getProperty("user.dir"))
         val base = if (userDir.fileName.toString() == "game-server") userDir else userDir.resolve("game-server")
-        return base.resolve("src/main/kotlin/net/dodian/uber/game/npc/spawns")
+        return base.resolve("data/world/npc-spawns")
     }
 
     @JvmStatic
@@ -97,11 +104,14 @@ object NpcSpawnRepository {
     ): List<NpcSpawnDef> {
         require(Files.isDirectory(root)) { "Missing NPC spawn directory: ${root.toAbsolutePath().normalize()}" }
         val files = Files.walk(root).use { stream ->
-            stream.filter { Files.isRegularFile(it) && it.fileName.toString().endsWith(".json") }
+            stream.filter {
+                Files.isRegularFile(it) &&
+                    (it.fileName.toString().endsWith(".jsonc") || it.fileName.toString().endsWith(".json"))
+            }
                 .sorted()
                 .collect(Collectors.toList())
         }
-        require(files.isNotEmpty()) { "No NPC spawn JSON files found in ${root.toAbsolutePath().normalize()}" }
+        require(files.isNotEmpty()) { "No NPC spawn JSONC files found in ${root.toAbsolutePath().normalize()}" }
 
         val result = ArrayList<NpcSpawnDef>()
         val keys = HashSet<String>()
@@ -132,6 +142,7 @@ object NpcSpawnRepository {
                     val facingName = spawn.facing ?: group.defaults.facing ?: "NORTH"
                     val facing = parseFacing(facingName)
                     val conditionKey = spawn.conditionKey ?: spawn.activity ?: group.defaults.conditionKey ?: group.defaults.activity
+                    val profile = NpcInteractionProfileRegistry.normalize(spawn.profile ?: group.defaults.profile ?: group.profile)
                     result += NpcSpawnDef(
                         npcId = npcId,
                         x = spawn.x,
@@ -152,6 +163,7 @@ object NpcSpawnRepository {
                         magic = spawn.magic ?: group.defaults.magic ?: MYSQL_DEFAULT_STAT,
                         attackAnimation = spawn.attackAnimation ?: group.defaults.attackAnimation ?: MYSQL_DEFAULT_STAT,
                         deathAnimation = spawn.deathAnimation ?: group.defaults.deathAnimation ?: MYSQL_DEFAULT_STAT,
+                        profile = profile?.takeIf { it.isNotBlank() },
                     )
                 }
             }

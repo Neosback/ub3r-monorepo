@@ -238,7 +238,7 @@ enum class QuestTabEntry(
                     }
 
                     7338 -> {
-                        Player.openPage(client, "https://dodian.net/forumdisplay.php?f=83")
+                        client.openAccountServices()
                         return true
                     }
 
@@ -249,7 +249,11 @@ enum class QuestTabEntry(
                     }
 
                     7341 -> {
-                        Player.openPage(client, "https://dodian.net/index.php?pageid=modcp")
+                        if (client.playerRights < 1) {
+                            client.sendMessage("You do not have permission to open the Game Control Panel.")
+                            return true
+                        }
+                        client.openModcpList()
                         return true
                     }
                 }

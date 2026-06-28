@@ -31,7 +31,7 @@ public class GamePacketDecoder extends ByteToMessageDecoder {
     private int size   = 0;
 
     private boolean isNpcTraceOpcode(int opcode) {
-        return opcode == 155 || opcode == 17 || opcode == 21 || opcode == 18 || opcode == 72;
+        return opcode == 155 || opcode == 17 || opcode == 21 || opcode == 18 || opcode == 26 || opcode == 72;
     }
 
     private String preview(ByteBuf payload, int maxBytes) {

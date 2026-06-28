@@ -22,8 +22,7 @@ data class NpcOptionBinding(
 data class NpcPluginDefinition(
     val name: String,
     val npcIds: IntArray,
-    val ownsSpawnDefinitions: Boolean = false,
-    val entries: List<NpcSpawnDef> = emptyList(),
+    val profiles: Set<String> = emptySet(),
     val optionBindings: List<NpcOptionBinding> = emptyList(),
     val stateNamespace: String = name,
 )
@@ -64,7 +63,6 @@ object NpcPluginStateStore {
 
 fun NpcPluginDefinition.toContentDefinition(
     explicitName: String,
-    ownsSpawnDefinitionsFlag: Boolean,
 ): NpcContentDefinition {
     val handlersBySlot = optionBindings.groupBy { it.slot }
 
@@ -84,8 +82,7 @@ fun NpcPluginDefinition.toContentDefinition(
     return NpcContentDefinition(
         name = explicitName.ifBlank { name },
         npcIds = npcIds,
-        ownsSpawnDefinitions = ownsSpawnDefinitionsFlag || ownsSpawnDefinitions,
-        entries = entries,
+        profiles = profiles,
         optionLabels = optionBindings.associate { it.slot.toOptionId() to it.label },
         interactionSource = NpcInteractionSource.DSL,
         onFirstClick = combined(NpcOptionSlot.FIRST),

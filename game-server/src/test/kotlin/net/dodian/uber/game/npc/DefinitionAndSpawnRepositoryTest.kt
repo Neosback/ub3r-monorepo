@@ -6,9 +6,10 @@ import net.dodian.uber.game.item.ItemDefinitionRepository
 import net.dodian.uber.game.objects.ObjectSpawnRepository
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.utilities.Geometry
+import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditObject
 import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditStore
-import net.dodian.uber.game.engine.systems.cache.DecodedMapObject
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -28,29 +29,43 @@ class DefinitionAndSpawnRepositoryTest {
         assertTrue(spawns.none { it.npcId == 394 || it.npcId == 395 })
         assertTrue(spawns.any { it.npcId == 1618 })
         assertTrue(spawns.any { it.npcId == 6080 })
+        val dad = spawns.single { it.npcId == 4130 && it.x == 2541 && it.y == 3092 && it.z == 0 }
+        assertEquals(3, dad.face)
+        assertEquals("dad.yanille", dad.profile)
         assertEquals(1_342, spawns.size)
         assertTrue(ItemDefinitionRepository.load(server.resolve("data/def/item"), server.resolve("data/cache")).size >= 26_988)
 
     }
 
     @Test
-    fun `name-based spawns resolve correctly`() {
+    fun `npc definition overrides apply over cache definitions`() {
+        val definitions = NpcDefinitionRepository.load(server.resolve("data/cache"))
+        val aubury = definitions[10681]
+        assertNotNull(aubury)
+        assertEquals("Aubury", aubury!!.name)
+        assertArrayEquals(arrayOf("Talk-to", null, "Trade", "Teleport", null), aubury.actions)
+    }
+
+    @Test
+    fun `jsonc name-based spawns resolve with comments trailing commas and profile`() {
         val tempDir = Files.createTempDirectory("spawns-test")
         val spawnJson = """
+            // comments and trailing commas are supported for authoring
             {
               "schemaVersion": 1,
               "family": "test_family",
               "groups": [
                 {
                   "name": "Banker",
+                  "profile": "banker.test",
                   "spawns": [
-                    { "x": 3200, "y": 3200, "plane": 0 }
-                  ]
-                }
-              ]
+                    { "x": 3200, "y": 3200, "plane": 0 },
+                  ],
+                },
+              ],
             }
         """.trimIndent()
-        Files.writeString(tempDir.resolve("test_spawn.json"), spawnJson)
+        Files.writeString(tempDir.resolve("test_spawn.jsonc"), spawnJson)
 
         val definitions = NpcDefinitionRepository.load(server.resolve("data/cache"))
         val spawns = NpcSpawnRepository.load(tempDir, definitions) { true }
@@ -59,8 +74,9 @@ class DefinitionAndSpawnRepositoryTest {
         assertEquals("Banker", definitions[resolvedNpcId]?.name)
         assertEquals(3200, spawns[0].x)
         assertEquals(3200, spawns[0].y)
+        assertEquals("banker.test", spawns[0].profile)
         
-        Files.deleteIfExists(tempDir.resolve("test_spawn.json"))
+        Files.deleteIfExists(tempDir.resolve("test_spawn.jsonc"))
         Files.deleteIfExists(tempDir)
      }
 
@@ -128,7 +144,19 @@ class DefinitionAndSpawnRepositoryTest {
          GameObjectData.addDefinition(baseData)
 
          // Publish a mock collision object representing the spawned base object in the world tile (3200, 3200)
-         val list = listOf(DecodedMapObject(objectId = 10355, type = 10, rotation = 2, x = 3200, y = 3200, plane = 0, regionId = CacheCollisionAuditStore.regionId(3200, 3200)))
+         val list =
+             listOf(
+                 CacheCollisionAuditObject(
+                     objectId = 10355,
+                     type = 10,
+                     rotation = 2,
+                     x = 3200,
+                     y = 3200,
+                     rawPlane = 0,
+                     effectivePlane = 0,
+                     regionId = CacheCollisionAuditStore.regionId(3200, 3200),
+                 ),
+             )
          CacheCollisionAuditStore.publish(emptyList(), mapOf(CacheCollisionAuditStore.regionId(3200, 3200) to list))
 
          // Verify that querying Geometry.getObject with the morphed ID (10356) correctly matches the base object!

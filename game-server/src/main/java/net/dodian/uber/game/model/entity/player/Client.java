@@ -179,6 +179,9 @@ public class Client extends Player implements Runnable {
     public int loginDelay = 0;
     public boolean validClient = true;
     public int newPms = 0;
+    private java.util.List<Integer> dropDisplayKey = new java.util.ArrayList<>();
+    public java.util.List<Integer> getDropDisplayKey() { return dropDisplayKey; }
+    public void setDropDisplayKey(java.util.List<Integer> key) { this.dropDisplayKey = key; }
 
     public int[] requiredLevel = {1, 10, 20, 30, 40, 50, 60, 70, 74, 76, 80, 82, 86, 88, 92,
             94, 96};
@@ -566,6 +569,13 @@ public class Client extends Player implements Runnable {
     public int lastButtonActionIndex = -1;
     public boolean bankSearchActive = false;
     public boolean bankSearchPendingInput = false;
+    public boolean modcpSearchPendingInput = false;
+    public int modcpDialogState = 0;
+    public int accountServicesDialogState = 0;
+    public boolean viewingAccountServices = false;
+    public int accountPasswordState = 0;
+    public java.util.List<String> modcpPlayerList = new java.util.ArrayList<>();
+    public String managingName = "";
     public String bankSearchQuery = "";
     public int[] bankSlotTabs = null;
     public int[][] bankContainerSlotMap = null;
@@ -812,7 +822,7 @@ public class Client extends Player implements Runnable {
     }
 
     private boolean isNpcTraceOpcode(int opcode) {
-        return opcode == 155 || opcode == 17 || opcode == 21 || opcode == 18 || opcode == 72;
+        return opcode == 155 || opcode == 17 || opcode == 21 || opcode == 18 || opcode == 26 || opcode == 72;
     }
 
     private void recordInboundPacket(net.dodian.uber.game.netty.game.GamePacket packet) {
@@ -2497,7 +2507,325 @@ public class Client extends Player implements Runnable {
     public void WriteBonus() {
         for (int i = 0; i < playerBonus.length; i++)
             updateBonus(i);
+        writeOsrsBonuses();
     }
+
+    public void writeOsrsBonuses() {
+        String[] OSRS_BONUS_NAMES = {
+            "Stab", "Slash", "Crush", "Magic", "Range",
+            "Stab", "Slash", "Crush", "Magic", "Range",
+            "Strength", "Ranged Strength", "Magic Strength", "Prayer"
+        };
+        int[] OSRS_BONUS_IDS = {
+            15130, 15131, 15132, 15133, 15134,
+            15135, 15136, 15137, 15138, 15139,
+            15140, 15141, 15142, 15143
+        };
+
+        for (int i = 0; i < 10; i++) {
+            int val = playerBonus[i];
+            String bonusStr = OSRS_BONUS_NAMES[i] + ": " + (val >= 0 ? "+" : "") + val;
+            send(new SendString(bonusStr, OSRS_BONUS_IDS[i]));
+        }
+
+        int meleeStrVal = playerBonus[10];
+        String meleeStr = "Strength: " + (meleeStrVal >= 0 ? "+" : "") + meleeStrVal;
+        send(new SendString(meleeStr, 15140));
+
+        int rangedStrVal = getRangedStr(this);
+        String rangedStr = "Ranged Strength: " + (rangedStrVal >= 0 ? "+" : "") + rangedStrVal;
+        send(new SendString(rangedStr, 15141));
+
+        double magicDmgPercent = (magicDmg() - 1.0) * 100.0;
+        String magicStr = "Magic Strength: " + (magicDmgPercent >= 0.0 ? "+" : "") + String.format("%3.1f", magicDmgPercent) + "%";
+        send(new SendString(magicStr, 15142));
+
+        int prayerVal = playerBonus[11];
+        String prayerStr = "Prayer: " + (prayerVal >= 0 ? "+" : "") + prayerVal;
+        send(new SendString(prayerStr, 15143));
+
+        int meleeMax = net.dodian.uber.game.combat.CombatPlayerExtensionsKt.meleeMaxHit(this);
+        int rangedMax = net.dodian.uber.game.combat.CombatPlayerExtensionsKt.rangedMaxHit(this);
+        send(new SendString("Melee Maxhit: <col=ff7000>" + meleeMax + "</col>", 15116));
+        send(new SendString("Range Maxhit: <col=ff7000>" + rangedMax + "</col>", 15117));
+
+        send(new SendString("0.0 kg", 15145));
+    }
+
+    public void loadAndShowModcpDetails(String targetName, boolean isOnline, String ipAddress) {
+        final String[] resultData = new String[4]; // [realName, rankName, createdDate, lastLoginDate]
+        resultData[0] = targetName;
+        resultData[1] = "Player";
+        resultData[2] = "N/A";
+        resultData[3] = "N/A";
+
+        try {
+            net.dodian.uber.game.persistence.repository.DbAsyncRepository.withConnection(conn -> {
+                try {
+                    String query = "SELECT c.name, c.lastlogin, u.joindate, u.usergroupid " +
+                                   "FROM characters c " +
+                                   "LEFT JOIN user u ON LOWER(c.name) = LOWER(u.username) " +
+                                   "WHERE LOWER(c.name) = ?";
+                    java.sql.PreparedStatement ps = conn.prepareStatement(query);
+                    ps.setString(1, targetName.trim().toLowerCase());
+                    java.sql.ResultSet rs = ps.executeQuery();
+                    if (rs.next()) {
+                        resultData[0] = rs.getString("name");
+                        int mgroup = rs.getInt("usergroupid");
+                        int rights = (mgroup == 9 || mgroup == 5) ? 1 : ((mgroup == 6 || mgroup == 18 || mgroup == 10) ? 2 : 0);
+                        resultData[1] = rights == 1 ? "Moderator" : rights >= 2 ? "Administrator" : "Player";
+
+                        long joinSeconds = rs.getLong("joindate");
+                        if (joinSeconds > 0) {
+                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                            resultData[2] = sdf.format(new java.util.Date(joinSeconds * 1000L));
+                        }
+
+                        String lastLoginStr = rs.getString("lastlogin");
+                        if (lastLoginStr != null && !lastLoginStr.isEmpty() && !lastLoginStr.equals("0")) {
+                            try {
+                                long lastLoginMs = Long.parseLong(lastLoginStr);
+                                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
+                                resultData[3] = sdf.format(new java.util.Date(lastLoginMs));
+                            } catch (NumberFormatException e) {
+                                resultData[3] = lastLoginStr;
+                            }
+                        }
+                    }
+                } catch (java.sql.SQLException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            });
+        } catch (Exception e) {
+            // ignore
+        }
+
+        // Send strings to the client
+        send(new SendString(resultData[0], 36706));
+        send(new SendString(resultData[1], 36708));
+        send(new SendString(resultData[2], 36710)); // Created date
+        send(new SendString("Last Login:", 36711)); // Change label from "Play Time:" to "Last Login:"
+        send(new SendString(resultData[3], 36712)); // Last login value
+        send(new SendString(isOnline ? ipAddress : "Offline", 36714)); // IP address
+    }
+
+    public void openModcpList() {
+        if (playerRights < 1) {
+            sendMessage("You do not have permission to use the Game Control Panel.");
+            return;
+        }
+
+        modcpPlayerList.clear();
+        int count = 0;
+        for (int i = 0; i < net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players.length; i++) {
+            net.dodian.uber.game.model.entity.player.Player p = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
+            if (p != null) {
+                modcpPlayerList.add(p.playerName);
+                count++;
+                if (count >= 20) {
+                    break;
+                }
+            }
+        }
+
+        // Fill the 20 slots in the left scroll list (36731 to 36769)
+        int stringId = 36732;
+        for (int i = 0; i < 20; i++) {
+            if (i < modcpPlayerList.size()) {
+                send(new SendString(modcpPlayerList.get(i), stringId));
+            } else {
+                send(new SendString("", stringId));
+            }
+            stringId += 2;
+        }
+
+        // Set the right side details to the staff member's own info
+        loadAndShowModcpDetails(playerName, true, connectedFrom);
+
+        send(new ShowInterface(36700));
+    }
+
+    public void openModcp(String targetName) {
+        if (playerRights < 1) {
+            sendMessage("You do not have permission to use the Game Control Panel.");
+            return;
+        }
+
+        Client other = null;
+        for (int i = 0; i < net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players.length; i++) {
+            net.dodian.uber.game.model.entity.player.Player p = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
+            if (p != null && p.playerName.equalsIgnoreCase(targetName.trim())) {
+                other = (Client) p;
+                break;
+            }
+        }
+
+        managingName = targetName;
+        loadAndShowModcpDetails(targetName, other != null, other != null ? other.connectedFrom : "Offline");
+        send(new ShowInterface(36700));
+    }
+
+    public void handleModcpDialogue(int option) {
+        String targetName = managingName;
+        if (targetName == null || targetName.isEmpty()) {
+            sendMessage("No target player selected.");
+            modcpDialogState = 0;
+            send(new net.dodian.uber.game.netty.listener.out.RemoveInterfaces());
+            return;
+        }
+
+        Client other = null;
+        for (int i = 0; i < net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players.length; i++) {
+            net.dodian.uber.game.model.entity.player.Player p = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
+            if (p != null && p.playerName.equalsIgnoreCase(targetName.trim())) {
+                other = (Client) p;
+                break;
+            }
+        }
+
+        if (modcpDialogState == 1) { // Main Menu: 1=Teleport, 2=Mod, 3=Containers, 4=Cancel
+            if (option == 1) { // Teleport actions
+                modcpDialogState = 2;
+                showPlayerOption(new String[]{"Teleport: " + targetName, "Teleport to them", "Teleport them to me", "Move them Home", "Back"});
+            } else if (option == 2) { // Moderator actions
+                modcpDialogState = 3;
+                showPlayerOption(new String[]{"Mod: " + targetName, "Kick player", "Mute (24h)", "Un-mute player", "Back"});
+            } else if (option == 3) { // Check containers
+                modcpDialogState = 4;
+                showPlayerOption(new String[]{"View: " + targetName, "Check Bank", "Check Inventory", "Back"});
+            } else { // Cancel
+                modcpDialogState = 0;
+                send(new net.dodian.uber.game.netty.listener.out.RemoveInterfaces());
+            }
+        } else if (modcpDialogState == 2) { // Teleport Sub-menu: 1=To, 2=To Me, 3=Home, 4=Back
+            if (option == 4) { // Back
+                modcpDialogState = 1;
+                showPlayerOption(new String[]{"Manage " + targetName, "Teleport Actions", "Moderator Actions", "Check Containers", "Cancel"});
+                return;
+            }
+            if (other == null) {
+                sendMessage("Player is offline.");
+                return;
+            }
+            if (option == 1) {
+                transport(other.getPosition().copy());
+                sendMessage("Teleporting to " + other.playerName + "...");
+            } else if (option == 2) {
+                other.transport(getPosition().copy());
+                other.sendMessage("You have been teleported to " + playerName + ".");
+                sendMessage("Teleporting " + other.playerName + " to you...");
+            } else if (option == 3) {
+                other.transport(new Position(2611, 3093, 0));
+                other.sendMessage("You have been teleported home by " + playerName + ".");
+                sendMessage("Teleporting " + other.playerName + " home...");
+            }
+            modcpDialogState = 0;
+            send(new net.dodian.uber.game.netty.listener.out.RemoveInterfaces());
+        } else if (modcpDialogState == 3) { // Moderator Actions: 1=Kick, 2=Mute, 3=Unmute, 4=Back
+            if (option == 4) { // Back
+                modcpDialogState = 1;
+                showPlayerOption(new String[]{"Manage " + targetName, "Teleport Actions", "Moderator Actions", "Check Containers", "Cancel"});
+                return;
+            }
+            if (option == 1) { // Kick
+                if (other == null) {
+                    sendMessage("Player is offline.");
+                    return;
+                }
+                other.disconnected = true;
+                sendMessage("You have kicked " + other.playerName + ".");
+            } else if (option == 2) { // Mute
+                long muteTime = System.currentTimeMillis() + (24 * 60 * 60 * 1000L); // 24 hours
+                if (other != null) {
+                    other.mutedTill = muteTime;
+                    other.sendMessage("You have been muted for 24 hours by " + playerName + ".");
+                } else {
+                    try {
+                        net.dodian.uber.game.persistence.repository.DbAsyncRepository.withConnection(conn -> {
+                            try {
+                                java.sql.PreparedStatement ps = conn.prepareStatement("UPDATE characters SET unmutetime = ? WHERE name = ?");
+                                ps.setLong(1, muteTime);
+                                ps.setString(2, targetName);
+                                ps.executeUpdate();
+                            } catch (java.sql.SQLException e) {
+                                e.printStackTrace();
+                            }
+                            return null;
+                        });
+                    } catch (Exception e) {
+                        sendMessage("Error muting offline player: " + e.getMessage());
+                    }
+                }
+                sendMessage("You have muted " + targetName + " for 24 hours.");
+            } else if (option == 3) { // Unmute
+                if (other != null) {
+                    other.mutedTill = 0;
+                    other.sendMessage("You have been unmuted by " + playerName + ".");
+                } else {
+                    try {
+                        net.dodian.uber.game.persistence.repository.DbAsyncRepository.withConnection(conn -> {
+                            try {
+                                java.sql.PreparedStatement ps = conn.prepareStatement("UPDATE characters SET unmutetime = 0 WHERE name = ?");
+                                ps.setString(1, targetName);
+                                ps.executeUpdate();
+                            } catch (java.sql.SQLException e) {
+                                e.printStackTrace();
+                            }
+                            return null;
+                        });
+                    } catch (Exception e) {
+                        sendMessage("Error unmuting offline player: " + e.getMessage());
+                    }
+                }
+                sendMessage("You have unmuted " + targetName + ".");
+            }
+            modcpDialogState = 0;
+            send(new net.dodian.uber.game.netty.listener.out.RemoveInterfaces());
+        } else if (modcpDialogState == 4) { // Check Containers: 1=Bank, 2=Inventory, 3=Back
+            if (option == 3) { // Back
+                modcpDialogState = 1;
+                showPlayerOption(new String[]{"Manage " + targetName, "Teleport Actions", "Moderator Actions", "Check Containers", "Cancel"});
+                return;
+            }
+            if (other == null) {
+                sendMessage("Player is offline.");
+                return;
+            }
+            if (option == 1) { // Check Bank
+                openUpOtherBank(other.playerName);
+            } else if (option == 2) { // Check Inventory
+                openUpOtherInventory(other.playerName);
+            }
+            modcpDialogState = 0;
+            send(new net.dodian.uber.game.netty.listener.out.RemoveInterfaces());
+        }
+    }
+
+    public void openAccountServices() {
+        net.dodian.uber.game.ui.AccountServices.open(this);
+    }
+
+    public void handleAccountServicesRowClick(int index) {
+        net.dodian.uber.game.ui.AccountServices.handleRowClick(this, index);
+    }
+
+    public void verifyCurrentPassword(String inputPass) {
+        net.dodian.uber.game.ui.AccountServices.verifyCurrentPassword(this, inputPass);
+    }
+
+    public void handleAccountServicesDialogue(int option) {
+        net.dodian.uber.game.ui.AccountServices.handleAccountServicesDialogue(this, option);
+    }
+
+    public void showAccountInfo() {
+        net.dodian.uber.game.ui.AccountServices.showDefaultStatus(this);
+    }
+
+    public void changePassword(String newPassword) {
+        net.dodian.uber.game.ui.AccountServices.changePassword(this, newPassword);
+    }
+
 
     public int neglectDmg() {
         int bonus = 0;

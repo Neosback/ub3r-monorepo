@@ -10,17 +10,13 @@ import net.dodian.uber.game.skill.agility.AgilityTravel
 internal object RugMerchant : NpcModule {
     // Stats: 17: r=60 a=0 d=0 s=0 hp=18 rg=0 mg=0; 22: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0; 20: r=10 a=0 d=0 s=0 hp=99 rg=0 mg=0; 19: r=60 a=0 d=0 s=0 hp=52 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 17, x = 3287, y = 2814, z = 0, face = 0),
-        NpcSpawnDef(npcId = 22, x = 3401, y = 2918, z = 0, face = 0),
-        NpcSpawnDef(npcId = 20, x = 3348, y = 3002, z = 0, face = 0),
-        NpcSpawnDef(npcId = 19, x = 3181, y = 3045, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
-    val npcIds: IntArray = npcIdsFromEntries(entries)
+    val npcIds: IntArray = intArrayOf(17, 22, 20, 19)
 
 
     override val definition = legacyNpcDefinition(
+        npcIds = npcIds,
         name = "RugMerchant",
         entries = entries,
         onFirstClick = ::onFirstClick,

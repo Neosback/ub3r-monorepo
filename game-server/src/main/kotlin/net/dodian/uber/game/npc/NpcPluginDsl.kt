@@ -96,26 +96,11 @@ class NpcOptionsBuilder internal constructor(
     }
 }
 
-class NpcSpawnsBuilder internal constructor() {
-    private val entries = ArrayList<NpcSpawnDef>()
-
-    fun spawn(npcId: Int, x: Int, y: Int, z: Int = 0, face: Int = 0) {
-        entries += NpcSpawnDef(npcId = npcId, x = x, y = y, z = z, face = face)
-    }
-
-    fun addAll(spawns: List<NpcSpawnDef>) {
-        entries += spawns
-    }
-
-    internal fun build(): List<NpcSpawnDef> = entries.toList()
-}
-
 class NpcPluginBuilder internal constructor(
     private val name: String,
 ) {
     private val npcIds = LinkedHashSet<Int>()
-    private var ownsSpawnDefinitions: Boolean = false
-    private var entries: List<NpcSpawnDef> = emptyList()
+    private val profiles = LinkedHashSet<String>()
     private var optionBindings: List<NpcOptionBinding> = emptyList()
     private var stateNamespace: String = name
 
@@ -123,19 +108,11 @@ class NpcPluginBuilder internal constructor(
         ids.forEach { npcIds += it }
     }
 
-    fun ownsSpawns(value: Boolean = true) {
-        ownsSpawnDefinitions = value
-    }
-
-    fun spawns(entries: List<NpcSpawnDef>) {
-        this.entries = entries
-        entries.forEach { npcIds += it.npcId }
-    }
-
-    fun spawns(block: NpcSpawnsBuilder.() -> Unit) {
-        val builder = NpcSpawnsBuilder()
-        builder.block()
-        spawns(builder.build())
+    fun profiles(vararg values: String) {
+        values
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .forEach { profiles += it }
     }
 
     fun options(block: NpcOptionsBuilder.() -> Unit) {
@@ -152,8 +129,7 @@ class NpcPluginBuilder internal constructor(
         return NpcPluginDefinition(
             name = name,
             npcIds = npcIds.toIntArray(),
-            ownsSpawnDefinitions = ownsSpawnDefinitions,
-            entries = entries,
+            profiles = profiles.toSet(),
             optionBindings = optionBindings,
             stateNamespace = stateNamespace,
         )

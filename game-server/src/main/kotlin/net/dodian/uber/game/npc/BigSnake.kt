@@ -5,9 +5,7 @@ package net.dodian.uber.game.npc
 internal object BigSnake : NpcModule {
     // Stats: 2978: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 2978, x = 2392, y = 9873, z = 0, face = 0),
-    )
+    val entries: List<NpcSpawnDef> = emptyList()
 
 
     override val definition = simpleNpcDefinition(
