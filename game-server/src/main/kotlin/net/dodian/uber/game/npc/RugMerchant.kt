@@ -7,63 +7,109 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.skill.agility.AgilityTravel
 
-internal object RugMerchant : NpcModule {
-    // Stats: 17: r=60 a=0 d=0 s=0 hp=18 rg=0 mg=0; 22: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0; 20: r=10 a=0 d=0 s=0 hp=99 rg=0 mg=0; 19: r=60 a=0 d=0 s=0 hp=52 rg=0 mg=0
-
-    val entries: List<NpcSpawnDef> = emptyList()
-
-    val npcIds: IntArray = intArrayOf(17, 22, 20, 19)
-
-
-    override val definition = legacyNpcDefinition(
-        npcIds = npcIds,
-        name = "RugMerchant",
-        entries = entries,
-        onFirstClick = ::onFirstClick,
-        onSecondClick = ::onSecondClick,
-    )
-
-    fun onFirstClick(client: Client, npc: Npc): Boolean {
-        DialogueService.start(client) {
-            npcChat(npc.id, DialogueEmote.NEARLY_CRYING, "Hello there Traveler.", "Do you fancy taking a carpet ride?", "It will cost 5000 coins.")
-            options(
-                title = "Where can your carpet take me to?",
-                DialogueOption("Show destinations") {
-                    val destinations = when (npc.id) {
-                        17 -> arrayOf("Pollnivneach", "Nardah", "Bedabin Camp")
-                        19 -> arrayOf("Pollnivneach", "Nardah", "Sophanem")
-                        20 -> arrayOf("Nardah", "Bedabin Camp", "Sophanem")
-                        22 -> arrayOf("Pollnivneach", "Sophanem", "Bedabin Camp")
-                        else -> arrayOf("Cancel", "Cancel", "Cancel")
-                    }
-                    options(
-                        title = "Carpet rides cost 5k coins.",
-                        DialogueOption(destinations[0]) {
-                            action { c -> travel(c, npc.id, 0) }
-                            finish()
-                        },
-                        DialogueOption(destinations[1]) {
-                            action { c -> travel(c, npc.id, 1) }
-                            finish()
-                        },
-                        DialogueOption(destinations[2]) {
-                            action { c -> travel(c, npc.id, 2) }
-                            finish()
-                        },
-                        DialogueOption("Cancel") { finish() },
-                    )
-                },
-                DialogueOption("No, thank you.") {
-                    playerChat(DialogueEmote.ANGRY1, "No, thank you.")
-                    finish()
-                },
-            )
+internal object RugMerchant : NpcScript("RugMerchant", 17, 19, 20, 22) {
+    override val definition = define {
+        stats {
+            attack = 0
+            attackAnimation = 806
+            deathAnimation = 2304
+            defence = 0
+            examine = "Proud owner of carpet co"
+            hitpoints = 18
+            magic = 0
+            ranged = 0
+            respawnTicks = 60
+            strength = 0
         }
-        return true
-    }
 
-    fun onSecondClick(client: Client, npc: Npc): Boolean {
-        return onFirstClick(client, npc)
+        onOption("talk-to") {
+            action {
+                DialogueService.start(client) {
+                    npcChat(npc.id, DialogueEmote.NEARLY_CRYING, "Hello there Traveler.", "Do you fancy taking a carpet ride?", "It will cost 5000 coins.")
+                    options(
+                        title = "Where can your carpet take me to?",
+                        DialogueOption("Show destinations") {
+                            val destinations = when (npc.id) {
+                                17 -> arrayOf("Pollnivneach", "Nardah", "Bedabin Camp")
+                                19 -> arrayOf("Pollnivneach", "Nardah", "Sophanem")
+                                20 -> arrayOf("Nardah", "Bedabin Camp", "Sophanem")
+                                22 -> arrayOf("Pollnivneach", "Sophanem", "Bedabin Camp")
+                                else -> arrayOf("Cancel", "Cancel", "Cancel")
+                            }
+                            options(
+                                title = "Carpet rides cost 5k coins.",
+                                DialogueOption(destinations[0]) {
+                                    action { c -> travel(c, npc.id, 0) }
+                                    finish()
+                                },
+                                DialogueOption(destinations[1]) {
+                                    action { c -> travel(c, npc.id, 1) }
+                                    finish()
+                                },
+                                DialogueOption(destinations[2]) {
+                                    action { c -> travel(c, npc.id, 2) }
+                                    finish()
+                                },
+                                DialogueOption("Cancel") { finish() },
+                            )
+                        },
+                        DialogueOption("No, thank you.") {
+                            playerChat(DialogueEmote.ANGRY1, "No, thank you.")
+                            finish()
+                        },
+                    )
+                }
+                true
+            }
+        }
+
+        onOption("second") {
+            action {
+                DialogueService.start(client) {
+                    npcChat(npc.id, DialogueEmote.NEARLY_CRYING, "Hello there Traveler.", "Do you fancy taking a carpet ride?", "It will cost 5000 coins.")
+                    options(
+                        title = "Where can your carpet take me to?",
+                        DialogueOption("Show destinations") {
+                            val destinations = when (npc.id) {
+                                17 -> arrayOf("Pollnivneach", "Nardah", "Bedabin Camp")
+                                19 -> arrayOf("Pollnivneach", "Nardah", "Sophanem")
+                                20 -> arrayOf("Nardah", "Bedabin Camp", "Sophanem")
+                                22 -> arrayOf("Pollnivneach", "Sophanem", "Bedabin Camp")
+                                else -> arrayOf("Cancel", "Cancel", "Cancel")
+                            }
+                            options(
+                                title = "Carpet rides cost 5k coins.",
+                                DialogueOption(destinations[0]) {
+                                    action { c -> travel(c, npc.id, 0) }
+                                    finish()
+                                },
+                                DialogueOption(destinations[1]) {
+                                    action { c -> travel(c, npc.id, 1) }
+                                    finish()
+                                },
+                                DialogueOption(destinations[2]) {
+                                    action { c -> travel(c, npc.id, 2) }
+                                    finish()
+                                },
+                                DialogueOption("Cancel") { finish() },
+                            )
+                        },
+                        DialogueOption("No, thank you.") {
+                            playerChat(DialogueEmote.ANGRY1, "No, thank you.")
+                            finish()
+                        },
+                    )
+                }
+                true
+            }
+        }
+
+        spawns(
+            spawn(3181, 3045, profile = profile("rug_merchant.bedabin_camp")),
+            spawn(3401, 2918, profile = profile("rug_merchant.nardah")),
+            spawn(3348, 3002, profile = profile("rug_merchant.pollnivneach")),
+            spawn(3287, 2814, profile = profile("rug_merchant.jalsavrah_pyramid")),
+        )
     }
 
     private fun travel(client: Client, npcId: Int, choice: Int) {

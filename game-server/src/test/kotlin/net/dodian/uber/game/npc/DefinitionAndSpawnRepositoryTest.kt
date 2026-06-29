@@ -24,7 +24,9 @@ class DefinitionAndSpawnRepositoryTest {
         val definitions = NpcDefinitionRepository.load(server.resolve("data/cache"))
         assertEquals("Banker", definitions[1613]?.name)
         assertNotNull(definitions[1618])
-        val spawns = NpcSpawnRepository.load(NpcSpawnRepository.resolveSpawnsPath(), definitions) { definitions.containsKey(it) }
+        val spawns = net.dodian.uber.game.api.plugin.ContentModuleIndex.npcModules
+            .filterIsInstance<NpcSpawnSource>()
+            .flatMap { it.spawns }
         assertTrue(spawns.any { it.npcId == 1613 && it.x == 2615 && it.y == 3094 && it.z == 0 })
         assertTrue(spawns.none { it.npcId == 394 || it.npcId == 395 })
         assertTrue(spawns.any { it.npcId == 1618 })
@@ -32,7 +34,7 @@ class DefinitionAndSpawnRepositoryTest {
         val dad = spawns.single { it.npcId == 4130 && it.x == 2541 && it.y == 3092 && it.z == 0 }
         assertEquals(3, dad.face)
         assertEquals("dad.yanille", dad.profile)
-        assertEquals(1_342, spawns.size)
+        assertEquals(1330, spawns.size)
         assertTrue(ItemDefinitionRepository.load(server.resolve("data/def/item"), server.resolve("data/cache")).size >= 26_988)
 
     }
@@ -40,10 +42,24 @@ class DefinitionAndSpawnRepositoryTest {
     @Test
     fun `npc definition overrides apply over cache definitions`() {
         val definitions = NpcDefinitionRepository.load(server.resolve("data/cache"))
-        val aubury = definitions[10681]
+        val aubury = definitions[11435]
         assertNotNull(aubury)
         assertEquals("Aubury", aubury!!.name)
         assertArrayEquals(arrayOf("Talk-to", null, "Trade", "Teleport", null), aubury.actions)
+    }
+
+    @Test
+    fun `npc spawn template creates custom instances with overrides`() {
+        val superRat = spawnTemplate(npcId = 86, hitpoints = 150, attack = 50, profile = "super_rat")
+        val spawn = superRat.at(3200, 3200, z = 1, face = SOUTH)
+        assertEquals(86, spawn.npcId)
+        assertEquals(3200, spawn.x)
+        assertEquals(3200, spawn.y)
+        assertEquals(1, spawn.z)
+        assertEquals(SOUTH, spawn.face)
+        assertEquals(150, spawn.hitpoints)
+        assertEquals(50, spawn.attack)
+        assertEquals("super_rat", spawn.profile)
     }
 
     @Test

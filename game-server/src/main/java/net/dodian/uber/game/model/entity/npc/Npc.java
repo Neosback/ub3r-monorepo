@@ -863,6 +863,10 @@ public class Npc extends Entity {
         return fighting;
     }
 
+    public void setFighting(boolean fighting) {
+        this.fighting = fighting;
+    }
+
     public boolean validClient(Client c) {
         return c != null && !c.disconnected && c.dbId > 0;
     }

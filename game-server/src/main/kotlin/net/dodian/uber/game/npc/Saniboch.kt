@@ -6,67 +6,106 @@ import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
-internal object Saniboch : NpcModule {
+internal object Saniboch : NpcScript("Saniboch", 2345) {
     private data class NpcReply(
         val emote: DialogueEmote = DialogueEmote.DEFAULT,
         val lines: Array<String>,
     )
-    // Stats: 2345: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val entries: List<NpcSpawnDef> = emptyList()
+    override val definition = define {
+        stats {
+            attack = 0
+            attackAnimation = 806
+            deathAnimation = 2304
+            defence = 0
+            hitpoints = 0
+            magic = 0
+            ranged = 0
+            respawnTicks = 60
+            strength = 0
+        }
 
-    val npcIds: IntArray = intArrayOf(2345)
-
-
-    override val definition = legacyNpcDefinition(
-        npcIds = npcIds,
-        name = "Saniboch",
-        entries = entries,
-        onFirstClick = ::onFirstClick,
-        onSecondClick = ::onSecondClick,
-    )
-
-    fun onFirstClick(client: Client, npc: Npc): Boolean {
-        DialogueService.start(client) {
-            if (client.checkUnlock(0)) {
-                npcChat(npc.id, DialogueEmote.DEFAULT, "You can enter freely, no need to pay me anything.")
-                finish()
-            } else {
-                npcChat(npc.id, DialogueEmote.DEFAULT, "Hello!", "Are you looking to enter my dungeon?", "You have to pay to enter.", "You can also pay a one time fee.")
-                options(
-                    title = "Select an option",
-                    DialogueOption("Enter fee") {
+        onOption("talk-to") {
+            action {
+                DialogueService.start(client) {
+                    if (client.checkUnlock(0)) {
+                        npcChat(npc.id, DialogueEmote.DEFAULT, "You can enter freely, no need to pay me anything.")
+                        finish()
+                    } else {
+                        npcChat(npc.id, DialogueEmote.DEFAULT, "Hello!", "Are you looking to enter my dungeon?", "You have to pay to enter.", "You can also pay a one time fee.")
                         options(
-                            title = "Select a payment option",
-                            DialogueOption("Ship ticket") {
-                                val reply = shipTicketReply(client)
+                            title = "Select an option",
+                            DialogueOption("Enter fee") {
+                                options(
+                                    title = "Select a payment option",
+                                    DialogueOption("Ship ticket") {
+                                        val reply = shipTicketReply(client)
+                                        npcChat(npc.id, reply.emote, *reply.lines)
+                                        finish()
+                                    },
+                                    DialogueOption("Coins") {
+                                        val reply = coinPaymentReply(client)
+                                        npcChat(npc.id, reply.emote, *reply.lines)
+                                        finish()
+                                    },
+                                )
+                            },
+                            DialogueOption("Permanent unlock") {
+                                val reply = permanentUnlockReply(client)
                                 npcChat(npc.id, reply.emote, *reply.lines)
                                 finish()
                             },
-                            DialogueOption("Coins") {
-                                val reply = coinPaymentReply(client)
-                                npcChat(npc.id, reply.emote, *reply.lines)
+                            DialogueOption("Nevermind") {
+                                playerChat(DialogueEmote.DEFAULT, "I do not want anything.")
                                 finish()
                             },
                         )
-                    },
-                    DialogueOption("Permanent unlock") {
-                        val reply = permanentUnlockReply(client)
-                        npcChat(npc.id, reply.emote, *reply.lines)
-                        finish()
-                    },
-                    DialogueOption("Nevermind") {
-                        playerChat(DialogueEmote.DEFAULT, "I do not want anything.")
-                        finish()
-                    },
-                )
+                    }
+                }
+                true
             }
         }
-        return true
-    }
 
-    fun onSecondClick(client: Client, npc: Npc): Boolean {
-        return onFirstClick(client, npc)
+        onOption("second") {
+            action {
+                DialogueService.start(client) {
+                    if (client.checkUnlock(0)) {
+                        npcChat(npc.id, DialogueEmote.DEFAULT, "You can enter freely, no need to pay me anything.")
+                        finish()
+                    } else {
+                        npcChat(npc.id, DialogueEmote.DEFAULT, "Hello!", "Are you looking to enter my dungeon?", "You have to pay to enter.", "You can also pay a one time fee.")
+                        options(
+                            title = "Select an option",
+                            DialogueOption("Enter fee") {
+                                options(
+                                    title = "Select a payment option",
+                                    DialogueOption("Ship ticket") {
+                                        val reply = shipTicketReply(client)
+                                        npcChat(npc.id, reply.emote, *reply.lines)
+                                        finish()
+                                    },
+                                    DialogueOption("Coins") {
+                                        val reply = coinPaymentReply(client)
+                                        npcChat(npc.id, reply.emote, *reply.lines)
+                                        finish()
+                                    },
+                                )
+                            },
+                            DialogueOption("Permanent unlock") {
+                                val reply = permanentUnlockReply(client)
+                                npcChat(npc.id, reply.emote, *reply.lines)
+                                finish()
+                            },
+                            DialogueOption("Nevermind") {
+                                playerChat(DialogueEmote.DEFAULT, "I do not want anything.")
+                                finish()
+                            },
+                        )
+                    }
+                }
+                true
+            }
+        }
     }
 
     private fun shipTicketReply(client: Client): NpcReply {

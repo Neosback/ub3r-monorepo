@@ -7,7 +7,7 @@ import net.dodian.uber.game.skill.smithing.rockshell.RockshellDialogueModule
 import net.dodian.uber.game.ui.dialogue.modules.SettingsDialogueModule
 import net.dodian.uber.game.npc.DukeHoracio
 import net.dodian.uber.game.npc.PartyPete
-import net.dodian.uber.game.npc.UnknownNpc1597
+import net.dodian.uber.game.npc.Gundai
 import net.dodian.uber.game.npc.Watcher
 import net.dodian.uber.game.model.entity.player.Client
 
@@ -33,7 +33,7 @@ object DialogueRenderRegistry {
     private val handlers: Map<Int, DialogueRenderHandler> = Builder().apply {
         PartyPete.registerLegacyDialogues(DialogueRegistry.Builder(this))
         include(SettingsDialogueModule)
-        UnknownNpc1597.registerLegacyDialogues(DialogueRegistry.Builder(this))
+        Gundai.registerLegacyDialogues(DialogueRegistry.Builder(this))
         Watcher.registerLegacyDialogues(DialogueRegistry.Builder(this))
         include(BrimhavenEntryDialogueModule)
         DukeHoracio.registerLegacyDialogues(DialogueRegistry.Builder(this))

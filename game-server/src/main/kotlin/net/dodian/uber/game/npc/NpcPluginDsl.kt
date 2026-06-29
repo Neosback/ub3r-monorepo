@@ -103,6 +103,7 @@ class NpcPluginBuilder internal constructor(
     private val profiles = LinkedHashSet<String>()
     private var optionBindings: List<NpcOptionBinding> = emptyList()
     private var stateNamespace: String = name
+    val definitionOverrides = ArrayList<NpcDefinitionOverrideJson>()
 
     fun ids(vararg ids: Int) {
         ids.forEach { npcIds += it }
@@ -121,6 +122,10 @@ class NpcPluginBuilder internal constructor(
         optionBindings = builder.build()
     }
 
+    fun npc(id: Int, block: NpcDefinitionOverrideBuilder.() -> Unit) {
+        definitionOverrides += NpcDefinitionOverrideBuilder(id).apply(block).build()
+    }
+
     fun state(namespace: String) {
         stateNamespace = namespace
     }
@@ -131,6 +136,7 @@ class NpcPluginBuilder internal constructor(
             npcIds = npcIds.toIntArray(),
             profiles = profiles.toSet(),
             optionBindings = optionBindings,
+            definitionOverrides = definitionOverrides,
             stateNamespace = stateNamespace,
         )
     }
@@ -138,3 +144,42 @@ class NpcPluginBuilder internal constructor(
 
 fun npcPlugin(name: String, init: NpcPluginBuilder.() -> Unit): NpcPluginDefinition =
     NpcPluginBuilder(name).apply(init).build()
+
+class NpcDefinitionOverrideBuilder(val id: Int) {
+    var name: String? = null
+    var examine: String? = null
+    var size: Int? = null
+    var combatLevel: Int? = null
+    var standingAnimation: Int? = null
+    var walkingAnimation: Int? = null
+    var attackAnimation: Int? = null
+    var deathAnimation: Int? = null
+    var respawnTicks: Int? = null
+    var attack: Int? = null
+    var strength: Int? = null
+    var defence: Int? = null
+    var hitpoints: Int? = null
+    var ranged: Int? = null
+    var magic: Int? = null
+    var actions: List<String?>? = null
+
+    fun build() = NpcDefinitionOverrideJson(
+        id = id,
+        name = name,
+        examine = examine,
+        size = size,
+        combatLevel = combatLevel,
+        standingAnimation = standingAnimation,
+        walkingAnimation = walkingAnimation,
+        attackAnimation = attackAnimation,
+        deathAnimation = deathAnimation,
+        respawnTicks = respawnTicks,
+        attack = attack,
+        strength = strength,
+        defence = defence,
+        hitpoints = hitpoints,
+        ranged = ranged,
+        magic = magic,
+        actions = actions
+    )
+}

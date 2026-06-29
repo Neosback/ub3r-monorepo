@@ -1,0 +1,24 @@
+package net.dodian.uber.game.npc
+
+import net.dodian.uber.game.engine.systems.dialogue.DialogueIds
+import net.dodian.uber.game.engine.systems.dialogue.core.DialogueRegistry
+import net.dodian.uber.game.model.entity.npc.Npc
+import net.dodian.uber.game.model.entity.player.Client
+
+internal object Gundai : NpcScript("Gundai", 1597) {
+    override val definition = define {
+    }
+
+    fun registerLegacyDialogues(builder: DialogueRegistry.Builder) {
+        builder.handle(DialogueIds.Legacy.MAGE_ARENA_OPTIONS) { c ->
+            c.sendInterfaceAnimation(4883, 1597)
+            c.sendString(c.GetNpcName(c.NpcTalkTo), 4884)
+            c.sendString("Select an Option", 2460)
+            c.sendString("Can you teleport me to the mage arena?", 2461)
+            c.sendString("Whats at the mage arena?", 2462)
+            c.sendChatboxInterface(2459)
+            c.NpcDialogueSend = true
+            true
+        }
+    }
+}

@@ -65,6 +65,7 @@ object ContentModuleIndex {
     @JvmField val itemContents: List<ItemContent>
     @JvmField val commandContents: List<CommandContent>
     @JvmField val npcContents: List<NpcContentDefinition>
+    @JvmField val npcModules: List<NpcModule>
     @JvmField val skillPlugins: List<SkillPlugin>
     @JvmField val shopPlugins: List<ShopPlugin>
     @JvmField val eventBootstraps: List<() -> Unit>
@@ -81,6 +82,7 @@ object ContentModuleIndex {
         val discoveredItems = mutableListOf<Pair<String, ItemContent>>()
         val discoveredCommands = mutableListOf<Pair<String, CommandContent>>()
         val discoveredNpcs = mutableListOf<Pair<String, NpcContentDefinition>>()
+        val discoveredNpcModules = mutableListOf<Pair<String, NpcModule>>()
         val discoveredSkills = mutableListOf<Pair<String, SkillPlugin>>()
         val discoveredShops = mutableListOf<Pair<String, ShopPlugin>>()
         val discoveredEvents = mutableListOf<Pair<String, () -> Unit>>()
@@ -131,6 +133,7 @@ object ContentModuleIndex {
 
             if (instance is NpcModule) {
                 discoveredNpcs += className to instance.definition
+                discoveredNpcModules += className to instance
                 pluginKind = pluginKind ?: "npc-module"
             }
 
@@ -168,6 +171,7 @@ object ContentModuleIndex {
         itemContents = discoveredItems.sortedBy { it.first }.map { it.second }
         commandContents = discoveredCommands.sortedBy { it.first }.map { it.second }
         npcContents = discoveredNpcs.sortedBy { it.first }.map { it.second }
+        npcModules = discoveredNpcModules.sortedBy { it.first }.map { it.second }
         skillPlugins = discoveredSkills.sortedBy { it.first }.map { it.second }
         shopPlugins = discoveredShops.sortedBy { it.first }.map { it.second }
         eventBootstraps = discoveredEvents.sortedBy { it.first }.map { it.second }

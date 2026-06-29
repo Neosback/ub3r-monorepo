@@ -5,6 +5,8 @@ import java.util.TreeMap
 import net.dodian.uber.game.npc.NpcSpawnDef
 import net.dodian.uber.game.npc.NpcDefinitionRepository
 import net.dodian.uber.game.npc.NpcSpawnRepository
+import net.dodian.uber.game.npc.NpcSpawnSource
+import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcData
@@ -28,14 +30,13 @@ class NpcManager {
     fun getNpcData(): Collection<NpcData> = data.values
 
     fun loadSpawns() {
-        val spawnRoot = NpcSpawnRepository.resolveSpawnsPath()
-        logger.info("Loading NPC spawns from JSONC files: {}", spawnRoot.toAbsolutePath().normalize())
-        val cachePath = Path.of("data/cache")
-        val cacheDefs = NpcDefinitionRepository.load(cachePath)
-        val contentSpawns = NpcSpawnRepository.load(spawnRoot, definitions = cacheDefs) { data.containsKey(it) }
-        ensureDefinitionsForSpawnNpcIds(contentSpawns)
-        val loaded = loadContentSpawns(contentSpawns)
-        logger.info("Loaded {} content NPC spawns from JSONC.", loaded)
+        logger.info("Loading NPC spawns from Kotlin modules")
+        val kotlinSpawns = ContentModuleIndex.npcModules
+            .filterIsInstance<NpcSpawnSource>()
+            .flatMap { it.spawns }
+        ensureDefinitionsForSpawnNpcIds(kotlinSpawns)
+        val loaded = loadContentSpawns(kotlinSpawns)
+        logger.info("Loaded {} Kotlin NPC spawns.", loaded)
     }
 
     private fun ensureDefinitionsForSpawnNpcIds(spawns: List<NpcSpawnDef>) {
@@ -313,16 +314,9 @@ class NpcManager {
                     )
                 )
             }
-            val dbDefs = try {
-                NpcDataRepository.loadDefinitions()
-            } catch (e: Exception) {
-                logger.error("Failed to load DB npc definitions, using cache defaults only", e)
-                emptyMap()
-            }
             data.clear()
             data.putAll(definitions)
-            data.putAll(dbDefs)
-            logger.info("Loaded {} Npc Definitions from Cache and Overrides (DB overrides count: {})", definitions.size, dbDefs.size)
+            logger.info("Loaded {} Npc Definitions from Cache and Kotlin Overrides", definitions.size)
         } catch (e: RuntimeException) {
             logger.error("Error loading NPC definitions", e)
         }
@@ -355,6 +349,13 @@ class NpcManager {
             npc.syncChunkMembership()
         }
         return npc
+    }
+
+    fun removeNpc(npc: Npc) {
+        npc.alive = false
+        npc.visible = false
+        npc.removeFromChunk()
+        npcMap.remove(npc.slot)
     }
 
     fun getNpc(index: Int): Npc = npcMap[index]

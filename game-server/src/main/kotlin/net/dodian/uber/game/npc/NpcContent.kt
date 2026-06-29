@@ -51,6 +51,7 @@ data class NpcContentDefinition(
     val onThirdClick: NpcClickHandler = NO_CLICK_HANDLER,
     val onFourthClick: NpcClickHandler = NO_CLICK_HANDLER,
     val onAttack: NpcClickHandler = NO_CLICK_HANDLER,
+    val definitionOverrides: List<NpcDefinitionOverrideJson> = emptyList(),
 )
 
 fun NpcContentDefinition.optionLabel(option: Int): String? = optionLabels[option]

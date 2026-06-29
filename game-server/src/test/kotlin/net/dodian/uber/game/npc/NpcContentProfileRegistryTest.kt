@@ -14,11 +14,11 @@ class NpcContentProfileRegistryTest {
     @Test
     fun `profile handler wins over global handler for same npc id`() {
         NpcContentRegistry.clearForTests()
-        NpcContentRegistry.register(definition("global-aubury", 10681))
-        NpcContentRegistry.register(definition("varrock-aubury", 10681, "aubury.varrock"))
+        NpcContentRegistry.register(definition("global-aubury", 11435))
+        NpcContentRegistry.register(definition("varrock-aubury", 11435, "aubury.varrock"))
 
-        assertEquals("varrock-aubury", NpcContentRegistry.get(10681, "aubury.varrock")?.name)
-        assertEquals("global-aubury", NpcContentRegistry.get(10681, "aubury.yanille")?.name)
+        assertEquals("varrock-aubury", NpcContentRegistry.get(11435, "aubury.varrock")?.name)
+        assertEquals("global-aubury", NpcContentRegistry.get(11435, "aubury.yanille")?.name)
     }
 
     private fun definition(name: String, npcId: Int, vararg profiles: String): NpcContentDefinition =

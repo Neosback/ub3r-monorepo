@@ -24,6 +24,7 @@ data class NpcPluginDefinition(
     val npcIds: IntArray,
     val profiles: Set<String> = emptySet(),
     val optionBindings: List<NpcOptionBinding> = emptyList(),
+    val definitionOverrides: List<NpcDefinitionOverrideJson> = emptyList(),
     val stateNamespace: String = name,
 )
 
@@ -90,6 +91,7 @@ fun NpcPluginDefinition.toContentDefinition(
         onThirdClick = combined(NpcOptionSlot.THIRD),
         onFourthClick = combined(NpcOptionSlot.FOURTH),
         onAttack = combined(NpcOptionSlot.ATTACK),
+        definitionOverrides = definitionOverrides,
     )
 }
 
