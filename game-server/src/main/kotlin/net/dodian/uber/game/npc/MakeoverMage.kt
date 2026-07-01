@@ -7,20 +7,28 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SetTabInterface
 
-internal object MakeoverMage : NpcModule {
-    val entries: List<NpcSpawnDef> = emptyList()
-    val npcIds: IntArray = intArrayOf(1306)
+internal object MakeoverMage : NpcFamily by npcFamily("Make-over mage", 1306, block = {
+    ids(1307)
 
+    cache {
+        name = "Make-over mage"
+    }
 
-    override val definition = legacyNpcDefinition(
-        npcIds = npcIds,
-        name = "MakeoverMage",
-        entries = entries,
-        onFirstClick = ::onFirstClick,
-        onThirdClick = ::onThirdClick,
-    )
+    runtime {
+        deathAnimation = 2304
+    }
 
-    fun onFirstClick(client: Client, npc: Npc): Boolean {
+    options {
+        talkTo(handler = MakeoverMage::talkTo)
+        third("makeover", MakeoverMage::openMakeover)
+    }
+
+    spawns {
+        spawn(2603, 3088)
+    }
+}) {
+
+    fun talkTo(client: Client, npc: Npc): Boolean {
         DialogueService.start(client) {
             npcChat(
                 npc.id,
@@ -31,7 +39,7 @@ internal object MakeoverMage : NpcModule {
                 title = "Would you like to change your looks?",
                 DialogueOption("Sure") {
                     playerChat(DialogueEmote.DEFAULT, "I would love that.")
-                    action { c -> c.send(SetTabInterface(3559, 3213)) }
+                    action { it.send(SetTabInterface(3559, 3213)) }
                     finish(closeInterfaces = false)
                 },
                 DialogueOption("No thanks") {
@@ -43,8 +51,7 @@ internal object MakeoverMage : NpcModule {
         return true
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    fun onThirdClick(client: Client, npc: Npc): Boolean {
+    fun openMakeover(client: Client, npc: Npc): Boolean {
         client.send(SetTabInterface(3559, 3213))
         return true
     }

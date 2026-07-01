@@ -1,41 +1,11 @@
 package net.dodian.uber.game.npc
 
-import net.dodian.uber.game.api.content.dialogue.DialogueEmote
-import net.dodian.uber.game.api.content.dialogue.DialogueOption
-import net.dodian.uber.game.engine.systems.dialogue.DialogueService
-import net.dodian.uber.game.model.entity.npc.Npc
-import net.dodian.uber.game.model.entity.player.Client
-
-internal object Duradel : NpcModule {
-    // Stats: 405: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
-
-    val entries: List<NpcSpawnDef> = emptyList()
-
-    val npcIds: IntArray = intArrayOf(405)
-
-
-    override val definition = legacyNpcDefinition(
-        npcIds = npcIds,
-        name = "Duradel",
-        entries = entries,
-        onFirstClick = ::onFirstClick,
-        onSecondClick = ::onSecondClick,
-        onThirdClick = ::onThirdClick,
-    )
-
-    fun onFirstClick(client: Client, npc: Npc): Boolean {
-        SlayerMasterDialogue.startIntro(client, npc.id)
-        return true
+internal object Duradel : NpcFamily by npcFamily("Duradel", 405, block = {
+    runtime {
+        deathAnimation = 2304
     }
 
-    fun onSecondClick(client: Client, npc: Npc): Boolean {
-        SlayerMasterDialogue.assignTask(client, npc.id)
-        return true
+    spawns {
+        spawn(2606, 3398)
     }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun onThirdClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 15
-        return true
-    }
-}
+})

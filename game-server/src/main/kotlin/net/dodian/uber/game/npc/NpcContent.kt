@@ -17,28 +17,24 @@ interface NpcModule : PluginModuleMetadataProvider {
 
     override val pluginMetadata: PluginModuleMetadata
         get() = PluginModuleMetadata(
-            name = definition.name,
-            description = "NPC content module for ${definition.npcIds.size} npc ids",
-            version = "1.0.0",
-            owner = "gameplay",
+        name = definition.name,
+        description = "NPC family for ${definition.npcIds.size} ids",
+        version = "1.0.0",
+        owner = "gameplay",
         )
 }
 
-fun npcIds(vararg ids: Int): IntArray = ids.distinct().toIntArray()
+interface NpcSpawnSource {
+    val spawns: List<NpcSpawnDef>
+}
 
-fun npcIdsFromEntries(entries: List<NpcSpawnDef>): IntArray =
-    entries
-        .map { it.npcId }
-        .distinct()
-        .toIntArray()
-
-fun npcIdsFromEntries(entries: List<NpcSpawnDef>, vararg additionalNpcIds: Int): IntArray =
-    buildList {
-            addAll(entries.map { it.npcId })
-            addAll(additionalNpcIds.toList())
-        }
-        .distinct()
-        .toIntArray()
+interface NpcFamily : NpcModule, NpcSpawnSource {
+    val familyName: String
+    val primaryId: Int
+    val ids: IntArray
+    val cacheOverrides: List<NpcCacheOverride>
+    val runtimeDefinitions: List<NpcRuntimeDefinition>
+}
 
 data class NpcContentDefinition(
     val name: String,
@@ -51,7 +47,8 @@ data class NpcContentDefinition(
     val onThirdClick: NpcClickHandler = NO_CLICK_HANDLER,
     val onFourthClick: NpcClickHandler = NO_CLICK_HANDLER,
     val onAttack: NpcClickHandler = NO_CLICK_HANDLER,
-    val definitionOverrides: List<NpcDefinitionOverrideJson> = emptyList(),
+    val cacheOverrides: List<NpcCacheOverride> = emptyList(),
+    val runtimeDefinitions: List<NpcRuntimeDefinition> = emptyList(),
 )
 
 fun NpcContentDefinition.optionLabel(option: Int): String? = optionLabels[option]

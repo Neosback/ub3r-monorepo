@@ -2,13 +2,8 @@ package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.engine.systems.dialogue.DialogueIds
 import net.dodian.uber.game.engine.systems.dialogue.core.DialogueRegistry
-import net.dodian.uber.game.model.entity.npc.Npc
-import net.dodian.uber.game.model.entity.player.Client
 
-internal object Gundai : NpcScript("Gundai", 1597) {
-    override val definition = define {
-    }
-
+internal object Gundai {
     fun registerLegacyDialogues(builder: DialogueRegistry.Builder) {
         builder.handle(DialogueIds.Legacy.MAGE_ARENA_OPTIONS) { c ->
             c.sendInterfaceAnimation(4883, 1597)

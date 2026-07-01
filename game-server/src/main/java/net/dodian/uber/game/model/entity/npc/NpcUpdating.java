@@ -70,8 +70,6 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
                 if (player.getLocalNpcs().add(npc)) {
                     player.bumpLocalNpcMembershipRevision();
-                    if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
-                        npc.setId(player.getGender() == 0 ? 1306 : 1307);
                     addNpc(player, npc, stream);
                     appendBlockUpdate(npc, updateBlock);
                     SynchronizationContext.recordNpcAdd();
@@ -150,8 +148,16 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         buf.putBits(5, z); // y coordinate relative to thisPlayer
 
         buf.putBits(1, 1); // discard client walking queue on add-local
-        buf.putBits(14, npc.getId());
+        buf.putBits(14, displayIdFor(player, npc));
         buf.putBits(1, npc.getUpdateFlags().isUpdateRequired() ? 1 : 0);
+    }
+
+    private int displayIdFor(Player player, Npc npc) {
+        int id = npc.getId();
+        if (id == 1306 || id == 1307) {
+            return player.getGender() == 0 ? 1306 : 1307;
+        }
+        return id;
     }
 
     @Override

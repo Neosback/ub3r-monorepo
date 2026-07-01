@@ -4,7 +4,6 @@ import java.nio.file.Path
 import java.util.TreeMap
 import net.dodian.uber.game.npc.NpcSpawnDef
 import net.dodian.uber.game.npc.NpcDefinitionRepository
-import net.dodian.uber.game.npc.NpcSpawnRepository
 import net.dodian.uber.game.npc.NpcSpawnSource
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.model.Position
@@ -41,39 +40,8 @@ class NpcManager {
 
     private fun ensureDefinitionsForSpawnNpcIds(spawns: List<NpcSpawnDef>) {
         val missingIds = spawns.asSequence().map { it.npcId }.distinct().filter { getData(it) == null }.sorted().toList()
-        if (missingIds.isEmpty()) {
-            return
-        }
-
-        var inserted = 0
-        val stillMissing = ArrayList<Int>()
-        for (npcId in missingIds) {
-            try {
-                val dummy = NpcData(
-                    "Unknown NPC $npcId",
-                    "no examine",
-                    806,
-                    836,
-                    60,
-                    0,
-                    1,
-                    intArrayOf(0, 0, 0, 0, 0, 0, 0)
-                )
-                data[npcId] = dummy
-                inserted++
-            } catch (e: RuntimeException) {
-                logger.error("Failed to create dummy NPC definition for spawn npcId={}", npcId, e)
-                stillMissing += npcId
-            }
-        }
-
-        logger.warn(
-            "Auto-created {} dummy NPC definitions for content spawns ({} requested).",
-            inserted,
-            missingIds.size,
-        )
-        if (stillMissing.isNotEmpty()) {
-            logger.error("NPC definitions still missing after auto-creation attempt: {}", stillMissing.joinToString(","))
+        if (missingIds.isNotEmpty()) {
+            error("Missing NPC definitions for Kotlin spawns: ${missingIds.joinToString(",")}")
         }
     }
 
@@ -247,76 +215,46 @@ class NpcManager {
 
     fun reloadAllData(c: Client, id: Int) {
         try {
-            val definition = NpcDataRepository.loadDefinitionById(id)
-            if (definition != null) {
-                data[id] = definition
-                for (n in npcMap.values) {
-                    if (n.id == id) {
-                        n.reloadData()
-                    }
-                }
-            }
             reloadDrops(c, id)
-            c.sendMessage("Finished updating all '${getData(id)?.name}' npcs!")
+            c.sendMessage("Finished reloading drops for '${getData(id)?.name}' npcs. NPC definitions now come from cache and Kotlin families.")
         } catch (e: RuntimeException) {
             logger.error("NPC full data reload failed for id={}", id, e)
         }
     }
 
     fun reloadNpcConfig(c: Client, id: Int, table: String, value: String) {
-        if (!data.containsKey(id)) {
-            try {
-                NpcDataRepository.insertDefaultDefinition(id)
-                val defaultDefinition = NpcDataRepository.loadDefinitionById(id)
-                if (defaultDefinition != null) {
-                    data[id] = defaultDefinition
-                    c.sendMessage("Added default config values to the npc!")
-                }
-            } catch (e: RuntimeException) {
-                logger.error("NPC config bootstrap failed for id={}", id, e)
-            }
-        } else if (!table.equals("new npc", ignoreCase = true)) {
-            try {
-                val field = NpcDataRepository.parseDefinitionField(table)
-                NpcDataRepository.updateDefinitionField(id, field, value)
-                c.sendMessage("You updated '${field.column}' with value '$value'!")
-                reloadAllData(c, id)
-            } catch (e: IllegalArgumentException) {
-                c.sendMessage(e.message ?: "Invalid npc config field.")
-            } catch (e: RuntimeException) {
-                logger.error("NPC config reload failed for id={} field={}", id, table, e)
-                c.sendMessage("Failed updating npc config. Check logs for details.")
-            }
-        }
+        c.sendMessage("NPC definitions are edited in Kotlin family files now. Drops still use ::r_drops / drop commands.")
     }
 
     fun loadData() {
         try {
             val cachePath = Path.of("data/cache")
             val cacheDefs = NpcDefinitionRepository.load(cachePath)
-            val definitions = cacheDefs.mapValues { (_, def) ->
+            val definitions = cacheDefs.mapValues { (_, runtimeDef) ->
+                val cacheDef = runtimeDef.cache
+                val runtimeDefValues = runtimeDef.runtime
                 NpcData(
-                    def.name,
-                    def.examine,
-                    def.attackAnimation,
-                    def.deathAnimation,
-                    def.respawnTicks,
-                    def.combatLevel,
-                    def.size,
+                    cacheDef.name,
+                    cacheDef.examine,
+                    runtimeDefValues.attackAnimation ?: 806,
+                    runtimeDefValues.deathAnimation ?: 836,
+                    runtimeDefValues.respawnTicks ?: 60,
+                    cacheDef.combatLevel,
+                    cacheDef.size,
                     intArrayOf(
-                        def.defence,
-                        def.attack,
-                        def.strength,
-                        def.hitpoints,
-                        def.ranged,
+                        runtimeDefValues.defence ?: 0,
+                        runtimeDefValues.attack ?: 0,
+                        runtimeDefValues.strength ?: 0,
+                        runtimeDefValues.hitpoints ?: 0,
+                        runtimeDefValues.ranged ?: 0,
                         0,
-                        def.magic
+                        runtimeDefValues.magic ?: 0
                     )
                 )
             }
             data.clear()
             data.putAll(definitions)
-            logger.info("Loaded {} Npc Definitions from Cache and Kotlin Overrides", definitions.size)
+            logger.info("Loaded {} NPC definitions from cache plus Kotlin runtime definitions", definitions.size)
         } catch (e: RuntimeException) {
             logger.error("Error loading NPC definitions", e)
         }

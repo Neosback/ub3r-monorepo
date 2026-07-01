@@ -12,15 +12,6 @@ data class CacheNpcDefinition(
     var clockwiseTurnAnimation: Int = -1,
     var anticlockwiseTurnAnimation: Int = -1,
     var actions: Array<String?> = arrayOfNulls(5),
-    var attackAnimation: Int = 806,
-    var deathAnimation: Int = 836,
-    var respawnTicks: Int = 60,
-    var attack: Int = 0,
-    var strength: Int = 0,
-    var defence: Int = 0,
-    var hitpoints: Int = 0,
-    var ranged: Int = 0,
-    var magic: Int = 0,
 )
 
 object NpcCacheDefinitionDecoder {

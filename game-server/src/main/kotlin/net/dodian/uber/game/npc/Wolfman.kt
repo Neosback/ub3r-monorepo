@@ -1,27 +1,16 @@
 package net.dodian.uber.game.npc
 
-import net.dodian.uber.game.model.entity.npc.Npc
-import net.dodian.uber.game.model.entity.player.Client
-
-internal object Wolfman : NpcScript("Wolfman", 1032) {
-    override val definition = define {
-        stats {
-            hitpoints = 100
-            attack = 0
-            defence = 0
-            strength = 0
-            magic = 0
-            ranged = 0
-            attackAnimation = 806
-            deathAnimation = 836
-            respawnTicks = 60
-        }
-
-        onOption("trade") {
-            action {
-                client.WanneShop = 5
-                true
-            }
-        }
+internal object Wolfman : NpcFamily by npcFamily("Wolfman", 3200, block = {
+    cache {
+        name = "Wolfman"
     }
-}
+
+    runtime {
+        deathAnimation = 2304
+        hitpoints = 100
+    }
+
+    spawns {
+        spawn(2805, 3427)
+    }
+})

@@ -885,6 +885,7 @@ public class Npc extends Entity {
             if (defence >= 0) currentLevels[0] = defence;
             if (attack >= 0) currentLevels[1] = attack;
             if (strength >= 0) currentLevels[2] = strength;
+            if (hitpoints > 0) currentLevels[3] = hitpoints;
             if (ranged >= 0) currentLevels[4] = ranged;
             if (magic >= 0) currentLevels[6] = magic;
 
@@ -901,6 +902,7 @@ public class Npc extends Entity {
             
             deathEmote = data.getDeathEmote();
             respawn = data.getRespawn();
+            combat = data.getCombat();
         }
         if (respawnTicks > 0) {
             respawn = respawnTicks;
@@ -921,6 +923,7 @@ public class Npc extends Entity {
             level[6] = magic;
         }
         if (hitpoints > 0) {
+            level[3] = hitpoints;
             maxHealth = hitpoints;
             currentHealth = hitpoints;
         }
