@@ -5,7 +5,7 @@ internal object Vulture : NpcFamily by npcFamily("Vulture", 1267, block = {
         examine = "Love to keep desert clean"
     }
 
-    runtime {
+    server {
         attackAnimation = 2018
         deathAnimation = 2021
         attack = 25

@@ -4,6 +4,7 @@ import java.nio.file.Path
 import java.util.TreeMap
 import net.dodian.uber.game.npc.NpcSpawnDef
 import net.dodian.uber.game.npc.NpcDefinitionRepository
+import net.dodian.uber.game.npc.NpcServerDefinition
 import net.dodian.uber.game.npc.NpcSpawnSource
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.model.Position
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory
 class NpcManager {
     val npcMap = HashMap<Int, Npc>()
     private val data = HashMap<Int, NpcData>()
+    private val serverDefinitions = HashMap<Int, NpcServerDefinition>()
     private var nextIndex = 1
 
     init {
@@ -85,16 +87,17 @@ class NpcManager {
                 NpcInteractionProfileRegistry.register(spawn.profile)
                 npc.interactionProfile = spawn.profile
                 npc.applySpawnOverrides(
-                    spawn.respawnTicks,
-                    spawn.attack,
-                    spawn.defence,
-                    spawn.strength,
-                    spawn.hitpoints,
-                    spawn.ranged,
-                    spawn.magic,
-                    spawn.attackAnimation,
-                    spawn.deathAnimation,
+                    spawn.overrides.respawnTicks,
+                    spawn.overrides.attack,
+                    spawn.overrides.defence,
+                    spawn.overrides.strength,
+                    spawn.overrides.hitpoints,
+                    spawn.overrides.ranged,
+                    spawn.overrides.magic,
+                    spawn.overrides.attackAnimation,
+                    spawn.overrides.deathAnimation,
                 )
+                npc.applyDisplayOverrides(spawn.overrides.headIcon, spawn.overrides.transformTo)
                 npc.applySpawnBehaviorOverrides(
                     effectiveWalkRadius(spawn),
                     spawn.attackRange,
@@ -232,31 +235,34 @@ class NpcManager {
             val cacheDefs = NpcDefinitionRepository.load(cachePath)
             val definitions = cacheDefs.mapValues { (_, runtimeDef) ->
                 val cacheDef = runtimeDef.cache
-                val runtimeDefValues = runtimeDef.runtime
+                val serverDefValues = runtimeDef.server
                 NpcData(
                     cacheDef.name,
                     cacheDef.examine,
-                    runtimeDefValues.attackAnimation ?: 806,
-                    runtimeDefValues.deathAnimation ?: 836,
-                    runtimeDefValues.respawnTicks ?: 60,
+                    serverDefValues.attackAnimation ?: 806,
+                    serverDefValues.deathAnimation ?: 836,
+                    serverDefValues.respawnTicks ?: 60,
                     cacheDef.combatLevel,
                     cacheDef.size,
                     intArrayOf(
-                        runtimeDefValues.defence ?: 0,
-                        runtimeDefValues.attack ?: 0,
-                        runtimeDefValues.strength ?: 0,
-                        runtimeDefValues.hitpoints ?: 0,
-                        runtimeDefValues.ranged ?: 0,
+                        serverDefValues.defence ?: 0,
+                        serverDefValues.attack ?: 0,
+                        serverDefValues.strength ?: 0,
+                        serverDefValues.hitpoints ?: 0,
+                        serverDefValues.ranged ?: 0,
                         0,
-                        runtimeDefValues.magic ?: 0
+                        serverDefValues.magic ?: 0
                     )
                 )
             }
             data.clear()
             data.putAll(definitions)
-            logger.info("Loaded {} NPC definitions from cache plus Kotlin runtime definitions", definitions.size)
+            serverDefinitions.clear()
+            serverDefinitions.putAll(cacheDefs.mapValues { (_, definition) -> definition.server })
+            logger.info("Loaded {} NPC definitions from cache plus Kotlin server definitions", definitions.size)
         } catch (e: RuntimeException) {
             logger.error("Error loading NPC definitions", e)
+            throw e
         }
 
         try {
@@ -281,6 +287,7 @@ class NpcManager {
 
     fun createNpc(id: Int, position: Position, face: Int): Npc {
         val npc = Npc(nextIndex, id, position, face)
+        serverDefinitions[id]?.let { npc.applyDisplayOverrides(it.headIcon, it.transformTo) }
         npcMap[nextIndex] = npc
         nextIndex++
         if (net.dodian.uber.game.Server.chunkManager != null) {

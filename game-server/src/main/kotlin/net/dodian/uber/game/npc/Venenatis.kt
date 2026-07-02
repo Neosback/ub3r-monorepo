@@ -5,7 +5,7 @@ internal object Venenatis : NpcFamily by npcFamily("Venenatis", 6610, block = {
         examine = "Wild spider is wild"
     }
 
-    runtime {
+    server {
         attackAnimation = 5322
         deathAnimation = 5329
         respawnTicks = 250

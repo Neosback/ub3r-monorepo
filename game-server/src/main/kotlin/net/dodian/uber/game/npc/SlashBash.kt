@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object SlashBash : NpcFamily by npcFamily("Slash Bash", 882, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 100
         attack = 100

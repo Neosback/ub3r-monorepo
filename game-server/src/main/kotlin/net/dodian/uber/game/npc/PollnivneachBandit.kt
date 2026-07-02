@@ -5,7 +5,7 @@ internal object PollnivneachBandit : NpcFamily by npcFamily("Pollnivneach bandit
         examine = "Just following orders"
     }
 
-    runtime {
+    server {
         attackAnimation = 401
         deathAnimation = 2304
         attack = 35

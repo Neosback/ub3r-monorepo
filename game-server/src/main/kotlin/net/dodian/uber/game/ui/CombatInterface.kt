@@ -20,7 +20,7 @@ object CombatInterface : InterfaceButtonContent {
             // Slot 0: first/accurate style for each weapon interface. Old IDs: 1177, 1080, 14218, 22228, 48010, 21200, 6221, 6236, 17102, 8234, 30088, 18103, 9125, 6168
             CombatStyleDefinition(
                 0, "combat.style.primary",
-                intArrayOf(433, 782, 1704, 1772, 2282, 2429, 3802, 4454, 4685, 4711, 5567, 5860, 6137, 7768, 8466, 12298),
+                intArrayOf(433, 782, 1704, 1772, 2282, 2429, 3802, 4454, 4685, 4711, 5567, 5579, 5860, 6137, 7768, 8466, 12298),
                 0,
                 mapOf(
                     433 to Player.fightStyle.POUND,      // warhammer bash/accurate
@@ -34,6 +34,7 @@ object CombatInterface : InterfaceButtonContent {
                     4685 to Player.fightStyle.CONTROLLED, // spear lunge (controlled)
                     4711 to Player.fightStyle.CHOP,      // 2h sword/godsword chop
                     5567 to Player.fightStyle.SPIKE,     // pickaxe spike
+                    5579 to Player.fightStyle.SPIKE,     // Tarnish pickaxe first style
                     5860 to Player.fightStyle.PUNCH,     // unarmed punch
                     6137 to Player.fightStyle.POUND,     // staff bash
                     7768 to Player.fightStyle.CHOP,      // claws chop
@@ -45,7 +46,7 @@ object CombatInterface : InterfaceButtonContent {
             // Slot 1: second/aggressive style. Old IDs: 1175, 22229, 1078, 3015, 33019, 6169, 8235, 9126, 18078, 21201, 48008, 14219, 6219, 6234, 17100
             CombatStyleDefinition(
                 1, "combat.style.secondary",
-                intArrayOf(432, 784, 1707, 1771, 2285, 2432, 3805, 4453, 4688, 4713, 4714, 5579, 5862, 6136, 7771, 8468, 12297),
+                intArrayOf(432, 784, 1707, 1771, 2285, 2432, 3805, 4453, 4688, 4713, 4714, 5862, 6136, 7771, 8468, 12297),
                 1,
                 mapOf(
                     432 to Player.fightStyle.PUMMEL,     // warhammer pummel
@@ -59,7 +60,6 @@ object CombatInterface : InterfaceButtonContent {
                     4688 to Player.fightStyle.SWIPE_CON, // spear swipe (controlled)
                     4713 to Player.fightStyle.SLASH,     // 2h sword slash
                     4714 to Player.fightStyle.SLASH,     // godsword slash
-                    5579 to Player.fightStyle.IMPALE,    // pickaxe impale
                     5862 to Player.fightStyle.KICK,      // unarmed kick
                     6136 to Player.fightStyle.POUND,     // staff pound
                     7771 to Player.fightStyle.SLASH,     // claws slash

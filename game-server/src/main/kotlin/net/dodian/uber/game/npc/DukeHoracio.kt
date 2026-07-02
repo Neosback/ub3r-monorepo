@@ -6,15 +6,15 @@ import net.dodian.uber.game.ui.dialogue.DialogueUi
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
-internal object DukeHoracio {
-    val npcIds: IntArray = intArrayOf(8051)
-
-    @Suppress("UNUSED_PARAMETER")
-    fun onFirstClick(client: Client, npc: Npc): Boolean {
-        client.NpcWanneTalk = 8051
-        return true
+internal object DukeHoracio : NpcFamily by npcFamily("Duke Horacio", 8051, block = {
+    cache {
+        name = "Duke Horacio"
     }
 
+    options {
+        talkTo(handler = ::handleDukeHoracioTalkTo)
+    }
+}) {
     fun registerLegacyDialogues(builder: DialogueRegistry.Builder) {
         builder.handle(DialogueIds.Misc.HOLIDAY_GREETING) { c ->
             c.showNPCChat(c.NpcTalkTo, 591, arrayOf("Happy Holidays adventurer!"))
@@ -36,4 +36,10 @@ internal object DukeHoracio {
             true
         }
     }
+}
+
+@Suppress("UNUSED_PARAMETER")
+private fun handleDukeHoracioTalkTo(client: Client, npc: Npc): Boolean {
+    client.NpcWanneTalk = 8051
+    return true
 }

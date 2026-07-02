@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object TokXil : NpcFamily by npcFamily("Tok-Xil", 2193, block = {
-    runtime {
+    server {
         attackAnimation = 2633
         deathAnimation = 2630
         attack = 70

@@ -5,7 +5,7 @@ internal object SwordMummy : NpcFamily by npcFamily("Sword mummy", 953, block = 
         examine = "What a long sworded mummy"
     }
 
-    runtime {
+    server {
         attackAnimation = 5554
         deathAnimation = 5555
         respawnTicks = 50

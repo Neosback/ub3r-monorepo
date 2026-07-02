@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Koftik3 : NpcFamily by npcFamily("Koftik", 974, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 120
         attack = 68

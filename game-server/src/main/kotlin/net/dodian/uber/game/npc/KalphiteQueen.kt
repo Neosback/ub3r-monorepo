@@ -5,7 +5,7 @@ internal object KalphiteQueen : NpcFamily by npcFamily("Kalphite queen", 4303, b
         examine = "Queen of all kalphites."
     }
 
-    runtime {
+    server {
         attackAnimation = 6241
         deathAnimation = 6242
         respawnTicks = 250

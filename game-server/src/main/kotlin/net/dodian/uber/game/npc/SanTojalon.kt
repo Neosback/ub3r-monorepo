@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object SanTojalon : NpcFamily by npcFamily("San Tojalon", 3964, block = {
-    runtime {
+    server {
         attackAnimation = 5487
         deathAnimation = 5492
         respawnTicks = 180

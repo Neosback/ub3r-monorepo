@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object AberrantSpectre : NpcFamily by npcFamily("Aberrant spectre", 2, block = {
-    runtime {
+    server {
         attackAnimation = 1507
         deathAnimation = 1508
         respawnTicks = 35

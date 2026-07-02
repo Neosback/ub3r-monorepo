@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object OchreBlamishSnail : NpcFamily by npcFamily("Ochre Blamish Snail", 1229, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 20
         attack = 70

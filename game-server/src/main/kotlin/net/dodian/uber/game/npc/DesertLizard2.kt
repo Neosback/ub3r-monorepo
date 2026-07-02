@@ -5,7 +5,7 @@ internal object DesertLizard2 : NpcFamily by npcFamily("Desert lizard", 461, blo
         examine = "how can it survive the heat?"
     }
 
-    runtime {
+    server {
         attackAnimation = 2776
         deathAnimation = 2778
         respawnTicks = 50

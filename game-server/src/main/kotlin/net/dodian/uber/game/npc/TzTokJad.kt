@@ -5,7 +5,7 @@ internal object TzTokJad : NpcFamily by npcFamily("TzTok-Jad", 3127, block = {
         examine = "Scariest boss in Dodian"
     }
 
-    runtime {
+    server {
         attackAnimation = 2655
         deathAnimation = 2654
         respawnTicks = 360

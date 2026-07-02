@@ -5,7 +5,7 @@ internal object AlbinoBat : NpcFamily by npcFamily("Albino bat", 1039, block = {
         name = "Albino bat"
     }
 
-    runtime {
+    server {
         attackAnimation = 4915
         deathAnimation = 4917
         respawnTicks = 30

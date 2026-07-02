@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object SkeletonHellhound : NpcFamily by npcFamily("Skeleton Hellhound", 5054, block = {
-    runtime {
+    server {
         attackAnimation = 6581
         deathAnimation = 6576
         respawnTicks = 35

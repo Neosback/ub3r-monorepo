@@ -5,7 +5,7 @@ internal object ScarabMage2 : NpcFamily by npcFamily("Scarab mage 2", 794, block
         examine = "Magic warrior of scarabs"
     }
 
-    runtime {
+    server {
         attackAnimation = 414
         deathAnimation = 2304
         attack = 55

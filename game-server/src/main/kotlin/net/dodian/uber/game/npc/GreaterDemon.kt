@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object GreaterDemon : NpcFamily by npcFamily("Greater demon", 2025, block = {
-    runtime {
+    server {
         attackAnimation = 64
         deathAnimation = 67
         respawnTicks = 35

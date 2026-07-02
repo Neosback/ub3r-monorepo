@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object MossGiant : NpcFamily by npcFamily("Moss giant", 3851, block = {
-    runtime {
+    server {
         attackAnimation = 4652
         deathAnimation = 4673
         respawnTicks = 35

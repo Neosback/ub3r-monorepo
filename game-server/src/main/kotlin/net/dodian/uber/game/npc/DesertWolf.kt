@@ -5,7 +5,7 @@ internal object DesertWolf : NpcFamily by npcFamily("Desert wolf", 4649, block =
         examine = "People's worse enemy"
     }
 
-    runtime {
+    server {
         attackAnimation = 6559
         deathAnimation = 6558
         attack = 50

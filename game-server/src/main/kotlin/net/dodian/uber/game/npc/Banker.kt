@@ -6,7 +6,7 @@ internal object Banker : NpcFamily by npcFamily("Banker", 1613, block = {
         examine = "I do not get paid enough for this."
     }
 
-    runtime {
+    server {
         deathAnimation = 2304
     }
 

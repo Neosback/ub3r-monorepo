@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object TzHaarKet : NpcFamily by npcFamily("TzHaar-Ket", 2173, block = {
-    runtime {
+    server {
         attackAnimation = 2609
         deathAnimation = 2608
         respawnTicks = 35

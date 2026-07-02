@@ -32,6 +32,25 @@ data class NpcOptionBinding(
 class NpcSpawnsBuilder internal constructor(private val primaryId: Int) {
     private val values = ArrayList<NpcSpawnDef>()
 
+    fun at(
+        x: Int,
+        y: Int,
+        z: Int = 0,
+        block: NpcSpawnOverrideBuilder.() -> Unit = {},
+    ) {
+        spawn(x, y, z = z, block = block)
+    }
+
+    fun atId(
+        npcId: Int,
+        x: Int,
+        y: Int,
+        z: Int = 0,
+        block: NpcSpawnOverrideBuilder.() -> Unit = {},
+    ) {
+        spawnId(npcId, x, y, z = z, block = block)
+    }
+
     fun spawn(
         x: Int,
         y: Int,
@@ -39,15 +58,17 @@ class NpcSpawnsBuilder internal constructor(private val primaryId: Int) {
         face: Int = NORTH,
         walkRadius: Int = 0,
         profile: NpcProfile? = null,
-        hitpoints: Int = NPC_UNSET,
-        attack: Int = NPC_UNSET,
-        defence: Int = NPC_UNSET,
-        strength: Int = NPC_UNSET,
-        ranged: Int = NPC_UNSET,
-        magic: Int = NPC_UNSET,
-        respawnTicks: Int = NPC_UNSET,
-        attackAnimation: Int = NPC_UNSET,
-        deathAnimation: Int = NPC_UNSET,
+        hitpoints: Int? = null,
+        attack: Int? = null,
+        defence: Int? = null,
+        strength: Int? = null,
+        ranged: Int? = null,
+        magic: Int? = null,
+        respawnTicks: Int? = null,
+        attackAnimation: Int? = null,
+        deathAnimation: Int? = null,
+        headIcon: Int? = null,
+        transformTo: Int? = null,
         attackRange: Int = 6,
         alwaysActive: Boolean = false,
         block: NpcSpawnOverrideBuilder.() -> Unit = {},
@@ -69,6 +90,8 @@ class NpcSpawnsBuilder internal constructor(private val primaryId: Int) {
             respawnTicks,
             attackAnimation,
             deathAnimation,
+            headIcon,
+            transformTo,
             attackRange,
             alwaysActive,
             block,
@@ -83,15 +106,17 @@ class NpcSpawnsBuilder internal constructor(private val primaryId: Int) {
         face: Int = NORTH,
         walkRadius: Int = 0,
         profile: NpcProfile? = null,
-        hitpoints: Int = NPC_UNSET,
-        attack: Int = NPC_UNSET,
-        defence: Int = NPC_UNSET,
-        strength: Int = NPC_UNSET,
-        ranged: Int = NPC_UNSET,
-        magic: Int = NPC_UNSET,
-        respawnTicks: Int = NPC_UNSET,
-        attackAnimation: Int = NPC_UNSET,
-        deathAnimation: Int = NPC_UNSET,
+        hitpoints: Int? = null,
+        attack: Int? = null,
+        defence: Int? = null,
+        strength: Int? = null,
+        ranged: Int? = null,
+        magic: Int? = null,
+        respawnTicks: Int? = null,
+        attackAnimation: Int? = null,
+        deathAnimation: Int? = null,
+        headIcon: Int? = null,
+        transformTo: Int? = null,
         attackRange: Int = 6,
         alwaysActive: Boolean = false,
         block: NpcSpawnOverrideBuilder.() -> Unit = {},
@@ -106,15 +131,19 @@ class NpcSpawnsBuilder internal constructor(private val primaryId: Int) {
                 walkRadius = walkRadius,
                 attackRange = attackRange,
                 alwaysActive = alwaysActive,
-                respawnTicks = respawnTicks,
-                attack = attack,
-                defence = defence,
-                strength = strength,
-                hitpoints = hitpoints,
-                ranged = ranged,
-                magic = magic,
-                attackAnimation = attackAnimation,
-                deathAnimation = deathAnimation,
+                overrides = NpcServerPatch(
+                    attackAnimation = attackAnimation,
+                    deathAnimation = deathAnimation,
+                    respawnTicks = respawnTicks,
+                    attack = attack,
+                    defence = defence,
+                    strength = strength,
+                    hitpoints = hitpoints,
+                    ranged = ranged,
+                    magic = magic,
+                    headIcon = headIcon,
+                    transformTo = transformTo,
+                ),
                 profile = profile?.key,
             )
         values += NpcSpawnOverrideBuilder(base).apply(block).build()
@@ -130,7 +159,7 @@ class NpcFamilyBuilder internal constructor(
     private val ids = linkedSetOf(primaryId)
     private val profiles = linkedSetOf<String>()
     private val cacheOverrides = ArrayList<NpcCacheOverride>()
-    private val runtimeDefinitions = ArrayList<NpcRuntimeDefinition>()
+    private val serverDefinitions = ArrayList<NpcServerDefinition>()
     private var options = emptyList<NpcOptionBinding>()
     private var spawns = emptyList<NpcSpawnDef>()
 
@@ -158,13 +187,23 @@ class NpcFamilyBuilder internal constructor(
         cacheOverrides += NpcCacheOverrideBuilder(id).apply(block).build()
     }
 
-    fun runtime(block: NpcRuntimeDefinitionBuilder.() -> Unit) {
-        runtime(primaryId, block)
+    fun server(block: NpcServerDefinitionBuilder.() -> Unit) {
+        server(primaryId, block)
     }
 
-    fun runtime(id: Int, block: NpcRuntimeDefinitionBuilder.() -> Unit) {
+    fun server(id: Int, block: NpcServerDefinitionBuilder.() -> Unit) {
         ids += id
-        runtimeDefinitions += NpcRuntimeDefinitionBuilder(id).apply(block).build()
+        serverDefinitions += NpcServerDefinitionBuilder(id).apply(block).buildDefinition()
+    }
+
+    @Deprecated("Use server { }. Runtime values are server-owned NPC values.", ReplaceWith("server(block)"))
+    fun runtime(block: NpcServerDefinitionBuilder.() -> Unit) {
+        server(block)
+    }
+
+    @Deprecated("Use server(id) { }. Runtime values are server-owned NPC values.", ReplaceWith("server(id, block)"))
+    fun runtime(id: Int, block: NpcServerDefinitionBuilder.() -> Unit) {
+        server(id, block)
     }
 
     fun spawns(block: NpcSpawnsBuilder.() -> Unit) {
@@ -189,9 +228,9 @@ class NpcFamilyBuilder internal constructor(
                 onFourthClick = handler(4),
                 onAttack = handler(5),
                 cacheOverrides = cacheOverrides.toList(),
-                runtimeDefinitions = runtimeDefinitions.toList(),
+                serverDefinitions = serverDefinitions.toList(),
             )
-        return DefaultNpcFamily(name, primaryId, finalIds, content, spawns, cacheOverrides, runtimeDefinitions)
+        return DefaultNpcFamily(name, primaryId, finalIds, content, spawns, cacheOverrides, serverDefinitions)
     }
 }
 
@@ -202,7 +241,7 @@ private data class DefaultNpcFamily(
     override val definition: NpcContentDefinition,
     override val spawns: List<NpcSpawnDef>,
     override val cacheOverrides: List<NpcCacheOverride>,
-    override val runtimeDefinitions: List<NpcRuntimeDefinition>,
+    override val serverDefinitions: List<NpcServerDefinition>,
 ) : NpcFamily
 
 fun npcFamily(name: String, primaryId: Int, block: NpcFamilyBuilder.() -> Unit): NpcFamily =

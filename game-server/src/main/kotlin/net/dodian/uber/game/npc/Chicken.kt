@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Chicken : NpcFamily by npcFamily("Chicken", 3661, block = {
-    runtime {
+    server {
         attackAnimation = 5387
         deathAnimation = 5389
         respawnTicks = 20

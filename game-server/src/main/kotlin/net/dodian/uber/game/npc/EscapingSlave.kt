@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object EscapingSlave : NpcFamily by npcFamily("Escaping slave", 826, block = {
-    runtime {
+    server {
         deathAnimation = 2304
     }
 

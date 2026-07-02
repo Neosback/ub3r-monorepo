@@ -5,7 +5,7 @@ internal object Spinolyp : NpcFamily by npcFamily("Spinolyp", 5961, block = {
         examine = "no examine"
     }
 
-    runtime {
+    server {
         hitpoints = 100
         attack = 10
         strength = 10

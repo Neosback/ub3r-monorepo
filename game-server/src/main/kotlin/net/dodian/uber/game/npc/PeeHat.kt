@@ -5,7 +5,7 @@ internal object PeeHat : NpcFamily by npcFamily("Pee hat", 927, block = {
         examine = "Wish he was a party hat"
     }
 
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 120
         attack = 50

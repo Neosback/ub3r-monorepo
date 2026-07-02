@@ -5,7 +5,7 @@ internal object Nathifa : NpcFamily by npcFamily("Nathifa", 3890, block = {
         examine = "She sell good quality pickaxe"
     }
 
-    runtime {
+    server {
         attack = 1
         strength = 1
         defence = 1

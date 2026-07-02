@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object CaptainRovin : NpcFamily by npcFamily("Captain Rovin", 884, block = {
-    runtime {
+    server {
         deathAnimation = 2304
     }
 

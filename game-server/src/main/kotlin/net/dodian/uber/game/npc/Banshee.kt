@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Banshee : NpcFamily by npcFamily("Banshee", 414, block = {
-    runtime {
+    server {
         attackAnimation = 1523
         deathAnimation = 1524
         attack = 40

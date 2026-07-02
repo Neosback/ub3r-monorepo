@@ -163,7 +163,7 @@ def cache_lines(final_id, export_def, old_rows):
     return body
 
 
-def runtime_lines(final_id, export_def, monster, primary_id):
+def server_lines(final_id, export_def, monster, primary_id):
     fields = []
     simple_map = [
         ("attackAnimation", "attackEmote"),
@@ -212,14 +212,14 @@ def runtime_lines(final_id, export_def, monster, primary_id):
 
     if not fields:
         return []
-    body = ["    runtime {" if final_id == primary_id else "    runtime(%d) {" % final_id]
+    body = ["    server {" if final_id == primary_id else "    server(%d) {" % final_id]
     for key, value in fields:
         body.append(f"        {key} = {value}")
     body.append("    }")
     return body
 
 
-def unsupported_runtime_values(export_def, monster):
+def unsupported_server_values(export_def, monster):
     values = {}
     combat = positive(export_def, "combat")
     if combat is not None:
@@ -267,7 +267,7 @@ def spawn_call(primary_id, final_id, row):
     return f"        {prefix}{', '.join(args)})"
 
 
-def write_family(path, object_name, family_name, primary_id, ids, cache_overrides, runtime_definitions, spawn_lines):
+def write_family(path, object_name, family_name, primary_id, ids, cache_overrides, server_definitions, spawn_lines):
     lines = [
         "package net.dodian.uber.game.npc",
         "",
@@ -283,8 +283,8 @@ def write_family(path, object_name, family_name, primary_id, ids, cache_override
                 lines.append("")
             lines.extend(block)
         lines.append("")
-    if runtime_definitions:
-        for index, block in enumerate(runtime_definitions):
+    if server_definitions:
+        for index, block in enumerate(server_definitions):
             if index:
                 lines.append("")
             lines.extend(block)
@@ -348,9 +348,9 @@ def main():
         monster = monsters.get(final_id)
         cache_blocks = [cache_lines(final_id, export_def, old_rows)]
         cache_blocks = [block for block in cache_blocks if block]
-        runtime_blocks = [runtime_lines(final_id, export_def, monster, final_id)]
-        runtime_blocks = [block for block in runtime_blocks if block]
-        unsupported_values = unsupported_runtime_values(export_def, monster)
+        server_blocks = [server_lines(final_id, export_def, monster, final_id)]
+        server_blocks = [block for block in server_blocks if block]
+        unsupported_values = unsupported_server_values(export_def, monster)
 
         seen = set()
         spawn_lines = []
@@ -379,7 +379,7 @@ def main():
             final_id,
             ids,
             cache_blocks,
-            runtime_blocks,
+            server_blocks,
             spawn_lines,
         )
 

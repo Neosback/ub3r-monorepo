@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object LesserDemon : NpcFamily by npcFamily("Lesser demon", 2005, block = {
-    runtime {
+    server {
         attackAnimation = 64
         deathAnimation = 67
         respawnTicks = 35

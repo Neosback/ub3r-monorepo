@@ -5,7 +5,7 @@ internal object Sheep : NpcFamily by npcFamily("Sheep", 2693, block = {
         name = "Sheep"
     }
 
-    runtime {
+    server {
         deathAnimation = 2304
     }
 

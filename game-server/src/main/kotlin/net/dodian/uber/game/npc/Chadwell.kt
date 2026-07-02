@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Chadwell : NpcFamily by npcFamily("Chadwell", 971, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 70
         attack = 68

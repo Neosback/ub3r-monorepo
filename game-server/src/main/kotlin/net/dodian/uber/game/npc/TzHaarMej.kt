@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object TzHaarMej : NpcFamily by npcFamily("TzHaar-Mej", 2154, block = {
-    runtime {
+    server {
         attackAnimation = 2612
         deathAnimation = 2607
         attack = 50

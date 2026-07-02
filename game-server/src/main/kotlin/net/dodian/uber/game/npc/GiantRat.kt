@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object GiantRat : NpcFamily by npcFamily("Giant rat", 2856, block = {
-    runtime {
+    server {
         attackAnimation = 4933
         deathAnimation = 4935
         respawnTicks = 20

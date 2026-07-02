@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object BattleMage : NpcFamily by npcFamily("Battle mage", 1611, block = {
-    runtime {
+    server {
         attackAnimation = 414
         respawnTicks = 30
         attack = 60

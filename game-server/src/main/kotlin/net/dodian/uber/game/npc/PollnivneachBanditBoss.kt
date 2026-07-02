@@ -5,7 +5,7 @@ internal object PollnivneachBanditBoss : NpcFamily by npcFamily("Pollnivneach ba
         examine = "Believe he is the true Pollnivneach leader"
     }
 
-    runtime {
+    server {
         attackAnimation = 451
         deathAnimation = 2304
         respawnTicks = 155

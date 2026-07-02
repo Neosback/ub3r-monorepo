@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Jelly : NpcFamily by npcFamily("Jelly", 437, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         respawnTicks = 35
         attack = 50

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object GnomeTrainer : NpcFamily by npcFamily("Gnome trainer", 6080, block = {
-    runtime {
+    server {
         deathAnimation = 2304
     }
 

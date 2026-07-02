@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Vampyre : NpcFamily by npcFamily("Vampyre", 3137, block = {
-    runtime {
+    server {
         attackAnimation = 1264
         attack = 60
         strength = 78

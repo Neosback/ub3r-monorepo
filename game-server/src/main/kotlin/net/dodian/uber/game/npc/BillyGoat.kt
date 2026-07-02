@@ -5,7 +5,7 @@ internal object BillyGoat : NpcFamily by npcFamily("Billy goat", 1794, block = {
         examine = "Billy was his name"
     }
 
-    runtime {
+    server {
         attackAnimation = 4936
         deathAnimation = 253
         respawnTicks = 150

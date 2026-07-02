@@ -5,7 +5,7 @@ internal object Woman : NpcFamily by npcFamily("Woman", 6990, block = {
         examine = "no examine"
     }
 
-    runtime {
+    server {
         hitpoints = 7
         attack = 1
         strength = 1

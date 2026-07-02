@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object BruiseBlamishSnail : NpcFamily by npcFamily("Bruise Blamish Snail", 1230, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 13
     }

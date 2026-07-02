@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object ThrowerTroll : NpcFamily by npcFamily("Thrower Troll", 1103, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 96
     }

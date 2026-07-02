@@ -5,7 +5,7 @@ internal object BanditBoss : NpcFamily by npcFamily("Bandit boss", 690, block = 
         examine = "Hates religion"
     }
 
-    runtime {
+    server {
         attackAnimation = 386
         deathAnimation = 2304
         respawnTicks = 155

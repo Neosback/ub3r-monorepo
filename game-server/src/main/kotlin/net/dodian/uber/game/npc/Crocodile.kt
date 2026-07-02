@@ -5,7 +5,7 @@ internal object Crocodile : NpcFamily by npcFamily("Crocodile", 4184, block = {
         examine = "Ow Charlie that hurts."
     }
 
-    runtime {
+    server {
         attackAnimation = 2039
         deathAnimation = 2038
         attack = 65

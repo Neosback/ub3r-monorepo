@@ -5,7 +5,7 @@ internal object Goat : NpcFamily by npcFamily("Goat", 1795, block = {
         examine = "Thinks Billy is retarded"
     }
 
-    runtime {
+    server {
         attackAnimation = 250
         deathAnimation = 253
         respawnTicks = 50

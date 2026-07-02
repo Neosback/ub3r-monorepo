@@ -5,7 +5,7 @@ internal object Dwayne : NpcFamily by npcFamily("Dwayne", 2261, block = {
         examine = "I am the one and only Dwayne!"
     }
 
-    runtime {
+    server {
         attackAnimation = 1312
         deathAnimation = 1314
         respawnTicks = 180

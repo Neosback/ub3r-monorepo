@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object SandCrab : NpcFamily by npcFamily("Sand Crab", 5935, block = {
-    runtime {
+    server {
         attack = 1
         strength = 1
         defence = 1

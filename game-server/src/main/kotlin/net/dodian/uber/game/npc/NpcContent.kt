@@ -33,7 +33,7 @@ interface NpcFamily : NpcModule, NpcSpawnSource {
     val primaryId: Int
     val ids: IntArray
     val cacheOverrides: List<NpcCacheOverride>
-    val runtimeDefinitions: List<NpcRuntimeDefinition>
+    val serverDefinitions: List<NpcServerDefinition>
 }
 
 data class NpcContentDefinition(
@@ -48,7 +48,7 @@ data class NpcContentDefinition(
     val onFourthClick: NpcClickHandler = NO_CLICK_HANDLER,
     val onAttack: NpcClickHandler = NO_CLICK_HANDLER,
     val cacheOverrides: List<NpcCacheOverride> = emptyList(),
-    val runtimeDefinitions: List<NpcRuntimeDefinition> = emptyList(),
+    val serverDefinitions: List<NpcServerDefinition> = emptyList(),
 )
 
 fun NpcContentDefinition.optionLabel(option: Int): String? = optionLabels[option]

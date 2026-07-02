@@ -5,7 +5,7 @@ internal object Jackal : NpcFamily by npcFamily("Jackal", 4185, block = {
         examine = "Man's best friend"
     }
 
-    runtime {
+    server {
         attackAnimation = 6559
         deathAnimation = 6558
         attack = 25

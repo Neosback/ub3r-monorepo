@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object BlackDragon : NpcFamily by npcFamily("Black dragon", 252, block = {
-    runtime {
+    server {
         attackAnimation = 91
         deathAnimation = 92
         respawnTicks = 40

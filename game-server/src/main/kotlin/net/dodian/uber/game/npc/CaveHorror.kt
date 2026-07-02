@@ -6,7 +6,7 @@ internal object CaveHorror : NpcFamily by npcFamily("Cave horror", 1047, block =
         examine = "A horrible, emaciated ape like creature with beady red eyes."
     }
 
-    runtime {
+    server {
         attackAnimation = 4234
         deathAnimation = 4233
         attack = 80

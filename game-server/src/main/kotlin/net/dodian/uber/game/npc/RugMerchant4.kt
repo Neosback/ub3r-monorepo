@@ -5,8 +5,12 @@ internal object RugMerchant4 : NpcFamily by npcFamily("Rug merchant", 22, block 
         examine = "Proud owner of carpet co"
     }
 
-    runtime {
+    server {
         deathAnimation = 2304
+    }
+
+    options {
+        talkTo(handler = ::handleRugMerchantTalkTo)
     }
 
     spawns {

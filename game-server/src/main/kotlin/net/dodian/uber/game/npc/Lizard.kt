@@ -5,7 +5,7 @@ internal object Lizard : NpcFamily by npcFamily("Lizard", 458, block = {
         examine = "how can it survive the heat?"
     }
 
-    runtime {
+    server {
         attackAnimation = 2776
         deathAnimation = 2778
         attack = 33

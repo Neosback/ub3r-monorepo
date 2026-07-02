@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object HillGiant : NpcFamily by npcFamily("Hill giant", 2098, block = {
-    runtime {
+    server {
         attackAnimation = 4652
         deathAnimation = 4653
         respawnTicks = 30

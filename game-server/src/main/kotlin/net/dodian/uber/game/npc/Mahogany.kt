@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Mahogany : NpcFamily by npcFamily("Mahogany", 2534, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 75
         attack = 63

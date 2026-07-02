@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Zombie2 : NpcFamily by npcFamily("Zombie", 75, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 30
         attack = 17

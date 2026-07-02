@@ -5,7 +5,7 @@ internal object Highwayman : NpcFamily by npcFamily("Highwayman", 518, block = {
         name = "Highwayman"
     }
 
-    runtime {
+    server {
         deathAnimation = 2304
         respawnTicks = 30
         attack = 6

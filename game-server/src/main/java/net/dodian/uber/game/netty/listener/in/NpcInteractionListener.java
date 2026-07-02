@@ -18,7 +18,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Consolidated Netty handler for npc interaction opcodes:
- * 155 (click1), 17 (click2), 21 (click3), 18 (click4), 72 (attack), 230 (legacy click2 compat).
+ * 155 (slot 0/click1), 17 (slot 2/click3), 21 (slot 3/click4), 18 (legacy slot 4/click4),
+ * 72 (attack/slot 1), 230 (legacy click2 compat).
  */
 @PacketHandler(opcode = 155)
 public class NpcInteractionListener implements PacketListener {
@@ -43,13 +44,13 @@ public class NpcInteractionListener implements PacketListener {
                 handleNpcClick1(client, packet);
                 return;
             case 17:
-                handleNpcClick2(client, packet);
-                return;
-            case 21:
                 handleNpcClick3(client, packet);
                 return;
-            case 18:
+            case 21:
                 handleNpcClick4(client, packet);
+                return;
+            case 18:
+                handleNpcClick4LegacySlot(client, packet);
                 return;
             case 230:
                 handleNpcClick2LegacyCompat(client, packet);
@@ -80,7 +81,7 @@ public class NpcInteractionListener implements PacketListener {
         PacketInteractionService.handleNpcClick(client, packet.opcode(), 1, npcIndex);
     }
 
-    private void handleNpcClick2(Client client, GamePacket packet) {
+    private void handleNpcClick3(Client client, GamePacket packet) {
         ByteBuf payload = packet.payload();
         if (payload.readableBytes() < 2) {
             PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
@@ -95,10 +96,10 @@ public class NpcInteractionListener implements PacketListener {
             PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
             return;
         }
-        PacketInteractionService.handleNpcClick(client, packet.opcode(), 2, npcIndex);
+        PacketInteractionService.handleNpcClick(client, packet.opcode(), 3, npcIndex);
     }
 
-    private void handleNpcClick3(Client client, GamePacket packet) {
+    private void handleNpcClick4(Client client, GamePacket packet) {
         ByteBuf payload = packet.payload();
         if (payload.readableBytes() < 2) {
             PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
@@ -113,10 +114,10 @@ public class NpcInteractionListener implements PacketListener {
             PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
             return;
         }
-        PacketInteractionService.handleNpcClick(client, packet.opcode(), 3, npcIndex);
+        PacketInteractionService.handleNpcClick(client, packet.opcode(), 4, npcIndex);
     }
 
-    private void handleNpcClick4(Client client, GamePacket packet) {
+    private void handleNpcClick4LegacySlot(Client client, GamePacket packet) {
         ByteBuf payload = packet.payload();
         if (payload.readableBytes() < 2) {
             PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);

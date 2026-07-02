@@ -1,6 +1,8 @@
 package net.dodian.uber.game.engine.systems.interaction
 
 import net.dodian.cache.objects.GameObjectData
+import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditObject
+import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditStore
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.objects.DoorRegistry
 import net.dodian.uber.game.model.objects.WorldObject
@@ -136,6 +138,7 @@ object ObjectClipService {
 
     private fun applyStaticOverride(override: StaticObjectOverride) {
         removeDecodedObject(override.position)
+        removeCachedObjectsForStaticOverride(override)
         if (override.replacementObjectId >= 0) {
             applyDecodedObject(
                 position = override.position,
@@ -145,6 +148,49 @@ object ObjectClipService {
                 obj = GameObjectData.forId(override.replacementObjectId),
             )
         }
+    }
+
+    private fun removeCachedObjectsForStaticOverride(override: StaticObjectOverride) {
+        CacheCollisionAuditStore.objectsForTile(override.position.x, override.position.y)
+            .asSequence()
+            .filter { it.matchesStaticOverrideRemoval(override) }
+            .forEach { removeCachedObject(it) }
+    }
+
+    private fun CacheCollisionAuditObject.matchesStaticOverrideRemoval(override: StaticObjectOverride): Boolean {
+        if (skipped) {
+            return false
+        }
+        if (x != override.position.x || y != override.position.y || plane != override.position.z) {
+            return false
+        }
+        if (type != override.replacementType) {
+            return false
+        }
+        return override.replacementFace < 0 || rotation == (override.replacementFace and 0x3)
+    }
+
+    private fun removeCachedObject(obj: CacheCollisionAuditObject) {
+        val definition = GameObjectData.forId(obj.objectId)
+        collisionBuildService.removeObject(
+            id = obj.objectId,
+            x = obj.x,
+            y = obj.y,
+            z = obj.plane,
+            type = obj.type,
+            rotation = obj.rotation,
+            sizeX = definition.sizeX,
+            sizeY = definition.sizeY,
+            solid = definition.isSolid(),
+            walkable = definition.isWalkable(),
+            hasActions = definition.hasActions(),
+            objectName = definition.name,
+            blockWalk = definition.blockWalk(),
+            blockRange = definition.blockRange(),
+            breakRouteFinding = definition.breakRouteFinding(),
+            impenetrable = definition.isImpenetrable(),
+            decoration = definition.isDecoration(),
+        )
     }
 
     private fun removeTrackedClip(position: Position) {

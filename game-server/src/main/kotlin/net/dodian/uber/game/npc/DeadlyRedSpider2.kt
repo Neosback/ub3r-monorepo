@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object DeadlyRedSpider2 : NpcFamily by npcFamily("Deadly red spider", 3021, block = {
-    runtime {
+    server {
         attackAnimation = 5327
         deathAnimation = 5329
         attack = 50

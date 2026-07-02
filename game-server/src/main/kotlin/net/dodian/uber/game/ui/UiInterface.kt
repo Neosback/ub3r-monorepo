@@ -18,7 +18,7 @@ object UiInterface : InterfaceButtonContent {
     private val tabInterfaceDefaultButtons = intArrayOf(83093)
     private val tabInterfaceEquipmentButtons = intArrayOf(27653)
     private val sidebarHomeButtons = intArrayOf(7212)
-    private val closeInterfaceButtons = intArrayOf(83051, 9118, 19022, 50001)
+    private val closeInterfaceButtons = intArrayOf(83051, 9118, 19022, 50001, 58002)
     private val questTabToggleButtons = intArrayOf(83097)
     private val logoutButtons = intArrayOf(2458, 9154)
     private val morphButtons = intArrayOf(23132)

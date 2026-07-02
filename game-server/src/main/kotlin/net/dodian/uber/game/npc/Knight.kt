@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Knight : NpcFamily by npcFamily("Knight", 5793, block = {
-    runtime {
+    server {
         deathAnimation = 2304
     }
 

@@ -5,7 +5,7 @@ internal object TheShaikahan : NpcFamily by npcFamily("The Shaikahan", 1173, blo
         name = "The Shaikahan"
     }
 
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 100
         attack = 1

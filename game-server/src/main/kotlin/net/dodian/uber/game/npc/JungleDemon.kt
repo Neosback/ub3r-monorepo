@@ -5,7 +5,7 @@ internal object JungleDemon : NpcFamily by npcFamily("Jungle Demon", 1443, block
         examine = "I am the master of magic!"
     }
 
-    runtime {
+    server {
         attackAnimation = 64
         deathAnimation = 67
         respawnTicks = 180

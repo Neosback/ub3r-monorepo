@@ -5,7 +5,7 @@ internal object Werewolf : NpcFamily by npcFamily("Werewolf", 2593, block = {
         examine = "Big bad wolf"
     }
 
-    runtime {
+    server {
         attackAnimation = 6536
         deathAnimation = 6537
         attack = 72

@@ -45,6 +45,10 @@ public class SyntaxInputListener implements PacketListener {
             return;
         }
 
+        if (net.dodian.uber.game.engine.systems.net.PacketSocialService.handlePendingNameInput(client, nameLong)) {
+            return;
+        }
+
         if (PacketBankingService.hasPendingBankSearch(client)) {
             PacketBankingService.applyPendingBankSearch(client, input);
         }

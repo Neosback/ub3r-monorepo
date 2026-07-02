@@ -5,7 +5,7 @@ internal object MithrilDragon : NpcFamily by npcFamily("Mithril Dragon", 2919, b
         examine = "Dwarfs would love this dragon"
     }
 
-    runtime {
+    server {
         attackAnimation = 91
         deathAnimation = 92
         respawnTicks = 40

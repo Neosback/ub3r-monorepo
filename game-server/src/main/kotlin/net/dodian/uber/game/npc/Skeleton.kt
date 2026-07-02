@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Skeleton : NpcFamily by npcFamily("Skeleton", 90, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 29
         attack = 13

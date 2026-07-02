@@ -5,7 +5,7 @@ internal object KingBlackDragon : NpcFamily by npcFamily("King black dragon", 23
         examine = "Rawr xD UwU"
     }
 
-    runtime {
+    server {
         attackAnimation = 80
         deathAnimation = 92
         respawnTicks = 180

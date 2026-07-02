@@ -5,7 +5,7 @@ internal object HeadMourners : NpcFamily by npcFamily("Head Mourners", 9017, blo
         name = "Head Mourners"
     }
 
-    runtime {
+    server {
         attackAnimation = 2080
         deathAnimation = 2304
         respawnTicks = 90

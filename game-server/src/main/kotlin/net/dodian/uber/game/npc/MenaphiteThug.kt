@@ -5,7 +5,7 @@ internal object MenaphiteThug : NpcFamily by npcFamily("Menaphite thug", 3549, b
         examine = "Just following orders"
     }
 
-    runtime {
+    server {
         attackAnimation = 401
         attack = 35
         strength = 35

@@ -5,7 +5,7 @@ internal object YtMejKot : NpcFamily by npcFamily("Yt-MejKot", 3123, block = {
         examine = "Guarding jad"
     }
 
-    runtime {
+    server {
         attackAnimation = 2637
         deathAnimation = 2638
         attack = 140

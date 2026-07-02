@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object IceGiant : NpcFamily by npcFamily("Ice giant", 2085, block = {
-    runtime {
+    server {
         attackAnimation = 4672
         deathAnimation = 4653
         respawnTicks = 30

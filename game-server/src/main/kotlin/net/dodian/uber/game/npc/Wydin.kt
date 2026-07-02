@@ -6,34 +6,33 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 
-internal object Wydin : NpcFamily by npcFamily("Wydin", 557, block = {
+internal object Wydin : NpcFamily by npcFamily("Zombie monk", 557, block = {
     cache {
-        name = "Wydin"
+        name = "Zombie monk"
     }
 
-    runtime {
+    server {
         deathAnimation = 2304
     }
 
     options {
-        talkTo(handler = Wydin::blessPlayer)
+        talkTo(handler = ::handleWydinBlessPlayer)
     }
 
     spawns {
         spawn(3256, 2780)
     }
-}) {
+})
 
-    fun blessPlayer(client: Client, npc: Npc): Boolean {
-        npc.performAnimation(5643, 0)
-        for (skill in listOf(0, 1, 2, 4)) {
-            val skillType = Objects.requireNonNull(Skill.getSkill(skill))
-            val maxLevel = Skills.getLevelForExperience(client.getExperience(skillType))
-            client.boost(5 + (maxLevel * 0.15).toInt(), skillType)
-        }
-        val ticks = (1 + Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))) * 2
-        client.addEffectTime(2, 200 + ticks)
-        client.sendMessage("The monk boost your stats!")
-        return true
+private fun handleWydinBlessPlayer(client: Client, npc: Npc): Boolean {
+    npc.performAnimation(5643, 0)
+    for (skill in listOf(0, 1, 2, 4)) {
+        val skillType = Objects.requireNonNull(Skill.getSkill(skill))
+        val maxLevel = Skills.getLevelForExperience(client.getExperience(skillType))
+        client.boost(5 + (maxLevel * 0.15).toInt(), skillType)
     }
+    val ticks = (1 + Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))) * 2
+    client.addEffectTime(2, 200 + ticks)
+    client.sendMessage("The monk boost your stats!")
+    return true
 }

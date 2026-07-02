@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Terrorbird : NpcFamily by npcFamily("Terrorbird", 136, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 34
         attack = 43

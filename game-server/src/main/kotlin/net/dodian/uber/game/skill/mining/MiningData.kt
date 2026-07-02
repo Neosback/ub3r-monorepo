@@ -169,7 +169,7 @@ object MiningData {
                     restThreshold(4)
                 }
                 node("Iron") {
-                    objectIds(7455, 7488)
+                    objectIds(7455, 7488, 11390)
                     requiredLevel(15)
                     baseDelayMs(3000L)
                     resourceItemId(440)

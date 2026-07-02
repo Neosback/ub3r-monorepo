@@ -5,7 +5,7 @@ internal object LocustRiderMelee2 : NpcFamily by npcFamily("Locust rider melee 2
         examine = "Melee warrior of scarabs"
     }
 
-    runtime {
+    server {
         attackAnimation = 5450
         deathAnimation = 5449
         attack = 70

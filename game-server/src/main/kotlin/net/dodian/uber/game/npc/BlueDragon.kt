@@ -5,7 +5,7 @@ internal object BlueDragon : NpcFamily by npcFamily("Blue dragon", 265, block = 
         examine = "Blue eyes nerf dragon"
     }
 
-    runtime {
+    server {
         attackAnimation = 91
         deathAnimation = 92
         respawnTicks = 40

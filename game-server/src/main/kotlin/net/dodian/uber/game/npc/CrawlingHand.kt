@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object CrawlingHand : NpcFamily by npcFamily("Crawling Hand", 449, block = {
-    runtime {
+    server {
         attackAnimation = 1592
         deathAnimation = 1590
         respawnTicks = 30

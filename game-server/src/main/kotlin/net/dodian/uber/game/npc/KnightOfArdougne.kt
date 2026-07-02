@@ -5,7 +5,7 @@ internal object KnightOfArdougne : NpcFamily by npcFamily("Knight of Ardougne", 
         name = "Knight of Ardougne"
     }
 
-    runtime {
+    server {
         attackAnimation = 451
         deathAnimation = 2304
         attack = 30

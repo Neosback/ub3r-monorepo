@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object FishingSpot4 : NpcFamily by npcFamily("Fishing spot", 1514, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 250
     }

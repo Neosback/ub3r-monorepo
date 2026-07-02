@@ -5,7 +5,7 @@ internal object MenaphiteThugBoss : NpcFamily by npcFamily("Menaphite thug boss"
         examine = "Come from a far land to be the true Pollnivneach leader"
     }
 
-    runtime {
+    server {
         attackAnimation = 401
         respawnTicks = 155
         attack = 75

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object AbyssalGuardian : NpcFamily by npcFamily("Abyssal guardian", 2585, block = {
-    runtime {
+    server {
         attackAnimation = 2187
         deathAnimation = 2189
         respawnTicks = 90

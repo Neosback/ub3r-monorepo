@@ -5,7 +5,7 @@ internal object ChaosDruid : NpcFamily by npcFamily("Chaos druid", 520, block = 
         name = "Chaos druid"
     }
 
-    runtime {
+    server {
         deathAnimation = 2304
         respawnTicks = 25
         attack = 25

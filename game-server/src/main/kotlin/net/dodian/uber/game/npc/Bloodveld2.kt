@@ -5,7 +5,7 @@ internal object Bloodveld2 : NpcFamily by npcFamily("Bloodveld", 1618, block = {
         name = "Bloodveld"
     }
 
-    runtime {
+    server {
         deathAnimation = 2304
         respawnTicks = 30
         attack = 90

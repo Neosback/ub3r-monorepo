@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Dagannoth : NpcFamily by npcFamily("Dagannoth", 1338, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 71
         attack = 1

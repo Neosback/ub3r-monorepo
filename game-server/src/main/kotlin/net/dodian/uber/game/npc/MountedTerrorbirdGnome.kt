@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object MountedTerrorbirdGnome : NpcFamily by npcFamily("Mounted terrorbird gnome", 5971, block = {
-    runtime {
+    server {
         hitpoints = 55
         attack = 40
         strength = 40

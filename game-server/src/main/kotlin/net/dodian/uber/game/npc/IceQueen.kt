@@ -5,7 +5,7 @@ internal object IceQueen : NpcFamily by npcFamily("Ice Queen", 4922, block = {
         examine = "Stone cold queen."
     }
 
-    runtime {
+    server {
         deathAnimation = 2304
         respawnTicks = 180
         attack = 95

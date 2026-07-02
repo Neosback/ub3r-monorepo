@@ -5,7 +5,7 @@ internal object Hero : NpcFamily by npcFamily("Hero", 3295, block = {
         name = "Hero"
     }
 
-    runtime {
+    server {
         attackAnimation = 451
         deathAnimation = 2304
         respawnTicks = 35

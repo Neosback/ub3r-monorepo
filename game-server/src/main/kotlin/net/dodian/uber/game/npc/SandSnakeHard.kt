@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object SandSnakeHard : NpcFamily by npcFamily("Sand Snake (hard)", 7894, block = {
-    runtime {
+    server {
         hitpoints = 180
         attack = 180
         strength = 140

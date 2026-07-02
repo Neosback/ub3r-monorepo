@@ -5,7 +5,7 @@ internal object Watchman : NpcFamily by npcFamily("Watchman", 5420, block = {
         name = "Watchman"
     }
 
-    runtime {
+    server {
         deathAnimation = 2304
         respawnTicks = 30
         attack = 16

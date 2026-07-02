@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object ChaosDwarf : NpcFamily by npcFamily("Chaos dwarf", 291, block = {
-    runtime {
+    server {
         attackAnimation = 99
         deathAnimation = 102
         respawnTicks = 35

@@ -12,6 +12,10 @@ data class CacheNpcDefinition(
     var clockwiseTurnAnimation: Int = -1,
     var anticlockwiseTurnAnimation: Int = -1,
     var actions: Array<String?> = arrayOfNulls(5),
+    var transformVarbit: Int = -1,
+    var transformVarp: Int = -1,
+    var transformChildren: List<Int> = emptyList(),
+    var transformFallbackChild: Int = -1,
 )
 
 object NpcCacheDefinitionDecoder {
@@ -81,9 +85,9 @@ object NpcCacheDefinitionDecoder {
                         }
                     }
                 }
-                106 -> skipTransforms(data, hasFallback = false)
+                106 -> readTransforms(definition, data, hasFallback = false)
                 115, 117 -> data.skip(8)
-                118 -> skipTransforms(data, hasFallback = true)
+                118 -> readTransforms(definition, data, hasFallback = true)
                 249 -> repeat(data.readUnsignedByte()) {
                     val stringValue = data.readUnsignedByte() == 1
                     data.readMedium()
@@ -98,12 +102,21 @@ object NpcCacheDefinitionDecoder {
         }
     }
 
-    private fun skipTransforms(data: CacheBuffer, hasFallback: Boolean) {
-        data.skip(4)
-        if (hasFallback) data.skip(2)
+    private fun readTransforms(definition: CacheNpcDefinition, data: CacheBuffer, hasFallback: Boolean) {
+        definition.transformVarbit = unsignedShortOrMinusOne(data.readUnsignedShort())
+        definition.transformVarp = unsignedShortOrMinusOne(data.readUnsignedShort())
+        val fallback = if (hasFallback) unsignedShortOrMinusOne(data.readUnsignedShort()) else -1
         val count = data.readUnsignedByte()
-        repeat(count + 1) { data.skip(2) }
+        val children = ArrayList<Int>(count + 2)
+        repeat(count + 1) {
+            children += unsignedShortOrMinusOne(data.readUnsignedShort())
+        }
+        children += fallback
+        definition.transformChildren = children
+        definition.transformFallbackChild = fallback
     }
+
+    private fun unsignedShortOrMinusOne(value: Int): Int = if (value == 65535) -1 else value
 
     private fun animationOrWalk(value: Int, walk: Int): Int = if (value == 65535) walk else value
 }

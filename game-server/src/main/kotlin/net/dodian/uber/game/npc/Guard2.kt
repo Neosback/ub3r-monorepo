@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Guard2 : NpcFamily by npcFamily("Guard", 3094, block = {
-    runtime {
+    server {
         attackAnimation = 412
         deathAnimation = 2304
         respawnTicks = 30

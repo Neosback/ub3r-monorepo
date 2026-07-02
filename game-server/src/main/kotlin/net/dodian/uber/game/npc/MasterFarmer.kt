@@ -5,7 +5,7 @@ internal object MasterFarmer : NpcFamily by npcFamily("Master Farmer", 5730, blo
         name = "Master Farmer"
     }
 
-    runtime {
+    server {
         deathAnimation = 2304
     }
 

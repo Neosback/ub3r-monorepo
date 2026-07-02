@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object WatchtowerWizard : NpcFamily by npcFamily("Watchtower wizard", 872, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 71
         attack = 20

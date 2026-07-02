@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Zogre : NpcFamily by npcFamily("Zogre", 867, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 50
         attack = 20

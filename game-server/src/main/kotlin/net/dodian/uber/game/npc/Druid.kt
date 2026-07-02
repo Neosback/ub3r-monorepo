@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Druid : NpcFamily by npcFamily("Druid", 3098, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         respawnTicks = 20
         attack = 30

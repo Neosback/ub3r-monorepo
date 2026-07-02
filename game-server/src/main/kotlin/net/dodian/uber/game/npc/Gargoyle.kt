@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Gargoyle : NpcFamily by npcFamily("Gargoyle", 412, block = {
-    runtime {
+    server {
         attackAnimation = 1519
         deathAnimation = 1518
         respawnTicks = 35

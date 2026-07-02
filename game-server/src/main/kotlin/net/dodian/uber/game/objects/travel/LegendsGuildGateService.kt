@@ -1,5 +1,6 @@
 package net.dodian.uber.game.objects.travel
 
+import net.dodian.cache.objects.GameObjectData
 import java.util.ArrayDeque
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -10,6 +11,7 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.objects.DoorRegistry
 import net.dodian.uber.game.api.content.ContentTiming
 import net.dodian.uber.game.engine.systems.follow.FollowService
+import net.dodian.uber.game.engine.systems.interaction.ObjectClipService
 import net.dodian.uber.game.engine.systems.interaction.PersonalPassageService
 import net.dodian.uber.game.engine.systems.pathing.AStarPathfindingAlgorithm
 import net.dodian.uber.game.engine.systems.pathing.Heuristic
@@ -32,8 +34,8 @@ object LegendsGuildGateService {
     private const val LEGENDS_GUARD_NPC_ID = 3951
     private val DEFAULT_LEFT_GATE_FACES = FacePair(open = 0, closed = -3)
     private val DEFAULT_RIGHT_GATE_FACES = FacePair(open = -2, closed = -3)
-    private const val PASSAGE_DURATION_MS = 5_000L
-    private const val VISUAL_OPEN_MS = 2_400L
+    private const val PASSAGE_DURATION_MS = 12_000L
+    private const val VISUAL_OPEN_MS = 12_000L
     private const val TRAVERSAL_TICK_MS = 600
     private const val TRAVERSAL_TIMEOUT_MS = 8_000L
     private val pathfinder =
@@ -134,6 +136,27 @@ object LegendsGuildGateService {
         return true
     }
 
+    @JvmStatic
+    fun openForGuardTalk(client: Client, npc: Npc): Boolean {
+        if (npc.id != LEGENDS_GUARD_NPC_ID || !isLegendsGuard(npc.position)) {
+            return false
+        }
+        if (!client.premium) {
+            client.sendMessage("You need to be a premium member to enter the Legends Guild.")
+            return true
+        }
+
+        val fromSouth = client.position.y <= leftGate.y
+        PersonalPassageService.grantBidirectionalEdges(
+            client,
+            edges = gatePassageEdges() + guardApproachEdges(fromSouth),
+            durationMs = PASSAGE_DURATION_MS,
+        )
+        openGateForNearbyPlayers()
+        client.sendMessage("The guard opens the gate for you.")
+        return true
+    }
+
     private fun scheduleTraversalTick(client: Client, traversal: ActiveTraversal) {
         ContentTiming.runRepeatingMs(
             delayMs = TRAVERSAL_TICK_MS,
@@ -224,11 +247,33 @@ object LegendsGuildGateService {
         PersonalPassageService.grantBidirectionalEdges(
             client,
             edges =
-                listOf(
-                    lane.entry to lane.gate,
-                    lane.gate to lane.exit,
-                ) + guardApproachEdges(fromSouth = lane.entry.y < leftGate.y),
+                gatePassageEdges(lane) + guardApproachEdges(fromSouth = lane.entry.y < leftGate.y),
             durationMs = PASSAGE_DURATION_MS,
+        )
+    }
+
+    private fun gatePassageEdges(): List<Pair<Position, Position>> =
+        gatePassageEdges(resolveLaneForSide(southLeft.x, fromSouth = true)) +
+            gatePassageEdges(resolveLaneForSide(southRight.x, fromSouth = true)) +
+            gatePassageEdges(resolveLaneForSide(northLeft.x, fromSouth = false)) +
+            gatePassageEdges(resolveLaneForSide(northRight.x, fromSouth = false))
+
+    private fun gatePassageEdges(lane: Lane): List<Pair<Position, Position>> =
+        listOf(
+            lane.entry to lane.gate,
+            lane.gate to lane.exit,
+        )
+
+    private fun resolveLaneForSide(laneX: Int, fromSouth: Boolean): Lane {
+        val entryY = if (fromSouth) southLeft.y else northLeft.y
+        val exitY = if (fromSouth) northLeft.y else southLeft.y
+        val direction = if (fromSouth) "south_to_north" else "north_to_south"
+        val side = if (laneX == leftGate.x) "left" else "right"
+        return Lane(
+            id = "$side:$direction",
+            entry = Position(laneX, entryY, leftGate.z),
+            gate = Position(laneX, leftGate.y, leftGate.z),
+            exit = Position(laneX, exitY, leftGate.z),
         )
     }
 
@@ -248,12 +293,14 @@ object LegendsGuildGateService {
     private fun openGateForNearbyPlayers() {
         val snapshot = resolveVisualSnapshot()
         lastVisualSnapshotForTests = snapshot
+        applyGateCollision(snapshot, open = true)
         broadcastGateFaces(snapshot, open = true)
         val token = visualToken.incrementAndGet()
         ContentTiming.runLaterMs(VISUAL_OPEN_MS.toInt()) {
             if (visualToken.get() != token) {
                 return@runLaterMs
             }
+            applyGateCollision(snapshot, open = false)
             broadcastGateFaces(snapshot, open = false)
         }
     }
@@ -305,6 +352,29 @@ object LegendsGuildGateService {
             if (rightFace != null) {
                 viewer.ReplaceObject(rightGate.x, rightGate.y, GATE_OBJECT_RIGHT, rightFace, GATE_TYPE)
             }
+        }
+    }
+
+    private fun applyGateCollision(snapshot: VisualSnapshot, open: Boolean) {
+        val leftFace = if (open) snapshot.left?.open else snapshot.left?.closed
+        val rightFace = if (open) snapshot.right?.open else snapshot.right?.closed
+        if (leftFace != null) {
+            ObjectClipService.applyDecodedObject(
+                position = leftGate,
+                objectId = GATE_OBJECT_LEFT,
+                type = GATE_TYPE,
+                direction = leftFace,
+                obj = GameObjectData.forId(GATE_OBJECT_LEFT),
+            )
+        }
+        if (rightFace != null) {
+            ObjectClipService.applyDecodedObject(
+                position = rightGate,
+                objectId = GATE_OBJECT_RIGHT,
+                type = GATE_TYPE,
+                direction = rightFace,
+                obj = GameObjectData.forId(GATE_OBJECT_RIGHT),
+            )
         }
     }
 

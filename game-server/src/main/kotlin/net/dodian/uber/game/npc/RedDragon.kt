@@ -5,7 +5,7 @@ internal object RedDragon : NpcFamily by npcFamily("Red dragon", 247, block = {
         examine = "Red and fierce!"
     }
 
-    runtime {
+    server {
         attackAnimation = 91
         deathAnimation = 92
         respawnTicks = 40

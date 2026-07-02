@@ -5,7 +5,7 @@ internal object AbyssalDemon : NpcFamily by npcFamily("Abyssal demon", 415, bloc
         examine = "Wonder where their whip is from?"
     }
 
-    runtime {
+    server {
         attackAnimation = 1537
         deathAnimation = 1538
         attack = 110

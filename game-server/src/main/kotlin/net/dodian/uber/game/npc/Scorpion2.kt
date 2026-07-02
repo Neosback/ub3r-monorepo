@@ -5,7 +5,7 @@ internal object Scorpion2 : NpcFamily by npcFamily("Scorpion", 3024, block = {
         examine = "Has a nice sting to it"
     }
 
-    runtime {
+    server {
         attackAnimation = 6261
         deathAnimation = 6260
         respawnTicks = 40

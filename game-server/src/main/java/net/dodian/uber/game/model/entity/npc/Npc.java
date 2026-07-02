@@ -299,6 +299,23 @@ public class Npc extends Entity {
         getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 
+    public void transformTo(int npcId) {
+        setTransformedNpcId(npcId);
+    }
+
+    public void clearTransform() {
+        setTransformedNpcId(-1);
+    }
+
+    public void applyDisplayOverrides(Integer headIcon, Integer transformTo) {
+        if (headIcon != null) {
+            setHeadIcon(headIcon);
+        }
+        if (transformTo != null) {
+            transformTo(transformTo);
+        }
+    }
+
     public boolean isWalking() {
         return walking;
     }
@@ -878,23 +895,23 @@ public class Npc extends Entity {
         return combat;
     }
 
-    public void applySpawnOverrides(int respawnTicks, int attack, int defence, int strength, int hitpoints, int ranged, int magic, int attackAnim, int deathAnim) {
-        if (attackAnim >= 0 || deathAnim >= 0 || respawnTicks > 0 || defence >= 0 || attack >= 0 || strength >= 0 || ranged >= 0 || magic >= 0 || hitpoints > 0) {
+    public void applySpawnOverrides(Integer respawnTicks, Integer attack, Integer defence, Integer strength, Integer hitpoints, Integer ranged, Integer magic, Integer attackAnim, Integer deathAnim) {
+        if (attackAnim != null || deathAnim != null || isPositive(respawnTicks) || defence != null || attack != null || strength != null || ranged != null || magic != null || isPositive(hitpoints)) {
             int[] currentLevels = new int[7];
             System.arraycopy(data.getLevel(), 0, currentLevels, 0, 7);
-            if (defence >= 0) currentLevels[0] = defence;
-            if (attack >= 0) currentLevels[1] = attack;
-            if (strength >= 0) currentLevels[2] = strength;
-            if (hitpoints > 0) currentLevels[3] = hitpoints;
-            if (ranged >= 0) currentLevels[4] = ranged;
-            if (magic >= 0) currentLevels[6] = magic;
+            if (defence != null) currentLevels[0] = defence;
+            if (attack != null) currentLevels[1] = attack;
+            if (strength != null) currentLevels[2] = strength;
+            if (isPositive(hitpoints)) currentLevels[3] = hitpoints;
+            if (ranged != null) currentLevels[4] = ranged;
+            if (magic != null) currentLevels[6] = magic;
 
             this.data = new NpcData(
                 data.getName(),
                 data.getExamine(),
-                attackAnim >= 0 ? attackAnim : data.getAttackEmote(),
-                deathAnim >= 0 ? deathAnim : data.getDeathEmote(),
-                respawnTicks > 0 ? respawnTicks : data.getRespawn(),
+                attackAnim != null ? attackAnim : data.getAttackEmote(),
+                deathAnim != null ? deathAnim : data.getDeathEmote(),
+                isPositive(respawnTicks) ? respawnTicks : data.getRespawn(),
                 combat,
                 getSize(),
                 currentLevels
@@ -904,30 +921,34 @@ public class Npc extends Entity {
             respawn = data.getRespawn();
             combat = data.getCombat();
         }
-        if (respawnTicks > 0) {
+        if (isPositive(respawnTicks)) {
             respawn = respawnTicks;
         }
-        if (defence >= 0) {
+        if (defence != null) {
             level[0] = defence;
         }
-        if (attack >= 0) {
+        if (attack != null) {
             level[1] = attack;
         }
-        if (strength >= 0) {
+        if (strength != null) {
             level[2] = strength;
         }
-        if (ranged >= 0) {
+        if (ranged != null) {
             level[4] = ranged;
         }
-        if (magic >= 0) {
+        if (magic != null) {
             level[6] = magic;
         }
-        if (hitpoints > 0) {
+        if (isPositive(hitpoints)) {
             level[3] = hitpoints;
             maxHealth = hitpoints;
             currentHealth = hitpoints;
         }
         CalculateMaxHit(true);
+    }
+
+    private boolean isPositive(Integer value) {
+        return value != null && value > 0;
     }
 
     public void applySpawnBehaviorOverrides(int walkRadius, int attackRange, boolean alwaysActive, Function1<? super Client, Boolean> condition) {

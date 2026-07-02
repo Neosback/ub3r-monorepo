@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object InfernalMage : NpcFamily by npcFamily("Infernal Mage", 443, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         attack = 60
         strength = 55

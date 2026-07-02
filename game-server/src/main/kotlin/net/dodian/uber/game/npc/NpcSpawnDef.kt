@@ -2,7 +2,6 @@ package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.model.entity.player.Client
 
-const val NPC_UNSET = -1
 const val NORTH = 0
 const val NORTH_EAST = 1
 const val EAST = 2
@@ -49,46 +48,57 @@ data class NpcSpawnDef(
     val attackRange: Int = 6,
     val alwaysActive: Boolean = false,
     val condition: (Client) -> Boolean = { true },
-    val respawnTicks: Int = NPC_UNSET,
-    val attack: Int = NPC_UNSET,
-    val defence: Int = NPC_UNSET,
-    val strength: Int = NPC_UNSET,
-    val hitpoints: Int = NPC_UNSET,
-    val ranged: Int = NPC_UNSET,
-    val magic: Int = NPC_UNSET,
-    val attackAnimation: Int = NPC_UNSET,
-    val deathAnimation: Int = NPC_UNSET,
+    val overrides: NpcServerPatch = NpcServerPatch(),
     val profile: String? = null,
-)
+) {
+    val respawnTicks: Int? get() = overrides.respawnTicks
+    val attack: Int? get() = overrides.attack
+    val defence: Int? get() = overrides.defence
+    val strength: Int? get() = overrides.strength
+    val hitpoints: Int? get() = overrides.hitpoints
+    val ranged: Int? get() = overrides.ranged
+    val magic: Int? get() = overrides.magic
+    val attackAnimation: Int? get() = overrides.attackAnimation
+    val deathAnimation: Int? get() = overrides.deathAnimation
+    val headIcon: Int? get() = overrides.headIcon
+    val transformTo: Int? get() = overrides.transformTo
+}
 
 class NpcSpawnOverrideBuilder internal constructor(private var spawn: NpcSpawnDef) {
-    var attack: Int
-        get() = spawn.attack
-        set(value) { spawn = spawn.copy(attack = value) }
-    var defence: Int
-        get() = spawn.defence
-        set(value) { spawn = spawn.copy(defence = value) }
-    var strength: Int
-        get() = spawn.strength
-        set(value) { spawn = spawn.copy(strength = value) }
-    var hitpoints: Int
-        get() = spawn.hitpoints
-        set(value) { spawn = spawn.copy(hitpoints = value.takeIf { it > 0 } ?: spawn.hitpoints) }
-    var ranged: Int
-        get() = spawn.ranged
-        set(value) { spawn = spawn.copy(ranged = value) }
-    var magic: Int
-        get() = spawn.magic
-        set(value) { spawn = spawn.copy(magic = value) }
-    var respawnTicks: Int
-        get() = spawn.respawnTicks
-        set(value) { spawn = spawn.copy(respawnTicks = value.takeIf { it > 0 } ?: spawn.respawnTicks) }
-    var attackAnimation: Int
-        get() = spawn.attackAnimation
-        set(value) { spawn = spawn.copy(attackAnimation = value) }
-    var deathAnimation: Int
-        get() = spawn.deathAnimation
-        set(value) { spawn = spawn.copy(deathAnimation = value) }
+    private val server = NpcServerDefinitionBuilder()
+    var attack: Int?
+        get() = spawn.overrides.attack
+        set(value) { value?.let { server.attack = it } }
+    var defence: Int?
+        get() = spawn.overrides.defence
+        set(value) { value?.let { server.defence = it } }
+    var strength: Int?
+        get() = spawn.overrides.strength
+        set(value) { value?.let { server.strength = it } }
+    var hitpoints: Int?
+        get() = spawn.overrides.hitpoints
+        set(value) { value?.let { server.hitpoints = it } }
+    var ranged: Int?
+        get() = spawn.overrides.ranged
+        set(value) { value?.let { server.ranged = it } }
+    var magic: Int?
+        get() = spawn.overrides.magic
+        set(value) { value?.let { server.magic = it } }
+    var respawnTicks: Int?
+        get() = spawn.overrides.respawnTicks
+        set(value) { value?.let { server.respawnTicks = it } }
+    var attackAnimation: Int?
+        get() = spawn.overrides.attackAnimation
+        set(value) { value?.let { server.attackAnimation = it } }
+    var deathAnimation: Int?
+        get() = spawn.overrides.deathAnimation
+        set(value) { value?.let { server.deathAnimation = it } }
+    var headIcon: Int?
+        get() = spawn.overrides.headIcon
+        set(value) { value?.let { server.headIcon = it } }
+    var transformTo: Int?
+        get() = spawn.overrides.transformTo
+        set(value) { value?.let { server.transformTo = it } }
 
     fun stats(
         attack: Int? = null,
@@ -98,25 +108,40 @@ class NpcSpawnOverrideBuilder internal constructor(private var spawn: NpcSpawnDe
         ranged: Int? = null,
         magic: Int? = null,
     ) {
-        spawn = spawn.copy(
-            attack = attack ?: spawn.attack,
-            defence = defence ?: spawn.defence,
-            strength = strength ?: spawn.strength,
-            hitpoints = hitpoints?.takeIf { it > 0 } ?: spawn.hitpoints,
-            ranged = ranged ?: spawn.ranged,
-            magic = magic ?: spawn.magic,
+        server.stats(
+            attack = attack,
+            defence = defence,
+            strength = strength,
+            hitpoints = hitpoints,
+            ranged = ranged,
+            magic = magic,
         )
     }
 
     fun respawn(ticks: Int) {
-        spawn = spawn.copy(respawnTicks = ticks.takeIf { it > 0 } ?: spawn.respawnTicks)
+        server.respawn(ticks)
     }
 
     fun animations(attack: Int? = null, death: Int? = null) {
-        spawn = spawn.copy(
-            attackAnimation = attack ?: spawn.attackAnimation,
-            deathAnimation = death ?: spawn.deathAnimation,
-        )
+        server.animations(attack = attack, death = death)
+    }
+
+    fun overrides(block: NpcServerDefinitionBuilder.() -> Unit) {
+        server.apply(block)
+    }
+
+    fun server(block: NpcServerDefinitionBuilder.() -> Unit) {
+        overrides(block)
+    }
+
+    fun display(headIcon: Int? = null, transformTo: Int? = null, block: NpcDisplayOverrideBuilder.() -> Unit = {}) {
+        val display = NpcDisplayOverrideBuilder().apply {
+            this.headIcon = headIcon
+            this.transformTo = transformTo
+            block()
+        }.build()
+        display.headIcon?.let { server.headIcon = it }
+        display.transformTo?.let { server.transformTo = it }
     }
 
     fun movement(walkRadius: Int? = null, attackRange: Int? = null, alwaysActive: Boolean? = null) {
@@ -139,5 +164,16 @@ class NpcSpawnOverrideBuilder internal constructor(private var spawn: NpcSpawnDe
         spawn = spawn.copy(condition = condition)
     }
 
-    internal fun build(): NpcSpawnDef = spawn
+    internal fun build(): NpcSpawnDef = spawn.copy(overrides = spawn.overrides.overlay(server.buildPatch()))
+}
+
+class NpcDisplayOverrideBuilder internal constructor() {
+    var headIcon: Int? = null
+    var transformTo: Int? = null
+
+    internal fun build(): NpcDisplayOverride =
+        NpcDisplayOverride(
+            headIcon = headIcon?.takeIf { it >= 0 },
+            transformTo = transformTo?.takeIf { it >= 0 },
+        )
 }

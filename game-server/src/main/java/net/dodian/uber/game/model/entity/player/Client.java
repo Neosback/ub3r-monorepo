@@ -570,6 +570,10 @@ public class Client extends Player implements Runnable {
     public boolean bankSearchActive = false;
     public boolean bankSearchPendingInput = false;
     public boolean modcpSearchPendingInput = false;
+    public boolean addFriendPendingInput = false;
+    public boolean removeFriendPendingInput = false;
+    public boolean addIgnorePendingInput = false;
+    public boolean removeIgnorePendingInput = false;
     public int modcpDialogState = 0;
     public int accountServicesDialogState = 0;
     public boolean viewingAccountServices = false;
@@ -4200,9 +4204,13 @@ public class Client extends Player implements Runnable {
         otherdbId = -1;
     }
 
-    public void varbit(int id, int value) {
-        // Preserve old signature but delegate to the new Netty-based packet implementation.
+    public void setVarp(int id, int value) {
         send(new SetVarbit(id, value));
+    }
+
+    public void varbit(int id, int value) {
+        // Compatibility alias. This writes a raw client settings/varp slot.
+        setVarp(id, value);
     }
 
     public boolean toggleDuelRule(int ruleIndex) {

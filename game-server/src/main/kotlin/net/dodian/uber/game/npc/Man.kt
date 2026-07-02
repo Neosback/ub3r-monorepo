@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Man : NpcFamily by npcFamily("Man", 1, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         respawnTicks = 1
         hitpoints = 7

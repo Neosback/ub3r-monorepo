@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Nechryael : NpcFamily by npcFamily("Nechryael", 8, block = {
-    runtime {
+    server {
         attackAnimation = 1528
         deathAnimation = 1530
         respawnTicks = 180

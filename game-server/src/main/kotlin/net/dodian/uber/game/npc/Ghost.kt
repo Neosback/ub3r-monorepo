@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Ghost : NpcFamily by npcFamily("Ghost", 92, block = {
-    runtime {
+    server {
         attackAnimation = 5532
         deathAnimation = 5534
         respawnTicks = 30

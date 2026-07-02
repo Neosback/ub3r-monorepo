@@ -5,7 +5,7 @@ internal object BlackKnightTitan : NpcFamily by npcFamily("Black Knight Titan", 
         examine = "Mad because bad"
     }
 
-    runtime {
+    server {
         attackAnimation = 128
         deathAnimation = 131
         respawnTicks = 180

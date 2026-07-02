@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Wolf : NpcFamily by npcFamily("Wolf", 106, block = {
-    runtime {
+    server {
         attackAnimation = 6559
         deathAnimation = 6558
         attack = 30

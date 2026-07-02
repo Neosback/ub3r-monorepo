@@ -5,7 +5,7 @@ internal object KalphiteWorker1 : NpcFamily by npcFamily("Kalphite worker 1", 95
         examine = "Hard working bug"
     }
 
-    runtime {
+    server {
         attackAnimation = 6223
         deathAnimation = 6228
         respawnTicks = 40

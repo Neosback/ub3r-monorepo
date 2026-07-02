@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object GnomeBaller : NpcFamily by npcFamily("Gnome baller", 626, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 40
         attack = 60

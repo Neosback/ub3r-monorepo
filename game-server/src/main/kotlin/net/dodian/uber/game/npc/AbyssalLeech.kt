@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object AbyssalLeech : NpcFamily by npcFamily("Abyssal leech", 2584, block = {
-    runtime {
+    server {
         attackAnimation = 2181
         deathAnimation = 2183
         respawnTicks = 50

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object PostiePete : NpcFamily by npcFamily("Postie Pete", 3805, block = {
-    runtime {
+    server {
         deathAnimation = 2304
     }
 

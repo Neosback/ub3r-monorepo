@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Pyrefiend : NpcFamily by npcFamily("Pyrefiend", 433, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         attack = 25
         strength = 15

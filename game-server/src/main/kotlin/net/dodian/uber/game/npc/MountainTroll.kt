@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object MountainTroll : NpcFamily by npcFamily("Mountain Troll", 1107, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         hitpoints = 91
     }

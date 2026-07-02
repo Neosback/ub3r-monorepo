@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object KalphiteGuardian : NpcFamily by npcFamily("Kalphite Guardian", 1157, block = {
-    runtime {
+    server {
         attackAnimation = 6224
         deathAnimation = 6228
         respawnTicks = 70

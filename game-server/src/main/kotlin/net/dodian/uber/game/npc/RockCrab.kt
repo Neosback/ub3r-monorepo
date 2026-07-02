@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object RockCrab : NpcFamily by npcFamily("Rock crab", 100, block = {
-    runtime {
+    server {
         attackAnimation = 1312
         deathAnimation = 1314
         attack = 1

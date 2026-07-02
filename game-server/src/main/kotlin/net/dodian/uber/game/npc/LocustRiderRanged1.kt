@@ -5,7 +5,7 @@ internal object LocustRiderRanged1 : NpcFamily by npcFamily("Locust rider ranged
         examine = "Ranged warrior of scarabs"
     }
 
-    runtime {
+    server {
         attackAnimation = 5451
         deathAnimation = 5449
         respawnTicks = 30

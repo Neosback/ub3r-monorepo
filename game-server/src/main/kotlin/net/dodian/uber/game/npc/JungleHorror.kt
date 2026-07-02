@@ -5,7 +5,7 @@ internal object JungleHorror : NpcFamily by npcFamily("Jungle horror", 1042, blo
         name = "Jungle horror"
     }
 
-    runtime {
+    server {
         attackAnimation = 4234
         deathAnimation = 4233
         attack = 60

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object OgreShaman : NpcFamily by npcFamily("Ogre shaman", 4382, block = {
-    runtime {
+    server {
         hitpoints = 1
         attack = 1
         strength = 1

@@ -30,7 +30,7 @@ object MagicInterface : InterfaceButtonContent {
 
     private val teleports =
         listOf(
-            TeleportBinding(0, "magic.teleport.yanille", intArrayOf(21741, 75010, 84237), 2604, 6, 3101, 3, false),
+            TeleportBinding(0, "magic.teleport.yanille", intArrayOf(21741, 75010, 84237, 40100), 2604, 6, 3101, 3, false),
             TeleportBinding(1, "magic.teleport.seers", intArrayOf(13035, 4143, 50235), 2722, 6, 3484, 2, false),
             TeleportBinding(2, "magic.teleport.ardougne", intArrayOf(13045, 4146, 50245), 2660, 4, 3306, 4, false),
             TeleportBinding(3, "magic.teleport.catherby", intArrayOf(13053, 4150, 50253), 2802, 4, 3432, 3, false),

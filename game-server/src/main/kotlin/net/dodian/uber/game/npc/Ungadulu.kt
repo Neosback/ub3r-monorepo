@@ -5,7 +5,7 @@ internal object Ungadulu : NpcFamily by npcFamily("Ungadulu", 3957, block = {
         examine = "Man of herblore"
     }
 
-    runtime {
+    server {
         attackAnimation = 406
         deathAnimation = 2304
         respawnTicks = 180

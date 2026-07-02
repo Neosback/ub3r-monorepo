@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object ShadowWarrior : NpcFamily by npcFamily("Shadow warrior", 2853, block = {
-    runtime {
+    server {
         deathAnimation = 2304
         attack = 45
         strength = 50
