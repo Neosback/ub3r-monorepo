@@ -153,7 +153,7 @@ object MiningData {
             }
             family("Common Ores") {
                 node("Copper") {
-                    objectIds(7451, 7484)
+                    objectIds(7451, 7484, 10943, 11161)
                     requiredLevel(1)
                     baseDelayMs(2000L)
                     resourceItemId(436)
@@ -161,7 +161,7 @@ object MiningData {
                     restThreshold(4)
                 }
                 node("Tin") {
-                    objectIds(7452, 7485)
+                    objectIds(7452, 7485, 11360, 11361)
                     requiredLevel(1)
                     baseDelayMs(2000L)
                     resourceItemId(438)
@@ -169,7 +169,7 @@ object MiningData {
                     restThreshold(4)
                 }
                 node("Iron") {
-                    objectIds(7455, 7488, 11390)
+                    objectIds(7455, 7488, 11390, 11364, 11365)
                     requiredLevel(15)
                     baseDelayMs(3000L)
                     resourceItemId(440)
@@ -177,7 +177,7 @@ object MiningData {
                     restThreshold(4)
                 }
                 node("Coal") {
-                    objectIds(7456, 7489)
+                    objectIds(7456, 7489, 11366, 11367)
                     requiredLevel(30)
                     baseDelayMs(5000L)
                     resourceItemId(453)
@@ -185,7 +185,7 @@ object MiningData {
                     restThreshold(4)
                 }
                 node("Gold") {
-                    objectIds(7458, 7491)
+                    objectIds(7458, 7491, 11368, 11369)
                     requiredLevel(40)
                     baseDelayMs(6000L)
                     resourceItemId(444)
@@ -195,7 +195,7 @@ object MiningData {
             }
             family("High Tier Ores") {
                 node("Mithril") {
-                    objectIds(7459, 7492)
+                    objectIds(7459, 7492, 11370, 11371)
                     requiredLevel(55)
                     baseDelayMs(7000L)
                     resourceItemId(447)
@@ -203,7 +203,7 @@ object MiningData {
                     restThreshold(4)
                 }
                 node("Adamantite") {
-                    objectIds(7460, 7493)
+                    objectIds(7460, 7493, 11372, 11373)
                     requiredLevel(70)
                     baseDelayMs(9000L)
                     resourceItemId(449)
@@ -211,7 +211,7 @@ object MiningData {
                     restThreshold(4)
                 }
                 node("Runite") {
-                    objectIds(7461, 7494)
+                    objectIds(7461, 7494, 11374, 11375)
                     requiredLevel(85)
                     baseDelayMs(35000L)
                     resourceItemId(451)

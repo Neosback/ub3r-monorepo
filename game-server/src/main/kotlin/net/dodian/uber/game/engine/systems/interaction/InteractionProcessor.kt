@@ -4,6 +4,7 @@ import net.dodian.uber.game.Server
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.cache.objects.GameObjectDef
 import net.dodian.uber.game.combat.getAttackStyle
+import net.dodian.uber.game.engine.config.gameWorldId
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectContentRegistry
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectClickLoggingService
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectInteractionService
@@ -227,6 +228,7 @@ object InteractionProcessor {
                 skillObjectBinding?.let {
                     SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.OBJECT, SkillPolicyResult.SETTLE_WAIT)
                 }
+                if (gameWorldId == 2) logger.debug("[W2-DISPATCH] settle gate WAITING objId={}", intent.objectId)
                 return InteractionExecutionResult.WAITING
             }
         } else {
@@ -298,6 +300,8 @@ object InteractionProcessor {
                 fallbackData = routeSnapshot.objectData,
                 fallbackDef = routeSnapshot.objectDef,
             )
+        if (gameWorldId == 2) logger.info("[W2-DISPATCH] pre-stillPresent objId={} option={} pos=({},{}) binding={} objectDefNull={}",
+            intent.objectId, intent.option, targetPosition.x, targetPosition.y, skillObjectBinding != null, intent.objectDef == null)
         if (intent.objectDef != null &&
             !isObjectStillPresent(
                 objectId = intent.objectId,
@@ -320,6 +324,8 @@ object InteractionProcessor {
                     packetOpcode = intent.opcode,
                 ),
             )
+        if (gameWorldId == 2) logger.info("[W2-DISPATCH] result objId={} handled={} handlerName={} handlerNs={}",
+            intent.objectId, timing.handled, timing.handlerName, timing.handlerNs)
         if (skillObjectBinding == null &&
             timing.handled &&
             timing.handlerName != SkillInteractionDispatcher::class.java.name

@@ -72,6 +72,8 @@ object ObjectInteractionService {
         val key = buildReentrancyKey(context)
         val active = reentrancyGuard.get()
         if (!active.add(key)) {
+            if (net.dodian.uber.game.engine.config.gameWorldId == 2)
+                logger.info("[W2-DISPATCH] tryHandleTimed reentrancy objId={} option={}", context.objectId, context.option)
             return DispatchTiming(false, 0L, 0L, null)
         }
 

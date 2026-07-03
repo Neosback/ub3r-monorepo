@@ -8,6 +8,7 @@ import net.dodian.uber.game.api.content.ContentErrorPolicy
 import net.dodian.uber.game.engine.systems.interaction.ObjectInteractionPolicy
 import net.dodian.uber.game.api.plugin.PluginRegistry
 import net.dodian.uber.game.api.plugin.skills.objectPolicy
+import net.dodian.uber.game.engine.config.gameWorldId
 import org.slf4j.LoggerFactory
 
 object SkillInteractionDispatcher {
@@ -21,9 +22,13 @@ object SkillInteractionDispatcher {
         position: Position,
         obj: GameObjectData?,
     ): Boolean {
-        val binding = PluginRegistry.currentSkills().objectBinding(option, objectId) ?: return false
+        val binding = PluginRegistry.currentSkills().objectBinding(option, objectId) ?: run {
+            if (gameWorldId == 2) logger.info("[W2-DISPATCH] SkillDispatch no binding option={} objectId={}", option, objectId)
+            return false
+        }
         return ContentErrorPolicy.runBoolean(client, "skill.object.click") {
             val handled = binding.handler(client, objectId, position, obj)
+            if (gameWorldId == 2) logger.info("[W2-DISPATCH] SkillDispatch handled={} option={} objectId={}", handled, option, objectId)
             SkillPolicyMetrics.record(
                 binding.preset,
                 SkillPolicyRoute.OBJECT,
