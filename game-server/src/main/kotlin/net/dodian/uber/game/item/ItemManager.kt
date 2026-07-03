@@ -144,7 +144,17 @@ open class ItemManager @JvmOverloads constructor(
 
     fun isNote(id: Int): Boolean {
         val item = items[id]
-        return item != null && id >= 0 && item.getNoteable()
+        return item != null && id >= 0 && item.isNoted()
+    }
+
+    fun getLinkedItemId(id: Int): Int {
+        val item = items[id] ?: return 0
+        return item.linkedItemId
+    }
+
+    fun getLinkedNotedId(id: Int): Int {
+        val item = items[id] ?: return 0
+        return item.linkedNotedId
     }
 
     fun isStackable(id: Int): Boolean {

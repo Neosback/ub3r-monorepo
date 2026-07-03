@@ -61,6 +61,8 @@ class Item(
 
     fun getNoteable(): Boolean = noteable
 
+    fun isNoted(): Boolean = linkedItemId > 0 && linkedItemId != id
+
     fun getPremium(): Boolean = premium
 
     fun getTwoHanded(): Boolean = twoHanded
@@ -160,7 +162,7 @@ class Item(
 
             val stackable = json?.stackable ?: base.stackable
             val tradeable = json?.tradeable ?: base.tradeable
-            val noteable = json?.noteable ?: true
+            val noteable = json?.noteable ?: false
             val premium = json?.members ?: false
 
             val highAlch = json?.highAlch ?: base.highAlch

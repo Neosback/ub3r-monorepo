@@ -103,3 +103,11 @@ tasks.register<JavaExec>("runSyncBenchmark") {
     classpath = syncTestSourceSet.runtimeClasspath
     mainClass.set("net.dodian.uber.game.runtime.sync.SyncPipelineBenchmark")
 }
+
+tasks.register<JavaExec>("dumpObjectDefs") {
+    group = "tools"
+    description = "Dump all object definitions from cache to JSON"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.engine.systems.cache.ObjectDefinitionDumper")
+    args = listOf("data/cache")
+}

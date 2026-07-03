@@ -2436,25 +2436,11 @@ public class Client extends Player implements Runnable {
     }
 
     public int getUnnotedItem(int ItemID) {
-        String NotedName = Server.itemManager.getName(ItemID);
-        for (Item item : Server.itemManager.items.values()) {
-            String checkName = item.getName(), checkDesc = item.getDescription();
-            if (item.getNoteable() && item.getId() != ItemID && (checkName != null && checkName.equals(NotedName)) && (checkDesc != null && !checkDesc.startsWith("Swap this note at any bank for a"))) {
-                return item.getId();
-            }
-        }
-        return 0;
+        return Server.itemManager.getLinkedItemId(ItemID);
     }
 
     public int getNotedItem(int ItemID) {
-        String NotedName = Server.itemManager.getName(ItemID);
-        for (Item item : Server.itemManager.items.values()) {
-            String checkName = item.getName(), checkDesc = item.getDescription();
-            if (!item.getNoteable() && item.getId() != ItemID && (checkName != null && checkName.equals(NotedName)) && (checkDesc != null && checkDesc.startsWith("Swap_this_note_at_any_bank"))) {
-                return item.getId();
-            }
-        }
-        return 0;
+        return Server.itemManager.getLinkedNotedId(ItemID);
     }
 
     public void WriteEnergy() {
