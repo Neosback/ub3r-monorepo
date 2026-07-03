@@ -12,8 +12,9 @@ import net.dodian.uber.game.skill.prayer.PrayerManager
 import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.engine.systems.combat.CombatAttackResult
 import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService
+import net.dodian.uber.game.engine.systems.combat.CombatSpecialService
 import net.dodian.uber.game.engine.systems.combat.resolveCombatTargetPlayer
-import net.dodian.uber.game.engine.systems.animation.UnarmedAttackAnimationService
+import net.dodian.uber.game.engine.systems.animation.AttackAnimationService
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.utilities.Range
@@ -153,6 +154,7 @@ fun Client.handleMeleeAttack(): CombatAttackResult? {
             }
         }
         val nextDelay = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
+        if (specialActivated) CombatSpecialService.drainSpecial(this)
         if (debug) send(SendMessage("hit = $hit, nextDelay = $nextDelay"))
     return CombatAttackResult(nextDelay)
 }
@@ -231,44 +233,470 @@ fun landHit(p: Client, t: Entity): Boolean {
 }
 
 fun Client.handleSpecial(crit: Boolean): Boolean {
-    val emote = UnarmedAttackAnimationService.resolve(this)
-    val chance = Range(1, 8).value
-    if(chance != 1 || hit == 0) { //Do not occur special attack if hit a 0 or chance is 0!
-        PlayerAnimationService.requestAttack(this, emote)
-    } else if (target is Npc) {
-        val npc = Server.npcManager.getNpc(target.slot)
-        when (equipment[Equipment.Slot.WEAPON.id]) {
-            1215 -> {
-                hit = (hit * 1.1).toInt()
-                hit2 = Range(1, hit / 2).value
-                callGfxMask(252, 100)
-                PlayerAnimationService.requestAttack(this, 1062)
-                /* Damage portion! */
-                if(hit >= npc.currentHealth) hit = npc.currentHealth
-                    npc.dealDamage(this, hit, if(crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
-                if (hit2 >= npc.currentHealth) hit2 = npc.currentHealth
-                    npc.dealDamage(this, hit2, Entity.hitType.STANDARD)
-                return true
+    val emote = AttackAnimationService.resolve(this)
+    if (specialActivated) {
+        val weaponId = equipment[Equipment.Slot.WEAPON.id]
+        return when {
+            weaponId in setOf(1215, 1231, 5680, 5698) -> handleDdsSpec(crit)
+            weaponId in setOf(11802, 81, 20368) -> handleAgsSpec(crit)
+            weaponId in setOf(11804, 20370) -> handleBgsSpec(crit)
+            weaponId in setOf(11806, 20372) -> handleSgsSpec(crit)
+            weaponId in setOf(11808, 20374) -> handleZgsSpec(crit)
+            weaponId in setOf(13652, 20784) -> handleClawsSpec(crit)
+            weaponId in setOf(4153, 24225) -> handleGmaulSpec(crit)
+            weaponId in setOf(1434) -> handleDragonMaceSpec(crit)
+            weaponId in setOf(1377) -> handleDragonBaxeSpec(crit)
+            weaponId in setOf(11838, 12809) -> handleSaradominSwordSpec(crit)
+            weaponId in setOf(4587) -> handleDragonScimitarSpec(crit)
+            weaponId in setOf(1305) -> handleDragonLongswordSpec(crit)
+            weaponId in setOf(13576) -> handleDragonWarhammerSpec(crit)
+            weaponId in setOf(1249, 5730) -> handleDragonSpearSpec(crit)
+            weaponId in setOf(4151, 80, 21371, 15441, 15442, 15443, 15444) -> handleAbyssalWhipSpec(crit)
+            weaponId in setOf(7158) -> handleDragon2hSpec(crit)
+            weaponId in setOf(3204) -> handleDragonHalberdSpec(crit)
+            weaponId in setOf(11791, 12904) -> handleStaffOfDeadSpec(crit)
+            weaponId in setOf(6739, 13241, 20011) -> handleDragonAxeSpec(crit)
+            weaponId in setOf(11920, 12797, 23677, 25376, 27695, 13243) -> handleDragonPickaxeSpec(crit)
+            weaponId in setOf(21015) -> handleDinhsBulwarkSpec(crit)
+            else -> {
+                PlayerAnimationService.requestAttack(this, emote)
+                false
             }
-            else -> PlayerAnimationService.requestAttack(this, emote)
+        }
+    }
+
+    val chance = Range(1, 8).value
+    if (chance != 1 || hit == 0) {
+        PlayerAnimationService.requestAttack(this, emote)
+        return false
+    }
+    return false
+}
+
+private fun Client.handleDdsSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.15).toInt()
+    hit2 = (Utils.random(meleeMaxHit().toInt()) * 1.15).toInt()
+    callGfxMask(252, 100)
+    PlayerAnimationService.requestAttack(this, 1062)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        if (hit2 >= npc.currentHealth) hit2 = npc.currentHealth
+        npc.dealDamage(this, hit2, Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        if (hit2 >= player.currentHealth) hit2 = player.currentHealth
+        player.dealDamage(this, hit2, Entity.hitType.STANDARD)
+    }
+    return true
+}
+
+private fun Client.handleAgsSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.375).toInt()
+    callGfxMask(1211, 100)
+    PlayerAnimationService.requestAttack(this, 7644)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    return true
+}
+
+private fun Client.handleBgsSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.21).toInt()
+    callGfxMask(1212, 100)
+    PlayerAnimationService.requestAttack(this, 7642)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        val remaining = hit
+        val skills = arrayOf(Skill.DEFENCE, Skill.STRENGTH, Skill.ATTACK, Skill.PRAYER, Skill.MAGIC, Skill.RANGED)
+        for (skill in skills) {
+            val current = player.getLevel(skill)
+            val drain = remaining.coerceAtMost(current)
+            player.setLevel((current - drain).coerceAtLeast(0), skill)
+        }
+    }
+    return true
+}
+
+private fun Client.handleSgsSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.1).toInt()
+    callGfxMask(1209, 100)
+    PlayerAnimationService.requestAttack(this, 7640)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    heal(hit, hit / 2)
+    val prayerRestore = hit / 4
+    val newPrayer = (currentPrayer + prayerRestore).coerceAtMost(getLevel(Skill.PRAYER))
+    currentPrayer = newPrayer
+    send(SendMessage("The SGS special restores some health and prayer."))
+    return true
+}
+
+private fun Client.handleZgsSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.1).toInt()
+    callGfxMask(1210, 100)
+    PlayerAnimationService.requestAttack(this, 7638)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        if (hit > 0 && player.stunTimer == 0) {
+            player.stunTimer = 20
+            player.send(SendMessage("You have been frozen!"))
+            send(SendMessage("You freeze your opponent!"))
+        }
+    }
+    return true
+}
+
+private fun Client.handleClawsSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.0).toInt()
+    val maxHit = meleeMaxHit()
+    val h1 = Utils.random((maxHit * 1.0).toInt())
+    val h2: Int
+    val h3: Int
+    val h4: Int
+    if (h1 > 0) {
+        h2 = (h1 / 2).coerceAtLeast(0)
+        h3 = (h2 / 2).coerceAtLeast(0)
+        h4 = (h1 - h2 - h3).coerceAtLeast(0)
+    } else {
+        h2 = Utils.random((maxHit * 0.75).toInt())
+        if (h2 > 0) {
+            h3 = (h2 / 2).coerceAtLeast(0)
+            h4 = h3
+        } else {
+            h3 = Utils.random((maxHit * 0.75).toInt())
+            h4 = if (h3 > 0) h3 else Utils.random((maxHit * 0.75).toInt()).coerceAtLeast(1)
+        }
+    }
+    hit = h1; hit2 = h2
+    callGfxMask(1171, 100)
+    PlayerAnimationService.requestAttack(this, 7527)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        if (hit2 > 0) {
+            if (hit2 >= npc.currentHealth) hit2 = npc.currentHealth
+            npc.dealDamage(this, hit2, Entity.hitType.STANDARD)
+        }
+        if (h3 > 0) {
+            val h3d = if (h3 >= npc.currentHealth) npc.currentHealth else h3
+            npc.dealDamage(this, h3d, Entity.hitType.STANDARD)
+        }
+        if (h4 > 0) {
+            val h4d = if (h4 >= npc.currentHealth) npc.currentHealth else h4
+            npc.dealDamage(this, h4d, Entity.hitType.STANDARD)
         }
     } else if (target is Player) {
         val player = resolveCombatTargetPlayer(target.slot) ?: return false
-        when (equipment[Equipment.Slot.WEAPON.id]) {
-            1215 -> {
-                hit = (hit * 1.1).toInt()
-                hit2 = Range(1, hit / 2).value
-                callGfxMask(252, 100)
-                PlayerAnimationService.requestAttack(this, 1062)
-                /* Damage portion! */
-                if(hit >= player.currentHealth) hit = player.currentHealth
-                    player.dealDamage(this, hit, if(crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
-                if (hit2 >= player.currentHealth) hit2 = player.currentHealth
-                    player.dealDamage(this, hit2, Entity.hitType.STANDARD)
-                return true
-            }
-            else ->  PlayerAnimationService.requestAttack(this, emote)
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        if (hit2 > 0) {
+            if (hit2 >= player.currentHealth) hit2 = player.currentHealth
+            player.dealDamage(this, hit2, Entity.hitType.STANDARD)
+        }
+        if (h3 > 0) {
+            player.dealDamage(this, h3.coerceAtMost(player.currentHealth), Entity.hitType.STANDARD)
+        }
+        if (h4 > 0) {
+            player.dealDamage(this, h4.coerceAtMost(player.currentHealth), Entity.hitType.STANDARD)
         }
     }
-    return false
+    return true
+}
+
+private fun Client.handleGmaulSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.0).toInt()
+    callGfxMask(340, 100)
+    PlayerAnimationService.requestAttack(this, 1667)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    combatTimer = 0
+    return true
+}
+
+private fun Client.handleDragonMaceSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.5).toInt()
+    callGfxMask(251, 100)
+    PlayerAnimationService.requestAttack(this, 1060)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    return true
+}
+
+private fun Client.handleDragonBaxeSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.0).toInt()
+    callGfxMask(246, 100)
+    PlayerAnimationService.requestAttack(this, 1056)
+    val strBoost = 10 + (getLevel(Skill.STRENGTH) / 4)
+    setLevel(getLevel(Skill.STRENGTH) + strBoost, Skill.STRENGTH)
+    setLevel((getLevel(Skill.ATTACK) * 0.9).toInt(), Skill.ATTACK)
+    setLevel((getLevel(Skill.DEFENCE) * 0.9).toInt(), Skill.DEFENCE)
+    setLevel((getLevel(Skill.RANGED) * 0.9).toInt(), Skill.RANGED)
+    setLevel((getLevel(Skill.MAGIC) * 0.9).toInt(), Skill.MAGIC)
+    send(SendMessage("Your strength has been boosted!"))
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    return true
+}
+
+private fun Client.handleSaradominSwordSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.0).toInt()
+    hit2 = Utils.random(16)
+    callGfxMask(1213, 100)
+    PlayerAnimationService.requestAttack(this, 1132)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        if (hit2 >= npc.currentHealth) hit2 = npc.currentHealth
+        npc.dealDamage(this, hit2, Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        if (hit2 >= player.currentHealth) hit2 = player.currentHealth
+        player.dealDamage(this, hit2, Entity.hitType.STANDARD)
+        callGfxMask(1196, 0)
+    }
+    return true
+}
+
+private fun Client.handleDragonScimitarSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.0).toInt()
+    callGfxMask(347, 100)
+    PlayerAnimationService.requestAttack(this, 1872)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        val pm = player.prayerManager
+        if (pm.isPrayerOn(net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.PROTECT_MELEE))
+            pm.togglePrayer(net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.PROTECT_MELEE)
+        if (pm.isPrayerOn(net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.PROTECT_RANGE))
+            pm.togglePrayer(net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.PROTECT_RANGE)
+        if (pm.isPrayerOn(net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.PROTECT_MAGIC))
+            pm.togglePrayer(net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.PROTECT_MAGIC)
+    }
+    return true
+}
+
+private fun Client.handleDragonLongswordSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.15).toInt()
+    callGfxMask(248, 100)
+    PlayerAnimationService.requestAttack(this, 1058)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    return true
+}
+
+private fun Client.handleDragonWarhammerSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.5).toInt()
+    callGfxMask(1292, 100)
+    PlayerAnimationService.requestAttack(this, 1378)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        val defLevel = player.getLevel(Skill.DEFENCE)
+        player.setLevel((defLevel * 0.7).toInt().coerceAtLeast(1), Skill.DEFENCE)
+        player.send(SendMessage("Your defence has been drained!"))
+    }
+    return true
+}
+
+private fun Client.handleDragonSpearSpec(@Suppress("UNUSED_PARAMETER") crit: Boolean): Boolean {
+    callGfxMask(253, 100)
+    PlayerAnimationService.requestAttack(this, 1064)
+    hit = -1
+    if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (player.stunTimer == 0) {
+            player.stunTimer = 3
+            player.send(SendMessage("You have been stunned!"))
+            send(SendMessage("You push your opponent back!"))
+        }
+    }
+    return true
+}
+
+private fun Client.handleAbyssalWhipSpec(crit: Boolean): Boolean {
+    hit = (hit * 1.0).toInt()
+    callGfxMask(341, 100)
+    PlayerAnimationService.requestAttack(this, 1658)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    return true
+}
+
+private fun Client.handleDragon2hSpec(crit: Boolean): Boolean {
+    callGfxMask(559, 100)
+    PlayerAnimationService.requestAttack(this, 3157)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    return true
+}
+
+private fun Client.handleDragonHalberdSpec(crit: Boolean): Boolean {
+    callGfxMask(1172, 100)
+    PlayerAnimationService.requestAttack(this, 1203)
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        hit = (hit * 1.1).toInt()
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        hit2 = (Utils.random(meleeMaxHit().toInt()) * 1.1).toInt()
+        if (hit2 >= npc.currentHealth) hit2 = npc.currentHealth
+        npc.dealDamage(this, hit2, Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        hit = (hit * 1.1).toInt()
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    return true
+}
+
+private fun Client.handleStaffOfDeadSpec(crit: Boolean): Boolean {
+    callGfxMask(1228, 100)
+    PlayerAnimationService.requestAttack(this, 1720)
+    setLevel(125, Skill.DEFENCE)
+    send(SendMessage("Your defence has been greatly boosted!"))
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    return true
+}
+
+private fun Client.handleDragonAxeSpec(crit: Boolean): Boolean {
+    callGfxMask(479, 100)
+    PlayerAnimationService.requestAttack(this, 2876)
+    setLevel((getLevel(Skill.WOODCUTTING) + 3), Skill.WOODCUTTING)
+    send(SendMessage("Your woodcutting level has been boosted!"))
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    return true
+}
+
+private fun Client.handleDragonPickaxeSpec(crit: Boolean): Boolean {
+    PlayerAnimationService.requestAttack(this, 7138)
+    setLevel((getLevel(Skill.MINING) + 3), Skill.MINING)
+    send(SendMessage("Your mining level has been boosted!"))
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    return true
+}
+
+private fun Client.handleDinhsBulwarkSpec(crit: Boolean): Boolean {
+    callGfxMask(1336, 100)
+    PlayerAnimationService.requestAttack(this, 7511)
+    hit = (hit * 1.2).toInt()
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    } else if (target is Player) {
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+    }
+    return true
 }

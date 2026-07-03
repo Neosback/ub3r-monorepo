@@ -6,6 +6,7 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
 import net.dodian.uber.game.ui.combat.CombatStyleService;
+import net.dodian.uber.game.engine.systems.combat.CombatSpecialService;
 
 
 public class SetEquipment implements OutgoingPacket {
@@ -41,6 +42,7 @@ public class SetEquipment implements OutgoingPacket {
         if (targetSlot == 3) { // 3 is the weapon slot
             client.CheckGear();
             CombatStyleService.refreshWeaponStyleUi(client);
+            CombatSpecialService.onWeaponEquip(client);
             client.requestWeaponAnims();
         }
         

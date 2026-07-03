@@ -1,22 +1,56 @@
 package net.dodian.uber.game.item
 
-import java.sql.Statement
-import java.util.HashMap
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
+import java.io.File
+import java.io.FileReader
+import java.util.HashSet
 import java.util.LinkedHashMap
 import net.dodian.uber.game.engine.systems.world.item.GlobalGroundItemSpawns
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Item
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.persistence.db.DbTables
-import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import org.slf4j.LoggerFactory
+
+fun parseItemsJsonDir(dirPath: String): List<ItemDefJson> {
+    val dir = File(dirPath)
+    if (!dir.exists() || !dir.isDirectory) return emptyList()
+    val gson = Gson()
+    return dir.listFiles { f -> f.isFile && f.name.endsWith(".json") }
+        ?.mapNotNull { file ->
+            try {
+                JsonReader(FileReader(file)).use { reader ->
+                    gson.fromJson<ItemDefJson>(reader, ItemDefJson::class.java)
+                }
+            } catch (e: Exception) {
+                System.err.println("Failed to parse items-json file ${file.name}: ${e.message}")
+                null
+            }
+        } ?: emptyList()
+}
+
+fun parseItemDefsFile(filePath: String): List<ItemDefBase> {
+    val file = File(filePath)
+    if (!file.exists()) return emptyList()
+    val gson = Gson()
+    return try {
+        JsonReader(FileReader(file)).use { reader ->
+            val type = object : TypeToken<List<ItemDefBase>>() {}.type
+            gson.fromJson<List<ItemDefBase>>(reader, type)
+        }
+    } catch (e: Exception) {
+        System.err.println("Failed to parse item definitions: ${e.message}")
+        emptyList()
+    }
+}
 
 open class ItemManager @JvmOverloads constructor(
     private val definitionLoader: (() -> Map<Int, Item>)? = null,
     private val globalSpawnBootstrap: (() -> Unit)? = null,
 ) {
     @JvmField
-    val items: MutableMap<Int, Item> = HashMap()
+    val items: MutableMap<Int, Item> = LinkedHashMap()
 
     private val logger = LoggerFactory.getLogger(ItemManager::class.java)
     private val defaultStandAnim = 808
@@ -40,8 +74,72 @@ open class ItemManager @JvmOverloads constructor(
 
     open fun loadItems() {
         items.clear()
-        items.putAll(definitionLoader?.invoke() ?: loadItemsFromDatabase())
+        items.putAll(definitionLoader?.invoke() ?: loadItemsFromJson())
         logger.info("Loaded {} item definitions.", items.size)
+    }
+
+    private fun loadItemsFromJson(): Map<Int, Item> {
+        val startTime = System.currentTimeMillis()
+        val loaded = LinkedHashMap<Int, Item>()
+
+        val baseDefs = parseItemDefsFile("data/def/item/item_definitions.json")
+        val baseMap = LinkedHashMap<Int, ItemDefBase>()
+        for (base in baseDefs) {
+            baseMap[base.id] = base
+        }
+        logger.info("Loaded {} base item definitions", baseMap.size)
+
+        val jsonDefs = parseItemsJsonDir("data/def/items-json")
+        logger.info("Loaded {} items-json definitions", jsonDefs.size)
+
+        val processedIds = LinkedHashSet<Int>()
+        for (json in jsonDefs) {
+            val base = baseMap[json.id]
+            if (base == null) {
+                val item = Item(
+                    id = json.id,
+                    name = json.name,
+                    slot = 0,
+                    standAnim = defaultStandAnim,
+                    walkAnim = defaultWalkAnim,
+                    runAnim = defaultRunAnim,
+                    attackAnim = defaultAttackAnim,
+                    shopSellValue = json.cost,
+                    shopBuyValue = json.cost,
+                    bonuses = json.equipment?.toBonusArray() ?: IntArray(14),
+                    stackable = json.stackable || json.noted,
+                    noteable = json.noteable,
+                    tradeable = json.tradeable,
+                    twoHanded = json.equipment?.slot == "2h",
+                    full = false,
+                    mask = false,
+                    premium = json.members,
+                    examine = json.examine ?: "It's a ${json.name}.",
+                    alchemy = json.highAlch,
+                    weight = json.weight,
+                    lowAlch = json.lowAlch,
+                    linkedItemId = json.linkedIdItem ?: 0,
+                    linkedNotedId = json.linkedIdNoted ?: 0,
+                    attackSpeed = json.weapon?.attackSpeed ?: 4,
+                    weaponType = json.weapon?.weaponType ?: "",
+                    stances = json.weapon?.stances ?: emptyArray(),
+                )
+                loaded[json.id] = item
+            } else {
+                loaded[json.id] = Item.fromDefs(base, json)
+            }
+            processedIds.add(json.id)
+        }
+
+        for ((id, base) in baseMap) {
+            if (id !in processedIds) {
+                loaded[id] = Item.fromDefs(base, null)
+            }
+        }
+
+        val elapsed = System.currentTimeMillis() - startTime
+        logger.info("Built {} item definitions in {}ms", loaded.size, elapsed)
+        return loaded
     }
 
     fun isNote(id: Int): Boolean {
@@ -60,91 +158,70 @@ open class ItemManager @JvmOverloads constructor(
     }
 
     fun getSlot(id: Int): Int {
-        if (id < 0) {
-            return 3
-        }
+        if (id < 0) return 3
         val item = items[id] ?: return 3
-        return item.getSlot()
+        return item.slot
     }
 
     fun getStandAnim(id: Int): Int {
-        if (id < 1) {
-            return defaultStandAnim
-        }
+        if (id < 1) return defaultStandAnim
         val item = items[id] ?: return defaultStandAnim
         return item.getStandAnim()
     }
 
     fun getWalkAnim(id: Int): Int {
-        if (id < 1) {
-            return defaultWalkAnim
-        }
+        if (id < 1) return defaultWalkAnim
         val item = items[id] ?: return defaultWalkAnim
         return item.getWalkAnim()
     }
 
     fun getRunAnim(id: Int): Int {
-        if (id < 1) {
-            return defaultRunAnim
-        }
+        if (id < 1) return defaultRunAnim
         val item = items[id] ?: return defaultRunAnim
         return item.getRunAnim()
     }
 
     fun getAttackAnim(id: Int): Int {
-        if (id < 1) {
-            return defaultAttackAnim
-        }
+        if (id < 1) return defaultAttackAnim
         val item = items[id] ?: return defaultAttackAnim
         return item.getAttackAnim()
     }
 
     fun isPremium(id: Int): Boolean {
-        if (id < 0) {
-            return false
-        }
+        if (id < 0) return false
         val item = items[id] ?: return false
         return item.getPremium()
     }
 
     fun isTradable(id: Int): Boolean {
-        if (id < 0 || id == 4084) {
-            return false
-        }
+        if (id < 0 || id == 4084) return false
         val item = items[id] ?: return false
         return item.getTradeable()
     }
 
     fun getBonus(id: Int, bonus: Int): Int {
-        if (id < 0) {
-            return 0
-        }
+        if (id < 0 || bonus < 0) return 0
         val item = items[id] ?: return 0
-        return item.getBonuses()[bonus]
+        val bonuses = item.getBonuses()
+        return if (bonus < bonuses.size) bonuses[bonus] else 0
     }
 
     fun isFullBody(id: Int): Boolean {
-        if (id < 0) {
-            return false
-        }
+        if (id < 0) return false
         val item = items[id]
-        return item != null && item.getSlot() == 4 && item.full
+        return item != null && item.slot == 4 && item.full
     }
 
     fun isFullHelm(id: Int): Boolean {
-        if (id < 0) {
-            return false
-        }
+        if (id < 0) return false
         val item = items[id]
-        return item != null && item.getSlot() == 0 && item.full
+        return item != null && item.slot == 0 && item.full
     }
 
     fun isMask(id: Int): Boolean {
-        if (id < 0) {
-            return false
-        }
+        if (id < 0) return false
         val item = items[id]
-        return item != null && item.getSlot() == 0 && item.mask
+        return item != null && item.slot == 0 && item.mask
     }
 
     fun getShopSellValue(id: Int): Int = items[id]?.getShopSellValue() ?: 1
@@ -159,15 +236,23 @@ open class ItemManager @JvmOverloads constructor(
 
     fun getExamine(id: Int): String = items[id]?.getDescription()?.replace("_", " ") ?: ""
 
+    fun getWeight(id: Int): Double = items[id]?.weight ?: 0.0
+
+    fun getAttackSpeed(id: Int): Int = items[id]?.attackSpeed ?: 4
+
+    fun getWeaponType(id: Int): String = items[id]?.weaponType ?: ""
+
+    fun getStances(id: Int): Array<ItemWeaponStance> = items[id]?.stances ?: emptyArray()
+
     fun getItemName(c: Client, name: String) {
         var send = false
         val normalizedName = name.replace("_", " ")
         for (item in items.values) {
             if (normalizedName.equals(item.getName().replace("_", " "), ignoreCase = true) &&
-                !item.getDescription().equals("null", ignoreCase = true)
+                item.getDescription() != "null"
             ) {
                 var prefix = ""
-                if (isNote(item.getId())) {
+                if (isNote(item.id)) {
                     prefix = " (NOTED)"
                 }
                 c.send(
@@ -188,24 +273,5 @@ open class ItemManager @JvmOverloads constructor(
 
     open fun reloadItems() {
         loadItems()
-    }
-
-    private fun loadItemsFromDatabase(): Map<Int, Item> {
-        val loaded = LinkedHashMap<Int, Item>()
-        val query = "SELECT * FROM ${DbTables.GAME_ITEM_DEFINITIONS} ORDER BY id ASC"
-        try {
-            DbAsyncRepository.withConnection { connection ->
-                connection.createStatement().use { statement: Statement ->
-                    statement.executeQuery(query).use { rows ->
-                        while (rows.next()) {
-                            loaded[rows.getInt("id")] = Item(rows)
-                        }
-                    }
-                }
-            }
-        } catch (exception: Exception) {
-            logger.error("Failed to load item definitions from the database.", exception)
-        }
-        return loaded
     }
 }

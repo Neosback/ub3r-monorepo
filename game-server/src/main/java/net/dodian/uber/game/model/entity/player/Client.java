@@ -108,7 +108,7 @@ public class Client extends Player implements Runnable {
     public boolean pLoaded = false;
     public int maxQuests = QuestTabEntry.values().length;
     public int[] quests = new int[maxQuests];
-    public int[] playerBonus = new int[12];
+    public int[] playerBonus = new int[14];
     private final Map<Integer, String> uiTextCache = new HashMap<>();
     private int lastWildLevelSent = -1;
     private String lastTopBarText = null;
@@ -317,35 +317,16 @@ public class Client extends Player implements Runnable {
     }
 
     public int getbattleTimer(int weapon) {
-        String wep = getItemName(weapon).toLowerCase();
-        //2952 aka wolfbane to strong as 3 tick weapon!
-        int wepPlainTick = 4; //Default tick for many weapons
-        if (wep.contains("dart") || wep.contains("knife")) {
-            wepPlainTick = 2;
-        } else if (wep.contains("longsword") || wep.contains("mace") || wep.contains("axe") && !wep.contains("dharok")
-                || wep.contains("spear") || wep.contains("tzhaar-ket-em") || wep.contains("torag") || wep.contains("guthan")
-                || wep.contains("verac") || (wep.contains("staff") && !wep.contains("ahrim")) || wep.contains("composite")
-                || wep.contains("crystal") || wep.contains("thrownaxe") || wep.contains("longbow")) {
-            wepPlainTick = 5;
-        } else if (wep.contains("battleaxe") || wep.contains("warhammer") || wep.contains("godsword")
-                || wep.contains("barrelchest") || wep.contains("ahrim") || wep.contains("toktz-mej-tal")
-                || wep.contains("dorgeshuun") || (wep.contains("crossbow") && !wep.contains("karil")) || wep.contains("javelin")) {
-            wepPlainTick = 6;
-        } else if (wep.contains("2h sword") || wep.contains("halberd") || wep.contains("maul") || wep.contains("balmung")
-                || wep.contains("tzhaar-ket-om") || wep.contains("dharok")) {
-            wepPlainTick = 7;
-        }
+        int wepPlainTick = Server.itemManager.getAttackSpeed(weapon);
         if (usingBow && fightType == 2) //Rapid style
             wepPlainTick -= 1;
         return wepPlainTick;
     }
 
     public boolean hasStaff() {
-        for (int staff : staffs) {
-            if (getEquipment()[Equipment.Slot.WEAPON.getId()] == staff)
-                return true;
-        }
-        return false;
+        int weaponId = getEquipment()[Equipment.Slot.WEAPON.getId()];
+        String weaponType = Server.itemManager.getWeaponType(weaponId);
+        return weaponType.equals("staff") || weaponType.equals("powered_staff");
     }
 
     public void CheckGear() {
@@ -557,8 +538,8 @@ public class Client extends Player implements Runnable {
 
     public int[] statId = {10252, 11000, 10253, 11001, 10254, 11002, 10255, 11011, 11013, 11014, 11010, 11012, 11006,
             11009, 11008, 11004, 11003, 11005, 47002, 54090, 11007};
-    public String[] BonusName = {"Stab", "Slash", "Crush", "Magic", "Range", "Stab", "Slash", "Crush", "Prayer", "Range",
-            "Str", "Spell Dmg"};
+    public String[] BonusName = {"Stab", "Slash", "Crush", "Magic", "Range", "Stab", "Slash", "Crush", "Magic", "Range",
+            "Melee Str", "Ranged Str", "Magic Dmg", "Prayer"};
 
     public int i;
     public int XremoveSlot = 0;
@@ -2393,8 +2374,7 @@ public class Client extends Player implements Runnable {
         send(new LoadPrivateMessage(name, world));
     }
 
-    public int[] staffs = {1391, 1393, 1395, 1397, 1399, 2415, 2416, 2417, 4675, 6526, 6914, 4710};
-
+    
     /**
      * Decrements the arrow count and updates the client.
      * 
@@ -2526,34 +2506,29 @@ public class Client extends Player implements Runnable {
             15140, 15141, 15142, 15143
         };
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 14; i++) {
             int val = playerBonus[i];
-            String bonusStr = OSRS_BONUS_NAMES[i] + ": " + (val >= 0 ? "+" : "") + val;
+            String bonusStr;
+            if (i == 12) {
+                bonusStr = OSRS_BONUS_NAMES[i] + ": " + (val >= 0 ? "+" : "") + val + "%";
+            } else {
+                bonusStr = OSRS_BONUS_NAMES[i] + ": " + (val >= 0 ? "+" : "") + val;
+            }
             send(new SendString(bonusStr, OSRS_BONUS_IDS[i]));
         }
-
-        int meleeStrVal = playerBonus[10];
-        String meleeStr = "Strength: " + (meleeStrVal >= 0 ? "+" : "") + meleeStrVal;
-        send(new SendString(meleeStr, 15140));
-
-        int rangedStrVal = getRangedStr(this);
-        String rangedStr = "Ranged Strength: " + (rangedStrVal >= 0 ? "+" : "") + rangedStrVal;
-        send(new SendString(rangedStr, 15141));
-
-        double magicDmgPercent = (magicDmg() - 1.0) * 100.0;
-        String magicStr = "Magic Strength: " + (magicDmgPercent >= 0.0 ? "+" : "") + String.format("%3.1f", magicDmgPercent) + "%";
-        send(new SendString(magicStr, 15142));
-
-        int prayerVal = playerBonus[11];
-        String prayerStr = "Prayer: " + (prayerVal >= 0 ? "+" : "") + prayerVal;
-        send(new SendString(prayerStr, 15143));
 
         int meleeMax = net.dodian.uber.game.combat.CombatPlayerExtensionsKt.meleeMaxHit(this);
         int rangedMax = net.dodian.uber.game.combat.CombatPlayerExtensionsKt.rangedMaxHit(this);
         send(new SendString("Melee Maxhit: <col=ff7000>" + meleeMax + "</col>", 15116));
         send(new SendString("Range Maxhit: <col=ff7000>" + rangedMax + "</col>", 15117));
 
-        send(new SendString("0.0 kg", 15145));
+        double totalWeight = 0.0;
+        for (int i = 0; i < 14; i++) {
+            if (getEquipment()[i] > 0) {
+                totalWeight += Server.itemManager.getWeight(getEquipment()[i]);
+            }
+        }
+        send(new SendString(String.format("%.1f kg", totalWeight), 15145));
     }
 
     public void loadAndShowModcpDetails(String targetName, boolean isOnline, String ipAddress) {
@@ -2835,25 +2810,20 @@ public class Client extends Player implements Runnable {
         int bonus = 0;
         if (getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284)
             bonus += ((getLevel(Skill.FIREMAKING) + 1) / 5) * 10;
-        return Math.min(1000, playerBonus[11] + bonus);
+        return Math.min(1000, playerBonus[13] + bonus);
     }
 
     public double magicDmg() {
-        double bonus = playerBonus[3] / 10D;
-        return bonus <= 0.0 ? 1.0 : (1.0 + (bonus / 100D));
+        return 1.0 + (playerBonus[12] / 100.0);
     }
 
     public void updateBonus(int id) {
         String send;
-        if (id == 3) {
-            double dmg = (magicDmg() - 1.0) * 100D;
-            send = "Spell Dmg: " + String.format("%3.1f", dmg) + "%";
-        } else if (id == 11)
-            send = "Neglect Dmg: " + String.format("%3.1f", neglectDmg() / 10D) + "%";
-        else if (id == 10)
-            send = (usingBow ? "Ranged str: " : "Melee str: ") + (usingBow && getRangedStr(this) >= 0 ? "+" : playerBonus[id] >= 0 ? "+" : "-") + (usingBow ? getRangedStr(this) : playerBonus[id]);
-        else
+        if (id >= 0 && id < 14) {
             send = BonusName[id] + ": " + (playerBonus[id] >= 0 ? "+" + playerBonus[id] : playerBonus[id]);
+        } else {
+            send = "Bonus: " + playerBonus[id];
+        }
         send(new SendString(send, 1675 + (id >= 10 ? id + 1 : id)));
     }
 
@@ -4824,11 +4794,16 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean bowWeapon(int weaponId) {
-        boolean bow = net.dodian.uber.game.skill.fletching.FletchingData.isBowWeapon(weaponId);
-        if (weaponId == 839 || weaponId == 841 || weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||
-                weaponId == 11235 || weaponId == 4734 || (weaponId >= 12765 && weaponId <= 12768))
-            bow = true;
-        return bow;
+        String weaponType = Server.itemManager.getWeaponType(weaponId);
+        if (weaponType.isEmpty()) {
+            boolean bow = net.dodian.uber.game.skill.fletching.FletchingData.isBowWeapon(weaponId);
+            if (weaponId == 839 || weaponId == 841 || weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||
+                    weaponId == 11235 || weaponId == 4734 || (weaponId >= 12765 && weaponId <= 12768))
+                bow = true;
+            return bow;
+        }
+        return weaponType.equals("bow") || weaponType.equals("crossbow") || weaponType.equals("thrown")
+            || weaponType.equals("chinchompas") || weaponType.equals("salamander");
     }
 
     public boolean checkInv = false;

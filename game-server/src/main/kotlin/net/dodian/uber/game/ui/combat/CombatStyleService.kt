@@ -44,6 +44,7 @@ object CombatStyleService {
         }
 
         applySelectedFightType(player, profile.interfaceId)
+        player.currentCombatInterface = profile.interfaceId
         val itemOnInterfaceId = profile.interfaceId + 1
         val textOnInterfaceId = if (itemName.equals("unarmed", ignoreCase = true)) {
             profile.interfaceId + 2
@@ -68,189 +69,88 @@ object CombatStyleService {
 
     @JvmStatic
     fun applySelectedFightType(player: Client, tabInterface: Int) {
+        val slot = resolveSlot(player, tabInterface)
+
         when (tabInterface) {
-            5855 -> {
-                if (player.fightType == 0) {
-                    setResolvedStyle(player, CombatStyle.ACCURATE_MELEE, Player.fightStyle.PUNCH, 0, 0)
-                } else if (player.fightType == 2 || (player.fightType == 3 &&
-                        player.weaponStyle != Player.fightStyle.DEFLECT &&
-                        player.weaponStyle != Player.fightStyle.BLOCK_THREE &&
-                        player.weaponStyle != Player.fightStyle.LONGRANGE)
-                ) {
-                    setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.KICK, 2, 1)
-                } else {
-                    setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.BLOCK, 1, 2)
-                }
-            }
-            425 -> {
-                if (player.fightType == 0) {
-                    setResolvedStyle(player, CombatStyle.ACCURATE_MELEE, Player.fightStyle.POUND, 0, 0)
-                } else if (player.fightType == 2 || (player.fightType == 3 &&
-                        player.weaponStyle != Player.fightStyle.DEFLECT &&
-                        player.weaponStyle != Player.fightStyle.BLOCK_THREE &&
-                        player.weaponStyle != Player.fightStyle.LONGRANGE)
-                ) {
-                    setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.PUMMEL, 2, 1)
-                } else {
-                    setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.BLOCK, 1, 2)
-                }
-            }
-            8460 -> {
-                if (player.fightType == 0) {
-                    setResolvedStyle(player, CombatStyle.CONTROLLED_MELEE, Player.fightStyle.JAB, 3, 0)
-                } else if (player.fightType == 2 || (player.fightType == 3 &&
-                        player.weaponStyle != Player.fightStyle.DEFLECT &&
-                        player.weaponStyle != Player.fightStyle.BLOCK_THREE &&
-                        player.weaponStyle != Player.fightStyle.LONGRANGE)
-                ) {
-                    setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.SWIPE, 2, 1)
-                } else {
-                    setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.FEND, 1, 2)
-                }
-            }
-            12290 -> {
-                if (player.fightType == 0) {
-                    setResolvedStyle(player, CombatStyle.ACCURATE_MELEE, Player.fightStyle.FLICK, 0, 0)
-                } else if (player.fightType == 2 || (player.fightType == 3 &&
-                        player.weaponStyle != Player.fightStyle.BLOCK_THREE &&
-                        player.weaponStyle != Player.fightStyle.LONGRANGE)
-                ) {
-                    setResolvedStyle(player, CombatStyle.CONTROLLED_MELEE, Player.fightStyle.LASH, 3, 1)
-                } else {
-                    setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.DEFLECT, 1, 2)
-                }
-            }
-            4446, 1764, 1749 -> {
-                if (player.fightType == 0) {
-                    setResolvedStyle(player, CombatStyle.ACCURATE_RANGED, Player.fightStyle.ACCURATE, 0, 0)
-                } else if (player.fightType == 2 || (player.fightType == 3 &&
-                        player.weaponStyle != Player.fightStyle.DEFLECT &&
-                        player.weaponStyle != Player.fightStyle.BLOCK_THREE &&
-                        player.weaponStyle != Player.fightStyle.LONGRANGE)
-                ) {
-                    setResolvedStyle(player, CombatStyle.RAPID_RANGED, Player.fightStyle.RAPID, 2, 1)
-                } else {
-                    setResolvedStyle(player, CombatStyle.LONGRANGE_RANGED, Player.fightStyle.LONGRANGE, 1, 2)
-                }
-            }
-            2276 -> {
-                if (player.fightType == 2 || (player.fightType == 3 &&
-                        (player.weaponStyle == Player.fightStyle.DEFLECT ||
-                            player.weaponStyle == Player.fightStyle.BLOCK_THREE ||
-                            player.weaponStyle == Player.fightStyle.LONGRANGE))
-                ) {
-                    setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.SLASH, 2, 2)
-                } else if (player.fightType == 0) {
-                    setResolvedStyle(player, CombatStyle.ACCURATE_MELEE, Player.fightStyle.STAB, 0, 0)
-                } else if (player.fightType == 1) {
-                    setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.BLOCK, 1, 3)
-                } else {
-                    setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.LUNGE_STR, 2, 2)
-                }
-            }
-            2423 -> {
-                when (player.fightType) {
-                    0 -> setResolvedStyle(player, CombatStyle.ACCURATE_MELEE, Player.fightStyle.CHOP, 0, 0)
-                    2 -> setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.SLASH, 2, 1)
-                    3 -> setResolvedStyle(player, CombatStyle.CONTROLLED_MELEE, Player.fightStyle.CONTROLLED, 3, 2)
-                    else -> setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.BLOCK, 1, 3)
-                }
-            }
-            3796 -> {
-                when (player.fightType) {
-                    0 -> setResolvedStyle(player, CombatStyle.ACCURATE_MELEE, Player.fightStyle.POUND, 0, 0)
-                    2 -> setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.PUMMEL, 2, 1)
-                    3 -> setResolvedStyle(player, CombatStyle.CONTROLLED_MELEE, Player.fightStyle.SPIKE, 3, 2)
-                    else -> setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.BLOCK, 1, 3)
-                }
-            }
-            4679 -> {
-                if (player.fightType == 3 && (player.weaponStyle == Player.fightStyle.DEFLECT ||
-                        player.weaponStyle == Player.fightStyle.BLOCK_THREE ||
-                        player.weaponStyle == Player.fightStyle.LONGRANGE)
-                ) {
-                    setResolvedStyle(player, CombatStyle.CONTROLLED_MELEE, Player.fightStyle.POUND, 2, 2)
-                } else if (player.fightType == 0) {
-                    setResolvedStyle(player, CombatStyle.CONTROLLED_MELEE, Player.fightStyle.LUNGE, 3, 2)
-                } else if (player.fightType == 2) {
-                    setResolvedStyle(player, CombatStyle.CONTROLLED_MELEE, Player.fightStyle.SWIPE, 3, 2)
-                } else {
-                    setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.BLOCK, 1, 3)
-                }
-            }
-            1698 -> {
-                if (player.fightType == 3 && (player.weaponStyle == Player.fightStyle.DEFLECT ||
-                        player.weaponStyle == Player.fightStyle.BLOCK_THREE ||
-                        player.weaponStyle == Player.fightStyle.LONGRANGE)
-                ) {
-                    setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.SMASH, 2, 2)
-                } else if (player.fightType == 0) {
-                    setResolvedStyle(player, CombatStyle.ACCURATE_MELEE, Player.fightStyle.CHOP, 0, 0)
-                } else if (player.fightType == 2) {
-                    setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.HACK, 2, 2)
-                } else {
-                    setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.BLOCK, 1, 3)
-                }
-            }
-            5570 -> {
-                if (player.fightType == 3 && (player.weaponStyle == Player.fightStyle.DEFLECT ||
-                        player.weaponStyle == Player.fightStyle.BLOCK_THREE ||
-                        player.weaponStyle == Player.fightStyle.LONGRANGE)
-                ) {
-                    setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.SMASH, 2, 2)
-                } else if (player.fightType == 0) {
-                    setResolvedStyle(player, CombatStyle.ACCURATE_MELEE, Player.fightStyle.SPIKE, 0, 0)
-                } else if (player.fightType == 2) {
-                    setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.IMPALE, 2, 2)
-                } else {
-                    setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.BLOCK, 1, 3)
-                }
-            }
-            4705 -> {
-                if (player.fightType == 3 && (player.weaponStyle == Player.fightStyle.DEFLECT ||
-                        player.weaponStyle == Player.fightStyle.BLOCK_THREE ||
-                        player.weaponStyle == Player.fightStyle.LONGRANGE)
-                ) {
-                    setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.SMASH, 2, 2)
-                } else if (player.fightType == 0) {
-                    setResolvedStyle(player, CombatStyle.ACCURATE_MELEE, Player.fightStyle.CHOP, 0, 0)
-                } else if (player.fightType == 2) {
-                    setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.SLASH, 2, 2)
-                } else {
-                    setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.BLOCK, 1, 3)
-                }
-            }
+            5855 -> apply3Button(player, slot, CombatStyle.ACCURATE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.DEFENSIVE_MELEE, 0, 2, 1)
+            425 -> apply3Button(player, slot, CombatStyle.ACCURATE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.DEFENSIVE_MELEE, 0, 2, 1)
+            8460 -> apply3Button(player, slot, CombatStyle.CONTROLLED_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.DEFENSIVE_MELEE, 3, 2, 1)
+            12290 -> apply3Button(player, slot, CombatStyle.ACCURATE_MELEE, CombatStyle.CONTROLLED_MELEE, CombatStyle.DEFENSIVE_MELEE, 0, 3, 1)
+            4446, 1764, 1749 -> apply3Button(player, slot, CombatStyle.ACCURATE_RANGED, CombatStyle.RAPID_RANGED, CombatStyle.LONGRANGE_RANGED, 0, 2, 1)
+            2276 -> apply4Button(player, slot, CombatStyle.ACCURATE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.DEFENSIVE_MELEE, 0, 2, 2, 1)
+            2423 -> apply4Button(player, slot, CombatStyle.ACCURATE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.CONTROLLED_MELEE, CombatStyle.DEFENSIVE_MELEE, 0, 2, 3, 1)
+            3796 -> apply4Button(player, slot, CombatStyle.ACCURATE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.CONTROLLED_MELEE, CombatStyle.DEFENSIVE_MELEE, 0, 2, 3, 1)
+            4679 -> apply4Button(player, slot, CombatStyle.CONTROLLED_MELEE, CombatStyle.CONTROLLED_MELEE, CombatStyle.CONTROLLED_MELEE, CombatStyle.DEFENSIVE_MELEE, 3, 3, 3, 1)
+            1698 -> apply4Button(player, slot, CombatStyle.ACCURATE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.DEFENSIVE_MELEE, 0, 2, 2, 1)
+            5570 -> apply4Button(player, slot, CombatStyle.ACCURATE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.DEFENSIVE_MELEE, 0, 2, 2, 1)
+            4705 -> apply4Button(player, slot, CombatStyle.ACCURATE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.DEFENSIVE_MELEE, 0, 2, 2, 1)
             328 -> {
                 player.varbit(108, if (player.autocast_spellIndex < 0) 0 else 3)
-                if (player.fightType == 0) {
-                    setResolvedStyle(player, CombatStyle.ACCURATE_MELEE, Player.fightStyle.POUND, 0, 0, setVarbit43 = true)
-                } else if (player.fightType == 2 || (player.fightType == 3 &&
-                        player.weaponStyle != Player.fightStyle.DEFLECT &&
-                        player.weaponStyle != Player.fightStyle.BLOCK_THREE &&
-                        player.weaponStyle != Player.fightStyle.LONGRANGE)
-                ) {
-                    setResolvedStyle(player, CombatStyle.AGGRESSIVE_MELEE, Player.fightStyle.PUMMEL, 2, 1, setVarbit43 = true)
-                } else {
-                    setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.BLOCK, 1, 2, setVarbit43 = true)
-                }
+                apply3Button(player, slot, CombatStyle.ACCURATE_MELEE, CombatStyle.AGGRESSIVE_MELEE, CombatStyle.DEFENSIVE_MELEE, 0, 2, 1)
             }
             else -> player.sendMessage("Unhandled interface style!")
         }
     }
 
-    private fun setResolvedStyle(
-        player: Client,
-        combatStyle: CombatStyle,
-        weaponStyle: Player.fightStyle,
-        fightType: Int,
-        varbit43: Int,
-        setVarbit43: Boolean = true,
+    private fun apply3Button(
+        player: Client, slot: Int,
+        style0: CombatStyle, style1: CombatStyle, style2: CombatStyle,
+        ft0: Int, ft1: Int, ft2: Int,
     ) {
-        player.combatStyle = combatStyle
-        player.weaponStyle = weaponStyle
-        player.fightType = fightType
-        if (setVarbit43) {
-            player.varbit(43, varbit43)
+        val styles = intArrayOf(0, 1, 2)
+        val combatStyles = arrayOf(style0, style1, style2)
+        val fightTypes = intArrayOf(ft0, ft1, ft2)
+        val idx = styles.indexOf(slot).takeIf { it >= 0 } ?: 0
+        player.combatStyle = combatStyles[idx]
+        player.fightType = fightTypes[idx]
+        player.varbit(43, slot)
+    }
+
+    private fun apply4Button(
+        player: Client, slot: Int,
+        style0: CombatStyle, style1: CombatStyle, style2: CombatStyle, style3: CombatStyle,
+        ft0: Int, ft1: Int, ft2: Int, ft3: Int,
+    ) {
+        val styles = intArrayOf(0, 1, 2, 3)
+        val combatStyles = arrayOf(style0, style1, style2, style3)
+        val fightTypes = intArrayOf(ft0, ft1, ft2, ft3)
+        val idx = styles.indexOf(slot).takeIf { it >= 0 } ?: 0
+        player.combatStyle = combatStyles[idx]
+        player.fightType = fightTypes[idx]
+        player.varbit(43, slot)
+    }
+
+    private fun resolveSlot(player: Client, tabInterface: Int): Int {
+        val weaponStyle = player.weaponStyle
+        val derived = deriveSlotFromWeaponStyle(player, tabInterface, weaponStyle)
+        if (derived >= 0) return derived
+        return player.fightType.coerceIn(0, 3)
+    }
+
+    private fun deriveSlotFromWeaponStyle(player: Client, tabInterface: Int, weaponStyle: Player.fightStyle): Int {
+        return when (tabInterface) {
+            5855 -> when (weaponStyle) { Player.fightStyle.PUNCH -> 0; Player.fightStyle.KICK -> 1; Player.fightStyle.BLOCK -> 2; else -> -1 }
+            425 -> when (weaponStyle) { Player.fightStyle.POUND -> 0; Player.fightStyle.PUMMEL -> 1; Player.fightStyle.BLOCK, Player.fightStyle.BLOCK_THREE -> 2; else -> -1 }
+            8460 -> when (weaponStyle) { Player.fightStyle.JAB -> 0; Player.fightStyle.SWIPE -> 1; Player.fightStyle.FEND -> 2; else -> -1 }
+            12290 -> when (weaponStyle) { Player.fightStyle.FLICK -> 0; Player.fightStyle.LASH -> 1; Player.fightStyle.DEFLECT -> 2; else -> -1 }
+            4446, 1764, 1749 -> when (weaponStyle) { Player.fightStyle.ACCURATE -> 0; Player.fightStyle.RAPID -> 1; Player.fightStyle.LONGRANGE -> 2; else -> -1 }
+            2276 -> when (weaponStyle) { Player.fightStyle.STAB -> 0; Player.fightStyle.LUNGE_STR -> 1; Player.fightStyle.SLASH -> 2; Player.fightStyle.BLOCK -> 3; else -> -1 }
+            2423 -> when (weaponStyle) { Player.fightStyle.CHOP -> 0; Player.fightStyle.SLASH -> 1; Player.fightStyle.CONTROLLED, Player.fightStyle.LUNGE -> 2; Player.fightStyle.BLOCK -> 3; else -> -1 }
+            3796 -> when (weaponStyle) { Player.fightStyle.POUND -> 0; Player.fightStyle.PUMMEL -> 1; Player.fightStyle.SPIKE -> 2; Player.fightStyle.BLOCK -> 3; else -> -1 }
+            4679 -> when (weaponStyle) { Player.fightStyle.LUNGE -> 0; Player.fightStyle.SWIPE_CON -> 1; Player.fightStyle.POUND_CON -> 2; Player.fightStyle.BLOCK -> 3; else -> -1 }
+            1698 -> when (weaponStyle) { Player.fightStyle.CHOP -> 0; Player.fightStyle.HACK -> 1; Player.fightStyle.SMASH -> 2; Player.fightStyle.BLOCK -> 3; else -> -1 }
+            5570 -> when (weaponStyle) { Player.fightStyle.SPIKE -> 0; Player.fightStyle.IMPALE -> 1; Player.fightStyle.SMASH -> 2; Player.fightStyle.BLOCK -> 3; else -> -1 }
+            4705 -> when (weaponStyle) { Player.fightStyle.CHOP -> 0; Player.fightStyle.SLASH -> 1; Player.fightStyle.SMASH -> 2; Player.fightStyle.BLOCK -> 3; else -> -1 }
+            328 -> {
+                val currentFightType = player.fightType
+                when {
+                    weaponStyle == Player.fightStyle.BLOCK -> 2
+                    weaponStyle == Player.fightStyle.POUND && currentFightType == 2 -> 1
+                    weaponStyle == Player.fightStyle.POUND && currentFightType != 2 -> 0
+                    else -> currentFightType.coerceIn(0, 2)
+                }
+            }
+            else -> -1
         }
     }
 }

@@ -219,7 +219,7 @@ class NpcFamilyDslTest {
         val primary = net.dodian.uber.game.ui.CombatInterface.bindings.single { it.componentKey == "combat.style.primary" }
         val secondary = net.dodian.uber.game.ui.CombatInterface.bindings.single { it.componentKey == "combat.style.secondary" }
 
-        assertTrue(5579 in primary.rawButtonIds)
-        assertFalse(5579 in secondary.rawButtonIds)
+        assertTrue(5567 in primary.rawButtonIds)
+        assertTrue(5579 in secondary.rawButtonIds)
     }
 }

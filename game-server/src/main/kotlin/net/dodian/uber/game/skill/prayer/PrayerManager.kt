@@ -77,7 +77,7 @@ class PrayerManager(player: Player) {
     }
 
     fun getDrainRate(): Double {
-        val drainResistance = 60.0 + (2 * c.playerBonus[8])
+        val drainResistance = 60.0 + (2 * c.playerBonus[13])
         val drain = getDrain()
         return if (drain == 0) 0.0 else drainResistance / drain
     }

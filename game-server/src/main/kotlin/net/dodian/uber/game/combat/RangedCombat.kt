@@ -45,7 +45,11 @@ fun Client.handleRangedAttack(): CombatAttackResult? {
     val equippedArrow = equipment[Equipment.Slot.ARROWS.id]
     var arrowGfx = arrows[equippedArrow]?.get(0) ?: 10
     var arrowPullGfx = arrows[equippedArrow]?.get(1) ?: 20
-    val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
+    val emote = net.dodian.uber.game.engine.systems.animation.AttackAnimationService.resolve(this)
+    // TODO: Ranged special attacks — magic shortbow (anim 1074, gfx 256, 2 hits),
+    // dark bow (2 hits, 1.3x/1.5x dmg), dragon thrownaxe (anim 7521, instant),
+    // dragon knife (anim 8291, 2 hits), ballista (anim 7222, 1.25x acc+dmg)
+    // if (specialActivated) { ... handle ranged spec per weapon ID }
 
     if(equipment[Equipment.Slot.WEAPON.id] == 4734) {
         arrowGfx = 27

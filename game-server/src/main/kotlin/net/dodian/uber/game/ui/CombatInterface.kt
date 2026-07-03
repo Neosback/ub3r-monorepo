@@ -2,6 +2,7 @@ package net.dodian.uber.game.ui
 
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.ui.combat.CombatStyleService
+import net.dodian.uber.game.engine.systems.combat.CombatSpecialService
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
 
@@ -20,7 +21,7 @@ object CombatInterface : InterfaceButtonContent {
             // Slot 0: first/accurate style for each weapon interface. Old IDs: 1177, 1080, 14218, 22228, 48010, 21200, 6221, 6236, 17102, 8234, 30088, 18103, 9125, 6168
             CombatStyleDefinition(
                 0, "combat.style.primary",
-                intArrayOf(433, 782, 1704, 1772, 2282, 2429, 3802, 4454, 4685, 4711, 5567, 5579, 5860, 6137, 7768, 8466, 12298),
+                intArrayOf(433, 782, 1704, 1772, 2282, 2429, 3802, 4454, 4685, 4711, 5567, 5860, 6137, 7768, 8466, 12298),
                 0,
                 mapOf(
                     433 to Player.fightStyle.POUND,      // warhammer bash/accurate
@@ -34,7 +35,6 @@ object CombatInterface : InterfaceButtonContent {
                     4685 to Player.fightStyle.CONTROLLED, // spear lunge (controlled)
                     4711 to Player.fightStyle.CHOP,      // 2h sword/godsword chop
                     5567 to Player.fightStyle.SPIKE,     // pickaxe spike
-                    5579 to Player.fightStyle.SPIKE,     // Tarnish pickaxe first style
                     5860 to Player.fightStyle.PUNCH,     // unarmed punch
                     6137 to Player.fightStyle.POUND,     // staff bash
                     7768 to Player.fightStyle.CHOP,      // claws chop
@@ -46,7 +46,7 @@ object CombatInterface : InterfaceButtonContent {
             // Slot 1: second/aggressive style. Old IDs: 1175, 22229, 1078, 3015, 33019, 6169, 8235, 9126, 18078, 21201, 48008, 14219, 6219, 6234, 17100
             CombatStyleDefinition(
                 1, "combat.style.secondary",
-                intArrayOf(432, 784, 1707, 1771, 2285, 2432, 3805, 4453, 4688, 4713, 4714, 5862, 6136, 7771, 8468, 12297),
+                intArrayOf(432, 784, 1707, 1771, 2285, 2432, 3805, 4453, 4688, 4713, 4714, 5579, 5862, 6136, 7771, 8468, 12297),
                 1,
                 mapOf(
                     432 to Player.fightStyle.PUMMEL,     // warhammer pummel
@@ -60,6 +60,7 @@ object CombatInterface : InterfaceButtonContent {
                     4688 to Player.fightStyle.SWIPE_CON, // spear swipe (controlled)
                     4713 to Player.fightStyle.SLASH,     // 2h sword slash
                     4714 to Player.fightStyle.SLASH,     // godsword slash
+                    5579 to Player.fightStyle.IMPALE,    // pickaxe impale
                     5862 to Player.fightStyle.KICK,      // unarmed kick
                     6136 to Player.fightStyle.POUND,     // staff pound
                     7771 to Player.fightStyle.SLASH,     // claws slash
@@ -73,7 +74,7 @@ object CombatInterface : InterfaceButtonContent {
             CombatStyleDefinition(
                 2, "combat.style.controlled",
                 intArrayOf(431, 785, 1706, 1770, 2284, 2431, 3804, 4452, 4687, 5578, 5861, 6135, 7770, 8467, 12296),
-                3,
+                2,
                 mapOf(
                     431 to Player.fightStyle.BLOCK,      // warhammer block (3-button defensive)
                     785 to Player.fightStyle.JAB,        // scythe jab (controlled)
@@ -98,7 +99,7 @@ object CombatInterface : InterfaceButtonContent {
             CombatStyleDefinition(
                 3, "combat.style.tertiary",
                 intArrayOf(783, 1705, 2283, 2430, 3803, 4686, 4712, 5577, 7769),
-                2,
+                3,
                 mapOf(
                     783 to Player.fightStyle.BLOCK,   // scythe block
                     1705 to Player.fightStyle.BLOCK,  // battleaxe block
@@ -114,7 +115,22 @@ object CombatInterface : InterfaceButtonContent {
         )
 
     override val bindings =
-        styles.map { definition ->
+        listOf(
+            buttonBinding(
+                interfaceId = -1,
+                componentId = 4,
+                componentKey = "combat.special",
+                rawButtonIds = intArrayOf(
+                    777,
+                    7737, 7637, 6104, 7473, 7498, 7548,
+                    7562, 7587, 7623, 7662, 7687, 7723,
+                    7788, 8481, 12322,
+                ),
+            ) { client, _ ->
+                CombatSpecialService.toggleSpecial(client)
+                true
+            },
+        ) + styles.map { definition ->
             buttonBinding(
                 interfaceId = -1,
                 componentId = definition.componentId,
@@ -134,9 +150,10 @@ object CombatInterface : InterfaceButtonContent {
 
     private fun defaultStyle(fightType: Int): Player.fightStyle =
         when (fightType) {
-            0 -> Player.fightStyle.CHOP
-            1 -> Player.fightStyle.BLOCK
+            0 -> Player.fightStyle.STAB
+            1 -> Player.fightStyle.SLASH
             2 -> Player.fightStyle.LUNGE_STR
-            else -> Player.fightStyle.LASH
+            3 -> Player.fightStyle.BLOCK
+            else -> Player.fightStyle.BLOCK
         }
 }

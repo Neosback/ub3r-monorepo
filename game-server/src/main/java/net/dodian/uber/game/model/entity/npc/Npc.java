@@ -1347,7 +1347,7 @@ public class Npc extends Entity {
                 } else attack = false;
             break;
             case 3137: //Vampire effect!
-                int prayerBonus = c.playerBonus[8];
+                int prayerBonus = c.playerBonus[13];
                 if(prayerBonus < 15) {
                     setText("I'll suckie your bloodie!");
                     hitDiff = 15 + Utils.random(25);
