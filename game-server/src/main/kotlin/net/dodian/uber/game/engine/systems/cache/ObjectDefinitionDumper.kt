@@ -34,6 +34,8 @@ object ObjectDefinitionDumper {
                     addProperty("solid", def.isSolid())
                     addProperty("hasActions", def.hasActions())
                     addProperty("blockWalk", def.blockWalk())
+                    addProperty("blockRange", def.blockRange())
+                    addProperty("impenetrable", def.isImpenetrable())
                     addProperty("decoration", def.isDecoration())
                     if (def.childIds != null) add("childIds", GsonBuilder().create().toJsonTree(def.childIds))
                 }

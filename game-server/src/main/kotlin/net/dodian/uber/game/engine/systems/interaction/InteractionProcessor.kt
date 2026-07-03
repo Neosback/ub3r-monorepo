@@ -10,6 +10,7 @@ import net.dodian.uber.game.engine.systems.interaction.objects.ObjectClickLoggin
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectInteractionService
 import net.dodian.uber.game.engine.systems.interaction.npcs.BankerApproachFallbackService
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentDispatcher
+import net.dodian.uber.game.engine.systems.pathing.collision.ProjectileLineService
 import net.dodian.uber.game.engine.systems.interaction.items.ItemOnNpcContentService
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.item.ItemOnNpcEvent
@@ -45,6 +46,7 @@ object InteractionProcessor {
     private val logger = LoggerFactory.getLogger(InteractionProcessor::class.java)
     private val settledSinceCycle = IdentityHashMap<InteractionIntent, Long>()
     private val objectDistanceRejectLogged = IdentityHashMap<InteractionIntent, Boolean>()
+    private val bankerRouteFailCount = IdentityHashMap<InteractionIntent, Int>()
     /**
      * Tracks the last position we routed to per intent — mirrors tarnish's [Waypoint.lastPosition].
      * When a route is in progress and the target hasn't moved, we skip re-routing and let the
@@ -118,9 +120,31 @@ object InteractionProcessor {
         val routeStart = System.nanoTime()
         if (!legendsGuardFrontLane && !player.goodDistanceEntity(npc, range)) {
             if (BankerApproachFallbackService.shouldAttemptFallback(player, npc, intent.option)) {
-                BankerApproachFallbackService.tryRouteCustomerSide(player, npc)
+                if (player.position.withinDistance(npc.position, 2)
+                    && ProjectileLineService.hasLineOfSight(player.position, npc.position)
+                ) {
+                    if (gameWorldId == 2) logger.info("[W2-BANKER] Ap-range+LOS hit npcId={} player=({},{}) npc=({},{})", npc.id, player.position.x, player.position.y, npc.position.x, npc.position.y)
+                } else {
+                    if (gameWorldId == 2) logger.info("[W2-BANKER] routing npcId={} player=({},{}) npc=({},{})", npc.id, player.position.x, player.position.y, npc.position.x, npc.position.y)
+                    val routed = BankerApproachFallbackService.tryRouteCustomerSide(player, npc)
+                    if (!routed) {
+                        val fails = (bankerRouteFailCount[intent] ?: 0) + 1
+                        bankerRouteFailCount[intent] = fails
+                        if (fails >= 3) {
+                            if (gameWorldId == 2) logger.info("[W2-BANKER] routing failed {} times — cancelling", fails)
+                            bankerRouteFailCount.remove(intent)
+                            player.sendMessage("I can't reach that!")
+                            clear(player)
+                            return InteractionExecutionResult.CANCELLED
+                        }
+                    } else {
+                        bankerRouteFailCount.remove(intent)
+                    }
+                    return InteractionExecutionResult.WAITING
+                }
+            } else {
+                return InteractionExecutionResult.WAITING
             }
-            return InteractionExecutionResult.WAITING
         }
         if (npc.position.withinDistance(player.position, 0)) {
             return InteractionExecutionResult.WAITING
@@ -868,6 +892,7 @@ object InteractionProcessor {
             settledSinceCycle.remove(it)
             objectDistanceRejectLogged.remove(it)
             lastRoutePosition.remove(it)
+            bankerRouteFailCount.remove(it)
         }
         InteractionSessionStateAdapter.clear(player)
         player.interactionEarliestCycle = 0

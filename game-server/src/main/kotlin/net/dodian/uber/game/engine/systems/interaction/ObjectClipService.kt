@@ -106,7 +106,7 @@ object ObjectClipService {
             blockWalk = obj.blockWalk(),
             blockRange = obj.blockRange(),
             breakRouteFinding = obj.breakRouteFinding(),
-            impenetrable = obj.isImpenetrable(),
+            impenetrable = if (objectId in CollisionBuildService.BLOCK_RANGE_FALSE_IDS) false else obj.isImpenetrable(),
             decoration = obj.isDecoration(),
         )
     }

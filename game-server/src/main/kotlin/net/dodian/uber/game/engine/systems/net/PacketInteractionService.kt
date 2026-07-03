@@ -13,6 +13,7 @@ import net.dodian.uber.game.engine.systems.combat.CombatCommandService
 import net.dodian.uber.game.engine.systems.combat.CombatIntent
 import net.dodian.uber.game.engine.systems.interaction.AttackPlayerIntent
 import net.dodian.uber.game.engine.systems.interaction.ItemOnNpcIntent
+import net.dodian.uber.game.engine.systems.interaction.npcs.BankerApproachFallbackService
 import net.dodian.uber.game.engine.systems.interaction.NpcInteractionIntent
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentRegistry
 import net.dodian.uber.game.engine.systems.interaction.scheduler.InteractionTaskScheduler
@@ -86,6 +87,9 @@ object PacketInteractionService {
         }
         if (option in 1..4) {
             LegendsGuildGateService.primeGuardApproach(client, npc)
+            if (BankerApproachFallbackService.shouldAttemptFallback(client, npc, option)) {
+                BankerApproachFallbackService.tryRouteCustomerSide(client, npc)
+            }
         }
         if (shouldClearRedundantWalkForNpcInteraction(client, npc, option)) {
             client.resetWalkingQueue()

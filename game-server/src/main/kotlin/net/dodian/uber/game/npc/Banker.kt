@@ -1,13 +1,26 @@
 package net.dodian.uber.game.npc
 
+import net.dodian.uber.game.api.content.dialogue.DialogueEmote
+import net.dodian.uber.game.api.content.dialogue.DialogueOption
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
+import net.dodian.uber.game.model.entity.npc.Npc
+import net.dodian.uber.game.model.entity.player.Client
+
 internal object Banker : NpcFamily by npcFamily("Banker", 1613, block = {
     cache {
         name = "Banker"
+        firstAction("Talk-to")
+        thirdAction("Bank")
         examine = "I do not get paid enough for this."
     }
 
     server {
         deathAnimation = 2304
+    }
+
+    options {
+        talkTo(handler = ::handleBankerTalkTo)
+        third("bank", ::handleBankerBank)
     }
 
     spawns {
@@ -19,13 +32,13 @@ internal object Banker : NpcFamily by npcFamily("Banker", 1613, block = {
         spawn(2615, 3091, face = WEST)
         spawn(2615, 3092, face = WEST)
         spawn(2615, 3094, face = WEST)
-        spawn(2721, 3495)
-        spawn(2722, 3495)
-        spawn(2724, 3495)
-        spawn(2727, 3378)
-        spawn(2727, 3495)
-        spawn(2728, 3495)
-        spawn(2729, 3495)
+        spawn(2721, 3495, face = SOUTH)
+        spawn(2722, 3495, face = SOUTH)
+        spawn(2724, 3495, face = SOUTH)
+        spawn(2727, 3378, face = SOUTH)
+        spawn(2727, 3495, face = SOUTH)
+        spawn(2728, 3495, face = SOUTH)
+        spawn(2729, 3495, face = SOUTH)
         spawn(2807, 3443, face = SOUTH)
         spawn(2809, 3443, face = SOUTH)
         spawn(2810, 3443, face = SOUTH)
@@ -58,3 +71,31 @@ internal object Banker : NpcFamily by npcFamily("Banker", 1613, block = {
         spawn(3514, 3483, face = WEST)
     }
 })
+
+private fun handleBankerTalkTo(client: Client, npc: Npc): Boolean {
+    DialogueService.start(client) {
+        npcChat(npc.id, DialogueEmote.DEFAULT, "Good day. How can I help you?")
+        options(
+            title = "Select an Option",
+            DialogueOption("I'd like to access my bank account, please.") {
+                finishThen { it.openUpBankRouted() }
+            },
+            DialogueOption("I'd like to check my PIN settings.") {
+                finishThen { it.openUpBankRouted() }
+            },
+            DialogueOption("I'd like to collect items.") {
+                finishThen { it.openUpBankRouted() }
+            },
+            DialogueOption("Actually, I don't need anything.") {
+                npcChat(npc.id, DialogueEmote.DEFAULT, "Well, come back if you change your mind.")
+                finish()
+            },
+        )
+    }
+    return true
+}
+
+private fun handleBankerBank(client: Client, npc: Npc): Boolean {
+    client.openUpBankRouted()
+    return true
+}

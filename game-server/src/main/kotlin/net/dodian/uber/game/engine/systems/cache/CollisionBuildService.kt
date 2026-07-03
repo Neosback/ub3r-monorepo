@@ -84,6 +84,7 @@ class CollisionBuildService(
         if (effectivePlane < 0 || isSkippedObject(obj.x, obj.y, effectivePlane)) {
             return
         }
+        val impenetrable = if (obj.objectId in BLOCK_RANGE_FALSE_OVERRIDES) false else definition.isImpenetrable()
         applyObject(
             id = obj.objectId,
             x = obj.x,
@@ -94,7 +95,7 @@ class CollisionBuildService(
             sizeX = definition.sizeX,
             sizeY = definition.sizeY,
             solid = definition.isSolid(),
-            impenetrable = definition.isImpenetrable(),
+            impenetrable = impenetrable,
             hasActions = definition.hasActions(),
             decoration = definition.isDecoration(),
         )
@@ -266,6 +267,20 @@ class CollisionBuildService(
         SkippedObjectRepository.key(x, y, z) in skippedObjectKeys
 
     companion object {
+        private val BLOCK_RANGE_FALSE_OVERRIDES = setOf(
+            // Bank booths — counters that allow talking/projectiles through
+            6083, 6084, 10083, 10355, 10356, 10357,
+            10517, 10518, 10527, 10528, 10583, 10584, 10585,
+            11338, 12798, 12799, 12800, 12801, 14367, 14368,
+            16642, 16643, 16700, 18491, 22819, 25808,
+            28564, 28565, 30389, 30390, 30391, 34138,
+            // Bank tables (behind the counter)
+            590, 591, 2094, 6081, 6082, 15677,
+        )
+
+        @JvmField
+        val BLOCK_RANGE_FALSE_IDS: Set<Int> = BLOCK_RANGE_FALSE_OVERRIDES
+
         @JvmStatic
         fun resolveFootprint(normalizedRotation: Int, sizeX: Int, sizeY: Int): Pair<Int, Int> =
             if (normalizedRotation == 1 || normalizedRotation == 3) sizeY to sizeX else sizeX to sizeY
