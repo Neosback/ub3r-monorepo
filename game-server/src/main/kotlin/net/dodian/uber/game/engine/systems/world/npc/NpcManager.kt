@@ -101,6 +101,7 @@ class NpcManager {
                 npc.applySpawnBehaviorOverrides(
                     effectiveWalkRadius(spawn),
                     spawn.attackRange,
+                    spawn.leashDistance,
                     spawn.alwaysActive,
                     spawn.condition,
                 )

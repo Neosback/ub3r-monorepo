@@ -46,6 +46,7 @@ data class NpcSpawnDef(
     val live: Boolean = true,
     val walkRadius: Int = 0,
     val attackRange: Int = 6,
+    val leashDistance: Int = 15,
     val alwaysActive: Boolean = false,
     val condition: (Client) -> Boolean = { true },
     val overrides: NpcServerPatch = NpcServerPatch(),

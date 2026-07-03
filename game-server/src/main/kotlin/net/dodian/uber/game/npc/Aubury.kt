@@ -33,7 +33,7 @@ internal object Aubury : NpcFamily by npcFamily("Aubury", 11435, block = {
     }
 
     spawns {
-        spawn(3253, 3402, profile = AuburyVarrockProfile)
+        spawn(3253, 3402, walkRadius = 3, profile = AuburyVarrockProfile)
     }
 })
 
@@ -58,7 +58,7 @@ internal object AuburyYanille : NpcFamily by npcFamily("Aubury", 11435, block = 
     }
 
     spawns {
-        spawn(2594, 3104, profile = AuburyYanilleProfile)
+        spawn(2594, 3104, walkRadius = 3, profile = AuburyYanilleProfile)
     }
 })
 

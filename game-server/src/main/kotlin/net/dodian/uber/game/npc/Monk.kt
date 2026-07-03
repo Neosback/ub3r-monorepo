@@ -16,7 +16,7 @@ internal object Monk : NpcFamily by npcFamily("Monk", 555, block = {
     }
 
     spawns {
-        spawn(2604, 3092) {
+        spawn(2604, 3092, walkRadius = 3) {
             visibleWhen(::isYanilleMonkVisible)
         }
     }

@@ -162,7 +162,7 @@ private class PlaneStaticObjectOverrideBuilder(
         replaceObject(2572, 3105, newObjectId = 14890, face = 0, objectType = 10)
         replaceObject(2595, 3409, newObjectId = 133, face = -1, objectType = 10)
         replaceObject(2613, 3084, newObjectId = 3994, face = -3, objectType = 11)
-        replaceObject(2626, 3116, newObjectId = 14905, face = -1, objectType = 11)
+        replaceObject(2626, 3116, newObjectId = 2460, face = -1, objectType = 11)
         replaceObject(2628, 3151, newObjectId = 2104, face = -3, objectType = 11)
         replaceObject(2629, 3151, newObjectId = 2105, face = -3, objectType = 11)
         replaceObject(2688, 3481, newObjectId = 27978, face = 1, objectType = 11)

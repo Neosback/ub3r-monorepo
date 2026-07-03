@@ -14,10 +14,10 @@ internal object GiantRat : NpcFamily by npcFamily("Giant rat", 2856, block = {
     }
 
     spawns {
-        spawn(2599, 3103, face = SOUTH)
-        spawn(2600, 3103, face = SOUTH)
-        spawn(2601, 3103, face = SOUTH)
-        spawn(2602, 3103, face = SOUTH)
-        spawn(3240, 9867)
+        spawn(2599, 3103, face = SOUTH, walkRadius = 2)
+        spawn(2600, 3103, face = SOUTH, walkRadius = 2)
+        spawn(2601, 3103, face = SOUTH, walkRadius = 2)
+        spawn(2602, 3103, face = SOUTH, walkRadius = 2)
+        spawn(3240, 9867, walkRadius = 2)
     }
 })

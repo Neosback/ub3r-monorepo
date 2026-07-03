@@ -40,7 +40,7 @@ object SkillDoctor {
     )
 
     private val bannedPluginPatterns = listOf("playerAction(", "while (true)")
-    private val cookingRangeObjectIds = intArrayOf(26181, 2728, 2781)
+    private val cookingRangeObjectIds = intArrayOf(26181, 114, 4172)
 
     @JvmStatic
     fun snapshot(): SkillDoctorReport {

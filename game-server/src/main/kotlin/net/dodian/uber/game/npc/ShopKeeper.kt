@@ -22,8 +22,8 @@ internal object ShopKeeper : NpcFamily by npcFamily("Shop keeper", 2813, block =
     }
 
     spawns {
-        spawn(2595, 3104)
-        spawn(3216, 3416)
+        spawn(2595, 3104, walkRadius = 3)
+        spawn(3216, 3416, walkRadius = 3)
     }
 })
 

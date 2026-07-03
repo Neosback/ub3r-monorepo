@@ -67,7 +67,13 @@ public class Npc extends Entity {
     private boolean fighting = false;
     private final int[] level = new int[7];
     private int spawnWalkRadius = 0;
+    public int wanderCooldown;
+    public int wanderTargetX;
+    public int wanderTargetY;
+    public boolean hasWanderTarget;
+    public int wanderStuckTicks;
     private int spawnAttackRange = 6;
+    private int spawnLeashDistance = 15;
     private boolean spawnAlwaysActive = false;
     private Function1<Client, Boolean> spawnCondition = defaultSpawnCondition();
     private String interactionProfile;
@@ -198,7 +204,7 @@ public class Npc extends Entity {
         faceTarget = -1;
         walking = false;
         getUpdateFlags().clear();
-        if (!hasActiveCombatTargets() && defaultFace >= 0 && defaultFace < Utils.directionDeltaX.length) {
+        if (!hasActiveCombatTargets() && defaultFace >= 0 && defaultFace < Utils.directionDeltaX.length && getWalkRadius() <= 0) {
             setFocus(
                     getPosition().getX() + Utils.directionDeltaX[defaultFace],
                     getPosition().getY() + Utils.directionDeltaY[defaultFace]
@@ -631,7 +637,24 @@ public class Npc extends Entity {
         if (!requireInRange) {
             return true;
         }
-        return getPosition().withinDistance(player.getPosition(), getEffectiveAttackRange());
+        return gapDistanceTo(player) <= getEffectiveAttackRange();
+    }
+
+    public int gapDistanceTo(Client player) {
+        int npcX1 = getPosition().getX();
+        int npcY1 = getPosition().getY();
+        int size = getSize();
+        int npcX2 = npcX1 + size - 1;
+        int npcY2 = npcY1 + size - 1;
+        int playerX = player.getPosition().getX();
+        int playerY = player.getPosition().getY();
+        int dx = 0;
+        int dy = 0;
+        if (npcX2 < playerX) dx = playerX - npcX2;
+        else if (npcX1 > playerX) dx = npcX1 - playerX;
+        if (npcY2 < playerY) dy = playerY - npcY2;
+        else if (npcY1 > playerY) dy = npcY1 - playerY;
+        return dx + dy;
     }
 
     public void addBossCount(Player p) {
@@ -772,6 +795,9 @@ public class Npc extends Entity {
             boostedStatOrig[i] = 0;
             boostedStat[i] = 0;
         }
+        hasWanderTarget = false;
+        wanderCooldown = 0;
+        wanderStuckTicks = 0;
         /* REset effect! */
         resetPoisonDamage(); //Default
         resetBurnDamage(); //Default
@@ -951,9 +977,10 @@ public class Npc extends Entity {
         return value != null && value > 0;
     }
 
-    public void applySpawnBehaviorOverrides(int walkRadius, int attackRange, boolean alwaysActive, Function1<? super Client, Boolean> condition) {
+    public void applySpawnBehaviorOverrides(int walkRadius, int attackRange, int leashDistance, boolean alwaysActive, Function1<? super Client, Boolean> condition) {
         spawnWalkRadius = Math.max(walkRadius, 0);
         spawnAttackRange = attackRange > 0 ? attackRange : 6;
+        spawnLeashDistance = leashDistance > 0 ? leashDistance : 15;
         spawnAlwaysActive = alwaysActive;
         if (condition == null) {
             spawnCondition = defaultSpawnCondition();
@@ -983,6 +1010,10 @@ public class Npc extends Entity {
 
     public int getEffectiveAttackRange() {
         return spawnAttackRange > 0 ? spawnAttackRange : 6;
+    }
+
+    public int getLeashDistance() {
+        return Math.max(spawnLeashDistance, 1);
     }
 
     public int getWalkRadius() {

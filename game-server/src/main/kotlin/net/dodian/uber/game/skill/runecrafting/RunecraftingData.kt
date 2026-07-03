@@ -28,7 +28,7 @@ object RunecraftingData {
     private val altarDefinitions: List<RunecraftingAltarDefinition> =
         listOf(
             RunecraftingAltarDefinition(
-                objectId = 14905,
+                objectId = 2460,
                 request = RunecraftingRequest(runeId = 561, requiredLevel = 1, experiencePerEssence = 60),
             ),
             RunecraftingAltarDefinition(
@@ -36,7 +36,7 @@ object RunecraftingData {
                 request = RunecraftingRequest(runeId = 565, requiredLevel = 50, experiencePerEssence = 85),
             ),
             RunecraftingAltarDefinition(
-                objectId = 14903,
+                objectId = 2458,
                 request = RunecraftingRequest(runeId = 564, requiredLevel = 75, experiencePerEssence = 120),
             ),
         )

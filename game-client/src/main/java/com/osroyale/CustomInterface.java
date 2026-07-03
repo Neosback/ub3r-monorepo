@@ -3863,7 +3863,7 @@ public class CustomInterface extends RSInterface {
         addSprite(interfaceId + 1, Client.spriteCache.get(192));
         addHoverButton(interfaceId + 2, 24, 15, 15, "Close", 250, interfaceId + 3, 3);
         addHoveredButton(interfaceId + 3, 25, 15, 15, interfaceId + 4);
-        addText(interfaceId + 5, "The Bank of Tarnish", tda, 2, 0xFF981F, true, true);
+        addText(interfaceId + 5, "The Bank of Dodian", tda, 2, 0xFF981F, true, true);
         addConfigButton(interfaceId + 6, 60_000, 217, 218, 32, 20, "Toggle Insert/Swap", 1, 5, 304);
         addConfigButton(interfaceId + 7, 60_000, 219, 220, 32, 20, "Toggle Note/Un-note", 1, 5, 115);
 

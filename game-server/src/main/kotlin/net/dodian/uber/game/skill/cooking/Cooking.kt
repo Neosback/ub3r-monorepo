@@ -143,7 +143,7 @@ object Cooking {
 }
 
 private class RangeObjectContent : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(26181, 2728, 2781)
+    override val objectIds: IntArray = intArrayOf(26181, 114, 4172)
 
     override fun onUseItem(
         client: Client,

@@ -16,6 +16,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.chunk.ChunkEntityIndex
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.engine.config.gameWorldId
 import net.dodian.uber.game.engine.systems.follow.FollowPathfindingTelemetry
 import net.dodian.uber.game.engine.systems.follow.FollowService
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
@@ -153,7 +154,7 @@ class EntityProcessor : Runnable {
         }
         npc.currentGameCycle = GameCycleClock.currentCycle()
 
-        if (!npc.isFighting && npc.isAlive && npc.walkRadius <= 0) {
+        if (!npc.isFighting && npc.isAlive && !npc.isWalking() && npc.walkRadius <= 0) {
             npc.setFocus(
                 npc.position.x + Utils.directionDeltaX[npc.face],
                 npc.position.y + Utils.directionDeltaY[npc.face],
@@ -165,8 +166,28 @@ class EntityProcessor : Runnable {
         }
 
         if (npc.alive && npc.isFighting && npc.lastAttack == 0) {
-            npc.attack()
-            handleNpcSpecialCases(npc)
+            val target = npc.getTarget(false)
+            if (target != null) {
+                val gap = npc.gapDistanceTo(target)
+
+                val spawnDx = Math.abs(npc.position.x - npc.originalPosition.x)
+                val spawnDy = Math.abs(npc.position.y - npc.originalPosition.y)
+                if (spawnDx > npc.leashDistance || spawnDy > npc.leashDistance) {
+                    if (gameWorldId == 2) logger.info("[W2-COMBAT] npcId={} LEASH_CLEAR: ({} tiles from spawn) returning to roaming", npc.id, Math.max(spawnDx, spawnDy))
+                    npc.isFighting = false
+                    npc.wanderCooldown = 0
+                } else if (gap > npc.effectiveAttackRange) {
+                    handleNpcCombatWalk(npc, target)
+                } else {
+                    val wasFighting = npc.isFighting
+                    npc.attack()
+                    if (wasFighting && !npc.isFighting) {
+                        if (gameWorldId == 2) logger.warn("[W2-COMBAT] npcId={} attack() cleared fighting despite gap={} range={}", npc.id, gap, npc.effectiveAttackRange)
+                        npc.isFighting = true
+                    }
+                    handleNpcSpecialCases(npc)
+                }
+            }
         }
 
         handleNpcRoaming(npc)
@@ -189,39 +210,133 @@ class EntityProcessor : Runnable {
 
     private fun handleNpcRoaming(npc: Npc) {
         if (!npc.isAlive || !npc.isVisible || npc.isFighting) {
+            npc.hasWanderTarget = false
             return
         }
 
         val walkRadius = npc.walkRadius
         if (walkRadius <= 0) {
+            npc.hasWanderTarget = false
             return
         }
 
-        if (Misc.chance(10) != 1) {
-            return
-        }
-
-        repeat(NPC_ROAM_DELTAS.size) {
-            val delta = NPC_ROAM_DELTAS[Utils.random(NPC_ROAM_DELTAS.size - 1)]
-            val dx = delta[0]
-            val dy = delta[1]
-
+        if (npc.hasWanderTarget) {
             val fromX = npc.position.x
             val fromY = npc.position.y
+            val dx = Integer.signum(npc.wanderTargetX - fromX)
+            val dy = Integer.signum(npc.wanderTargetY - fromY)
+
+            if (dx == 0 && dy == 0) {
+                npc.hasWanderTarget = false
+                npc.wanderCooldown = 10 + Utils.random(20)
+                npc.wanderStuckTicks = 0
+                return
+            }
+
             val toX = fromX + dx
             val toY = fromY + dy
 
-            if (!withinWalkRadius(npc.originalPosition, toX, toY, walkRadius)) {
-                return@repeat
-            }
-            if (!npc.canMove(dx, dy)) {
-                return@repeat
+            if (!withinWalkRadius(npc.originalPosition, toX, toY, fromX, fromY, walkRadius)) {
+                npc.hasWanderTarget = false
+                npc.wanderCooldown = 10 + Utils.random(20)
+                return
             }
 
-            npc.moveTo(toX, toY, npc.position.z)
-            npc.markWalkStep(fromX, fromY, toX, toY)
+            if (npc.canMove(dx, dy)) {
+                npc.moveTo(toX, toY, npc.position.z)
+                npc.markWalkStep(fromX, fromY, toX, toY)
+                npc.wanderStuckTicks = 0
+                return
+            }
+
+            if (dx != 0 && dy != 0) {
+                if (npc.canMove(dx, 0)) {
+                    val ortX = fromX + dx
+                    if (withinWalkRadius(npc.originalPosition, ortX, fromY, fromX, fromY, walkRadius)) {
+                        npc.moveTo(ortX, fromY, npc.position.z)
+                        npc.markWalkStep(fromX, fromY, ortX, fromY)
+                        npc.wanderStuckTicks = 0
+                        return
+                    }
+                }
+                if (npc.canMove(0, dy)) {
+                    val ortY = fromY + dy
+                    if (withinWalkRadius(npc.originalPosition, fromX, ortY, fromX, fromY, walkRadius)) {
+                        npc.moveTo(fromX, ortY, npc.position.z)
+                        npc.markWalkStep(fromX, fromY, fromX, ortY)
+                        npc.wanderStuckTicks = 0
+                        return
+                    }
+                }
+            }
+
+            npc.wanderStuckTicks++
+            if (npc.wanderStuckTicks > 30) {
+                npc.respawn()
+                npc.hasWanderTarget = false
+                npc.wanderStuckTicks = 0
+                npc.wanderCooldown = 10 + Utils.random(20)
+            } else {
+                npc.hasWanderTarget = false
+            }
             return
         }
+
+        if (npc.wanderCooldown > 0) {
+            npc.wanderCooldown--
+            return
+        }
+
+        if (Utils.random(999) >= 260) {
+            return
+        }
+
+        val spawn = npc.originalPosition
+        npc.wanderTargetX = spawn.x + Utils.random(walkRadius * 2) - walkRadius
+        npc.wanderTargetY = spawn.y + Utils.random(walkRadius * 2) - walkRadius
+        npc.hasWanderTarget = true
+        npc.wanderStuckTicks = 0
+    }
+
+    private fun handleNpcCombatWalk(npc: Npc, target: Client) {
+        if (!npc.isAlive || !npc.isFighting) {
+            return
+        }
+
+        val fromX = npc.position.x
+        val fromY = npc.position.y
+        val gap = npc.gapDistanceTo(target)
+
+        if (gap > npc.leashDistance) {
+            if (gameWorldId == 2) logger.info("[W2-COMBAT] npcId={} DISTANCE_CAP: gap={} > leashDistance={}, clearing combat", npc.id, gap, npc.leashDistance)
+            npc.isFighting = false
+            return
+        }
+
+        if (gameWorldId == 2) logger.info("[W2-COMBAT] npcId={} CHASE from {} {} toward target gap={}", npc.id, fromX, fromY, gap)
+
+        val dx = Integer.signum(target.position.x - fromX)
+        val dy = Integer.signum(target.position.y - fromY)
+
+        npc.applyFocus(target.position.x, target.position.y)
+
+        if (dx != 0 && dy != 0 && npc.canMove(dx, dy)) {
+            npc.moveTo(fromX + dx, fromY + dy, npc.position.z)
+            npc.markWalkStep(fromX, fromY, fromX + dx, fromY + dy)
+            return
+        }
+        if (dx != 0 && npc.canMove(dx, 0)) {
+            npc.moveTo(fromX + dx, fromY, npc.position.z)
+            npc.markWalkStep(fromX, fromY, fromX + dx, fromY)
+            return
+        }
+        if (dy != 0 && npc.canMove(0, dy)) {
+            npc.moveTo(fromX, fromY + dy, npc.position.z)
+            npc.markWalkStep(fromX, fromY, fromX, fromY + dy)
+            return
+        }
+
+        if (gameWorldId == 2) logger.info("[W2-COMBAT] npcId={} BLOCKED at {} {} all 3 directions blocked", npc.id, fromX, fromY)
     }
 
     private fun collectActiveNpcs(activeChunks: LongHashSet, output: ArrayList<Npc>): List<Npc> {
@@ -496,17 +611,6 @@ class EntityProcessor : Runnable {
 
     companion object {
         private val logger = LoggerFactory.getLogger(EntityProcessor::class.java)
-        private val NPC_ROAM_DELTAS =
-            arrayOf(
-                intArrayOf(-1, -1),
-                intArrayOf(-1, 0),
-                intArrayOf(-1, 1),
-                intArrayOf(0, -1),
-                intArrayOf(0, 1),
-                intArrayOf(1, -1),
-                intArrayOf(1, 0),
-                intArrayOf(1, 1),
-            )
         @Volatile
         private var SPAWN_ALWAYS_ACTIVE: Array<Npc?>? = null
         private val READY_INBOUND_PLAYERS = ConcurrentLinkedQueue<Client>()
@@ -519,11 +623,16 @@ class EntityProcessor : Runnable {
         }
 
         @JvmStatic
-        fun withinWalkRadius(origin: Position, targetX: Int, targetY: Int, walkRadius: Int): Boolean {
+        fun withinWalkRadius(origin: Position, targetX: Int, targetY: Int, fromX: Int, fromY: Int, walkRadius: Int): Boolean {
             if (walkRadius <= 0) {
                 return true
             }
-            return kotlin.math.abs(targetX - origin.x) <= walkRadius && kotlin.math.abs(targetY - origin.y) <= walkRadius
+            if (kotlin.math.abs(targetX - origin.x) <= walkRadius && kotlin.math.abs(targetY - origin.y) <= walkRadius) {
+                return true
+            }
+            val currentDist = kotlin.math.abs(fromX - origin.x) + kotlin.math.abs(fromY - origin.y)
+            val targetDist = kotlin.math.abs(targetX - origin.x) + kotlin.math.abs(targetY - origin.y)
+            return targetDist < currentDist
         }
 
         @JvmStatic

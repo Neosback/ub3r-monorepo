@@ -146,7 +146,7 @@ private class ChestObjectContent : ObjectContent {
     }
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId == 20873 || objectId == 20885 || objectId == 6847) {
+        if (objectId == 6847) {
             Thieving.attempt(client, objectId, position)
             return true
         }
@@ -249,7 +249,7 @@ private class ChestObjectContent : ObjectContent {
                 client.sendMessage("This chest is empty!")
                 true
             }
-            20885, 11729, 11730, 11731, 11732, 11733, 11734 -> {
+            11729, 11730, 11731, 11732, 11733, 11734 -> {
                 Thieving.attempt(client, objectId, position)
                 true
             }

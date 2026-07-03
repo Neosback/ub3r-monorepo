@@ -14,6 +14,6 @@ internal object Dad : NpcFamily by npcFamily("Dad", 4130, block = {
     }
 
     spawns {
-        spawn(2541, 3092, face = SOUTH_EAST)
+        spawn(2541, 3092, walkRadius = 5, attackRange = 1, leashDistance = 12)
     }
 })
