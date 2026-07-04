@@ -74,6 +74,7 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.SyntaxInputListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.InputFieldListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.BankTabCreationListener");
+            Class.forName("net.dodian.uber.game.netty.listener.in.DropdownMenuListener");
             
             repository.registerNoOp(77);
             repository.registerNoOp(202);

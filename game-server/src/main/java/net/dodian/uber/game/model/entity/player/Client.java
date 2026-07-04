@@ -169,6 +169,15 @@ public class Client extends Player implements Runnable {
     public int tradeApproachTicks = 0;
     public CopyOnWriteArrayList<GameItem> offeredItems = new CopyOnWriteArrayList<>();
     public CopyOnWriteArrayList<GameItem> otherOfferedItems = new CopyOnWriteArrayList<>();
+    public CopyOnWriteArrayList<GameItem> priceCheckerItems = new CopyOnWriteArrayList<>();
+    public boolean priceCheckerOpen = false;
+    public int priceCheckerMode = 0; // 0 = Value, 1 = High Alch
+    public boolean priceCheckerSearchPendingInput = false;
+    public GameItem priceCheckerSearchedItem = null;
+    public int acceptAid = 0; // 0 = off, 1 = on
+    public int rightClickToggle = 0; // 0 = off, 1 = on
+    public int scrollCameraToggle = 0; // 0 = off, 1 = on
+    public int entityAttackOption = 0; // 0 = Depends on combat levels, 1 = Always right-click, 2 = Left click where available, 3 = Hidden
     public boolean adding = false;
     public ArrayList<WorldObject> objects = new ArrayList<>();
     public long lastButton = 0;
@@ -675,6 +684,9 @@ public class Client extends Player implements Runnable {
 
     @Override
     public void destruct() {
+        if (priceCheckerOpen) {
+            closePriceChecker();
+        }
         PlayerDeferredLifecycleService.cancelAll(this);
         clearVerticalTravelState();
         releaseQueuedInboundPackets();
@@ -2961,6 +2973,241 @@ public class Client extends Player implements Runnable {
         other.resetOTItems(3416);
         send(new SendString("", 3431));
         other.send(new SendString("", 3431));
+    }
+
+    public void openPriceChecker() {
+        priceCheckerOpen = true;
+        priceCheckerItems.clear();
+        priceCheckerSearchedItem = null;
+        priceCheckerSearchPendingInput = false;
+        priceCheckerMode = 0; // default to value
+        send(new InventoryInterface(48500, 5063));
+        priceCheckerRefresh();
+    }
+
+    public void closePriceChecker() {
+        if (!priceCheckerOpen) return;
+        priceCheckerOpen = false;
+        priceCheckerWithdrawAll();
+        priceCheckerSearchedItem = null;
+        priceCheckerSearchPendingInput = false;
+        send(new RemoveInterfaces());
+    }
+
+    public void priceCheckerDeposit(int itemID, int fromSlot, int amount) {
+        if (!priceCheckerOpen) return;
+        if (fromSlot < 0 || fromSlot >= 28) return;
+        if (itemID != (playerItems[fromSlot] - 1)) return;
+        if (!playerHasItem(itemID, amount) || playerItems[fromSlot] != (itemID + 1)) return;
+        if (!Server.itemManager.isTradable(itemID)) {
+            send(new SendMessage("This item is untradeable!"));
+            return;
+        }
+        if (!Server.itemManager.isStackable(itemID)) {
+            amount = Math.min(amount, getInvAmt(itemID));
+        } else {
+            amount = Math.min(amount, playerItemsN[fromSlot]);
+        }
+        if (amount <= 0) return;
+
+        // Check slots: max 28 slots
+        if (priceCheckerItems.size() >= 28) {
+            boolean found = false;
+            for (GameItem item : priceCheckerItems) {
+                if (item.getId() == itemID && item.isStackable()) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                send(new SendMessage("Your price checker is full!"));
+                return;
+            }
+        }
+
+        if (Server.itemManager.isStackable(itemID)) {
+            boolean found = false;
+            for (GameItem item : priceCheckerItems) {
+                if (item.getId() == itemID) {
+                    found = true;
+                    item.addAmount(amount);
+                    deleteItem(itemID, fromSlot, amount);
+                    break;
+                }
+            }
+            if (!found) {
+                priceCheckerItems.add(new GameItem(itemID, amount));
+                deleteItem(itemID, fromSlot, amount);
+            }
+        } else {
+            for (int a = 1; a <= amount; a++) {
+                if (priceCheckerItems.size() >= 28) {
+                    send(new SendMessage("Your price checker is full!"));
+                    break;
+                }
+                if (a == 1) {
+                    priceCheckerItems.add(new GameItem(itemID, 1));
+                    deleteItem(itemID, fromSlot, 1);
+                } else {
+                    int slot = findItem(itemID, playerItems, playerItemsN);
+                    if (slot >= 0 && slot < 28) {
+                        priceCheckerItems.add(new GameItem(itemID, 1));
+                        deleteItem(itemID, slot, 1);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        priceCheckerRefresh();
+    }
+
+    public void priceCheckerWithdraw(int itemID, int fromSlot, int amount) {
+        if (!priceCheckerOpen) return;
+        if (fromSlot < 0 || fromSlot >= priceCheckerItems.size()) return;
+        GameItem item = priceCheckerItems.get(fromSlot);
+        if (item == null || item.getId() != itemID) return;
+
+        int count = item.getAmount();
+        amount = Math.min(amount, count);
+        if (amount <= 0) return;
+
+        // Check inventory space
+        if (!item.isStackable() && getFreeSpace() < amount) {
+            amount = getFreeSpace();
+            if (amount <= 0) {
+                send(new SendMessage("Not enough space in your inventory!"));
+                return;
+            }
+        }
+
+        if (item.isStackable()) {
+            if (amount < item.getAmount()) {
+                priceCheckerItems.set(fromSlot, new GameItem(item.getId(), item.getAmount() - amount));
+            } else {
+                priceCheckerItems.remove(fromSlot);
+            }
+            addItem(itemID, amount);
+        } else {
+            for (int a = 1; a <= amount; a++) {
+                if (getFreeSpace() <= 0) {
+                    send(new SendMessage("Not enough space in your inventory!"));
+                    break;
+                }
+                for (int i = 0; i < priceCheckerItems.size(); i++) {
+                    if (priceCheckerItems.get(i).getId() == itemID) {
+                        priceCheckerItems.remove(i);
+                        addItem(itemID, 1);
+                        break;
+                    }
+                }
+            }
+        }
+        priceCheckerRefresh();
+    }
+
+    public void priceCheckerWithdrawAll() {
+        if (!priceCheckerOpen) return;
+        ArrayList<GameItem> temp = new ArrayList<>(priceCheckerItems);
+        priceCheckerItems.clear();
+        for (GameItem item : temp) {
+            addItem(item.getId(), item.getAmount());
+        }
+        priceCheckerRefresh();
+    }
+
+    public void priceCheckerDepositAll() {
+        if (!priceCheckerOpen) return;
+        for (int slot = 0; slot < 28; slot++) {
+            int itemId = playerItems[slot] - 1;
+            int amount = playerItemsN[slot];
+            if (itemId >= 0 && amount > 0) {
+                priceCheckerDeposit(itemId, slot, amount);
+            }
+        }
+    }
+
+    public void priceCheckerSetMode(int mode) {
+        priceCheckerMode = mode;
+        priceCheckerRefresh();
+    }
+
+    public void priceCheckerSearch(String name) {
+        if (!priceCheckerOpen) return;
+        int foundId = -1;
+        String searchName = name.trim().toLowerCase().replace("'", "");
+        for (int i = 0; i < 20000; i++) {
+            String itemName = Server.itemManager.getName(i);
+            if (itemName != null && !itemName.isEmpty() && !Server.itemManager.isNote(i)) {
+                if (itemName.toLowerCase().replace("'", "").contains(searchName)) {
+                    foundId = i;
+                    break;
+                }
+            }
+        }
+        if (foundId == -1) {
+            send(new SendMessage("No items found matching: " + name));
+            priceCheckerSearchedItem = null;
+        } else {
+            priceCheckerSearchedItem = new GameItem(foundId, 1);
+        }
+        priceCheckerRefresh();
+    }
+
+    public int getPriceCheckerItemPrice(int itemId, int mode) {
+        if (mode == 1) {
+            return Server.itemManager.getAlchemy(itemId);
+        } else {
+            return Server.itemManager.getShopSellValue(itemId);
+        }
+    }
+
+    public void priceCheckerRefresh() {
+        if (!priceCheckerOpen) return;
+        for (int i = 0; i < 28; i++) {
+            String value = "";
+            if (i < priceCheckerItems.size()) {
+                GameItem item = priceCheckerItems.get(i);
+                if (item != null && item.getId() >= 0) {
+                    long price = getPriceCheckerItemPrice(item.getId(), priceCheckerMode);
+                    int amount = item.getAmount();
+                    if (item.isStackable()) {
+                        value = String.format("%,d", amount) + " x " + String.format("%,d", price) + "\\n= " + String.format("%,d", price * amount);
+                    } else {
+                        value = String.format("%,d", price);
+                    }
+                }
+            }
+            send(new SendString(value, 48550 + i));
+        }
+
+        if (priceCheckerSearchedItem != null) {
+            String itemName = Server.itemManager.getName(priceCheckerSearchedItem.getId());
+            long price = getPriceCheckerItemPrice(priceCheckerSearchedItem.getId(), priceCheckerMode);
+            send(new SendString("<col=ffb000>" + itemName + ":", 48582));
+            send(new SendString(String.format("%,d", price), 48583));
+            send(new SendItemOnInterfaceSlot(48581, priceCheckerSearchedItem.getId(), priceCheckerSearchedItem.getAmount(), 0));
+        } else {
+            send(new SendString("\\nSelect item to search", 48582));
+            send(new SendString("", 48583));
+            send(new ClearItemContainer(48581, 1));
+        }
+
+        long total = 0;
+        for (GameItem item : priceCheckerItems) {
+            if (item != null && item.getId() >= 0) {
+                total += (long) getPriceCheckerItemPrice(item.getId(), priceCheckerMode) * item.getAmount();
+            }
+        }
+        send(new SendString(String.format("%,d", total), 48513));
+
+        send(new TradeItemsUpdate(48542, priceCheckerItems));
+        send(new ResetItems(5064));
+        send(new SetVarbit(237, priceCheckerMode));
+    }
+
+    public void setEntityAttackOption(int value) {
+        this.entityAttackOption = value;
     }
 
     /* Shops */

@@ -44,6 +44,10 @@ object PacketWalkingService {
             return
         }
 
+        if (player.priceCheckerOpen) {
+            player.closePriceChecker()
+        }
+
         if (request.opcode == 164 || request.opcode == 248) {
             if (player.inTrade) {
                 TradeDuelSessionService.closeOpenTrade(player)

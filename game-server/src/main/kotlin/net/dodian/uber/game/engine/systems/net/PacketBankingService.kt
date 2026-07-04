@@ -198,8 +198,17 @@ object PacketBankingService {
                     client.bankItem(resolvedItemId, removeSlot, amount)
                 } else if (client.isPartyInterface) {
                     PartyRoomBalloons.offerPartyItems(client, resolvedItemId, amount, removeSlot)
+                } else if (client.priceCheckerOpen) {
+                    client.priceCheckerDeposit(resolvedItemId, removeSlot, amount)
                 }
                 client.checkItemUpdate()
+            }
+
+            interfaceId == 48542 -> {
+                if (client.priceCheckerOpen) {
+                    val amount = if (stack) client.priceCheckerItems[removeSlot].amount else 28
+                    client.priceCheckerWithdraw(resolvedItemId, removeSlot, amount)
+                }
             }
 
             interfaceId == 5382 || interfaceId in 50300..50310 -> {
@@ -300,8 +309,16 @@ object PacketBankingService {
                     client.bankItem(removeId, removeSlot, amount)
                 } else if (client.isPartyInterface) {
                     PartyRoomBalloons.offerPartyItems(client, removeId, amount, removeSlot)
+                } else if (client.priceCheckerOpen) {
+                    client.priceCheckerDeposit(removeId, removeSlot, amount)
                 }
                 client.checkItemUpdate()
+            }
+
+            48542 -> {
+                if (client.priceCheckerOpen) {
+                    client.priceCheckerWithdraw(removeId, removeSlot, amount)
+                }
             }
 
             5382 -> {
@@ -387,6 +404,7 @@ object PacketBankingService {
             interfaceId == 5382 ||
             interfaceId in 50300..50310 ||
             interfaceId == 5064 ||
+            interfaceId == 48542 ||
             interfaceId == 3322 ||
             interfaceId == 3415 ||
             interfaceId == 6669 ||
@@ -460,8 +478,20 @@ object PacketBankingService {
                             enteredAmount,
                             client.XremoveSlot,
                         )
+                    } else if (client.priceCheckerOpen) {
+                        client.priceCheckerDeposit(
+                            client.playerItems[client.XremoveSlot] - 1,
+                            client.XremoveSlot,
+                            enteredAmount,
+                        )
                     }
                     client.checkItemUpdate()
+                }
+
+                client.XinterfaceID == 48542 -> {
+                    if (client.priceCheckerOpen) {
+                        client.priceCheckerWithdraw(client.XremoveID, client.XremoveSlot, enteredAmount)
+                    }
                 }
 
                 client.XinterfaceID == 5382 || client.XinterfaceID in 50300..50310 -> {
@@ -586,8 +616,16 @@ object PacketBankingService {
                     client.bankItem(removeId, removeSlot, 1)
                 } else if (client.isPartyInterface) {
                     PartyRoomBalloons.offerPartyItems(client, removeId, 1, removeSlot)
+                } else if (client.priceCheckerOpen) {
+                    client.priceCheckerDeposit(removeId, removeSlot, 1)
                 }
                 client.checkItemUpdate()
+            }
+
+            interfaceId == 48542 -> {
+                if (client.priceCheckerOpen) {
+                    client.priceCheckerWithdraw(removeId, removeSlot, 1)
+                }
             }
 
             interfaceId == 5382 || interfaceId in 50300..50310 -> {
@@ -687,6 +725,7 @@ object PacketBankingService {
             interfaceId == 2274 -> isValidPartyOfferSlot(client, removeSlot)
             interfaceId == 6669 || interfaceId == 3415 -> !stack || isValidTradeOfferSlot(client, removeSlot)
             interfaceId == 5382 || interfaceId in 50300..50310 -> bankSlot < 0 || isValidBankSlot(client, bankSlot)
+            interfaceId == 48542 -> removeSlot >= 0 && removeSlot < client.priceCheckerItems.size
             else -> true
         }
 
@@ -701,6 +740,7 @@ object PacketBankingService {
             interfaceId == 2274 -> isValidPartyOfferSlot(client, removeSlot)
             interfaceId == 6669 || interfaceId == 3415 -> isValidTradeOfferSlot(client, removeSlot)
             interfaceId == 5382 || interfaceId in 50300..50310 -> bankSlot < 0 || isValidBankSlot(client, bankSlot)
+            interfaceId == 48542 -> removeSlot >= 0 && removeSlot < client.priceCheckerItems.size
             else -> true
         }
 
@@ -725,6 +765,7 @@ object PacketBankingService {
             interfaceId == 2274 -> isValidPartyOfferSlot(client, removeSlot)
             interfaceId == 6669 || interfaceId == 3415 -> isValidTradeOfferSlot(client, removeSlot)
             interfaceId == 5382 || interfaceId in 50300..50310 -> bankSlot < 0 || isValidBankSlot(client, bankSlot)
+            interfaceId == 48542 -> removeSlot >= 0 && removeSlot < client.priceCheckerItems.size
             else -> true
         }
 

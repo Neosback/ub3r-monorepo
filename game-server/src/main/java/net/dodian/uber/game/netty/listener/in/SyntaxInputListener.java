@@ -49,6 +49,12 @@ public class SyntaxInputListener implements PacketListener {
             return;
         }
 
+        if (client.priceCheckerSearchPendingInput) {
+            client.priceCheckerSearchPendingInput = false;
+            client.priceCheckerSearch(input);
+            return;
+        }
+
         if (PacketBankingService.hasPendingBankSearch(client)) {
             PacketBankingService.applyPendingBankSearch(client, input);
         }

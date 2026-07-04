@@ -10,34 +10,43 @@ import net.dodian.uber.game.api.content.ContentActions
 import net.dodian.uber.game.api.content.ContentSafety
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.netty.listener.out.SetTabInterface
+import net.dodian.uber.game.netty.listener.out.ShowInterface
 
 object UiInterface : InterfaceButtonContent {
     private val runOffButtons = intArrayOf(152)
     private val runOnButtons = intArrayOf(19158)
-    private val runToggleButtons = intArrayOf(74214)
+    private val runToggleButtons = intArrayOf(74214, 1050)
     private val tabInterfaceDefaultButtons = intArrayOf(83093)
     private val tabInterfaceEquipmentButtons = intArrayOf(27653)
     private val sidebarHomeButtons = intArrayOf(7212)
-    private val closeInterfaceButtons = intArrayOf(83051, 9118, 19022, 50001, 58002)
+    private val closeInterfaceButtons = intArrayOf(83051, 9118, 19022, 50001, 58002, 28502, 48502)
     private val questTabToggleButtons = intArrayOf(83097)
     private val logoutButtons = intArrayOf(2458, 9154)
     private val morphButtons = intArrayOf(23132)
     private val ignoredButtons = intArrayOf(26076, 4130, 130, 3014, 3016, 3017)
     private val sharedDepositOrChatButtons = intArrayOf(50004)
     private val sharedDepositOrRunButtons = intArrayOf(50007)
+    private val acceptAidButtons = intArrayOf(50006)
+    private val rightClickButtons = intArrayOf(50201)
+    private val cameraScrollButtons = intArrayOf(50202)
+    private val tabInterfaceDeathButtons = intArrayOf(27654)
+    private val tabInterfacePriceCheckerButtons = intArrayOf(27651)
 
     override val bindings =
         listOf(
             buttonBinding(-1, 0, "ui.run.off", runOffButtons) { client, _ ->
                 client.buttonOnRun = false
+                client.varbit(152, 0)
                 true
             },
             buttonBinding(-1, 1, "ui.run.on", runOnButtons) { client, _ ->
                 client.buttonOnRun = true
+                client.varbit(152, 1)
                 true
             },
             buttonBinding(-1, 2, "ui.run.toggle", runToggleButtons) { client, _ ->
                 client.buttonOnRun = !client.buttonOnRun
+                client.varbit(152, if (client.buttonOnRun) 1 else 0)
                 true
             },
             buttonBinding(-1, 3, "ui.tab.default_inventory", tabInterfaceDefaultButtons) { client, _ ->
@@ -59,6 +68,7 @@ object UiInterface : InterfaceButtonContent {
                 val wasItemListPreview = client.bankStyleViewOpen
                 val wasPartyInterface = client.isPartyInterface
                 val wasShopping = client.isShopping
+                val wasPriceChecker = client.priceCheckerOpen
                 ContentActions.cancel(
                     player = client,
                     reason = ContentActionCancelReason.INTERFACE_CLOSED,
@@ -95,6 +105,10 @@ object UiInterface : InterfaceButtonContent {
                 }
                 if (wasShopping) {
                     client.MyShopID = -1
+                    refreshItems = true
+                }
+                if (wasPriceChecker) {
+                    client.closePriceChecker()
                     refreshItems = true
                 }
                 if (refreshItems) {
@@ -161,7 +175,7 @@ object UiInterface : InterfaceButtonContent {
                         if (equipId > 0 && equipAmount > 0 && client.hasSpace()) {
                             if (client.remove(i, false)) {
                                 client.addItem(equipId, equipAmount)
-                                client.bankItem(equipId, client.getItemSlot(equipId), equipAmount)
+                                  client.bankItem(equipId, client.getItemSlot(equipId), equipAmount)
                             }
                         }
                     }
@@ -169,8 +183,32 @@ object UiInterface : InterfaceButtonContent {
                     client.checkItemUpdate()
                 } else {
                     client.buttonOnRun = !client.buttonOnRun
+                    client.varbit(152, if (client.buttonOnRun) 1 else 0)
                 }
                 true
             },
+            buttonBinding(-1, 13, "ui.accept_aid.toggle", acceptAidButtons) { client, _ ->
+                client.acceptAid = 1 - client.acceptAid
+                client.varbit(427, client.acceptAid)
+                true
+            },
+            buttonBinding(-1, 14, "ui.right_click.toggle", rightClickButtons) { client, _ ->
+                client.rightClickToggle = 1 - client.rightClickToggle
+                client.varbit(170, client.rightClickToggle)
+                true
+            },
+            buttonBinding(-1, 15, "ui.camera_scroll.toggle", cameraScrollButtons) { client, _ ->
+                client.scrollCameraToggle = 1 - client.scrollCameraToggle
+                client.varbit(207, client.scrollCameraToggle)
+                true
+            },
+            buttonBinding(-1, 16, "ui.tab.items_kept_on_death", tabInterfaceDeathButtons) { client, _ ->
+                client.send(ShowInterface(17100))
+                true
+            },
+            buttonBinding(-1, 17, "ui.tab.price_checker", tabInterfacePriceCheckerButtons) { client, _ ->
+                client.openPriceChecker()
+                true
+            }
         )
 }

@@ -6320,7 +6320,7 @@ public class Client extends GameEngine
                 for (int index = 0; index < sideIconsTab459.length; index++) {
                     if (tabInterfaceIDs[sideIconsTab459[index]] != -1) {
                         if (sideIconsId459[index] != -1) {
-                            sideIcons[sideIconsId459[index]].drawSprite(sideIconsX459[index] + xOffset, sideIconsY459[index] + yOffset);
+                            drawSideIcon(sideIconsId459[index], sideIconsX459[index] + xOffset, sideIconsY459[index] + yOffset);
                         }
                     }
                 }
@@ -6328,7 +6328,7 @@ public class Client extends GameEngine
                 for (int i = 0; i < sideIconsTab459.length; i++) {
                     if (tabInterfaceIDs[sideIconsTab459[i]] != -1) {
                         if (sideIconsId459[i] != -1) {
-                            sideIcons[sideIconsId459[i]].drawSprite(canvasWidth - iconX1[i], canvasHeight - iconY1[i]);
+                            drawSideIcon(sideIconsId459[i], canvasWidth - iconX1[i], canvasHeight - iconY1[i]);
                         }
                     }
                 }
@@ -6336,7 +6336,7 @@ public class Client extends GameEngine
                 for (int i = 0; i < sideIconsTab459.length; i++) {
                     if (tabInterfaceIDs[sideIconsTab459[i]] != -1) {
                         if (sideIconsId459[i] != -1) {
-                            sideIcons[sideIconsId459[i]].drawSprite(canvasWidth - 461 + iconX2[i], canvasHeight - iconY2[i]);
+                            drawSideIcon(sideIconsId459[i], canvasWidth - 461 + iconX2[i], canvasHeight - iconY2[i]);
                         }
                     }
                 }
@@ -6347,7 +6347,7 @@ public class Client extends GameEngine
                 for (int index = 0; index < sideIconsTab.length; index++) {
                     if (tabInterfaceIDs[sideIconsTab[index]] != -1) {
                         if (sideIconsId[index] != -1) {
-                            sideIcons[sideIconsId[index]].drawSprite(sideIconsX[index] + xOffset, sideIconsY[index] + yOffset);
+                            drawSideIcon(sideIconsId[index], sideIconsX[index] + xOffset, sideIconsY[index] + yOffset);
                         }
                     }
                 }
@@ -6355,7 +6355,7 @@ public class Client extends GameEngine
                 for (int i = 0; i < sideIconsTab.length; i++) {
                     if (tabInterfaceIDs[sideIconsTab[i]] != -1) {
                         if (iconId1[i] != -1) {
-                            sideIcons[iconId1[i]].drawSprite(canvasWidth - iconX1[i], canvasHeight - iconY1[i]);
+                            drawSideIcon(iconId1[i], canvasWidth - iconX1[i], canvasHeight - iconY1[i]);
                         }
                     }
                 }
@@ -6363,11 +6363,27 @@ public class Client extends GameEngine
                 for (int i = 0; i < sideIconsTab.length; i++) {
                     if (tabInterfaceIDs[sideIconsTab[i]] != -1) {
                         if (iconId2[i] != -1) {
-                            sideIcons[iconId2[i]].drawSprite(canvasWidth - 461 + iconX2[i], canvasHeight - iconY2[i]);
+                            drawSideIcon(iconId2[i], canvasWidth - 461 + iconX2[i], canvasHeight - iconY2[i]);
                         }
                     }
                 }
             }
+        }
+    }
+
+    private void drawSideIcon(int iconId, int x, int y) {
+        if (iconId == 7) {
+            Sprite newSprite = spriteCache.get(26);
+            Sprite oldSprite = sideIcons[7];
+            if (newSprite != null && oldSprite != null) {
+                int dx = (oldSprite.width - newSprite.width) / 2;
+                int dy = (oldSprite.height - newSprite.height) / 2;
+                newSprite.drawSprite(x + dx, y + dy);
+            } else if (newSprite != null) {
+                newSprite.drawSprite(x, y);
+            }
+        } else {
+            sideIcons[iconId].drawSprite(x, y);
         }
     }
 
@@ -8085,13 +8101,24 @@ public class Client extends GameEngine
     }
 
 
-    private void setNorth() {
+    private void setCompassDirection(int dir) {
         cameraX = 0;
         cameraY = 0;
-        cameraRotation = 0;
         cameraHorizontal = 0;
-        minimapRotation = 0;
         minimapZoom = 0;
+        if (dir == 0) { // North
+            cameraRotation = 0;
+            minimapRotation = 0;
+        } else if (dir == 1) { // South
+            cameraRotation = 1024;
+            minimapRotation = 1024;
+        } else if (dir == 2) { // East
+            cameraRotation = 512;
+            minimapRotation = 512;
+        } else if (dir == 3) { // West
+            cameraRotation = 1536;
+            minimapRotation = 1536;
+        }
     }
 
     private void processMenuActions(int id) {
@@ -8183,7 +8210,16 @@ public class Client extends GameEngine
         }
 
         if (action == 696) {
-            setNorth();
+            setCompassDirection(0);
+        }
+        if (action == 697) {
+            setCompassDirection(1);
+        }
+        if (action == 698) {
+            setCompassDirection(2);
+        }
+        if (action == 699) {
+            setCompassDirection(3);
         }
         if (action == 291) {
             outgoing.writeOpcode(140);
@@ -11856,7 +11892,7 @@ public class Client extends GameEngine
                 spellSelected = 0;
                 loadingStage = 0;
                 anInt1062 = 0;
-                setNorth();
+                setCompassDirection(0);
                 minimapState = 0;
                 anInt985 = -1;
                 destX = 0;
@@ -17215,7 +17251,7 @@ public class Client extends GameEngine
                         aBooleanArray876[l] = false;
                     }
                     // xpCounter = 0;
-                    setNorth();
+                    setCompassDirection(0);
                     opcode = -1;
                     return true;
 
@@ -18874,9 +18910,18 @@ public class Client extends GameEngine
     private void processMinimapActions() {
         final boolean fixed = !isResized();
         if (fixed ? MouseHandler.mouseX >= 542 && MouseHandler.mouseX <= 579 && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 38 : MouseHandler.mouseX >= canvasWidth - 180 && MouseHandler.mouseX <= canvasWidth - 139 && MouseHandler.mouseY >= 0 && MouseHandler.mouseY <= 40) {
-            menuActionName[1] = "Face North";
-            menuActionID[1] = 696;
-            menuActionRow = 2;
+            menuActionName[menuActionRow] = "Face North";
+            menuActionID[menuActionRow] = 696;
+            menuActionRow++;
+            menuActionName[menuActionRow] = "Face South";
+            menuActionID[menuActionRow] = 697;
+            menuActionRow++;
+            menuActionName[menuActionRow] = "Face East";
+            menuActionID[menuActionRow] = 698;
+            menuActionRow++;
+            menuActionName[menuActionRow] = "Face West";
+            menuActionID[menuActionRow] = 699;
+            menuActionRow++;
         }
         if (fixed ? MouseHandler.mouseX >= 742 && MouseHandler.mouseX <= 765 && MouseHandler.mouseY >= 0 && MouseHandler.mouseY <= 24 : MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1 && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24) {
             menuActionName[1] = "Logout";
