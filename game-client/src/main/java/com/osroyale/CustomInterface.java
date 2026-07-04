@@ -1209,7 +1209,7 @@ public class CustomInterface extends RSInterface {
         addConfigButton(50005, 50000, 140, 141, 40, 40, "View extra settings", 3, 5, 980, false);
         addConfigButton(50006, 50000, 127, 126, 40, 40, "Toggle accept aid", 0, 5, 427, false);
         addConfigButton(50007, 50000, 129, 128, 40, 40, "Toggle run", 0, 5, 152, true);
-        addConfigButton(50008, 50000, 731, 732, 40, 40, "View donator tab", 4, 5, 980, false);
+        addConfigButton(50008, 50000, 731, 732, 40, 40, "Magic Switcher", 4, 5, 980, false);
         tab.totalChildren(9);
         tab.child(0, 50001, 3, 48);
         tab.child(1, 50002, 5, 4);
@@ -1330,29 +1330,30 @@ public class CustomInterface extends RSInterface {
         scrollInterface.contentType = 0;
         scrollInterface.width = 165;
         scrollInterface.height = 155;
-        scrollInterface.scrollMax = 300;
-        int y = 5;
+        scrollInterface.scrollMax = 200;
+        int y = 15;
         scrollInterface.totalChildren(6);
 
-        addHoverButton(50421, 391, 118, 32, "Teleport to Donator Zone", 0, 50422, 1);
-        addHoveredButton(50422, 392, 118, 32, 50423);
-        addText(50424, "Donator Zone", TDA, 1, 0xFF9900, true, true);
+        // We use config 981 for the spellbook selection (0 = Normal, 1 = Ancient, 2 = Lunar)
+        addConfigButton(50421, 50420, 234, 235, 15, 15, "Enable Normal Magic", 0, 1, 981, false);
+        addText(50424, "Normal Magic", TDA, 1, 0xFF9900, false, true);
 
-        addHoverButton(50425, 391, 118, 32, "Manage donator titles", 0, 50426, 1);
-        addHoveredButton(50426, 392, 118, 32, 50427);
-        addText(50428, "Donator Titles", TDA, 1, 0xFF9900, true, true);
+        addConfigButton(50425, 50420, 234, 235, 15, 15, "Enable Ancient Magic", 1, 1, 981, false);
+        addText(50428, "Ancient Magic", TDA, 1, 0xFF9900, false, true);
 
+        addConfigButton(50429, 50420, 234, 235, 15, 15, "Enable Lunar Magic", 2, 1, 981, false);
+        addText(50432, "Lunar Magic", TDA, 1, 0xFF9900, false, true);
 
-        scrollInterface.child(0, 50421, 30, y);
-        scrollInterface.child(1, 50422, 30, y);
-        scrollInterface.child(2, 50424, 88, y + 7);
+        scrollInterface.child(0, 50421, 20, y);
+        scrollInterface.child(1, 50424, 45, y + 2);
 
-        y = 45;
-        scrollInterface.child(3, 50425, 30, y);
-        scrollInterface.child(4, 50426, 30, y);
-        scrollInterface.child(5, 50428, 88, y + 7);
+        y = 55;
+        scrollInterface.child(2, 50425, 20, y);
+        scrollInterface.child(3, 50428, 45, y + 2);
 
-
+        y = 95;
+        scrollInterface.child(4, 50429, 20, y);
+        scrollInterface.child(5, 50432, 45, y + 2);
     }
 
     public static void settings(TextDrawingArea[] tda) {

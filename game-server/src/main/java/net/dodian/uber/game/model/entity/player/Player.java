@@ -2175,7 +2175,8 @@ public abstract class Player extends Entity {
         c.setSidebarInterface(3, 3213); // backpack tab
         c.setSidebarInterface(4, 1644); // items wearing tab
         c.setSidebarInterface(5, 5608); // pray tab
-        c.setSidebarInterface(6, c.ancients == 1 ? 12855 : 1151); // magic spellbook
+        c.setSidebarInterface(6, c.ancients == 1 ? 12855 : c.ancients == 2 ? 29999 : 40000); // magic spellbook
+        c.varbit(981, c.ancients);
        // c.setSidebarInterface(7, 37128); // clan chat tab
         c.setSidebarInterface(8, 5065); // friend
         c.setSidebarInterface(9, 5715); // ignore

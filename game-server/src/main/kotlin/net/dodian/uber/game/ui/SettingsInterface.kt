@@ -23,6 +23,9 @@ object SettingsInterface : InterfaceButtonContent {
     private val settingsTabAudio = intArrayOf(50003)
     private val settingsTabKeybinds = intArrayOf(50005)
     private val settingsTabDonator = intArrayOf(50008)
+    private val settingsTabNormalMagic = intArrayOf(50421)
+    private val settingsTabAncientMagic = intArrayOf(50425)
+    private val settingsTabLunarMagic = intArrayOf(50429)
 
     private val clientModeFixed = intArrayOf(50031)
     private val clientModeResizable = intArrayOf(50034)
@@ -70,6 +73,28 @@ object SettingsInterface : InterfaceButtonContent {
             buttonBinding(-1, 9, "settings.tab.donator", settingsTabDonator) { client, _ ->
                 client.setSidebarInterface(11, 50400)
                 client.varbit(980, 4)
+                client.varbit(981, client.ancients)
+                true
+            },
+            buttonBinding(-1, 0, "settings.spellbook.normal", settingsTabNormalMagic) { client, _ ->
+                client.setSidebarInterface(6, 40000)
+                client.ancients = 0
+                client.varbit(981, 0)
+                client.sendMessage("Normal magic enabled")
+                true
+            },
+            buttonBinding(-1, 0, "settings.spellbook.ancient", settingsTabAncientMagic) { client, _ ->
+                client.setSidebarInterface(6, 12855)
+                client.ancients = 1
+                client.varbit(981, 1)
+                client.sendMessage("Ancient magic enabled")
+                true
+            },
+            buttonBinding(-1, 0, "settings.spellbook.lunar", settingsTabLunarMagic) { client, _ ->
+                client.setSidebarInterface(6, 29999)
+                client.ancients = 2
+                client.varbit(981, 2)
+                client.sendMessage("Lunar magic enabled")
                 true
             },
             // Client Screen Mode Bindings

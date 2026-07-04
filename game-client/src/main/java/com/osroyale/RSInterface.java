@@ -3068,7 +3068,7 @@ public class RSInterface {
 
 		setChildren(1 + spell_hovers.length, spellbook);
 
-		setBounds(12424, 1, 11, 0, spellbook);
+		setBounds(12424, 1, 4, 0, spellbook);
 
 		for(int i = 1, index = 0; i < spell_hovers.length + 1; i++, index++) {
 			int y = index >= 35 ? 8 : 178;

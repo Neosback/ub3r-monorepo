@@ -47,21 +47,9 @@ object PacketInterfaceCloseService {
             client.send(RemoveInterfaces())
         }
         if (client.inDuel && !client.duelFight) {
-            val other = client.getClient(client.duel_with)
-            if (other == null || !client.validClient(client.duel_with) ||
-                !PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.DUEL_REQUEST, 600L)
-            ) {
-                return
-            }
             TradeDuelSessionService.closeOpenDuel(client)
         }
         if (client.inTrade) {
-            val other = client.getClient(client.trade_reqId)
-            if (other == null || !client.validClient(client.trade_reqId) ||
-                !PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.TRADE_REQUEST, 600L)
-            ) {
-                return
-            }
             TradeDuelSessionService.closeOpenTrade(client)
         }
         if (client.currentSkill >= 0) {

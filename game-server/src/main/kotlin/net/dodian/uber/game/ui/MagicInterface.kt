@@ -9,7 +9,7 @@ import net.dodian.uber.game.ui.combat.CombatStyleService
 import net.dodian.uber.game.engine.util.Misc
 
 object MagicInterface : InterfaceButtonContent {
-    private const val NORMAL_INTERFACE_ID = 1151
+    private const val NORMAL_INTERFACE_ID = 40000
     private const val ANCIENT_INTERFACE_ID = 12855
 
     private val spellbookToggleButtons = intArrayOf(74212, 49047, 49046, 23024)
@@ -50,14 +50,18 @@ object MagicInterface : InterfaceButtonContent {
                     componentKey = "magic.spellbook_toggle",
                     rawButtonIds = spellbookToggleButtons,
                 ) { client, _ ->
-                    if (client.ancients == 1) {
-                        client.setSidebarInterface(6, 1151)
-                        client.ancients = 0
-                        client.sendMessage("Normal magic enabled")
-                    } else {
-                        client.setSidebarInterface(6, 12855)
+                    if (client.ancients == 0) {
+                        client.setSidebarInterface(6, ANCIENT_INTERFACE_ID)
                         client.ancients = 1
                         client.sendMessage("Ancient magic enabled")
+                    } else if (client.ancients == 1) {
+                        client.setSidebarInterface(6, 29999)
+                        client.ancients = 2
+                        client.sendMessage("Lunar magic enabled")
+                    } else {
+                        client.setSidebarInterface(6, NORMAL_INTERFACE_ID)
+                        client.ancients = 0
+                        client.sendMessage("Normal magic enabled")
                     }
                     true
                 },

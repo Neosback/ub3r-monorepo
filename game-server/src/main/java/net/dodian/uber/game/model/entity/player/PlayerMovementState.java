@@ -213,6 +213,10 @@ final class PlayerMovementState {
             return;
         }
 
+        if (temp.inDuel && temp.duelFight && temp.duelRule[9]) {
+            resetWalkingQueue();
+        }
+
         primaryDirection = getNextWalkingDirection();
         if (primaryDirection == -1) {
             return;

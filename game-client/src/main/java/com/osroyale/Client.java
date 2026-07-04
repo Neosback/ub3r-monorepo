@@ -19271,6 +19271,7 @@ public class Client extends GameEngine
         anIntArray968 = new int[33];
         fileStores = new RSFileStore[RSFileStore.CACHE_INDEX_COUNT];
         settings = new int[60_000];
+        settings[981] = 1;
         aBoolean972 = false;
         anInt975 = 50;
         anIntArray976 = new int[anInt975];

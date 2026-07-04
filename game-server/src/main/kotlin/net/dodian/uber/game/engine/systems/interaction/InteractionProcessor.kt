@@ -93,6 +93,10 @@ object InteractionProcessor {
     }
 
     private fun processNpcInteraction(player: Client, intent: NpcInteractionIntent): InteractionExecutionResult {
+        if (player.inDuel) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
         val startNs = System.nanoTime()
         val npc = Server.npcManager.getNpc(intent.npcIndex)
         if (npc == null) {
@@ -180,6 +184,10 @@ object InteractionProcessor {
     }
 
     private fun processObjectClick(player: Client, intent: ObjectClickIntent): InteractionExecutionResult {
+        if (player.inDuel) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
         val startNs = System.nanoTime()
         if (player.disconnected || player.randomed || player.UsingAgility) {
             clear(player)
@@ -375,6 +383,10 @@ object InteractionProcessor {
     }
 
     private fun processItemOnObject(player: Client, intent: ItemOnObjectIntent): InteractionExecutionResult {
+        if (player.inDuel) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
         val startNs = System.nanoTime()
         if (player.disconnected || player.randomed) {
             clear(player)
@@ -520,6 +532,10 @@ object InteractionProcessor {
     }
 
     private fun processMagicOnObject(player: Client, intent: MagicOnObjectIntent): InteractionExecutionResult {
+        if (player.inDuel) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
         val startNs = System.nanoTime()
         if (player.disconnected || player.randomed || player.UsingAgility) {
             clear(player)
@@ -656,6 +672,10 @@ object InteractionProcessor {
     }
 
     private fun processItemOnNpc(player: Client, intent: ItemOnNpcIntent): InteractionExecutionResult {
+        if (player.inDuel) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
         val startNs = System.nanoTime()
         val npc = Server.npcManager.getNpc(intent.npcIndex)
         if (npc == null) {
@@ -707,6 +727,10 @@ object InteractionProcessor {
     }
 
     private fun processMagicOnNpc(player: Client, intent: MagicOnNpcIntent): InteractionExecutionResult {
+        if (player.inDuel) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
         val startNs = System.nanoTime()
         val npc = Server.npcManager.getNpc(intent.npcIndex)
         if (npc == null) {
@@ -750,6 +774,10 @@ object InteractionProcessor {
     }
 
     private fun processMagicOnPlayer(player: Client, intent: MagicOnPlayerIntent): InteractionExecutionResult {
+        if (player.inDuel && intent.victimIndex != player.duel_with) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
         val startNs = System.nanoTime()
         val victim = PlayerRegistry.getClient(intent.victimIndex)
         if (victim == null) {
@@ -793,6 +821,10 @@ object InteractionProcessor {
     }
 
     private fun processAttackPlayer(player: Client, intent: AttackPlayerIntent): InteractionExecutionResult {
+        if (player.inDuel && intent.victimIndex != player.duel_with) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
         val startNs = System.nanoTime()
         val victim = PlayerRegistry.getClient(intent.victimIndex)
         if (victim == null) {

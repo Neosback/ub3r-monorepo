@@ -100,5 +100,6 @@ object PlayerDeathTickService {
         player.GetBonus(true)
         player.requestWeaponAnims()
         player.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
+        player.rerequestAnim()
     }
 }

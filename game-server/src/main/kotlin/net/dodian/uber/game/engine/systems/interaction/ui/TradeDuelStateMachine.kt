@@ -48,10 +48,20 @@ object TradeDuelStateMachine {
         if (!client.inDuel || client.duelConfirmed) {
             return true
         }
+        if (!canAttackWithDuelRules(client)) {
+            client.sendString("You don't have weapons/spells for rules!", 31009)
+            client.sendMessage("You don't have the right equipment to attack with the enabled combat styles!")
+            return true
+        }
+        if (!canAttackWithDuelRules(other)) {
+            client.sendString("Opponent doesn't have weapons/spells!", 31009)
+            client.sendMessage("Your opponent doesn't have the right equipment to attack with the enabled combat styles!")
+            return true
+        }
         client.duelConfirmed = true
         if (!other.duelConfirmed) {
-            client.sendString("Waiting for other player...", 6684)
-            other.sendString("Other player has accepted.", 6684)
+            client.sendString("Waiting for other player...", 31009)
+            other.sendString("Other player has accepted.", 31009)
             return true
         }
 
@@ -84,12 +94,32 @@ object TradeDuelStateMachine {
         if (other.duelConfirmed2) {
             client.removeEquipment()
             other.removeEquipment()
+            if (!canAttackWithDuelRules(client) || !canAttackWithDuelRules(other)) {
+                val msg = "You don't have the right equipment to attack with the enabled combat styles!"
+                client.sendMessage(msg)
+                other.sendMessage(msg)
+                client.declineDuel()
+                other.declineDuel()
+                return true
+            }
             client.startDuel()
             other.startDuel()
         } else {
-            client.sendString("Waiting for other player...", 6571)
-            other.sendString("Other player has accepted", 6571)
+            client.sendString("Waiting for other player...", 31526)
+            other.sendString("Other player has accepted", 31526)
         }
         return true
+    }
+
+    @JvmStatic
+    fun canAttackWithDuelRules(player: Client): Boolean {
+        val noMelee = player.duelRule[1]
+        val noRanged = player.duelRule[0]
+        val noMagic = player.duelRule[2]
+
+        if (!noMelee) return true
+        if (!noRanged && player.usingBow) return true
+        if (!noMagic && (player.magicId >= 0 || (player.hasStaff() && player.autocast_spellIndex >= 0))) return true
+        return false
     }
 }

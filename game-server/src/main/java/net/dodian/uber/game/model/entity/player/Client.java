@@ -2,6 +2,7 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.engine.event.GameEventBus;
+import net.dodian.uber.game.engine.systems.follow.FollowRouting;
 import net.dodian.uber.game.engine.event.GameEventScheduler;
 import net.dodian.uber.game.events.player.PlayerLogoutEvent;
 import net.dodian.uber.game.events.item.ItemPickupEvent;
@@ -152,15 +153,20 @@ public class Client extends Player implements Runnable {
 
     private final int[] trueSlots = {0, 1, 2, 13, 3, 4, 5, 7, 12, 10, 9};
     private final int[] falseSlots = {0, 1, 2, 4, 5, 6, -1, 7, -1, 10, 9, -1, 9, 3};
-    private final int[] stakeConfigId = new int[23];
-    private final int[] duelRuleConfigIds = {11, 12, 13, 22, 15, 16, 17, 18, 19, 20, 21};
-    public int[] duelLine = {6698, 6699, 6697, 7817, 669, 6696, 6701, 6702, 6703, 6704, 6731};
+    private final int[] stakeConfigId = new int[11];
+    private final int[] duelRuleConfigIds = {631, 632, 633, 634, 635, 636, 638, 639, 637, 640, 641};
+    public int[] duelLine = {31045, 31046, 31047, 31048, 31049, 31050, 31052, 31053, 31051, 31054, 31055};
     public boolean duelRequested = false, inDuel = false, duelConfirmed = false, duelConfirmed2 = false,
             duelFight = false;
+    public long lastDuelItemChangeMs = 0L;
     public int duel_with = 0;
+    public int duelApproachPendingSlot = -1;
+    public int duelApproachTicks = 0;
     public boolean tradeRequested = false, inTrade = false, canOffer = true, tradeConfirmed = false,
             tradeConfirmed2 = false, tradeResetNeeded = false;
     public int trade_reqId = 0;
+    public int tradeApproachPendingSlot = -1;
+    public int tradeApproachTicks = 0;
     public CopyOnWriteArrayList<GameItem> offeredItems = new CopyOnWriteArrayList<>();
     public CopyOnWriteArrayList<GameItem> otherOfferedItems = new CopyOnWriteArrayList<>();
     public boolean adding = false;
@@ -3351,28 +3357,29 @@ public class Client extends Player implements Runnable {
 
 
     public void RefreshDuelRules() {
-        int configValue = 0;
-        for (int i = 0; i < duelLine.length; i++) {
-            if (duelRule[i]) {
-                send(new SendString(/* "@red@" + */duelNames[i], duelLine[i]));
-                configValue += stakeConfigId[duelRuleConfigIds[i]];
-            } else {
-                send(new SendString(/* "@gre@" + */duelNames[i], duelLine[i]));
-            }
+        for (int i = 0; i < duelRule.length; i++) {
+            int configId = duelRuleConfigIds[i];
+            boolean on = duelRule[i];
+            if (i == 9) on = true;
+            if (i == 3 || i == 4 || i == 5 || i == 10) on = false;
+            String color = on ? "@red@" : ((i == 3 || i == 4 || i == 5 || i == 10) ? "@or2@" : "@gre@");
+            send(new SendString(color + duelNames[i], duelLine[i]));
+            setVarp(configId, on ? 1 : 0);
         }
+        int bodyConfigValue = 0;
         for (int i = 0; i < duelBodyRules.length; i++) {
             if (duelBodyRules[i])
-                configValue += stakeConfigId[i];
+                bodyConfigValue += stakeConfigId[i];
         }
-        varbit(286, configValue);
+        varbit(286, bodyConfigValue);
     }
 
     public void DuelVictory() {
         Client other = getClient(duel_with);
         if (validClient(duel_with)) {
             send(new SendMessage("You have defeated " + other.getPlayerName() + "!"));
-            send(new SendString("" + other.determineCombatLevel(), 6839));
-            send(new SendString(other.getPlayerName(), 6840));
+            send(new SendString(other.getPlayerName(), 31706));
+            send(new SendString("" + other.determineCombatLevel(), 31707));
         }
         boolean stake = false;
         StringBuilder playerStake = new StringBuilder();
@@ -3401,16 +3408,21 @@ public class Client extends Player implements Runnable {
                 other.resetDuel();
             resetDuel();
         }
-        if (stake) {
-            openInterface(6733);
+        long totalValue = 0;
+        for (GameItem item : otherOfferedItems) {
+            if (item.getId() > 0 && item.getAmount() > 0) {
+                totalValue += (long) Server.itemManager.getShopSellValue(item.getId()) * item.getAmount();
+            }
         }
+        send(new SendString("<col=E1981F>Total Value: " + String.format("%,d", totalValue), 31709));
+        openInterface(31700);
         heal(getMaxHealth());
         getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 
     }
 
     public void itemsToVScreen_old() {
-        send(new ItemsToVScreen(otherOfferedItems));
+        send(new DuelItemsUpdate(31708, otherOfferedItems, false));
     }
 
     public void refreshDuelScreen() {
@@ -3418,10 +3430,8 @@ public class Client extends Player implements Runnable {
         if (!validClient(duel_with)) {
             return;
         }
-        
-        send(new DuelItemsUpdate(6669, offeredItems, true));
-        
-        send(new DuelItemsUpdate(6670, other.offeredItems, true));
+        send(new DuelItemsUpdate(31012, offeredItems, true));
+        send(new DuelItemsUpdate(31014, other.offeredItems, true));
     }
 
     public void stakeItem(int itemID, int fromSlot, int amount) {
@@ -3481,6 +3491,11 @@ public class Client extends Player implements Runnable {
                 }
             }
         }
+        duelConfirmed = false;
+        other.duelConfirmed = false;
+        long timeNow = System.currentTimeMillis();
+        lastDuelItemChangeMs = timeNow;
+        other.lastDuelItemChangeMs = timeNow;
         resetItems(3214);
         resetItems(3322);
         other.resetItems(3214);
@@ -3505,6 +3520,10 @@ public class Client extends Player implements Runnable {
     }
 
     public void fromDuel(int itemID, int fromSlot, int amount) {
+        if (!canOffer) {
+            declineDuel();
+            return;
+        }
         if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
@@ -3552,6 +3571,9 @@ public class Client extends Player implements Runnable {
             }
         }
         duelConfirmed = false;
+        long timeNow = System.currentTimeMillis();
+        lastDuelItemChangeMs = timeNow;
+        other.lastDuelItemChangeMs = timeNow;
         resetItems(3214);
         resetItems(3322);
         refreshDuelScreen();
@@ -3797,6 +3819,8 @@ public class Client extends Player implements Runnable {
         tradeConfirmed2 = false;
         offeredItems.clear();
         trade_reqId = -1;
+        tradeApproachPendingSlot = -1;
+        tradeApproachTicks = 0;
         faceTarget(trade_reqId);
         checkItemUpdate();
     }
@@ -3811,7 +3835,9 @@ public class Client extends Player implements Runnable {
     }
 
     public void tradeReq(int id) {
-        facePlayer(id);
+        Client other = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[id];
+        if (other == null) return;
+        setFocus(other.getPosition().getX(), other.getPosition().getY());
         if (!Server.trading) {
             send(new SendMessage("Trading has been temporarily disabled"));
             return;
@@ -3822,14 +3848,33 @@ public class Client extends Player implements Runnable {
                 logout();
             }
         }
-        Client other = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[id];
+        if (!goodDistanceEntity(other, 1)) {
+            tradeApproachPendingSlot = id;
+            tradeApproachTicks = 0;
+            resetWalkingQueue();
+            FollowRouting.routeToEntityBoundary(
+                this, other.getPosition().getX(), other.getPosition().getY(),
+                1, getPosition().getZ(), null, false
+            );
+            return;
+        }
+        tradeApproachPendingSlot = -1;
+        resetWalkingQueue();
+        if (getPosition().getX() == other.getPosition().getX() && getPosition().getY() == other.getPosition().getY()) {
+            tradeApproachPendingSlot = id;
+            tradeApproachTicks = 0;
+            FollowRouting.routeToEntityBoundary(
+                this, other.getPosition().getX(), other.getPosition().getY(),
+                1, getPosition().getZ(), null, false
+            );
+            return;
+        }
         String tradeBlockMessage = net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService.tradeBlockMessage(this, other);
         if (tradeBlockMessage != null) {
             send(new SendMessage(tradeBlockMessage));
             return;
         }
         if (validClient(trade_reqId)) {
-            setFocus(other.getPosition().getX(), other.getPosition().getY());
             if (isBusy() || other.isBusy()) {
                 send(new SendMessage("That player is busy at the moment"));
                 trade_reqId = 0;
@@ -3974,8 +4019,30 @@ public class Client extends Player implements Runnable {
     }
 
     public void duelReq(int pid) {
-        facePlayer(pid);
         Client other = getClient(pid);
+        if (other == null) return;
+        setFocus(other.getPosition().getX(), other.getPosition().getY());
+        if (!goodDistanceEntity(other, 1)) {
+            duelApproachPendingSlot = pid;
+            duelApproachTicks = 0;
+            resetWalkingQueue();
+            FollowRouting.routeToEntityBoundary(
+                this, other.getPosition().getX(), other.getPosition().getY(),
+                1, getPosition().getZ(), null, false
+            );
+            return;
+        }
+        duelApproachPendingSlot = -1;
+        resetWalkingQueue();
+        if (getPosition().getX() == other.getPosition().getX() && getPosition().getY() == other.getPosition().getY()) {
+            duelApproachPendingSlot = pid;
+            duelApproachTicks = 0;
+            FollowRouting.routeToEntityBoundary(
+                this, other.getPosition().getX(), other.getPosition().getY(),
+                1, getPosition().getZ(), null, false
+            );
+            return;
+        }
         String duelBlockMessage = net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService.duelBlockMessage(this, other);
         if (duelBlockMessage != null) {
             send(new SendMessage(duelBlockMessage));
@@ -4030,14 +4097,16 @@ public class Client extends Player implements Runnable {
     }
 
     public void openDuel() {
+        duelRule[9] = true;
         RefreshDuelRules();
         refreshDuelScreen();
         inDuel = true;
         Client other = getClient(duel_with);
-        send(new SendString("Dueling with: " + other.getPlayerName() + " (level-" + other.determineCombatLevel() + ")", 6671));
-        send(new SendString("", 6684));
+        send(new SendString("Dueling with: " + other.getPlayerName() + " (level-" + other.determineCombatLevel() + ")", 31005));
+        send(new SendString("Opponent's combat level: @or2@" + other.determineCombatLevel(), 31006));
+        send(new SendString("", 31009));
         resetItems(3322);
-        send(new InventoryInterface(6575, 3321));
+        send(new InventoryInterface(31000, 3321));
         sendDuelArmour(other);
     }
 
@@ -4050,6 +4119,8 @@ public class Client extends Player implements Runnable {
         send(new RemoveInterfaces());
         canOffer = true;
         duel_with = 0;
+        duelApproachPendingSlot = -1;
+        duelApproachTicks = 0;
         duelRequested = false;
         duelConfirmed = false;
         duelConfirmed2 = false;
@@ -4079,29 +4150,52 @@ public class Client extends Player implements Runnable {
     public void confirmDuel() {
         canOffer = false;
         resetItems(3322);
-        send(new InventoryInterface(6412, 3321)); // Duel confirm
+        send(new InventoryInterface(31500, 3321));
         Client other = getClient(duel_with);
         if (!validClient(duel_with)) {
             declineDuel();
         }
-        /* Reset duel item containers! */
-        send(new ClearItemContainer(6509, 1));
-        send(new ClearItemContainer(6507, 1));
-        send(new ClearItemContainer(6502, 1));
-        send(new ClearItemContainer(6508, 1));
-        
-        /* Send duel items! */
-        send(DuelConfirmItems.forOwnItems(offeredItems, other.offeredItems));
-        send(DuelConfirmItems.forOtherItems(offeredItems, other.offeredItems));
-        send(new SendString(offeredItems.isEmpty() ? "Absolutely nothing!" : "", 6516));
-        send(new SendString(other.offeredItems.isEmpty() ? "Absolutely nothing!" : "", 6517));
-
-        send(new SendString("Movement will be disabled", 8242));
-        for (int i = 8243; i <= 8253; i++) {
-            send(new SendString("", i));
+        int lineIndex = 0;
+        for (int i = 0; i < duelRule.length; i++) {
+            if (lineIndex >= 15) break;
+            boolean on = duelRule[i];
+            if (i == 9) on = true;
+            if (i == 3 || i == 4 || i == 5 || i == 10) on = false;
+            String color = on ? "@red@" : ((i == 3 || i == 4 || i == 5 || i == 10) ? "@or2@" : "@gre@");
+            send(new SendString(color + duelNames[i], 31505 + lineIndex));
+            lineIndex++;
         }
-        send(new SendString("Hitpoints will be restored", 8250));
-        send(new SendString("", 6571));
+        while (lineIndex < 15) {
+            send(new SendString("", 31505 + lineIndex));
+            lineIndex++;
+        }
+        int slot = 0;
+        for (GameItem item : offeredItems) {
+            if (slot >= 28) break;
+            if (item.getId() > 0 && item.getAmount() > 0) {
+                send(new SendString("</col>" + getItemName(item.getId()) + " @whi@x " + String.format("%,d", item.getAmount()), 31531 + slot));
+                slot++;
+            }
+        }
+        while (slot < 28) {
+            send(new SendString("", 31531 + slot));
+            slot++;
+        }
+        slot = 0;
+        if (validClient(duel_with)) {
+            for (GameItem item : other.offeredItems) {
+                if (slot >= 28) break;
+                if (item.getId() > 0 && item.getAmount() > 0) {
+                    send(new SendString("</col>" + other.getItemName(item.getId()) + " @whi@x " + String.format("%,d", item.getAmount()), 31561 + slot));
+                    slot++;
+                }
+            }
+        }
+        while (slot < 28) {
+            send(new SendString("", 31561 + slot));
+            slot++;
+        }
+        send(new SendString("", 31526));
     }
 
     public void startDuel() {
@@ -4139,6 +4233,63 @@ public class Client extends Player implements Runnable {
         });
     }
 
+    public void processPendingApproaches() {
+        if (duelApproachPendingSlot != -1) {
+            duelApproachTicks++;
+            if (duelApproachTicks > 40) {
+                duelApproachPendingSlot = -1;
+                duelApproachTicks = 0;
+                return;
+            }
+            Client other = getClient(duelApproachPendingSlot);
+            if (other == null) {
+                duelApproachPendingSlot = -1;
+                duelApproachTicks = 0;
+                return;
+            }
+            if (goodDistanceEntity(other, 1)) {
+                if (getPosition().getX() == other.getPosition().getX() && getPosition().getY() == other.getPosition().getY()) {
+                    FollowRouting.routeToEntityBoundary(
+                        this, other.getPosition().getX(), other.getPosition().getY(),
+                        1, getPosition().getZ(), null, false
+                    );
+                    return;
+                }
+                int pending = duelApproachPendingSlot;
+                duelApproachPendingSlot = -1;
+                duelApproachTicks = 0;
+                duelReq(pending);
+            }
+        }
+        if (tradeApproachPendingSlot != -1) {
+            tradeApproachTicks++;
+            if (tradeApproachTicks > 40) {
+                tradeApproachPendingSlot = -1;
+                tradeApproachTicks = 0;
+                return;
+            }
+            Client other = getClient(tradeApproachPendingSlot);
+            if (other == null) {
+                tradeApproachPendingSlot = -1;
+                tradeApproachTicks = 0;
+                return;
+            }
+            if (goodDistanceEntity(other, 1)) {
+                if (getPosition().getX() == other.getPosition().getX() && getPosition().getY() == other.getPosition().getY()) {
+                    FollowRouting.routeToEntityBoundary(
+                        this, other.getPosition().getX(), other.getPosition().getY(),
+                        1, getPosition().getZ(), null, false
+                    );
+                    return;
+                }
+                int pending = tradeApproachPendingSlot;
+                tradeApproachPendingSlot = -1;
+                tradeApproachTicks = 0;
+                tradeReq(pending);
+            }
+        }
+    }
+
     /*
      * Danno: Edited for new duel rules, for future use.
      */
@@ -4172,6 +4323,7 @@ public class Client extends Player implements Runnable {
     public boolean toggleDuelRule(int ruleIndex) {
         Client other = getClient(duel_with);
         if (other == null || ruleIndex < 0 || ruleIndex >= duelRule.length
+                || ruleIndex == 3 || ruleIndex == 4 || ruleIndex == 5 || ruleIndex == 9 || ruleIndex == 10
                 || !net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_RULES, 800L)) {
             return false;
         }
@@ -4180,8 +4332,8 @@ public class Client extends Player implements Runnable {
             other.duelRule[ruleIndex] = duelRule[ruleIndex];
             duelConfirmed = false;
             other.duelConfirmed = false;
-            send(new SendString("", 6684));
-            other.send(new SendString("", 6684));
+            send(new SendString("", 31009));
+            other.send(new SendString("", 31009));
             RefreshDuelRules();
             other.RefreshDuelRules();
             return true;
@@ -4200,8 +4352,8 @@ public class Client extends Player implements Runnable {
             other.duelBodyRules[ruleIndex] = duelBodyRules[ruleIndex];
             duelConfirmed = false;
             other.duelConfirmed = false;
-            send(new SendString("", 6684));
-            other.send(new SendString("", 6684));
+            send(new SendString("", 31009));
+            other.send(new SendString("", 31009));
             RefreshDuelRules();
             other.RefreshDuelRules();
             return true;
@@ -4615,18 +4767,6 @@ public class Client extends Player implements Runnable {
         stakeConfigId[8] = 67108864; // No hand armour
         stakeConfigId[9] = 16777216; // No feet armour
         stakeConfigId[10] = 8388608; // No rings
-        stakeConfigId[11] = 16; // No ranging
-        stakeConfigId[12] = 32; // No melee
-        stakeConfigId[13] = 64; // No magic
-        stakeConfigId[14] = 8192; // no gear change
-        stakeConfigId[15] = 4096; // fun weapons
-        stakeConfigId[16] = 1; // no retreat
-        stakeConfigId[17] = 128; // No drinks
-        stakeConfigId[18] = 256; // No food
-        stakeConfigId[19] = 512; // No prayer
-        stakeConfigId[20] = 2; // movement
-        stakeConfigId[21] = 1024; // obstacles
-        stakeConfigId[22] = -1; // No specials
     }
 
     /**

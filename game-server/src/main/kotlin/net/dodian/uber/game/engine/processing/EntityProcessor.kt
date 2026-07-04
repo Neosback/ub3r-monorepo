@@ -606,6 +606,7 @@ class EntityProcessor : Runnable {
         PlayerLifecycleTickService.processAfterCombat(player, wallClockNow)
         PlayerLifecycleTickService.processEffectsPeriodicPersistence(player, wallClockNow)
         player.postProcessing()
+        player.processPendingApproaches()
         player.getNextPlayerMovement()
     }
 
