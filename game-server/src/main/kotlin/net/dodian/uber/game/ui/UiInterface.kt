@@ -31,6 +31,7 @@ object UiInterface : InterfaceButtonContent {
     private val cameraScrollButtons = intArrayOf(50202)
     private val tabInterfaceDeathButtons = intArrayOf(27654)
     private val tabInterfacePriceCheckerButtons = intArrayOf(27651)
+    private val tabInterfaceOverrideButtons = intArrayOf(27659)
 
     override val bindings =
         listOf(
@@ -208,6 +209,10 @@ object UiInterface : InterfaceButtonContent {
             },
             buttonBinding(-1, 17, "ui.tab.price_checker", tabInterfacePriceCheckerButtons) { client, _ ->
                 client.openPriceChecker()
+                true
+            },
+            buttonBinding(-1, 18, "ui.tab.override", tabInterfaceOverrideButtons) { client, _ ->
+                client.send(ShowInterface(60106))
                 true
             }
         )

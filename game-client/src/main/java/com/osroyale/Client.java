@@ -15910,6 +15910,7 @@ public class Client extends GameEngine
                 }
             }
 
+/*
             if (!isResized() ? MouseHandler.mouseX >= 742 && MouseHandler.mouseX <= 765 && MouseHandler.mouseY >= 0 && MouseHandler.mouseY <= 24 : MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1 && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24) {
                 spriteCache.get(26).drawARGBSprite(!isResized() ? xOffset + 226 : canvasWidth - 23, 0, 205);
             } else {
@@ -15918,6 +15919,7 @@ public class Client extends GameEngine
             if (tabID == 14) {
                 spriteCache.get(27).drawSprite(!isResized() ? xOffset + 226 : canvasWidth - 23, 0);
             }
+*/
 
             compass.rotate(33, cameraHorizontal, anIntArray1057, xOffset + 256, anIntArray968, (!isResized() ? 25 + compassYOffset : 24 + compassYOffset), 4, (!isResized() ? 29 + compassXOffset : canvasWidth - 176 + compassXOffset), 33, 25);
 
@@ -16037,6 +16039,7 @@ public class Client extends GameEngine
             }
         }
 
+/*
         if (!isResized() ? MouseHandler.mouseX >= 742 && MouseHandler.mouseX <= 765 && MouseHandler.mouseY >= 0 && MouseHandler.mouseY <= 24 : MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1 && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24) {
             spriteCache.get(26).drawARGBSprite(!isResized() ? xOffset + 226 : canvasWidth - 23, 0, 205);
         } else {
@@ -16045,6 +16048,7 @@ public class Client extends GameEngine
         if (tabID == 14) {
             spriteCache.get(27).drawSprite(!isResized() ? xOffset + 226 : canvasWidth - 23, 0);
         }
+*/
 
         if (menuOpen) {
             drawMenu();
@@ -18923,11 +18927,13 @@ public class Client extends GameEngine
             menuActionID[menuActionRow] = 699;
             menuActionRow++;
         }
+        /*
         if (fixed ? MouseHandler.mouseX >= 742 && MouseHandler.mouseX <= 765 && MouseHandler.mouseY >= 0 && MouseHandler.mouseY <= 24 : MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1 && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24) {
             menuActionName[1] = "Logout";
             menuActionID[1] = 700;
             menuActionRow = 2;
         }
+        */
 
         if (Settings.STATUS_ORB) {
             if (worldHover) {
