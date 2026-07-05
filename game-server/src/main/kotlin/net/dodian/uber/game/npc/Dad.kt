@@ -16,6 +16,7 @@ internal object Dad : NpcFamily by npcFamily("Dad", 4130, block = {
         hitpoints = 120
         ranged = 1
         magic = 1
+        alwaysAggressive = true
     }
 
     spawns {

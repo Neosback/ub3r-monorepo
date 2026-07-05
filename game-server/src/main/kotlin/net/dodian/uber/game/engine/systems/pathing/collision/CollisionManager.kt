@@ -134,14 +134,64 @@ class CollisionManager(
     }
 
     fun isTraversable(height: Int, x: Int, y: Int, direction: CollisionDirection, size: Int): Boolean {
-        for (offsetX in 0 until size) {
-            for (offsetY in 0 until size) {
-                if (!isTraversable(height, x + offsetX, y + offsetY, direction, impenetrable = false)) {
-                    return false
-                }
-            }
+        if (size == 1) {
+            return isTraversable(height, x, y, direction, impenetrable = false)
         }
-        return true
+        return when (direction) {
+            CollisionDirection.NORTH -> {
+                for (offset in 0 until size) {
+                    if (!isTraversableNorth(height, x + offset, y + size - 1, impenetrable = false)) return false
+                }
+                true
+            }
+            CollisionDirection.SOUTH -> {
+                for (offset in 0 until size) {
+                    if (!isTraversableSouth(height, x + offset, y, impenetrable = false)) return false
+                }
+                true
+            }
+            CollisionDirection.EAST -> {
+                for (offset in 0 until size) {
+                    if (!isTraversableEast(height, x + size - 1, y + offset, impenetrable = false)) return false
+                }
+                true
+            }
+            CollisionDirection.WEST -> {
+                for (offset in 0 until size) {
+                    if (!isTraversableWest(height, x, y + offset, impenetrable = false)) return false
+                }
+                true
+            }
+            CollisionDirection.NORTH_EAST -> {
+                for (offset in 0 until size) {
+                    if (!isTraversableNorth(height, x + offset, y + size - 1, impenetrable = false)) return false
+                    if (!isTraversableEast(height, x + size - 1, y + offset, impenetrable = false)) return false
+                }
+                isTraversableNorthEast(height, x + size - 1, y + size - 1, impenetrable = false)
+            }
+            CollisionDirection.NORTH_WEST -> {
+                for (offset in 0 until size) {
+                    if (!isTraversableNorth(height, x + offset, y + size - 1, impenetrable = false)) return false
+                    if (!isTraversableWest(height, x, y + offset, impenetrable = false)) return false
+                }
+                isTraversableNorthWest(height, x, y + size - 1, impenetrable = false)
+            }
+            CollisionDirection.SOUTH_EAST -> {
+                for (offset in 0 until size) {
+                    if (!isTraversableSouth(height, x + offset, y, impenetrable = false)) return false
+                    if (!isTraversableEast(height, x + size - 1, y + offset, impenetrable = false)) return false
+                }
+                isTraversableSouthEast(height, x + size - 1, y, impenetrable = false)
+            }
+            CollisionDirection.SOUTH_WEST -> {
+                for (offset in 0 until size) {
+                    if (!isTraversableSouth(height, x + offset, y, impenetrable = false)) return false
+                    if (!isTraversableWest(height, x, y + offset, impenetrable = false)) return false
+                }
+                isTraversableSouthWest(height, x, y, impenetrable = false)
+            }
+            CollisionDirection.NONE -> true
+        }
     }
 
     fun isTraversable(height: Int, x: Int, y: Int, direction: CollisionDirection, impenetrable: Boolean): Boolean =

@@ -154,6 +154,16 @@ class EntityProcessor : Runnable {
         }
         npc.currentGameCycle = GameCycleClock.currentCycle()
 
+        if (npc.coordinateState == Npc.CoordinateState.RETREATING) {
+            npc.isFighting = false
+            handleNpcRetreat(npc)
+            npc.effectChange()
+            handleNpcRandomActions(npc)
+            npc.processedGameCycle = npc.currentGameCycle
+            GameTaskRuntime.cycleNpc(npc)
+            return
+        }
+
         if (!npc.isFighting && npc.isAlive && !npc.isWalking() && npc.walkRadius <= 0) {
             npc.setFocus(
                 npc.position.x + Utils.directionDeltaX[npc.face],
@@ -165,19 +175,63 @@ class EntityProcessor : Runnable {
             npc.lastAttack = npc.lastAttack - 1
         }
 
+        if (npc.alive && !npc.isFighting && npc.isAggressive) {
+            for (client in PlayerRegistry.playersOnline.values) {
+                if (!client.isActive || client.disconnected || client.currentHealth < 1) continue
+                if (client.position.z != npc.position.z) continue
+                val dx = Math.abs(client.position.x - npc.position.x)
+                val dy = Math.abs(client.position.y - npc.position.y)
+                val dist = Math.max(dx, dy)
+                if (dist > 4) continue
+                if (client.position.x in 3200..3225 && client.position.y in 3200..3230) continue
+                if (!npc.isAlwaysAggressive && System.currentTimeMillis() > client.toleranceTimer) continue
+                if (!client.inWildy() && client.determineCombatLevel() >= npc.combatLevel * 2 + 1) continue
+                if (npc.isEligibleNpcAttackTarget(client, true)) {
+                    npc.damage[client] = npc.damage[client] ?: 0
+                    npc.isFighting = true
+                    npc.coordinateState = Npc.CoordinateState.AWAY
+                    break
+                }
+            }
+        }
+
         if (npc.alive && npc.isFighting && npc.lastAttack == 0) {
             val target = npc.getTarget(false)
             if (target != null) {
-                val gap = npc.gapDistanceTo(target)
+                var finalTarget = target
+                if (Utils.random(9) <= 2) {
+                    val candidates = ArrayList<Client>()
+                    for (client in PlayerRegistry.playersOnline.values) {
+                        if (client == target) continue
+                        if (!client.isActive || client.disconnected || client.currentHealth < 1) continue
+                        if (client.position.z != npc.position.z) continue
+                        val dist = Math.max(Math.abs(client.position.x - npc.position.x), Math.abs(client.position.y - npc.position.y))
+                        if (dist > npc.effectiveAttackRange) continue
+                        if (npc.isEligibleNpcAttackTarget(client, true)) {
+                            candidates.add(client)
+                        }
+                    }
+                    if (candidates.isNotEmpty()) {
+                        val newTarget = candidates[Utils.random(candidates.size - 1)]
+                        npc.damage[newTarget] = npc.damage[newTarget] ?: 0
+                        finalTarget = newTarget
+                    }
+                }
+
+                val gap = npc.gapDistanceTo(finalTarget)
 
                 val spawnDx = Math.abs(npc.position.x - npc.originalPosition.x)
                 val spawnDy = Math.abs(npc.position.y - npc.originalPosition.y)
                 if (spawnDx > npc.leashDistance || spawnDy > npc.leashDistance) {
-                    if (gameWorldId == 2) logger.info("[W2-COMBAT] npcId={} LEASH_CLEAR: ({} tiles from spawn) returning to roaming", npc.id, Math.max(spawnDx, spawnDy))
+                    if (gameWorldId == 2) logger.info("[W2-COMBAT] npcId={} LEASH_CLEAR: ({} tiles from spawn) returning to spawn", npc.id, Math.max(spawnDx, spawnDy))
+                    npc.coordinateState = Npc.CoordinateState.RETREATING
                     npc.isFighting = false
-                    npc.wanderCooldown = 0
+                    npc.retreatTimer = 0
+                    npc.wanderStuckTicks = 0
+                    npc.damage.clear()
+                    return
                 } else if (gap > npc.effectiveAttackRange) {
-                    handleNpcCombatWalk(npc, target)
+                    handleNpcCombatWalk(npc, finalTarget)
                 } else {
                     val wasFighting = npc.isFighting
                     npc.attack()
@@ -195,6 +249,49 @@ class EntityProcessor : Runnable {
         handleNpcRandomActions(npc)
         npc.processedGameCycle = npc.currentGameCycle
         GameTaskRuntime.cycleNpc(npc)
+    }
+
+    private fun handleNpcRetreat(npc: Npc) {
+        val spawnX = npc.originalPosition.x
+        val spawnY = npc.originalPosition.y
+        val fromX = npc.position.x
+        val fromY = npc.position.y
+        val dx = Integer.signum(spawnX - fromX)
+        val dy = Integer.signum(spawnY - fromY)
+        if (dx == 0 && dy == 0) {
+            npc.coordinateState = Npc.CoordinateState.HOME
+            npc.wanderCooldown = 10 + Utils.random(20)
+            npc.wanderStuckTicks = 0
+        } else {
+            if (npc.retreatTimer > 0) {
+                npc.retreatTimer--
+            } else {
+                val toX = fromX + dx
+                val toY = fromY + dy
+                if (npc.canMove(dx, dy)) {
+                    npc.moveTo(toX, toY, npc.position.z)
+                    npc.markWalkStep(fromX, fromY, toX, toY)
+                    npc.wanderStuckTicks = 0
+                } else {
+                    if (dx != 0 && npc.canMove(dx, 0)) {
+                        npc.moveTo(fromX + dx, fromY, npc.position.z)
+                        npc.markWalkStep(fromX, fromY, fromX + dx, fromY)
+                        npc.wanderStuckTicks = 0
+                    } else if (dy != 0 && npc.canMove(0, dy)) {
+                        npc.moveTo(fromX, fromY + dy, npc.position.z)
+                        npc.markWalkStep(fromX, fromY, fromX, fromY + dy)
+                        npc.wanderStuckTicks = 0
+                    } else {
+                        npc.wanderStuckTicks++
+                        if (npc.wanderStuckTicks > 15) {
+                            npc.respawn()
+                            npc.coordinateState = Npc.CoordinateState.HOME
+                            npc.wanderStuckTicks = 0
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun shouldProcessNpc(npc: Npc?, activeNpcChunks: LongHashSet): Boolean {

@@ -255,7 +255,10 @@ class NpcManager {
                         serverDefValues.ranged ?: 0,
                         0,
                         serverDefValues.magic ?: 0
-                    )
+                    ),
+                    serverDefValues.aggressive,
+                    serverDefValues.alwaysAggressive,
+                    serverDefValues.fightsBack
                 )
             }
             data.clear()

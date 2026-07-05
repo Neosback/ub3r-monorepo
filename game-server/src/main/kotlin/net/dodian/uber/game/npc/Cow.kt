@@ -24,6 +24,7 @@ internal object Cow : NpcFamily by npcFamily("Cow", 5842, block = {
         hitpoints = 8
         magic = 1
         ranged = 1
+        fightsBack = false
     }
 
     options {

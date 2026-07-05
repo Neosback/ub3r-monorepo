@@ -44,6 +44,9 @@ data class NpcServerPatch(
     val magic: Int? = null,
     val headIcon: Int? = null,
     val transformTo: Int? = null,
+    val aggressive: Boolean? = null,
+    val alwaysAggressive: Boolean? = null,
+    val fightsBack: Boolean? = null,
 ) {
     fun overlay(child: NpcServerPatch): NpcServerPatch =
         NpcServerPatch(
@@ -59,6 +62,9 @@ data class NpcServerPatch(
             magic = child.magic ?: magic,
             headIcon = child.headIcon ?: headIcon,
             transformTo = child.transformTo ?: transformTo,
+            aggressive = child.aggressive ?: aggressive,
+            alwaysAggressive = child.alwaysAggressive ?: alwaysAggressive,
+            fightsBack = child.fightsBack ?: fightsBack,
         )
 }
 
@@ -76,6 +82,9 @@ data class NpcServerDefinition(
     val magic: Int? = null,
     val headIcon: Int? = null,
     val transformTo: Int? = null,
+    val aggressive: Boolean = false,
+    val alwaysAggressive: Boolean = false,
+    val fightsBack: Boolean = true,
 ) {
     fun asPatch(): NpcServerPatch =
         NpcServerPatch(
@@ -91,6 +100,9 @@ data class NpcServerDefinition(
             magic = magic,
             headIcon = headIcon,
             transformTo = transformTo,
+            aggressive = aggressive,
+            alwaysAggressive = alwaysAggressive,
+            fightsBack = fightsBack,
         )
 }
 
@@ -175,6 +187,9 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
     var magic: Int? = null
     var headIcon: Int? = null
     var transformTo: Int? = null
+    var aggressive: Boolean? = null
+    var alwaysAggressive: Boolean? = null
+    var fightsBack: Boolean? = null
 
     fun stats(
         attack: Int? = null,
@@ -222,6 +237,9 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
             magic = nonNegative(magic),
             headIcon = nonNegative(headIcon),
             transformTo = nonNegative(transformTo),
+            aggressive = aggressive ?: false,
+            alwaysAggressive = alwaysAggressive ?: false,
+            fightsBack = fightsBack ?: true,
         )
 
     internal fun buildPatch(): NpcServerPatch =
@@ -238,6 +256,9 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
             magic = nonNegative(magic),
             headIcon = nonNegative(headIcon),
             transformTo = nonNegative(transformTo),
+            aggressive = aggressive,
+            alwaysAggressive = alwaysAggressive,
+            fightsBack = fightsBack,
         )
 }
 

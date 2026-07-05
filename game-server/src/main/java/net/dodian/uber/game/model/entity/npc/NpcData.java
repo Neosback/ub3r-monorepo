@@ -23,8 +23,11 @@ public class NpcData {
     private String name = "", examine="";
     private int attackEmote, defenceEmote, deathEmote, respawn, combat, size;
     private final int[] level = new int[7];
+    private boolean aggressive = false;
+    private boolean alwaysAggressive = false;
+    private boolean fightsBack = true;
 
-    public NpcData(String name, String examine, int attackEmote, int defenceEmote, int deathEmote, int respawn, int combat, int size, int[] levels) {
+    public NpcData(String name, String examine, int attackEmote, int defenceEmote, int deathEmote, int respawn, int combat, int size, int[] levels, boolean aggressive, boolean alwaysAggressive, boolean fightsBack) {
         this.name = name == null ? "" : name;
         this.examine = examine;
         this.attackEmote = attackEmote;
@@ -36,6 +39,9 @@ public class NpcData {
         if (levels != null && levels.length >= this.level.length) {
             System.arraycopy(levels, 0, this.level, 0, this.level.length);
         }
+        this.aggressive = aggressive;
+        this.alwaysAggressive = alwaysAggressive;
+        this.fightsBack = fightsBack;
     }
 
     public NpcData(ResultSet row) {
@@ -50,6 +56,9 @@ public class NpcData {
             combat = mapped.combat;
             size = mapped.size;
             System.arraycopy(mapped.level, 0, level, 0, level.length);
+            aggressive = mapped.aggressive;
+            alwaysAggressive = mapped.alwaysAggressive;
+            fightsBack = mapped.fightsBack;
         } catch (Exception e) {
             logger.error("NpcData error while mapping result set", e);
         }
@@ -57,6 +66,18 @@ public class NpcData {
 
     public void addDrop(int id, int min, int max, double percent, boolean rareShout) {
         drops.add(new NpcDrop(id, min, max, percent, rareShout));
+    }
+
+    public boolean isAggressive() {
+        return aggressive || alwaysAggressive;
+    }
+
+    public boolean isAlwaysAggressive() {
+        return alwaysAggressive;
+    }
+
+    public boolean fightsBack() {
+        return fightsBack;
     }
 
     /**

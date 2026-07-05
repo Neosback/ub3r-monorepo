@@ -68,5 +68,8 @@ object NpcDataInterop {
                 0,
                 data.magic,
             ),
+            false,
+            false,
+            true
         )
 }

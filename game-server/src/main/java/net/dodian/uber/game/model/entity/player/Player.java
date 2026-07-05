@@ -67,6 +67,8 @@ import java.util.*;
 public abstract class Player extends Entity {
     private static final Logger logger = LoggerFactory.getLogger(Player.class);
     public boolean yellOn = true, genie = false, antique = false, instaLoot = false, autoRetaliate = false;
+    public long toleranceTimer = 0L;
+    public Position toleranceCenter = null;
     public long longName = 0;
     public int wildyLevel = 0;
     public long lastAction = 0, lastMagic = 0;
@@ -654,6 +656,17 @@ public abstract class Player extends Entity {
 
     public void getNextPlayerMovement() {
         movementState.getNextPlayerMovement();
+        if (toleranceCenter == null) {
+            toleranceCenter = new Position(getPosition().getX(), getPosition().getY(), getPosition().getZ());
+            toleranceTimer = System.currentTimeMillis() + 600_000L;
+        } else {
+            int deltaX = Math.abs(getPosition().getX() - toleranceCenter.getX());
+            int deltaY = Math.abs(getPosition().getY() - toleranceCenter.getY());
+            if (Math.max(deltaX, deltaY) > 16) {
+                toleranceCenter = new Position(getPosition().getX(), getPosition().getY(), getPosition().getZ());
+                toleranceTimer = System.currentTimeMillis() + 600_000L;
+            }
+        }
     }
 
     public int getLevel(Skill skill) {

@@ -65,6 +65,25 @@ public class Npc extends Entity {
     private final PendingHitBuffer pendingHits = new PendingHitBuffer();
     private int deathEmote;
     public NpcData data;
+    public enum CoordinateState {
+        HOME,
+        AWAY,
+        RETREATING
+    }
+    public CoordinateState coordinateState = CoordinateState.HOME;
+    public int retreatTimer = 0;
+
+    public boolean isAggressive() {
+        return data != null && data.isAggressive();
+    }
+
+    public boolean isAlwaysAggressive() {
+        return data != null && data.isAlwaysAggressive();
+    }
+
+    public boolean fightsBack() {
+        return data == null || data.fightsBack();
+    }
     private boolean fighting = false;
     private final int[] level = new int[7];
     private int spawnWalkRadius = 0;
@@ -427,7 +446,9 @@ public class Npc extends Entity {
                     otherNpc.getDamage().remove(client);
                 }
                 otherNpc.getDamage().put(client, dmg);
-                otherNpc.fighting = true;
+                if (otherNpc.fightsBack()) {
+                    otherNpc.fighting = true;
+                }
             }
         }
         /* Dmg profile! */
@@ -438,7 +459,9 @@ public class Npc extends Entity {
                 getDamage().remove(client);
             }
             getDamage().put(client, dmg);
-            fighting = true;
+            if (fightsBack()) {
+                fighting = true;
+            }
         }
         if (currentHealth < 1) die();
         if (otherNpc != null && otherNpc.currentHealth < 1) //Daganoth kings!
@@ -629,7 +652,7 @@ public class Npc extends Entity {
         return false;
     }
 
-    private boolean isEligibleNpcAttackTarget(Client player, boolean requireInRange) {
+    public boolean isEligibleNpcAttackTarget(Client player, boolean requireInRange) {
         if (!validClient(player)) {
             return false;
         }
@@ -951,7 +974,10 @@ public class Npc extends Entity {
                 isPositive(respawnTicks) ? respawnTicks : data.getRespawn(),
                 combat,
                 getSize(),
-                currentLevels
+                currentLevels,
+                data.isAggressive(),
+                data.isAlwaysAggressive(),
+                data.fightsBack()
             );
             
             deathEmote = data.getDeathEmote();
