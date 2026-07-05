@@ -58,6 +58,8 @@ public final class Settings {
     static boolean DISPLAY_FPS = false;
     static boolean VALUE_ICONS = true;
     static boolean SHIFT_DROP = true;
+    public static int ENTITY_ATTACK_OPTION = 0;
+
 
     public static volatile boolean FIRST_CLIENT_START = true;
     public static volatile boolean RESIZABLE = false;
@@ -429,6 +431,9 @@ public final class Settings {
                     out.writeByte(49);
                     out.writeBoolean(FIRST_CLIENT_START);
 
+                    out.writeByte(50);
+                    out.writeInt(ENTITY_ATTACK_OPTION);
+
                     out.writeByte(0);
                     out.close();
                 } catch (Exception e) {
@@ -615,6 +620,12 @@ public final class Settings {
                 break;
             case 49:
                 FIRST_CLIENT_START = in.readBoolean();
+                break;
+            case 50:
+                ENTITY_ATTACK_OPTION = in.readInt();
+                if (ENTITY_ATTACK_OPTION < 0 || ENTITY_ATTACK_OPTION > 3) {
+                    ENTITY_ATTACK_OPTION = 0;
+                }
                 break;
         }
         return false;

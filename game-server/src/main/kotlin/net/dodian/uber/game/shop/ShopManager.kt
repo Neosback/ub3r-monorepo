@@ -24,6 +24,16 @@ class ShopManager {
 
     @Synchronized
     fun reloadShops(): Boolean {
+        if (ShopItems.isEmpty()) {
+            ShopItems = Array(MaxShops) { IntArray(MaxShopItems) }
+            ShopItemsN = Array(MaxShops) { IntArray(MaxShopItems) }
+            ShopItemsDelay = IntArray(MaxShops)
+            ShopItemsSN = Array(MaxShops) { IntArray(MaxShopItems) }
+            ShopItemsStandard = IntArray(MaxShops)
+            ShopName = Array(MaxShops) { "" }
+            ShopSModifier = IntArray(MaxShops)
+            ShopBModifier = IntArray(MaxShops)
+        }
         for (i in 0 until MaxShops) {
             for (j in 0 until MaxShopItems) {
                 ResetItem(i, j)
@@ -58,19 +68,19 @@ class ShopManager {
     }
 
     companion object {
-        @JvmField var MaxShops: Int = 101
-        @JvmField var MaxShopItems: Int = 40
-        @JvmField var MaxShowDelay: Int = 100
+        const val MaxShops: Int = 101
+        const val MaxShopItems: Int = 40
+        const val MaxShowDelay: Int = 100
         @JvmField var TotalShops: Int = 0
 
-        @JvmField var ShopItems: Array<IntArray> = Array(MaxShops) { IntArray(MaxShopItems) }
-        @JvmField var ShopItemsN: Array<IntArray> = Array(MaxShops) { IntArray(MaxShopItems) }
-        @JvmField var ShopItemsDelay: IntArray = IntArray(MaxShops)
-        @JvmField var ShopItemsSN: Array<IntArray> = Array(MaxShops) { IntArray(MaxShopItems) }
-        @JvmField var ShopItemsStandard: IntArray = IntArray(MaxShops)
-        @JvmField var ShopName: Array<String> = Array(MaxShops) { "" }
-        @JvmField var ShopSModifier: IntArray = IntArray(MaxShops)
-        @JvmField var ShopBModifier: IntArray = IntArray(MaxShops)
+        @JvmField var ShopItems: Array<IntArray> = emptyArray()
+        @JvmField var ShopItemsN: Array<IntArray> = emptyArray()
+        @JvmField var ShopItemsDelay: IntArray = IntArray(0)
+        @JvmField var ShopItemsSN: Array<IntArray> = emptyArray()
+        @JvmField var ShopItemsStandard: IntArray = IntArray(0)
+        @JvmField var ShopName: Array<String> = emptyArray()
+        @JvmField var ShopSModifier: IntArray = IntArray(0)
+        @JvmField var ShopBModifier: IntArray = IntArray(0)
 
         @JvmStatic
         fun resetAnItem(ShopID: Int, ArrayID: Int) {

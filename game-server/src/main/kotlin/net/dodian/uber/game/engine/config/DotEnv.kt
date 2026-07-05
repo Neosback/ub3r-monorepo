@@ -20,6 +20,8 @@ val nettyLeakDetection = dotenv["NETTY_LEAK_DETECTION"] ?: "disabled"
 val dodianLogLevel = dotenv["DODIAN_LOG_LEVEL"] ?: "info"
 val webApiEnabled = dotenv["WEB_API_ENABLED"]?.toBoolean() ?: true
 val webApiPort = dotenv["WEB_API_PORT"]?.toInt() ?: 8080
+val discordToken = dotenv["DISCORD_TOKEN"] ?: ""
+val discordChannelId = dotenv["DISCORD_CHANNEL_ID"] ?: ""
 
 // Database Settings
 val databaseHost = requiredNonBlankEnv("DATABASE_HOST")

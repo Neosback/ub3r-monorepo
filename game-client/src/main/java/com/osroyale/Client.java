@@ -12463,9 +12463,18 @@ public class Client extends GameEngine
             if (entityDef.actions != null) {
                 for (int i1 = 4; i1 >= 0; i1--) {
                     if (entityDef.actions[i1] != null && entityDef.actions[i1].equalsIgnoreCase("attack")) {
+                        if (Settings.ENTITY_ATTACK_OPTION == 3) {
+                            continue;
+                        }
                         char c = '\0';
-                        if (!Settings.ATTACK_PRIORITY && entityDef.combatLevel > localPlayer.combatLevel) {
+                        if (Settings.ENTITY_ATTACK_OPTION == 1) {
                             c = '\u07D0';
+                        } else if (Settings.ENTITY_ATTACK_OPTION == 2) {
+                            c = '\0';
+                        } else {
+                            if (!Settings.ATTACK_PRIORITY && entityDef.combatLevel > localPlayer.combatLevel) {
+                                c = '\u07D0';
+                            }
                         }
                         menuActionName[menuActionRow] = entityDef.actions[i1] + " <col=ffff00>" + s;
                         if (i1 == 0) {
@@ -12547,13 +12556,21 @@ public class Client extends GameEngine
         } else {
             for (int option = 5; option >= 0; option--) {
                 if (atPlayerActions[option] != null) {
+                    if (atPlayerActions[option].equalsIgnoreCase("attack") && Settings.ENTITY_ATTACK_OPTION == 3) {
+                        continue;
+                    }
                     menuActionName[menuActionRow] = atPlayerActions[option] + " <col=FFFFFF>" + s;
                     int identifier = '\0';
 
                     if (atPlayerActions[option].equalsIgnoreCase("attack")) {
-
-                        if (!Settings.ATTACK_PRIORITY && player.combatLevel > localPlayer.combatLevel) {
+                        if (Settings.ENTITY_ATTACK_OPTION == 1) {
                             identifier = '\u07D0';
+                        } else if (Settings.ENTITY_ATTACK_OPTION == 2) {
+                            identifier = '\0';
+                        } else {
+                            if (!Settings.ATTACK_PRIORITY && player.combatLevel > localPlayer.combatLevel) {
+                                identifier = '\u07D0';
+                            }
                         }
 
                         if (localPlayer.team != 0 && localPlayer.team == player.team) {

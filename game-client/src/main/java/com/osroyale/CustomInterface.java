@@ -1282,7 +1282,7 @@ public class CustomInterface extends RSInterface {
         addConfigButton(50202, 50200, 136, 137, 40, 40, "Toggle Scroll Camera Movement", 1, 5, 207);
         addConfigButton(50203, 50200, 138, 139, 40, 40, "Open Keybinding Interface", 1, 5, 208, false);
         addText(50204, "Entity 'Attack' option:", 0xFF9900, false, true, 52, TDA, 1);
-        addDropdownMenu(50205, 155, 0, false, true, Dropdown.DEFAULT, "Depends on combat levels", "Always right-click", "Left click where available", "Hidden");
+        addDropdownMenu(50205, 155, Settings.ENTITY_ATTACK_OPTION, false, true, Dropdown.DEFAULT, "Depends on combat levels", "Always right-click", "Left click where available", "Hidden");
         mainTab.totalChildren(6);
         mainTab.child(0, 50000, 0, 0);
         mainTab.child(1, 50201, 20, 75);

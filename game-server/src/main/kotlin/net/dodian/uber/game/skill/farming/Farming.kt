@@ -885,11 +885,9 @@ object FarmingSkillPlugin : SkillPlugin {
                 }
             }
             objectClick(preset = PolicyPreset.GATHERING, option = 2, *secondClickObjects) { client, objectId, position, obj ->
-                if (objectId in farmingPatchGuideObjects.objectIds) {
-                    farmingPatchGuideObjects.onSecondClick(client, objectId, position, obj)
-                } else {
-                    farmingPatchObjects.onSecondClick(client, objectId, position, obj)
-                }
+                val guideHandled = objectId in farmingPatchGuideObjects.objectIds &&
+                        farmingPatchGuideObjects.onSecondClick(client, objectId, position, obj)
+                guideHandled || farmingPatchObjects.onSecondClick(client, objectId, position, obj)
             }
             objectClick(preset = PolicyPreset.GATHERING, option = 4, *farmingPatchGuideObjects.objectIds) { client, objectId, position, obj ->
                 farmingPatchGuideObjects.onFourthClick(client, objectId, position, obj)

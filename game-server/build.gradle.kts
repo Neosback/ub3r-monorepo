@@ -1,7 +1,7 @@
 import org.gradle.api.tasks.compile.JavaCompile
 
 plugins {
-    kotlin("jvm") version "1.6.21"
+    kotlin("jvm") version "1.9.10"
     id("application")
     `java-library`
 }
@@ -51,6 +51,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0")
 
     implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
+    implementation("net.dv8tion:JDA:5.0.0-beta.24")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")
