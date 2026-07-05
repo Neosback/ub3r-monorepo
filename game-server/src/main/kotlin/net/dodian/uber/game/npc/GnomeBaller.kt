@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object GnomeBaller : NpcFamily by npcFamily("Gnome baller", 626, block = {
+    cache {
+        examine = "A bunch of legs, eyes and teeth."
+    }
+
     server {
+        defenceAnimation = 5320
         deathAnimation = 2304
         hitpoints = 40
         attack = 60

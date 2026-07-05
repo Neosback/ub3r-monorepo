@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object Mahogany : NpcFamily by npcFamily("Mahogany", 2534, block = {
+    cache {
+        examine = "Eeek! A ghost! Grave of Scorpius:  Spooky."
+    }
+
     server {
+        defenceAnimation = 5533
         deathAnimation = 2304
         hitpoints = 75
         attack = 63

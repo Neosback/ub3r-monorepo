@@ -6,6 +6,7 @@ internal object AbyssalDemon : NpcFamily by npcFamily("Abyssal demon", 415, bloc
     }
 
     server {
+        defenceAnimation = 1535
         attackAnimation = 1537
         deathAnimation = 1538
         attack = 110

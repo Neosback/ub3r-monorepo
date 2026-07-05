@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object FireGiant : NpcFamily by npcFamily("Fire giant", 2075, block = {
+    cache {
+        examine = "A very large elemental adversary."
+    }
+
     server {
+        defenceAnimation = 4661
         attackAnimation = 4652
         deathAnimation = 4653
         respawnTicks = 40

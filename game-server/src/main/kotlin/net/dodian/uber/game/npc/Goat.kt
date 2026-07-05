@@ -6,6 +6,7 @@ internal object Goat : NpcFamily by npcFamily("Goat", 1795, block = {
     }
 
     server {
+        defenceAnimation = 251
         attackAnimation = 250
         deathAnimation = 253
         respawnTicks = 50

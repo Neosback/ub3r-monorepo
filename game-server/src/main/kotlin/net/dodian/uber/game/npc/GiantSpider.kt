@@ -2,6 +2,7 @@ package net.dodian.uber.game.npc
 
 internal object GiantSpider : NpcFamily by npcFamily("Giant spider", 59, block = {
     server {
+        defenceAnimation = 5573
         deathAnimation = 2304
         hitpoints = 2
         attack = 19

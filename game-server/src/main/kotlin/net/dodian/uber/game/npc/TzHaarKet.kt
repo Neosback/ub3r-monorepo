@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object TzHaarKet : NpcFamily by npcFamily("TzHaar-Ket", 2173, block = {
+    cache {
+        examine = "One of the stronger guards of Mor Ul Rek."
+    }
+
     server {
+        defenceAnimation = 2602
         attackAnimation = 2609
         deathAnimation = 2608
         respawnTicks = 35

@@ -2,6 +2,7 @@ package net.dodian.uber.game.npc
 
 internal object SigbertTheAdventur : NpcFamily by npcFamily("Sigbert the Adventur", 37, block = {
     server {
+        defenceAnimation = 5568
         deathAnimation = 2304
         hitpoints = 22
         attack = 8

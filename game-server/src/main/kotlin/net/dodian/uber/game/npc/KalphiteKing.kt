@@ -6,6 +6,7 @@ internal object KalphiteKing : NpcFamily by npcFamily("Kalphite king", 4304, blo
     }
 
     server {
+        defenceAnimation = 6238
         attackAnimation = 6235
         deathAnimation = 6233
         respawnTicks = 250

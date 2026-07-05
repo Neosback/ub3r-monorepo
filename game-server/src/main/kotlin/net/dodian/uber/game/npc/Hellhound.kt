@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object Hellhound : NpcFamily by npcFamily("Hellhound", 104, block = {
+    cache {
+        examine = "From the maws of hell."
+    }
+
     server {
+        defenceAnimation = 6563
         attackAnimation = 6559
         deathAnimation = 6558
         respawnTicks = 40

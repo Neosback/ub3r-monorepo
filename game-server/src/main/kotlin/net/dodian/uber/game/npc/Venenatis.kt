@@ -6,6 +6,7 @@ internal object Venenatis : NpcFamily by npcFamily("Venenatis", 6610, block = {
     }
 
     server {
+        defenceAnimation = 5320
         attackAnimation = 5322
         deathAnimation = 5329
         respawnTicks = 250

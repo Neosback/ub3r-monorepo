@@ -80,6 +80,12 @@ object AttackAnimationService {
 
     @JvmStatic
     fun resolve(player: Client): Int {
+        if (player.playerNpc >= 0) {
+            val npcData = Server.npcManager.getData(player.playerNpc)
+            if (npcData != null && npcData.attackEmote > 0) {
+                return npcData.attackEmote
+            }
+        }
         val weaponId = player.equipment[Equipment.Slot.WEAPON.id]
         return resolveWeapon(weaponId, player.weaponStyle, player.combatStyle)
     }

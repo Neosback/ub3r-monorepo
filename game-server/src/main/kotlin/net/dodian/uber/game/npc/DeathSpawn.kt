@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object DeathSpawn : NpcFamily by npcFamily("Death spawn", 10, block = {
+    cache {
+        examine = "An evil death spawn."
+    }
+
     server {
+        defenceAnimation = 1542
         deathAnimation = 2304
         respawnTicks = 35
         attack = 60

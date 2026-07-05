@@ -112,3 +112,11 @@ tasks.register<JavaExec>("dumpObjectDefs") {
     mainClass.set("net.dodian.uber.game.engine.systems.cache.ObjectDefinitionDumper")
     args = listOf("data/cache")
 }
+
+tasks.register<JavaExec>("dumpNpcDefs") {
+    group = "tools"
+    description = "Dump all NPC definitions from cache to JSON"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.engine.systems.cache.NpcDefinitionDumper")
+    args = listOf("data/cache")
+}

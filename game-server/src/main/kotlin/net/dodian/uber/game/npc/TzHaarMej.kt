@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object TzHaarMej : NpcFamily by npcFamily("TzHaar-Mej", 2154, block = {
+    cache {
+        examine = "Appears to be some kind of mystic."
+    }
+
     server {
+        defenceAnimation = 2603
         attackAnimation = 2612
         deathAnimation = 2607
         attack = 50

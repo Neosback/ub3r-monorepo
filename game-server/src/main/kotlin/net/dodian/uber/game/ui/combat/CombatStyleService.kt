@@ -56,6 +56,7 @@ object CombatStyleService {
         player.setSidebarInterface(0, profile.interfaceId)
         player.sendInterfaceModel(itemOnInterfaceId, 200, weaponId)
         player.sendString(itemName, textOnInterfaceId)
+        player.updateAutoRetaliate()
     }
 
     @JvmStatic

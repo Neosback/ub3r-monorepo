@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object BlackDragon : NpcFamily by npcFamily("Black dragon", 252, block = {
+    cache {
+        examine = "A fierce dragon with black scales!"
+    }
+
     server {
         attackAnimation = 91
         deathAnimation = 92

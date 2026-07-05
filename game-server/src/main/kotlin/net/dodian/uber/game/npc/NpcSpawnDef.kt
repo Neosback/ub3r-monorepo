@@ -91,6 +91,9 @@ class NpcSpawnOverrideBuilder internal constructor(private var spawn: NpcSpawnDe
     var attackAnimation: Int?
         get() = spawn.overrides.attackAnimation
         set(value) { value?.let { server.attackAnimation = it } }
+    var defenceAnimation: Int?
+        get() = spawn.overrides.defenceAnimation
+        set(value) { value?.let { server.defenceAnimation = it } }
     var deathAnimation: Int?
         get() = spawn.overrides.deathAnimation
         set(value) { value?.let { server.deathAnimation = it } }
@@ -123,8 +126,8 @@ class NpcSpawnOverrideBuilder internal constructor(private var spawn: NpcSpawnDe
         server.respawn(ticks)
     }
 
-    fun animations(attack: Int? = null, death: Int? = null) {
-        server.animations(attack = attack, death = death)
+    fun animations(attack: Int? = null, defence: Int? = null, death: Int? = null) {
+        server.animations(attack = attack, defence = defence, death = death)
     }
 
     fun overrides(block: NpcServerDefinitionBuilder.() -> Unit) {

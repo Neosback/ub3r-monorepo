@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object BruiseBlamishSnail : NpcFamily by npcFamily("Bruise Blamish Snail", 1230, block = {
+    cache {
+        examine = "It is the avatar of the Arzinian Being of Bordanzan, representing ranging."
+    }
+
     server {
         deathAnimation = 2304
         hitpoints = 13

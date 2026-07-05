@@ -6,6 +6,7 @@ internal object Wolfman : NpcFamily by npcFamily("Wolfman", 3200, block = {
     }
 
     server {
+        defenceAnimation = 221
         deathAnimation = 2304
         hitpoints = 100
     }

@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object BerserkBarbarianSpirit : NpcFamily by npcFamily("Berserk barbarian spirit", 5565, block = {
+    cache {
+        examine = "He looks a tad upset."
+    }
+
     server {
         attackAnimation = 6726
         deathAnimation = 6727

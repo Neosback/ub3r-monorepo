@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object IceGiant : NpcFamily by npcFamily("Ice giant", 2085, block = {
+    cache {
+        examine = "He's got icicles in his beard."
+    }
+
     server {
+        defenceAnimation = 4671
         attackAnimation = 4672
         deathAnimation = 4653
         respawnTicks = 30

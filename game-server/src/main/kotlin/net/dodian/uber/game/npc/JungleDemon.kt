@@ -6,6 +6,7 @@ internal object JungleDemon : NpcFamily by npcFamily("Jungle Demon", 1443, block
     }
 
     server {
+        defenceAnimation = 65
         attackAnimation = 64
         deathAnimation = 67
         respawnTicks = 180

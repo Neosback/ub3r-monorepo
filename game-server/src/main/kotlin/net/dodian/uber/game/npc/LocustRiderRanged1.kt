@@ -6,6 +6,7 @@ internal object LocustRiderRanged1 : NpcFamily by npcFamily("Locust rider ranged
     }
 
     server {
+        defenceAnimation = 5448
         attackAnimation = 5451
         deathAnimation = 5449
         respawnTicks = 30

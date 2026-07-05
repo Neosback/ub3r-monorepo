@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object AberrantSpectre : NpcFamily by npcFamily("Aberrant spectre", 2, block = {
+    cache {
+        examine = "A very smelly ghost."
+    }
+
     server {
+        defenceAnimation = 1509
         attackAnimation = 1507
         deathAnimation = 1508
         respawnTicks = 35

@@ -6,6 +6,7 @@ internal object Jackal : NpcFamily by npcFamily("Jackal", 4185, block = {
     }
 
     server {
+        defenceAnimation = 6563
         attackAnimation = 6559
         deathAnimation = 6558
         attack = 25

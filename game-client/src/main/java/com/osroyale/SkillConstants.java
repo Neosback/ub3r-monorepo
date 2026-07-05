@@ -5,14 +5,14 @@ package com.osroyale;
  *
  * @author Daniel
  */
-final class SkillConstants {
+public final class SkillConstants {
 
 	/**  The total skill count. */
-	static final int SKILL_COUNT = 23;
+	public static final int SKILL_COUNT = 23;
 
 	/** An array of skill names.  */
 
-	static final String[] SKILL_NAMES = {
+	public static final String[] SKILL_NAMES = {
 	    /* 00 */ "Attack",
         /* 01 */ "Defence",
         /* 02 */ "Strength",
@@ -40,7 +40,7 @@ final class SkillConstants {
 	/**
 	 * All the skills enabled.
 	 */
-	static final boolean[] SKILLS_ENABLED = {
+	public static final boolean[] SKILLS_ENABLED = {
             /* 00 */ true,
             /* 01 */ true,
             /* 02 */ true,
@@ -91,7 +91,7 @@ final class SkillConstants {
 		return binarySearch(experience, mid + 1, max);
 	}
 
-	static int getExperienceForLevel(int level) {
+	public static int getExperienceForLevel(int level) {
 		if (level >= 99)
 			return EXP_FOR_LEVEL[98];
 		if (level < 1)

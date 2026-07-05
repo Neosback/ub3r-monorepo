@@ -1055,6 +1055,11 @@ public class Client extends Player implements Runnable {
         send(new SetSidebarInterface(menuId, form));
     }
 
+    public void updateAutoRetaliate() {
+        varbit(172, autoRetaliate ? 1 : 0);
+        sendString(autoRetaliate ? "Auto Retaliate (On)" : "Auto Retaliate (Off)", 3983);
+    }
+
     @Deprecated
     public void setSkillLevel(Skill skill, int currentLevel, int XP) {
         ProgressionService.setSkillLevel(this, skill, currentLevel, XP);

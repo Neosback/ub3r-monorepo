@@ -7,6 +7,10 @@ import net.dodian.uber.game.netty.listener.out.CameraReset
 import net.dodian.uber.game.netty.listener.out.SendCameraShake
 
 internal object Monk : NpcFamily by npcFamily("Monk", 555, block = {
+    cache {
+        examine = "A holy man."
+    }
+
     server {
         deathAnimation = 2304
     }

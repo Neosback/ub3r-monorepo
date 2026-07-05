@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object BigSnake : NpcFamily by npcFamily("Big Snake", 2978, block = {
+    cache {
+        examine = "A big snake."
+    }
+
     server {
         hitpoints = 120
         attack = 60

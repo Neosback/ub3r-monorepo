@@ -5,6 +5,10 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.objects.travel.LegendsGuildGateService
 
 internal object LegendsGuard : NpcFamily by npcFamily("Legends' Guard", 3951, block = {
+    cache {
+        examine = "A Legends' Guild guard; he protects the entrance to the Legends' Guild."
+    }
+
     server {
         deathAnimation = 2304
     }

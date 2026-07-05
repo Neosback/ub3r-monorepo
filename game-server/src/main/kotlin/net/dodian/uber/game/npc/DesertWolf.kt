@@ -6,6 +6,7 @@ internal object DesertWolf : NpcFamily by npcFamily("Desert wolf", 4649, block =
     }
 
     server {
+        defenceAnimation = 6559
         attackAnimation = 6559
         deathAnimation = 6558
         attack = 50

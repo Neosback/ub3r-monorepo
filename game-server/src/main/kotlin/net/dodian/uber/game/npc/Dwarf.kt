@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object Dwarf : NpcFamily by npcFamily("Dwarf", 290, block = {
+    cache {
+        examine = "A dwarven worker.  A short angry guy."
+    }
+
     server {
+        defenceAnimation = 100
         attackAnimation = 99
         deathAnimation = 102
         respawnTicks = 30

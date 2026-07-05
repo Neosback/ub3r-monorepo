@@ -5,6 +5,10 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.shop.ShopId
 
 internal object BowAndArrowSalesm : NpcFamily by npcFamily("Bow and Arrow salesman", 6060, block = {
+    cache {
+        examine = "Supplier of Archery equipment."
+    }
+
     server {
         deathAnimation = 2304
     }

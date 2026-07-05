@@ -6,6 +6,7 @@ internal object YtMejKot : NpcFamily by npcFamily("Yt-MejKot", 3123, block = {
     }
 
     server {
+        defenceAnimation = 2635
         attackAnimation = 2637
         deathAnimation = 2638
         attack = 140

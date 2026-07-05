@@ -2,6 +2,7 @@ package net.dodian.uber.game.npc
 
 internal object ChaosDruidWarrior : NpcFamily by npcFamily("Chaos druid warrior", 532, block = {
     cache {
+        examine = "Sells superior staffs."
         name = "Chaos druid warrior"
     }
 

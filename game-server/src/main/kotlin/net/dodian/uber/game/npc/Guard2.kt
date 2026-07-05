@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
-internal object Guard2 : NpcFamily by npcFamily("Guard", 3094, block = {
+internal object Guard2 : NpcFamily by npcFamily("Guard", 5421, block = {
+    cache {
+        examine = "Chief Herald of Falador."
+    }
+
     server {
         attackAnimation = 412
         deathAnimation = 2304

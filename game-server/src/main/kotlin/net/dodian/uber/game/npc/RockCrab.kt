@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object RockCrab : NpcFamily by npcFamily("Rock crab", 100, block = {
+    cache {
+        examine = "No one likes crabs... Disguised as rocks:  A rocky outcrop."
+    }
+
     server {
         attackAnimation = 1312
         deathAnimation = 1314

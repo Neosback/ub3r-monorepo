@@ -54,6 +54,7 @@ object NpcDataInterop {
             data.name,
             data.examine,
             data.attackEmote,
+            0,
             data.deathEmote,
             data.respawn,
             data.combat,

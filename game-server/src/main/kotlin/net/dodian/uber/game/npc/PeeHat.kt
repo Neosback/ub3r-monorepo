@@ -6,6 +6,7 @@ internal object PeeHat : NpcFamily by npcFamily("Pee hat", 927, block = {
     }
 
     server {
+        attackAnimation = 284
         deathAnimation = 2304
         hitpoints = 120
         attack = 50

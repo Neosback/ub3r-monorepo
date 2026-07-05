@@ -45,6 +45,7 @@ public class Npc extends Entity {
     private static final boolean COMBAT_TELEMETRY_ENABLED = Boolean.getBoolean("combat.telemetry.enabled");
     public long inFrenzy = -1;
     public boolean hadFrenzy = false;
+    private long lastBlockAnimationCycle = -1L;
     public final int[] poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Player or npc (0 or 1), id, time left in ticks, startDamage, currentDamage, changeDamage.
     public final int[] burnDamage = new int[]{-1, -1, 4, 0, 5}; //Player or npc (0 or 1), id, time left in ticks, damage, stopTime.
     private int id, currentHealth = 10, maxHealth = 10, respawn = 60, combat = 0, lastAttack = 0, maxHit;
@@ -414,6 +415,7 @@ public class Npc extends Entity {
             hitDiff = currentHealth;
         appendHit(hitDiff, type);
         currentHealth -= hitDiff;
+        net.dodian.uber.game.engine.systems.combat.CombatDefenderReaction.playBlockAnimation(this, hitDiff, Entity.damageType.MELEE);
         /* Daganoth kings mechanic dodian style! */
         Npc otherNpc = NpcSpawnLocator.dagannothTwinFor(this);
         if (otherNpc != null) {
@@ -877,6 +879,14 @@ public class Npc extends Entity {
         return visible;
     }
 
+    public long getLastBlockAnimationCycle() {
+        return lastBlockAnimationCycle;
+    }
+
+    public void setLastBlockAnimationCycle(long lastBlockAnimationCycle) {
+        this.lastBlockAnimationCycle = lastBlockAnimationCycle;
+    }
+
     /**
      * @return the deathtime
      */
@@ -921,8 +931,8 @@ public class Npc extends Entity {
         return combat;
     }
 
-    public void applySpawnOverrides(Integer respawnTicks, Integer attack, Integer defence, Integer strength, Integer hitpoints, Integer ranged, Integer magic, Integer attackAnim, Integer deathAnim) {
-        if (attackAnim != null || deathAnim != null || isPositive(respawnTicks) || defence != null || attack != null || strength != null || ranged != null || magic != null || isPositive(hitpoints)) {
+    public void applySpawnOverrides(Integer respawnTicks, Integer attack, Integer defence, Integer strength, Integer hitpoints, Integer ranged, Integer magic, Integer attackAnim, Integer defenceAnim, Integer deathAnim) {
+        if (attackAnim != null || defenceAnim != null || deathAnim != null || isPositive(respawnTicks) || defence != null || attack != null || strength != null || ranged != null || magic != null || isPositive(hitpoints)) {
             int[] currentLevels = new int[7];
             System.arraycopy(data.getLevel(), 0, currentLevels, 0, 7);
             if (defence != null) currentLevels[0] = defence;
@@ -936,6 +946,7 @@ public class Npc extends Entity {
                 data.getName(),
                 data.getExamine(),
                 attackAnim != null ? attackAnim : data.getAttackEmote(),
+                defenceAnim != null ? defenceAnim : data.getDefenceEmote(),
                 deathAnim != null ? deathAnim : data.getDeathEmote(),
                 isPositive(respawnTicks) ? respawnTicks : data.getRespawn(),
                 combat,

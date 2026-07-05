@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object CrawlingHand : NpcFamily by npcFamily("Crawling Hand", 449, block = {
+    cache {
+        examine = "Now THAT's handy.  I'm glad its just the hand I can see..."
+    }
+
     server {
+        defenceAnimation = 1591
         attackAnimation = 1592
         deathAnimation = 1590
         respawnTicks = 30

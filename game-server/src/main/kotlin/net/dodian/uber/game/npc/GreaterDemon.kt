@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object GreaterDemon : NpcFamily by npcFamily("Greater demon", 2025, block = {
+    cache {
+        examine = "Big, red, and incredibly evil."
+    }
+
     server {
+        defenceAnimation = 65
         attackAnimation = 64
         deathAnimation = 67
         respawnTicks = 35

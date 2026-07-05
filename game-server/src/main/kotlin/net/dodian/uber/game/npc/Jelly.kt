@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object Jelly : NpcFamily by npcFamily("Jelly", 437, block = {
+    cache {
+        examine = "Looks scared to see me.  Needs cream.....  Wibbly.  Wobbly...  Doesn't look so tough...  There's always room for jelly."
+    }
+
     server {
+        defenceAnimation = 1585
         deathAnimation = 2304
         respawnTicks = 35
         attack = 50

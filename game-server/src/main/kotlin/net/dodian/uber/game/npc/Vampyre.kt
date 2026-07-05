@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object Vampyre : NpcFamily by npcFamily("Vampyre", 3137, block = {
+    cache {
+        examine = "It looks really hungry."
+    }
+
     server {
         attackAnimation = 1264
         attack = 60

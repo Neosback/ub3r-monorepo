@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object CaveBugLarva : NpcFamily by npcFamily("Cave bug larva", 1833, block = {
+    cache {
+        examine = "I guess he sells what he steals...?"
+    }
+
     server {
         deathAnimation = 2304
     }

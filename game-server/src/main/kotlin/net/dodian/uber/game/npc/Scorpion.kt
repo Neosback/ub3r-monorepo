@@ -6,6 +6,7 @@ internal object Scorpion : NpcFamily by npcFamily("Scorpion", 2479, block = {
     }
 
     server {
+        defenceAnimation = 6255
         attackAnimation = 6261
         deathAnimation = 6260
         attack = 55

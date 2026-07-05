@@ -1,8 +1,13 @@
 package net.dodian.uber.game.npc
 
 internal object Dad : NpcFamily by npcFamily("Dad", 4130, block = {
+    cache {
+        examine = "An unusually large troll."
+    }
+
     server {
         attackAnimation = 284
+
         deathAnimation = 287
         respawnTicks = 180
         attack = 80

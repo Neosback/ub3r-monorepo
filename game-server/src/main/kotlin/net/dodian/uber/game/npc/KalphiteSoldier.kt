@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object KalphiteSoldier : NpcFamily by npcFamily("Kalphite Soldier", 1154, block = {
+    cache {
+        examine = "I'd better be careful eating this."
+    }
+
     server {
         attackAnimation = 6224
         deathAnimation = 6228

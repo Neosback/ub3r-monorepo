@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object OgreChieftain : NpcFamily by npcFamily("Ogre chieftain", 4362, block = {
+    cache {
+        examine = "Tough-looking."
+    }
+
     server {
         hitpoints = 60
         attack = 75

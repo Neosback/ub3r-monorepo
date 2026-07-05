@@ -12,6 +12,8 @@ import net.dodian.uber.game.skill.prayer.PrayerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.engine.systems.combat.CombatDefenderReaction;
 import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService;
+import net.dodian.uber.game.engine.systems.combat.CombatStartService;
+import net.dodian.uber.game.engine.systems.combat.CombatIntent;
 import net.dodian.uber.game.engine.util.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +71,13 @@ class PlayerCombatState {
         CombatLogoutLockService.refreshInteraction(attacker, owner);
         maybePlayDefenderReaction(amt, inferDamageType(attacker));
         applyDamage(attacker, amt, type);
+        if (attacker != null && player.autoRetaliate && player.target == null && player.getCurrentHealth() > 0) {
+            if (attacker.getType() == Entity.Type.NPC) {
+                CombatStartService.startNpcAttack(player, (Npc) attacker, CombatIntent.ATTACK_NPC);
+            } else if (attacker.getType() == Entity.Type.PLAYER) {
+                CombatStartService.startPlayerAttack(player, (Client) attacker, CombatIntent.ATTACK_PLAYER);
+            }
+        }
     }
 
     void dealDamage(int amt, Entity.hitType type, Entity attacker, Entity.damageType damageType) {
@@ -125,6 +134,13 @@ class PlayerCombatState {
         CombatLogoutLockService.refreshInteraction(attacker, owner);
         maybePlayDefenderReaction(amt, damageType);
         applyDamage(attacker, amt, type);
+        if (attacker != null && player.autoRetaliate && player.target == null && player.getCurrentHealth() > 0) {
+            if (attacker.getType() == Entity.Type.NPC) {
+                CombatStartService.startNpcAttack(player, (Npc) attacker, CombatIntent.ATTACK_NPC);
+            } else if (attacker.getType() == Entity.Type.PLAYER) {
+                CombatStartService.startPlayerAttack(player, (Client) attacker, CombatIntent.ATTACK_PLAYER);
+            }
+        }
     }
 
     private void applyDamage(Entity attacker, int amt, Entity.hitType type) {

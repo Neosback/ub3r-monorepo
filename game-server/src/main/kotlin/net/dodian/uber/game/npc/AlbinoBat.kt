@@ -2,6 +2,7 @@ package net.dodian.uber.game.npc
 
 internal object AlbinoBat : NpcFamily by npcFamily("Albino bat", 1039, block = {
     cache {
+        examine = "Seems very well off."
         name = "Albino bat"
     }
 

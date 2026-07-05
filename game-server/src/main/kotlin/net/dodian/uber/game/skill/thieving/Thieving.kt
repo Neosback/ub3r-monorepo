@@ -146,7 +146,7 @@ private class ChestObjectContent : ObjectContent {
     }
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId == 6847) {
+        if (objectId == 6847 || objectId == 20873) {
             Thieving.attempt(client, objectId, position)
             return true
         }

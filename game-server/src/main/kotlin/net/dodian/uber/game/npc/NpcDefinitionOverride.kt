@@ -33,6 +33,7 @@ data class NpcCacheOverride(
 
 data class NpcServerPatch(
     val attackAnimation: Int? = null,
+    val defenceAnimation: Int? = null,
     val deathAnimation: Int? = null,
     val respawnTicks: Int? = null,
     val attack: Int? = null,
@@ -47,6 +48,7 @@ data class NpcServerPatch(
     fun overlay(child: NpcServerPatch): NpcServerPatch =
         NpcServerPatch(
             attackAnimation = child.attackAnimation ?: attackAnimation,
+            defenceAnimation = child.defenceAnimation ?: defenceAnimation,
             deathAnimation = child.deathAnimation ?: deathAnimation,
             respawnTicks = child.respawnTicks ?: respawnTicks,
             attack = child.attack ?: attack,
@@ -63,6 +65,7 @@ data class NpcServerPatch(
 data class NpcServerDefinition(
     val id: Int,
     val attackAnimation: Int? = null,
+    val defenceAnimation: Int? = null,
     val deathAnimation: Int? = null,
     val respawnTicks: Int? = null,
     val attack: Int? = null,
@@ -77,6 +80,7 @@ data class NpcServerDefinition(
     fun asPatch(): NpcServerPatch =
         NpcServerPatch(
             attackAnimation = attackAnimation,
+            defenceAnimation = defenceAnimation,
             deathAnimation = deathAnimation,
             respawnTicks = respawnTicks,
             attack = attack,
@@ -160,6 +164,7 @@ class NpcCacheOverrideBuilder internal constructor(private val id: Int) {
  */
 class NpcServerDefinitionBuilder internal constructor(private val id: Int? = null) {
     var attackAnimation: Int? = null
+    var defenceAnimation: Int? = null
     var deathAnimation: Int? = null
     var respawnTicks: Int? = null
     var attack: Int? = null
@@ -187,8 +192,9 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
         this.magic = magic ?: this.magic
     }
 
-    fun animations(attack: Int? = null, death: Int? = null) {
+    fun animations(attack: Int? = null, defence: Int? = null, death: Int? = null) {
         this.attackAnimation = attack ?: attackAnimation
+        this.defenceAnimation = defence ?: defenceAnimation
         this.deathAnimation = death ?: deathAnimation
     }
 
@@ -205,6 +211,7 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
         NpcServerDefinition(
             id = requireNotNull(id) { "NpcServerDefinitionBuilder needs an id to build a definition" },
             attackAnimation = positive(attackAnimation),
+            defenceAnimation = positive(defenceAnimation),
             deathAnimation = positive(deathAnimation),
             respawnTicks = positive(respawnTicks),
             attack = nonNegative(attack),
@@ -220,6 +227,7 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
     internal fun buildPatch(): NpcServerPatch =
         NpcServerPatch(
             attackAnimation = positive(attackAnimation),
+            defenceAnimation = positive(defenceAnimation),
             deathAnimation = positive(deathAnimation),
             respawnTicks = positive(respawnTicks),
             attack = nonNegative(attack),

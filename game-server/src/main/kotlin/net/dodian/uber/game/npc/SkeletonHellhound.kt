@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object SkeletonHellhound : NpcFamily by npcFamily("Skeleton Hellhound", 5054, block = {
+    cache {
+        examine = "A creature summoned by Vanstrom to kill the remaining Myreque."
+    }
+
     server {
         attackAnimation = 6581
         deathAnimation = 6576

@@ -4,6 +4,10 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
 internal object Duradel : NpcFamily by npcFamily("Duradel", 405, block = {
+    cache {
+        examine = "He looks dangerous!"
+    }
+
     server {
         deathAnimation = 2304
     }

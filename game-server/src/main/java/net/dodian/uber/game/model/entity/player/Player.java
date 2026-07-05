@@ -66,7 +66,7 @@ import java.util.*;
 
 public abstract class Player extends Entity {
     private static final Logger logger = LoggerFactory.getLogger(Player.class);
-    public boolean yellOn = true, genie = false, antique = false, instaLoot = false;
+    public boolean yellOn = true, genie = false, antique = false, instaLoot = false, autoRetaliate = false;
     public long longName = 0;
     public int wildyLevel = 0;
     public long lastAction = 0, lastMagic = 0;
@@ -2177,6 +2177,7 @@ public abstract class Player extends Entity {
         c.setSidebarInterface(5, 5608); // pray tab
         c.setSidebarInterface(6, c.ancients == 1 ? 12855 : c.ancients == 2 ? 29999 : 40000); // magic spellbook
         c.varbit(981, c.ancients);
+        c.updateAutoRetaliate();
        // c.setSidebarInterface(7, 37128); // clan chat tab
         c.setSidebarInterface(8, 5065); // friend
         c.setSidebarInterface(9, 5715); // ignore

@@ -18,6 +18,7 @@ enum class ThievingDefinition(
     val respawnTime: Int,
     val type: ThievingType,
 ) {
+    CAGE(20873, 1, 500, intArrayOf(995), arrayOf(Range(10, 40)), intArrayOf(100), 0, ThievingType.OTHER),
     FARMER(3086, 10, 800, intArrayOf(314), arrayOf(Range(2, 5)), intArrayOf(100), 0, ThievingType.PICKPOCKETING),
     MASTER_FARMER(3257, 70, 1200, intArrayOf(314), arrayOf(Range(4, 10)), intArrayOf(100), 0, ThievingType.PICKPOCKETING),
     BAKER_STALL(11730, 10, 1000, intArrayOf(2309), arrayOf(Range(1, 1)), intArrayOf(100), 12, ThievingType.STALL_THIEVING),
@@ -34,7 +35,7 @@ enum class ThievingDefinition(
 
 object ThievingObjectComponents {
     val stallObjects = intArrayOf(4877)
-    val chestObjects = intArrayOf(375, 378, 6847, 11729, 11730, 11731, 11732, 11733, 11734)
+    val chestObjects = intArrayOf(375, 378, 6847, 11729, 11730, 11731, 11732, 11733, 11734, 20873)
     val plunderObjects = intArrayOf(
         20275, 20277, 20931, 20932, 26580,
         26600, 26601, 26602, 26603, 26604, 26605, 26606, 26607, 26608, 26609, 26610, 26611, 26612, 26613,

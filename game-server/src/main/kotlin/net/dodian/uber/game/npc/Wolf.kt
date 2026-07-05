@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object Wolf : NpcFamily by npcFamily("Wolf", 106, block = {
+    cache {
+        examine = "Not man's best friend."
+    }
+
     server {
+        defenceAnimation = 6559
         attackAnimation = 6559
         deathAnimation = 6558
         attack = 30

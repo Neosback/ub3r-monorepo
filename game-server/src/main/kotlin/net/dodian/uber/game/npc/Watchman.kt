@@ -2,6 +2,7 @@ package net.dodian.uber.game.npc
 
 internal object Watchman : NpcFamily by npcFamily("Watchman", 5420, block = {
     cache {
+        examine = "Someone has to get rid of all the stone they dug Keldagrim out of."
         name = "Watchman"
     }
 

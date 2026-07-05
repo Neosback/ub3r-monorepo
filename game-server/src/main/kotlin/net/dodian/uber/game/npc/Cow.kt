@@ -7,7 +7,7 @@ import net.dodian.uber.game.engine.systems.event.ServerEvent
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
-internal object Cow : NpcFamily by npcFamily("Cow", 2790, block = {
+internal object Cow : NpcFamily by npcFamily("Cow", 5842, block = {
     cache {
         name = "Cow"
         examine = "Meow meow I am a cow!"
@@ -15,6 +15,7 @@ internal object Cow : NpcFamily by npcFamily("Cow", 2790, block = {
 
     server {
         attackAnimation = 5849
+        defenceAnimation = 5850
         deathAnimation = 5851
         respawnTicks = 30
         attack = 1
@@ -26,7 +27,7 @@ internal object Cow : NpcFamily by npcFamily("Cow", 2790, block = {
     }
 
     options {
-        attack(handler = ::handleCowEventReward)
+        talkTo(handler = ::handleCowEventReward)
     }
 
     spawns {

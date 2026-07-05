@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object Nechryael : NpcFamily by npcFamily("Nechryael", 8, block = {
+    cache {
+        examine = "An evil death demon."
+    }
+
     server {
+        defenceAnimation = 1529
         attackAnimation = 1528
         deathAnimation = 1530
         respawnTicks = 180

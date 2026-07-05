@@ -4,6 +4,10 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
 internal object Mazchna : NpcFamily by npcFamily("Mazchna", 402, block = {
+    cache {
+        examine = "He looks dangerous!"
+    }
+
     server {
         deathAnimation = 2304
     }

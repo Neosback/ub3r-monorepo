@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object SanTojalon : NpcFamily by npcFamily("San Tojalon", 3964, block = {
+    cache {
+        examine = "The spirit of a long-dead warrior."
+    }
+
     server {
+        defenceAnimation = 5482
         attackAnimation = 5487
         deathAnimation = 5492
         respawnTicks = 180

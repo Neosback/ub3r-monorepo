@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object PlaceHolderDrop : NpcFamily by npcFamily("Place Holder Drop", 1337, block = {
+    cache {
+        examine = "So what can one do with a drunken sailor?"
+    }
+
     server {
         deathAnimation = 2304
     }

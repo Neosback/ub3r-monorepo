@@ -2,6 +2,7 @@ package net.dodian.uber.game.npc
 
 internal object Diango : NpcFamily by npcFamily("Diango", 970, block = {
     server {
+        defenceAnimation = 1340
         deathAnimation = 2304
         hitpoints = 70
         attack = 68

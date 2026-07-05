@@ -15,6 +15,12 @@ object PlayerBlockAnimationService {
 
     @JvmStatic
     fun resolve(player: Client): Int {
+        if (player.playerNpc >= 0) {
+            val npcData = Server.npcManager.getData(player.playerNpc)
+            if (npcData != null && npcData.defenceEmote > 0) {
+                return npcData.defenceEmote
+            }
+        }
         val weapon = player.equipment[Equipment.Slot.WEAPON.id]
         val shield = player.equipment[Equipment.Slot.SHIELD.id]
         if (shield > 0) {

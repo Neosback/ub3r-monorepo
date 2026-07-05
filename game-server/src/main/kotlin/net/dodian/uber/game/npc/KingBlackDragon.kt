@@ -6,7 +6,8 @@ internal object KingBlackDragon : NpcFamily by npcFamily("King black dragon", 23
     }
 
     server {
-        attackAnimation = 80
+        defenceAnimation = 90
+        attackAnimation = 81
         deathAnimation = 92
         respawnTicks = 180
         attack = 210

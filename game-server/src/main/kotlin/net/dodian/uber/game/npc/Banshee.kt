@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object Banshee : NpcFamily by npcFamily("Banshee", 414, block = {
+    cache {
+        examine = "A tortured screaming soul."
+    }
+
     server {
+        defenceAnimation = 1525
         attackAnimation = 1523
         deathAnimation = 1524
         attack = 40

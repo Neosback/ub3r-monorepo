@@ -21,13 +21,14 @@ public class NpcData {
 
     private final ArrayList<NpcDrop> drops = new ArrayList<>();
     private String name = "", examine="";
-    private int attackEmote, deathEmote, respawn, combat, size;
+    private int attackEmote, defenceEmote, deathEmote, respawn, combat, size;
     private final int[] level = new int[7];
 
-    public NpcData(String name, String examine, int attackEmote, int deathEmote, int respawn, int combat, int size, int[] levels) {
+    public NpcData(String name, String examine, int attackEmote, int defenceEmote, int deathEmote, int respawn, int combat, int size, int[] levels) {
         this.name = name == null ? "" : name;
         this.examine = examine;
         this.attackEmote = attackEmote;
+        this.defenceEmote = defenceEmote;
         this.deathEmote = deathEmote;
         this.respawn = respawn;
         this.combat = combat;
@@ -84,6 +85,14 @@ public class NpcData {
 
     public void setAttackEmote(int animationId) {
         this.attackEmote = animationId;
+    }
+
+    public int getDefenceEmote() {
+        return defenceEmote;
+    }
+
+    public void setDefenceEmote(int animationId) {
+        this.defenceEmote = animationId;
     }
 
     /**

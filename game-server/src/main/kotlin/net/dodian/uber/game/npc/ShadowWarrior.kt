@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object ShadowWarrior : NpcFamily by npcFamily("Shadow warrior", 2853, block = {
+    cache {
+        examine = "A fighter from the supernatural world. He's a shadow of his former self."
+    }
+
     server {
         deathAnimation = 2304
         attack = 45

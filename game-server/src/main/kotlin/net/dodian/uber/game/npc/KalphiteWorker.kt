@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object KalphiteWorker : NpcFamily by npcFamily("Kalphite Worker", 1153, block = {
+    cache {
+        examine = "Big, ugly, and smelly. / A large dim looking humanoid."
+    }
+
     server {
         attackAnimation = 6224
         deathAnimation = 6228

@@ -2,6 +2,7 @@ package net.dodian.uber.game.npc
 
 internal object DoorMan : NpcFamily by npcFamily("Door man", 33, block = {
     server {
+        defenceAnimation = 5568
         deathAnimation = 2304
         hitpoints = 22
         attack = 8

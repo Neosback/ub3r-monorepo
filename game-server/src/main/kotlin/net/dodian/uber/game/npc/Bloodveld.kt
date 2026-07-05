@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object Bloodveld : NpcFamily by npcFamily("Bloodveld", 484, block = {
+    cache {
+        examine = "The tongue of evil."
+    }
+
     server {
+        defenceAnimation = 1550
         attackAnimation = 1552
         deathAnimation = 1553
         respawnTicks = 35

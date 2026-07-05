@@ -858,13 +858,35 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             playerProps.put(player.playerLooks[10]); // leg color
             playerProps.put(player.playerLooks[11]); // feet color
             playerProps.put(player.playerLooks[12]); // skin color (0-6)
-            playerProps.putShort(player.getStandAnim()); // standAnimIndex
-            playerProps.putShort(player.getWalkAnim()); // standTurnAnimIndex, 823 default
-            playerProps.putShort(player.getWalkAnim()); // walkAnimIndex
-            playerProps.putShort(player.getWalkAnim()); // turn180AnimIndex, 820 default
-            playerProps.putShort(player.getWalkAnim()); // turn90CWAnimIndex, 821 default
-            playerProps.putShort(player.getWalkAnim()); // turn90CCWAnimIndex, 822 default
-            playerProps.putShort(player.getRunAnim()); // runAnimIndex
+            int standAnim = player.getStandAnim();
+            int walkAnim = player.getWalkAnim();
+            int runAnim = player.getRunAnim();
+            int walkTurn = walkAnim;
+            int turn180 = walkAnim;
+            int turn90CW = walkAnim;
+            int turn90CCW = walkAnim;
+
+            if (player.getPlayerNpc() >= 0) {
+                net.dodian.uber.game.engine.systems.cache.CacheNpcDefinition npcDef =
+                    net.dodian.uber.game.npc.NpcClientMorphService.INSTANCE.definition(player.getPlayerNpc());
+                if (npcDef != null) {
+                    standAnim = npcDef.getStandingAnimation() > 0 ? npcDef.getStandingAnimation() : 808;
+                    walkAnim = npcDef.getWalkingAnimation() > 0 ? npcDef.getWalkingAnimation() : 819;
+                    runAnim = walkAnim;
+                    walkTurn = npcDef.getClockwiseTurnAnimation() > 0 ? npcDef.getClockwiseTurnAnimation() : walkAnim;
+                    turn180 = npcDef.getHalfTurnAnimation() > 0 ? npcDef.getHalfTurnAnimation() : walkAnim;
+                    turn90CW = npcDef.getClockwiseTurnAnimation() > 0 ? npcDef.getClockwiseTurnAnimation() : walkAnim;
+                    turn90CCW = npcDef.getAnticlockwiseTurnAnimation() > 0 ? npcDef.getAnticlockwiseTurnAnimation() : walkAnim;
+                }
+            }
+
+            playerProps.putShort(standAnim); // standAnimIndex
+            playerProps.putShort(walkTurn); // standTurnAnimIndex, 823 default
+            playerProps.putShort(walkAnim); // walkAnimIndex
+            playerProps.putShort(turn180); // turn180AnimIndex, 820 default
+            playerProps.putShort(turn90CW); // turn90CWAnimIndex, 821 default
+            playerProps.putShort(turn90CCW); // turn90CCWAnimIndex, 822 default
+            playerProps.putShort(runAnim); // runAnimIndex
 
             playerProps.putLong(Utils.playerNameToInt64(player.getPlayerName()));
             playerProps.put(player.determineCombatLevel()); // combat level

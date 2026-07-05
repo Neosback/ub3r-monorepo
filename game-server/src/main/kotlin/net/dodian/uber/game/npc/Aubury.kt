@@ -16,6 +16,7 @@ internal object Aubury : NpcFamily by npcFamily("Aubury", 11435, block = {
     profiles(AuburyVarrockProfile.key)
 
     cache {
+        examine = "Runes are his passion."
         name = "Aubury"
         firstAction("Talk-to")
         thirdAction("Trade")

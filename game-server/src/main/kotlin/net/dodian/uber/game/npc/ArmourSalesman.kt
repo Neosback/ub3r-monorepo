@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object ArmourSalesman : NpcFamily by npcFamily("Armour salesman", 6059, block = {
+    cache {
+        examine = "Supplier of Rangers armour."
+    }
+
     server {
         deathAnimation = 2304
     }

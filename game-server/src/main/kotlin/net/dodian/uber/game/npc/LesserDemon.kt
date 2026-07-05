@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object LesserDemon : NpcFamily by npcFamily("Lesser demon", 2005, block = {
+    cache {
+        examine = "Lesser, but still pretty big."
+    }
+
     server {
+        defenceAnimation = 65
         attackAnimation = 64
         deathAnimation = 67
         respawnTicks = 35

@@ -2,6 +2,7 @@ package net.dodian.uber.game.npc
 
 internal object TheShaikahan : NpcFamily by npcFamily("The Shaikahan", 1173, block = {
     cache {
+        examine = "Ironically, makes a living from swords."
         name = "The Shaikahan"
     }
 

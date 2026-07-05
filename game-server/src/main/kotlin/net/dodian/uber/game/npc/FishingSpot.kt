@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object FishingSpot : NpcFamily by npcFamily("Fishing spot", 319, block = {
+    cache {
+        examine = "A vision of supernatural horror."
+    }
+
     server {
         deathAnimation = 2304
         hitpoints = 2000

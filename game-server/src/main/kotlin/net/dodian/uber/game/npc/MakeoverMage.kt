@@ -11,6 +11,7 @@ internal object MakeoverMage : NpcFamily by npcFamily("Makeover Mage", 1306, blo
     ids(1307)
 
     cache {
+        examine = "Master of the mystical make-over."
         name = "Makeover Mage"
     }
 

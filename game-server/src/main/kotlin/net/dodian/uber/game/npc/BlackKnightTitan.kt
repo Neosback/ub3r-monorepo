@@ -6,6 +6,7 @@ internal object BlackKnightTitan : NpcFamily by npcFamily("Black Knight Titan", 
     }
 
     server {
+        defenceAnimation = 129
         attackAnimation = 128
         deathAnimation = 131
         respawnTicks = 180

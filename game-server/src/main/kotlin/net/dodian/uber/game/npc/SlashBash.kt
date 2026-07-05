@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object SlashBash : NpcFamily by npcFamily("Slash Bash", 882, block = {
+    cache {
+        examine = "A powerful looking Zogre."
+    }
+
     server {
         deathAnimation = 2304
         hitpoints = 100

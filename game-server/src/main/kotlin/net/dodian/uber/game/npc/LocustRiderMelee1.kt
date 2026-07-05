@@ -6,6 +6,7 @@ internal object LocustRiderMelee1 : NpcFamily by npcFamily("Locust rider melee 1
     }
 
     server {
+        defenceAnimation = 5448
         attackAnimation = 5450
         deathAnimation = 5449
         respawnTicks = 30

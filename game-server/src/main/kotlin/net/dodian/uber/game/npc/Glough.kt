@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object Glough : NpcFamily by npcFamily("Glough", 7102, block = {
+    cache {
+        examine = "A gnome consumed by his own wrath."
+    }
+
     server {
+        defenceAnimation = 4651
         hitpoints = 575
         attack = 260
         strength = 270

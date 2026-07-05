@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object OgreShaman : NpcFamily by npcFamily("Ogre shaman", 4382, block = {
+    cache {
+        examine = "Seems intelligent. For an ogre."
+    }
+
     server {
         hitpoints = 1
         attack = 1

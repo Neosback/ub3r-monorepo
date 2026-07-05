@@ -2,6 +2,7 @@ package net.dodian.uber.game.npc
 
 internal object FinalBoss : NpcFamily by npcFamily("Final Boss", 47, block = {
     server {
+        defenceAnimation = 5568
         attackAnimation = 2705
         deathAnimation = 2707
         strength = 1

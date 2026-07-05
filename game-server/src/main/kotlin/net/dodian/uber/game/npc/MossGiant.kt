@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object MossGiant : NpcFamily by npcFamily("Moss giant", 3851, block = {
+    cache {
+        examine = "His beard seems to have a life of its own."
+    }
+
     server {
+        defenceAnimation = 4655
         attackAnimation = 4652
         deathAnimation = 4673
         respawnTicks = 35

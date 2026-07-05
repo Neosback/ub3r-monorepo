@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object WatchtowerWizard : NpcFamily by npcFamily("Watchtower wizard", 872, block = {
+    cache {
+        examine = "An undead skeletal ogre. It's falling apart! Looks like he's de-composing."
+    }
+
     server {
         deathAnimation = 2304
         hitpoints = 71

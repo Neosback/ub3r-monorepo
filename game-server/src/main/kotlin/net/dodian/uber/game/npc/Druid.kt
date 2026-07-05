@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object Druid : NpcFamily by npcFamily("Druid", 3098, block = {
+    cache {
+        examine = "Loves nature."
+    }
+
     server {
         deathAnimation = 2304
         respawnTicks = 20

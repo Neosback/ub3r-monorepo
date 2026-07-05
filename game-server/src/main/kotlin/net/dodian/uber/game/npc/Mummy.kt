@@ -6,6 +6,7 @@ internal object Mummy : NpcFamily by npcFamily("Mummy", 950, block = {
     }
 
     server {
+        defenceAnimation = 5552
         attackAnimation = 5554
         deathAnimation = 5555
         respawnTicks = 40

@@ -95,6 +95,7 @@ class NpcManager {
                     spawn.overrides.ranged,
                     spawn.overrides.magic,
                     spawn.overrides.attackAnimation,
+                    spawn.overrides.defenceAnimation,
                     spawn.overrides.deathAnimation,
                 )
                 npc.applyDisplayOverrides(spawn.overrides.headIcon, spawn.overrides.transformTo)
@@ -241,6 +242,7 @@ class NpcManager {
                     cacheDef.name,
                     cacheDef.examine,
                     serverDefValues.attackAnimation ?: 806,
+                    serverDefValues.defenceAnimation ?: 0,
                     serverDefValues.deathAnimation ?: 836,
                     serverDefValues.respawnTicks ?: 60,
                     cacheDef.combatLevel,

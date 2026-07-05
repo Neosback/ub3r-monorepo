@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object Ghoul : NpcFamily by npcFamily("Ghoul", 289, block = {
+    cache {
+        examine = "It's totally savage."
+    }
+
     server {
         attackAnimation = 422
         deathAnimation = 2304

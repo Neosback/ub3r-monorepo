@@ -1,6 +1,10 @@
 package net.dodian.uber.game.npc
 
 internal object Zogre : NpcFamily by npcFamily("Zogre", 867, block = {
+    cache {
+        examine = "A partially decomposing zombie ogre."
+    }
+
     server {
         deathAnimation = 2304
         hitpoints = 50

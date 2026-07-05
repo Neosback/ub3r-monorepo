@@ -2,6 +2,7 @@ package net.dodian.uber.game.npc
 
 internal object Highwayman : NpcFamily by npcFamily("Highwayman", 518, block = {
     cache {
+        examine = "Likes people spending money."
         name = "Highwayman"
     }
 

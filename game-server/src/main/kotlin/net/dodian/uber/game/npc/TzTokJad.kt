@@ -6,6 +6,7 @@ internal object TzTokJad : NpcFamily by npcFamily("TzTok-Jad", 3127, block = {
     }
 
     server {
+        defenceAnimation = 2653
         attackAnimation = 2655
         deathAnimation = 2654
         respawnTicks = 360

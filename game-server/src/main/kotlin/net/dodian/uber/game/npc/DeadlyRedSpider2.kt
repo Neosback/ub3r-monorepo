@@ -1,7 +1,12 @@
 package net.dodian.uber.game.npc
 
 internal object DeadlyRedSpider2 : NpcFamily by npcFamily("Deadly red spider", 3021, block = {
+    cache {
+        examine = "I think this spider has been genetically modified."
+    }
+
     server {
+        defenceAnimation = 5328
         attackAnimation = 5327
         deathAnimation = 5329
         attack = 50
