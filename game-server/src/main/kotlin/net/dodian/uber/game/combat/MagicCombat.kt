@@ -17,8 +17,43 @@ import net.dodian.uber.game.engine.systems.combat.resolveCombatTargetPlayer
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.engine.systems.skills.RuneCostService
 import net.dodian.uber.game.engine.util.Misc
+import net.dodian.uber.game.engine.systems.cache.CacheSpotAnimDefinitions
 import net.dodian.utilities.Utils
 import kotlin.math.min
+
+
+data class AncientSpellGfx(
+    val castGfx: String? = null,
+    val projectileGfx: String? = null,
+    val impactGfx: String? = null,
+    val castAnim: Int = 1979
+)
+
+private val ANCIENT_SPELLS_GFX = mapOf(
+    // Rush spells
+    0 to AncientSpellGfx(projectileGfx = "smoke_rush_travel", impactGfx = "smoke_rush_impact"),
+    1 to AncientSpellGfx(projectileGfx = "shadow_rush_travel", impactGfx = "shadow_rush_impact"),
+    2 to AncientSpellGfx(projectileGfx = "blood_rush_travel", impactGfx = "blood_rush_impact"),
+    3 to AncientSpellGfx(projectileGfx = "ice_rush_travel", impactGfx = "ice_rush_impact"),
+    
+    // Burst spells
+    4 to AncientSpellGfx(projectileGfx = "smoke_burst_travel", impactGfx = "smoke_burst_impact"),
+    5 to AncientSpellGfx(impactGfx = "shadow_burst_impact"),
+    6 to AncientSpellGfx(impactGfx = "spell_blood_burst_impact"),
+    7 to AncientSpellGfx(projectileGfx = "ice_burst_travel", impactGfx = "ice_burst_impact"),
+    
+    // Blitz spells
+    8 to AncientSpellGfx(castGfx = "smoke_blitz_travel", projectileGfx = "smoke_blitz_travel", impactGfx = "smoke_blitz_impact", castAnim = 1978),
+    9 to AncientSpellGfx(castGfx = "shadow_blitz_travel", projectileGfx = "shadow_blitz_travel", impactGfx = "shadow_blitz_impact", castAnim = 1978),
+    10 to AncientSpellGfx(castGfx = "blood_blitz_travel", projectileGfx = "blood_blitz_travel", impactGfx = "blood_blitz_impact", castAnim = 1978),
+    11 to AncientSpellGfx(castGfx = "ice_blitz_travel", projectileGfx = "ice_blitz_travel", impactGfx = "ice_blitz_impact", castAnim = 1978),
+    
+    // Barrage spells
+    12 to AncientSpellGfx(projectileGfx = "smoke_barrage_travel", impactGfx = "smoke_barrage_impact"),
+    13 to AncientSpellGfx(impactGfx = "shadow_barrage_impact"),
+    14 to AncientSpellGfx(impactGfx = "spell_blood_barrage_impact"),
+    15 to AncientSpellGfx(castGfx = "ice_burst_travel", impactGfx = "ice_barrage_impact") // Ice Barrage (casts directly)
+)
 
 fun Client.handleMagicAttack(): CombatAttackResult? {
     if (stunTimer > 0 || target == null)
@@ -61,7 +96,6 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
     val hitDelay = getDistanceDelay(distance, true).toLong()
     deleteItem(565, 1)
     checkItemUpdate()
-    PlayerAnimationService.requestAttack(this, 1979)
     var maxHit = baseDamage[slot] * magicBonusDamage()
     if (target is Npc) { // Slayer damage!
         val checkNpc = Server.npcManager.getNpc(target.slot)
@@ -71,7 +105,6 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
             val reduceDefence = min(checkNpc.defence / 15, 18)
             val value = (12.0 + Misc.random(reduceDefence)) / 100.0
             maxHit *= 1.0 - value
-            //System.out.println("reduce value: $value and defence $reduceDefence to be new max hit $maxHit")
         }
     }
     var hit = Utils.random(maxHit.toInt())
@@ -79,18 +112,28 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
     val extra = getLevel(Skill.MAGIC) * 0.195
     if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
     val landCrit = Math.random() * 100 <= criticalChance
-    /* Magic graphics! */
-    when (type) {
-        0 //Burn effect!
-        -> stillgfx(357, target.position.y, target.position.x)
-        1 //Shadow effect, poison?!
-        -> stillgfx(379, target.position.y, target.position.x)
-        2 //Blood effect
-        -> stillgfx(377, target.position.y, target.position.x)
-        3 //Freeze effect
-        -> stillgfx(369, target.position.y, target.position.x)
-        else //Other ancient effect!
-        -> stillgfx(78, target.position.y, target.position.x)
+
+    val gfx = ANCIENT_SPELLS_GFX[slot]
+    if (gfx != null) {
+        PlayerAnimationService.requestAttack(this, gfx.castAnim)
+        if (gfx.castGfx != null) {
+            val castGfxId = SpotAnimNames.getId(gfx.castGfx)
+            if (castGfxId != -1) {
+                callGfxMask(castGfxId, 100)
+            }
+        }
+        if (gfx.projectileGfx != null) {
+            this.shoot(gfx.projectileGfx, target)
+        }
+        if (gfx.impactGfx != null) {
+            val impactGfxId = SpotAnimNames.getId(gfx.impactGfx)
+            if (impactGfxId != -1) {
+                stillgfx(impactGfxId, target.position.y, target.position.x)
+            }
+        }
+    } else {
+        PlayerAnimationService.requestAttack(this, 1979)
+        stillgfx(78, target.position.y, target.position.x)
     }
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)

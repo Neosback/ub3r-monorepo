@@ -1929,7 +1929,13 @@ public class Client extends Player implements Runnable {
     }
 
     public void wear(int wearID, int slot, int interFace) {
+        if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+            System.out.println("[W2-WEAR] wearID=" + wearID + ", slot=" + slot + ", interFace=" + interFace);
+        }
         if (isBusy() || interFace != 3214) {
+            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+                System.out.println("[W2-WEAR] Exit busy or interface. isBusy()=" + isBusy() + ", interFace=" + interFace);
+            }
             return;
         }
         if (net.dodian.uber.game.skill.runecrafting.Runecrafting.emptyPouch(this, wearID)) { //Runecrafting Pouches
@@ -1956,23 +1962,46 @@ public class Client extends Player implements Runnable {
             ItemDispatcher.tryHandle(this, 1, wearID, slot, interFace);
             return;
         }
-        if (duelConfirmed && !duelFight)
+        if (duelConfirmed && !duelFight) {
+            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+                System.out.println("[W2-WEAR] Exit duelConfirmed=true, duelFight=false");
+            }
             return;
+        }
         if (!playerHasItem(wearID)) {
+            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+                System.out.println("[W2-WEAR] Exit playerHasItem=false");
+            }
             return;
         }
         int targetSlot = Server.itemManager.getSlot(wearID);
+        if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+            System.out.println("[W2-WEAR] targetSlot=" + targetSlot);
+        }
         if (canUse(wearID)) {
+            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+                System.out.println("[W2-WEAR] Exit canUse (premium check) = true");
+            }
             send(new SendMessage("You must be a premium member to use this item"));
             return;
         }
         if (targetSlot != 8 && duelBodyRules[falseSlots[targetSlot]]) {
+            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+                System.out.println("[W2-WEAR] Exit duelBodyRules restriction");
+            }
             send(new SendMessage("Current duel rules restrict this from being worn!"));
             return;
         }
         if ((playerItems[slot] - 1) == wearID) {
-            if (!checkEquip(wearID, targetSlot, slot))
+            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+                System.out.println("[W2-WEAR] Calling checkEquip");
+            }
+            if (!checkEquip(wearID, targetSlot, slot)) {
+                if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+                    System.out.println("[W2-WEAR] Exit checkEquip = false");
+                }
                 return;
+            }
             int wearAmount = playerItemsN[slot];
             if (wearAmount < 1) {
                 return;
@@ -1998,6 +2027,9 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean checkEquip(int id, int slot, int invSlot) {
+        if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+            System.out.println("[W2-EQUIP] id=" + id + ", slot=" + slot + ", invSlot=" + invSlot);
+        }
         boolean maxCheck = getItemName(id).contains(("Max cape")) || getItemName(id).contains(("Max hood"));
         if (maxCheck && totalLevel() < Skills.maxTotalLevel()) {
             send(new SendMessage("You need a total level of " + Skills.maxTotalLevel() + " to equip the " + getItemName(id).toLowerCase() + "."));

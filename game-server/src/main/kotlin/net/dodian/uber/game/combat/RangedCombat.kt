@@ -18,6 +18,7 @@ import net.dodian.uber.game.engine.systems.combat.resolveCombatTargetPlayer
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.utilities.Utils
+import net.dodian.uber.game.engine.systems.cache.CacheSpotAnimDefinitions
 
 fun Client.handleRangedAttack(): CombatAttackResult? {
     if (stunTimer > 0 || target == null)
@@ -33,18 +34,18 @@ fun Client.handleRangedAttack(): CombatAttackResult? {
     }
 
     val arrows = mapOf(
-        882 to listOf(10, 19),
-        884 to listOf(9, 18),
-        886 to listOf(11, 20),
-        888 to listOf(12, 21),
-        890 to listOf(13, 22),
-        892 to listOf(14, 23),
-        11212 to listOf(1120, 1116)
+        882 to listOf("bronze_arrow_travel", "bronze_arrow_launch"),
+        884 to listOf("iron_arrow_travel", "iron_arrow_launch"),
+        886 to listOf("steel_arrow_travel", "steel_arrow_launch"),
+        888 to listOf("mithril_arrow_travel", "mithril_arrow_launch"),
+        890 to listOf("adamant_arrow_travel", "adamant_arrow_launch"),
+        892 to listOf("rune_arrow_travel", "rune_arrow_launch"),
+        11212 to listOf("ii_dragon_arrow_normal_projanim", "dragon_arrow_launch")
     )
     //obby ring, 442 + 443
     val equippedArrow = equipment[Equipment.Slot.ARROWS.id]
-    var arrowGfx = arrows[equippedArrow]?.get(0) ?: 10
-    var arrowPullGfx = arrows[equippedArrow]?.get(1) ?: 20
+    var arrowGfx = arrows[equippedArrow]?.get(0) ?: "bronze_arrow_travel"
+    var arrowPullGfx: String? = arrows[equippedArrow]?.get(1) ?: "bronze_arrow_launch"
     val emote = net.dodian.uber.game.engine.systems.animation.AttackAnimationService.resolve(this)
     // TODO: Ranged special attacks — magic shortbow (anim 1074, gfx 256, 2 hits),
     // dark bow (2 hits, 1.3x/1.5x dmg), dragon thrownaxe (anim 7521, instant),
@@ -52,8 +53,8 @@ fun Client.handleRangedAttack(): CombatAttackResult? {
     // if (specialActivated) { ... handle ranged spec per weapon ID }
 
     if(equipment[Equipment.Slot.WEAPON.id] == 4734) {
-        arrowGfx = 27
-        arrowPullGfx = -1 //Not right but believe there is no real gfx for this!
+        arrowGfx = "crossbowbolt_travel"
+        arrowPullGfx = null
     }
 
     CombatLogoutLockService.refreshInteraction(this, target)
@@ -65,21 +66,15 @@ fun Client.handleRangedAttack(): CombatAttackResult? {
     val distance = distanceToPoint(target.position.x, target.position.y)
     val hitDelay = getDistanceDelay(distance, false).toLong()
     if (DeleteArrow()) {
-        if(target is Npc) {
-            val offsetX = (position.y - target.position.y) * 1
-            val offsetY = (position.x - target.position.x) * 1
-            PlayerAnimationService.requestResetClear(this)
-            PlayerAnimationService.requestAttack(this, emote)
-            callGfxMask(arrowPullGfx, 100)
-            arrowGfx(offsetY, offsetX, 50, 50 + (distance * 5), arrowGfx, 43, 35, target.slot + 1, 51, 16)
-        } else {
-            val offsetX = (position.y - target.position.y) * -1
-            val offsetY = (position.x - target.position.x) * -1
-            PlayerAnimationService.requestResetClear(this)
-            PlayerAnimationService.requestAttack(this, emote)
-            callGfxMask(arrowPullGfx, 100)
-            arrowGfx(offsetY, offsetX, 50, 50 + (distance * 5), arrowGfx, 43, 35, -(target.slot + 1), 51, 16)
+        PlayerAnimationService.requestResetClear(this)
+        PlayerAnimationService.requestAttack(this, emote)
+        if (arrowPullGfx != null) {
+            val arrowPullGfxId = SpotAnimNames.getId(arrowPullGfx)
+            if (arrowPullGfxId != -1) {
+                callGfxMask(arrowPullGfxId, 100)
+            }
         }
+        this.shoot(arrowGfx, target)
     }
     var maxHit = rangedMaxHit().toDouble()
     if (target is Npc) { // Slayer damage!

@@ -27,6 +27,18 @@ class CacheBootstrapService(
                 )
             }
 
+            val spotAnimDefinitions = SpotAnimDefinitionDecoder.decode(store)
+            CacheSpotAnimDefinitions.replace(spotAnimDefinitions)
+            if (spotAnimDefinitions.isNotEmpty()) {
+                logger.info("Loaded cache spot animation definitions: count={}", spotAnimDefinitions.size)
+            }
+
+            val interfaceDefinitions = InterfaceDefinitionDecoder.decode(store)
+            CacheInterfaceDefinitions.replace(interfaceDefinitions)
+            if (interfaceDefinitions.isNotEmpty()) {
+                logger.info("Loaded cache interface components: count={}", interfaceDefinitions.size)
+            }
+
             val decoder = MapDecoder(store)
             val regions = decoder.decodeIndexEntries()
             val summary = rebuildCollisionStreaming(decoder, regions)

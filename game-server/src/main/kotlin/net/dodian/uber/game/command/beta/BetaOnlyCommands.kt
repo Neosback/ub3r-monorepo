@@ -77,8 +77,8 @@ private fun handleBeta(context: CommandContext): Boolean {
             }
         }
         context.alias == "item" -> {
-            val newItemID = cmd[1].toInt()
-            var newItemAmount = cmd[2].toInt()
+            val newItemID = cmd.getOrNull(1)?.toIntOrNull() ?: return true
+            var newItemAmount = cmd.getOrNull(2)?.toIntOrNull() ?: 1
             if (newItemID < 1 || newItemID > 22376) {
                 context.reply("Stop pulling a River! Maximum itemid = 22376!")
                 return true

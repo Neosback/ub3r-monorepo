@@ -45,6 +45,19 @@ public final class ItemDefinition implements RSItemComposition {
         /* Customs added here? */
 
         switch (i) {
+            case 11748:
+            case 11749:
+            case 11750:
+            case 11751:
+            case 11752:
+            case 11753:
+            case 11754:
+            case 11755:
+            case 11756:
+            case 11757:
+            case 11758:
+                itemDef.itemActions = new String[]{null, "Wield", null, null, "Drop"};
+                break;
             case 2399://keepsake key - originally silverlight key
                 itemDef.name = "Keepsake key";
                 itemDef.itemActions = new String[]{null, null, null, null, "Drop"};

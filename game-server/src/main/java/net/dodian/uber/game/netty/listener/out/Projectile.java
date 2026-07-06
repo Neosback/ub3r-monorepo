@@ -23,14 +23,32 @@ public class Projectile implements OutgoingPacket {
     private final int begin;
     private final int slope;
     private final int initDistance;
+    private Object targetObject = null;
 
-    
     public Projectile(Position casterPosition, int offsetY, int offsetX, int angle, int speed,
                      int gfxMoving, int startHeight, int endHeight, int targetIndex,
                      int begin, int slope, int initDistance) {
         this.casterPosition = casterPosition;
         this.offsetY = offsetY;
         this.offsetX = offsetX;
+        this.angle = angle;
+        this.speed = speed;
+        this.gfxMoving = gfxMoving;
+        this.startHeight = startHeight;
+        this.endHeight = endHeight;
+        this.targetIndex = targetIndex;
+        this.begin = begin;
+        this.slope = slope;
+        this.initDistance = initDistance;
+    }
+
+    public Projectile(Position casterPosition, Object targetObject, int angle, int speed,
+                     int gfxMoving, int startHeight, int endHeight, int targetIndex,
+                     int begin, int slope, int initDistance) {
+        this.casterPosition = casterPosition;
+        this.targetObject = targetObject;
+        this.offsetY = 0;
+        this.offsetX = 0;
         this.angle = angle;
         this.speed = speed;
         this.gfxMoving = gfxMoving;
@@ -51,13 +69,28 @@ public class Projectile implements OutgoingPacket {
 
         int localX = casterPosition.getX() - baseX;
         int localY = casterPosition.getY() - baseY;
-        int offsetByte = (localX << 4) | localY;
+        int offsetByte = (localX << 3) | localY;
+
+        int finalOffsetX = this.offsetX;
+        int finalOffsetY = this.offsetY;
+
+        if (targetObject != null) {
+            Position targetPos;
+            if (targetObject instanceof net.dodian.uber.game.model.entity.Entity) {
+                targetPos = ((net.dodian.uber.game.model.entity.Entity) targetObject).getPosition();
+            } else if (targetObject instanceof Position) {
+                targetPos = (Position) targetObject;
+            } else {
+                targetPos = casterPosition;
+            }
+            finalOffsetX = targetPos.getX() - casterPosition.getX();
+            finalOffsetY = targetPos.getY() - casterPosition.getY();
+        }
 
         ByteMessage message = ByteMessage.message(117, MessageType.FIXED);
         message.put(offsetByte);       
-        message.put(offsetX);
-
-        message.put(offsetY);
+        message.put(finalOffsetX);
+        message.put(finalOffsetY);
 
         message.putShort(targetIndex);
 

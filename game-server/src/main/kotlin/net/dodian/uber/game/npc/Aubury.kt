@@ -7,12 +7,13 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.objects.travel.EssenceMineTravel
 import net.dodian.uber.game.shop.ShopId
+import net.dodian.uber.game.rscm.asRscm
 import net.dodian.utilities.Utils
 
 private val AuburyVarrockProfile = profile("aubury.varrock")
 private val AuburyYanilleProfile = profile("aubury.yanille")
 
-internal object Aubury : NpcFamily by npcFamily("Aubury", 11435, block = {
+internal object Aubury : NpcFamily by npcFamily("Aubury", "npc.aubury".asRscm(), block = {
     profiles(AuburyVarrockProfile.key)
 
     cache {
@@ -38,7 +39,7 @@ internal object Aubury : NpcFamily by npcFamily("Aubury", 11435, block = {
     }
 })
 
-internal object AuburyYanille : NpcFamily by npcFamily("Aubury", 11435, block = {
+internal object AuburyYanille : NpcFamily by npcFamily("Aubury", "npc.aubury".asRscm(), block = {
     profiles(AuburyYanilleProfile.key)
 
     cache {

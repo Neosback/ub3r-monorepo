@@ -71,6 +71,7 @@ public class Server {
 
     public static void main(String[] args) throws Exception {
         StartupValidationService.validateOrThrow();
+        net.dodian.uber.game.rscm.RSCM.load(new java.io.File("data/mappings"));
 
         serverStartup = System.currentTimeMillis();
         System.out.println();

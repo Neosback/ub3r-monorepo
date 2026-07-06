@@ -120,3 +120,29 @@ tasks.register<JavaExec>("dumpNpcDefs") {
     mainClass.set("net.dodian.uber.game.engine.systems.cache.NpcDefinitionDumper")
     args = listOf("data/cache")
 }
+
+tasks.register<JavaExec>("dumpSpotAnimDefs") {
+    group = "tools"
+    description = "Dump all spot animation (graphic) definitions from cache to JSON, optionally enriched with rsmod names"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.engine.systems.cache.SpotAnimDefinitionDumper")
+    args = listOf(
+        "data/cache",
+        "/Users/tylercovalt/Desktop/rsmod-main/.data/symbols/spotanim.sym",
+    )
+}
+
+tasks.register<JavaExec>("dumpInterfaceDefs") {
+    group = "tools"
+    description = "Dump all interface/component definitions from cache to JSON"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.engine.systems.cache.InterfaceDefinitionDumper")
+    args = listOf("data/cache")
+}
+
+tasks.register<JavaExec>("generateRscm") {
+    group = "tools"
+    description = "Generate all RSCM mappings from JSON definitions to mappings/def/"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.engine.systems.cache.RscmGenerator")
+}
