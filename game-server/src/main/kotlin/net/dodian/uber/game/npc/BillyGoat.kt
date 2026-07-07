@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object BillyGoat : NpcFamily by npcFamily("Billy goat", 1794, block = {
-    cache {
+    definition {
         examine = "Billy was his name"
     }
 

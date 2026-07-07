@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Hero : NpcFamily by npcFamily("Hero", 3295, block = {
-    cache {
+    definition {
         name = "Hero"
     }
 

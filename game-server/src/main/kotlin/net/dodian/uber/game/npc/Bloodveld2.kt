@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Bloodveld2 : NpcFamily by npcFamily("Bloodveld", 1618, block = {
-    cache {
+    definition {
         name = "Bloodveld"
     }
 

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object TzHaarXil : NpcFamily by npcFamily("TzHaar-Xil", 2167, block = {
-    cache {
+    definition {
         examine = "Doesn't look very social."
     }
 

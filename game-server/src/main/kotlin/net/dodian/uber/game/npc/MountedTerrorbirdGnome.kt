@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object MountedTerrorbirdGnome : NpcFamily by npcFamily("Mounted terrorbird gnome", 5971, block = {
-    cache {
+    definition {
         examine = "These gnomes know how to get around!"
     }
 

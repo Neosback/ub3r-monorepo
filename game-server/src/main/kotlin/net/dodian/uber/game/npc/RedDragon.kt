@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object RedDragon : NpcFamily by npcFamily("Red dragon", 247, block = {
-    cache {
+    definition {
         examine = "Red and fierce!"
     }
 

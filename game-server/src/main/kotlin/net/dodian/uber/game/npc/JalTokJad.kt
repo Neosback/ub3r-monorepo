@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object JalTokJad : NpcFamily by npcFamily("JalTok-Jad", 7704, block = {
-    cache {
+    definition {
         examine = "Unknown (edit)"
     }
 

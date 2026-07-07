@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
 internal object DukeHoracio : NpcFamily by npcFamily("Duke Horacio", 8051, block = {
-    cache {
+    definition {
         examine = "Duke Horacio of Lumbridge."
         name = "Duke Horacio"
     }

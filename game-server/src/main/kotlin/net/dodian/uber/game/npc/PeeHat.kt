@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object PeeHat : NpcFamily by npcFamily("Pee hat", 927, block = {
-    cache {
+    definition {
         examine = "Wish he was a party hat"
     }
 

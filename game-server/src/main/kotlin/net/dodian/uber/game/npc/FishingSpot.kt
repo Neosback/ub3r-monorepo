@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object FishingSpot : NpcFamily by npcFamily("Fishing spot", 319, block = {
-    cache {
+    definition {
         examine = "A vision of supernatural horror."
     }
 

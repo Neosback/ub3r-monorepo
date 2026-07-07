@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object ThrowerTroll2 : NpcFamily by npcFamily("Thrower Troll", 1105, block = {
-    cache {
+    definition {
         examine = "He's ready for a bet."
     }
 

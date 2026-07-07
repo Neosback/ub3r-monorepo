@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object ArmourSalesman : NpcFamily by npcFamily("Armour salesman", 6059, block = {
-    cache {
+    definition {
         examine = "Supplier of Rangers armour."
     }
 

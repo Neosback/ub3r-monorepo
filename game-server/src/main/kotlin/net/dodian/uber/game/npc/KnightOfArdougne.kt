@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object KnightOfArdougne : NpcFamily by npcFamily("Knight of Ardougne", 3297, block = {
-    cache {
+    definition {
         name = "Knight of Ardougne"
     }
 

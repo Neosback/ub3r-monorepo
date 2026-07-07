@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object TzTokJad : NpcFamily by npcFamily("TzTok-Jad", 3127, block = {
-    cache {
+    definition {
         examine = "Scariest boss in Dodian"
     }
 

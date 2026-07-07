@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Glough : NpcFamily by npcFamily("Glough", 7102, block = {
-    cache {
+    definition {
         examine = "A gnome consumed by his own wrath."
     }
 

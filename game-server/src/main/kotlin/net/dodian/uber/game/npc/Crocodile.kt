@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Crocodile : NpcFamily by npcFamily("Crocodile", 4184, block = {
-    cache {
+    definition {
         examine = "Ow Charlie that hurts."
     }
 

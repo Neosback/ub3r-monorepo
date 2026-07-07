@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Zombie2 : NpcFamily by npcFamily("Zombie", 75, block = {
-    cache {
+    definition {
         examine = "Could do with gaining a few pounds.  It looks just a bit... underfed."
     }
 

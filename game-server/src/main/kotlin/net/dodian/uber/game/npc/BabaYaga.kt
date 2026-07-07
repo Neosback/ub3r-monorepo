@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object BabaYaga : NpcFamily by npcFamily("Baba Yaga", 3837, block = {
-    cache {
+    definition {
         examine = "Mysterious woman"
     }
 

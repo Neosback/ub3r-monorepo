@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Venenatis : NpcFamily by npcFamily("Venenatis", 6610, block = {
-    cache {
+    definition {
         examine = "Wild spider is wild"
     }
 

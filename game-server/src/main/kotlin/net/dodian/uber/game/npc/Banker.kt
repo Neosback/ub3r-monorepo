@@ -7,10 +7,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
 internal object Banker : NpcFamily by npcFamily("Banker", 1613, block = {
-    cache {
-        name = "Banker"
-        firstAction("Talk-to")
-        thirdAction("Bank")
+    definition {
         examine = "I do not get paid enough for this."
     }
 

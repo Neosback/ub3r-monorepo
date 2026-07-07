@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object BlackKnightTitan : NpcFamily by npcFamily("Black Knight Titan", 4067, block = {
-    cache {
+    definition {
         examine = "Mad because bad"
     }
 

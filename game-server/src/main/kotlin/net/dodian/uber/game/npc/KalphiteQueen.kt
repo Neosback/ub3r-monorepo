@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object KalphiteQueen : NpcFamily by npcFamily("Kalphite queen", 4303, block = {
-    cache {
+    definition {
         examine = "Queen of all kalphites."
     }
 

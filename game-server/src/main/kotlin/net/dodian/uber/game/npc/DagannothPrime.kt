@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object DagannothPrime : NpcFamily by npcFamily("Dagannoth Prime", 2266, block = {
-    cache {
+    definition {
         examine = "A legendary Dagannoth King, rumoured to fly on the North winds."
     }
 

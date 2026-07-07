@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Jackal : NpcFamily by npcFamily("Jackal", 4185, block = {
-    cache {
+    definition {
         examine = "Man's best friend"
     }
 

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object DeadlyRedSpider2 : NpcFamily by npcFamily("Deadly red spider", 3021, block = {
-    cache {
+    definition {
         examine = "I think this spider has been genetically modified."
     }
 

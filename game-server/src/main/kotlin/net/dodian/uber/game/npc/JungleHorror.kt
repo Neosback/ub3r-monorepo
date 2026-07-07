@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object JungleHorror : NpcFamily by npcFamily("Jungle horror", 1042, block = {
-    cache {
+    definition {
         name = "Jungle horror"
     }
 

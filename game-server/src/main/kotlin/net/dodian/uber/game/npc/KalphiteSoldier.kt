@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object KalphiteSoldier : NpcFamily by npcFamily("Kalphite Soldier", 1154, block = {
-    cache {
+    definition {
         examine = "I'd better be careful eating this."
     }
 

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object YtMejKot : NpcFamily by npcFamily("Yt-MejKot", 3123, block = {
-    cache {
+    definition {
         examine = "Guarding jad"
     }
 

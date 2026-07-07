@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Terrorbird : NpcFamily by npcFamily("Terrorbird", 136, block = {
-    cache {
+    definition {
         examine = "Big, ugly, and smelly. / A large dim looking humanoid."
     }
 

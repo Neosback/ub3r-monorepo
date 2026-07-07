@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object IceQueen : NpcFamily by npcFamily("Ice Queen", 4922, block = {
-    cache {
+    definition {
         examine = "Stone cold queen."
     }
 

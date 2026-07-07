@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object CaveHorror : NpcFamily by npcFamily("Cave horror", 1047, block = {
-    cache {
+    definition {
         name = "Cave horror"
         examine = "A horrible, emaciated ape like creature with beady red eyes."
     }

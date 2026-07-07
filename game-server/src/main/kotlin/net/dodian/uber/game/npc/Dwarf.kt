@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Dwarf : NpcFamily by npcFamily("Dwarf", 290, block = {
-    cache {
+    definition {
         examine = "A dwarven worker.  A short angry guy."
     }
 

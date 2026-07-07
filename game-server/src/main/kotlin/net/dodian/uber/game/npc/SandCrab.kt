@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object SandCrab : NpcFamily by npcFamily("Sand Crab", 5935, block = {
-    cache {
+    definition {
         examine = "No one likes crabs... Disguised as sandy rocks:  A sandy outcrop."
     }
 

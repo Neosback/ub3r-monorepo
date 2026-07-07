@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object BlackDemon : NpcFamily by npcFamily("Black Demon", 1432, block = {
-    cache {
+    definition {
         examine = "A big, scary, jet-black demon."
     }
 

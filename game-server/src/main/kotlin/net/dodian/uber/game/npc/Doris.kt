@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Doris : NpcFamily by npcFamily("Doris", 4808, block = {
-    cache {
+    definition {
         examine = "How did she obtain battlestaffs?"
     }
 

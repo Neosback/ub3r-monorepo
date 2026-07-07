@@ -2,6 +2,7 @@ package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.rscm.asRscm
 
 class NpcOptionsBuilder internal constructor() {
     private val bindings = ArrayList<NpcOptionBinding>()
@@ -186,13 +187,29 @@ class NpcFamilyBuilder internal constructor(
         options = NpcOptionsBuilder().apply(block).build()
     }
 
-    fun cache(block: NpcCacheOverrideBuilder.() -> Unit) {
-        cache(primaryId, block)
+    fun definition(block: NpcDefinitionOverrideBuilder.() -> Unit) {
+        definition(primaryId, block)
     }
 
-    fun cache(id: Int, block: NpcCacheOverrideBuilder.() -> Unit) {
+    fun definition(id: Int, block: NpcDefinitionOverrideBuilder.() -> Unit) {
         ids += id
-        cacheOverrides += NpcCacheOverrideBuilder(id).apply(block).build()
+        cacheOverrides += NpcDefinitionOverrideBuilder(id).apply(block).build()
+    }
+
+    @Deprecated(
+        "Use definition { } instead. This block does NOT modify the client cache.",
+        ReplaceWith("definition(block)")
+    )
+    fun cache(block: NpcDefinitionOverrideBuilder.() -> Unit) {
+        definition(block)
+    }
+
+    @Deprecated(
+        "Use definition(id, block) instead.",
+        ReplaceWith("definition(id, block)")
+    )
+    fun cache(id: Int, block: NpcDefinitionOverrideBuilder.() -> Unit) {
+        definition(id, block)
     }
 
     fun server(block: NpcServerDefinitionBuilder.() -> Unit) {
@@ -254,5 +271,15 @@ private data class DefaultNpcFamily(
 
 fun npcFamily(name: String, primaryId: Int, block: NpcFamilyBuilder.() -> Unit): NpcFamily =
     NpcFamilyBuilder(name, primaryId).apply(block).build()
+
+fun npcFamily(rscmId: String, name: String, block: NpcFamilyBuilder.() -> Unit): NpcFamily {
+    val id = rscmId.asRscm()
+    return NpcFamilyBuilder(name, id).apply(block).build()
+}
+
+fun npcFamily(rscmId: String, block: NpcFamilyBuilder.() -> Unit): NpcFamily {
+    val id = rscmId.asRscm()
+    return NpcFamilyBuilder(rscmId.substringAfter("."), id).apply(block).build()
+}
 
 fun noNpcClick(@Suppress("UNUSED_PARAMETER") client: Client, @Suppress("UNUSED_PARAMETER") npc: Npc): Boolean = false

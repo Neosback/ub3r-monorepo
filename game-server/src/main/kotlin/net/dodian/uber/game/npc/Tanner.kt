@@ -5,10 +5,6 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.shop.ShopId
 
 internal object Tanner : NpcFamily by npcFamily("Tanner", 5809, block = {
-    cache {
-        firstAction("Tan")
-        thirdAction("Trade")
-    }
 
     server {
         deathAnimation = 2304

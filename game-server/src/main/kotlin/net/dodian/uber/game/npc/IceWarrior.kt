@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object IceWarrior : NpcFamily by npcFamily("Ice warrior", 2851, block = {
-    cache {
+    definition {
         examine = "A cold-hearted elemental warrior."
     }
 

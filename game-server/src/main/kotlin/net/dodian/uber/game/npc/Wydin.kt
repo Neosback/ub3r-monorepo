@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 
 internal object Wydin : NpcFamily by npcFamily("Zombie monk", 557, block = {
-    cache {
+    definition {
         examine = "Looked better."
         name = "Zombie monk"
     }

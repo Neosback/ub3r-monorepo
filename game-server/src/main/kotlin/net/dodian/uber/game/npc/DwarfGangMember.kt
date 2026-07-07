@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object DwarfGangMember : NpcFamily by npcFamily("Dwarf gang member", 1356, block = {
-    cache {
+    definition {
         examine = "A short stout menacing fellow."
     }
 

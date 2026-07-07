@@ -1,33 +1,16 @@
 package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.engine.systems.cache.CacheNpcDefinition
+import net.dodian.uber.game.rscm.asRscmSeq
 
 data class NpcCacheOverride(
     val id: Int,
     val name: String? = null,
     val examine: String? = null,
-    val size: Int? = null,
-    val combatLevel: Int? = null,
-    val standingAnimation: Int? = null,
-    val walkingAnimation: Int? = null,
-    val halfTurnAnimation: Int? = null,
-    val clockwiseTurnAnimation: Int? = null,
-    val anticlockwiseTurnAnimation: Int? = null,
-    val actions: Map<Int, String?> = emptyMap(),
 ) {
     fun applyTo(definition: CacheNpcDefinition) {
         name?.let { definition.name = it }
         examine?.let { definition.examine = it }
-        size?.let { definition.size = it }
-        combatLevel?.let { definition.combatLevel = it }
-        standingAnimation?.let { definition.standingAnimation = it }
-        walkingAnimation?.let { definition.walkingAnimation = it }
-        halfTurnAnimation?.let { definition.halfTurnAnimation = it }
-        clockwiseTurnAnimation?.let { definition.clockwiseTurnAnimation = it }
-        anticlockwiseTurnAnimation?.let { definition.anticlockwiseTurnAnimation = it }
-        for ((slot, action) in actions) {
-            definition.actions[slot - 1] = cleanText(action)
-        }
     }
 }
 
@@ -114,66 +97,18 @@ data class NpcDisplayOverride(
     val transformTo: Int? = null,
 )
 
-/**
- * Server-side copy of decoded client-cache metadata.
- *
- * These values can affect server-owned uses such as dialogue labels or examine messages after
- * NpcData is built. They do not rewrite a connected player's cache: right-click names, right-click
- * option text, combat display, model size, and base stand/walk/turn rendering still come from the
- * client-visible NPC definition or display id unless future protocol/client work sends them.
- */
-class NpcCacheOverrideBuilder internal constructor(private val id: Int) {
+class NpcDefinitionOverrideBuilder internal constructor(private val id: Int) {
     var name: String? = null
     var examine: String? = null
-    var size: Int? = null
-    var combatLevel: Int? = null
-    var standingAnimation: Int? = null
-    var walkingAnimation: Int? = null
-    var halfTurnAnimation: Int? = null
-    var clockwiseTurnAnimation: Int? = null
-    var anticlockwiseTurnAnimation: Int? = null
-    private val actions = linkedMapOf<Int, String?>()
-
-    /**
-     * Records cache-action intent for validation/documentation. This does not rewrite a live
-     * player's right-click menu unless the displayed client NPC definition already exposes it.
-     */
-    fun action(slot: Int, label: String?) {
-        require(slot in 1..5) { "NPC cache action slot must be between 1 and 5. Got $slot." }
-        actions[slot] = label
-    }
-
-    fun firstAction(label: String?) = action(1, label)
-    fun secondAction(label: String?) = action(2, label)
-    fun thirdAction(label: String?) = action(3, label)
-    fun fourthAction(label: String?) = action(4, label)
-    fun fifthAction(label: String?) = action(5, label)
 
     internal fun build(): NpcCacheOverride =
         NpcCacheOverride(
             id = id,
             name = cleanText(name),
             examine = cleanText(examine),
-            size = positive(size),
-            combatLevel = nonNegative(combatLevel),
-            standingAnimation = positive(standingAnimation),
-            walkingAnimation = positive(walkingAnimation),
-            halfTurnAnimation = positive(halfTurnAnimation),
-            clockwiseTurnAnimation = positive(clockwiseTurnAnimation),
-            anticlockwiseTurnAnimation = positive(anticlockwiseTurnAnimation),
-            actions = actions.toMap(),
         )
 }
 
-/**
- * Server-owned values that are currently consumed by NpcData or per-spawn NPC state.
- *
- * TODO:  useful future combat and metadata fields, but they should stay in
- * audits/import evidence until engine logic consumes them. Do not add live DSL properties for
- * maxHit, attackSpeed, aggressive, poisonous, venomous, poison/venom immunity, attack type/style,
- * weakness, slayer metadata, attributes/categories, combat bonuses, defence bonuses, or
- * server-side combat level until the combat/slayer systems read them.
- */
 class NpcServerDefinitionBuilder internal constructor(private val id: Int? = null) {
     var attackAnimation: Int? = null
     var defenceAnimation: Int? = null
@@ -211,6 +146,18 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
         this.attackAnimation = attack ?: attackAnimation
         this.defenceAnimation = defence ?: defenceAnimation
         this.deathAnimation = death ?: deathAnimation
+    }
+
+    fun attackAnimation(rscm: String) {
+        this.attackAnimation = rscm.asRscmSeq()
+    }
+
+    fun defenceAnimation(rscm: String) {
+        this.defenceAnimation = rscm.asRscmSeq()
+    }
+
+    fun deathAnimation(rscm: String) {
+        this.deathAnimation = rscm.asRscmSeq()
     }
 
     fun respawn(ticks: Int) {

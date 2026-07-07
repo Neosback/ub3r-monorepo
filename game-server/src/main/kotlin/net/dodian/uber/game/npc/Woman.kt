@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Woman : NpcFamily by npcFamily("Woman", 6990, block = {
-    cache {
+    definition {
         examine = "no examine"
     }
 

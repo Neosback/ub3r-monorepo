@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object KalphiteWorker1 : NpcFamily by npcFamily("Kalphite worker 1", 955, block = {
-    cache {
+    definition {
         examine = "Hard working bug"
     }
 

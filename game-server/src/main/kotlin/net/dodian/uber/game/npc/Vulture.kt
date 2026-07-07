@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Vulture : NpcFamily by npcFamily("Vulture", 1267, block = {
-    cache {
+    definition {
         examine = "Love to keep desert clean"
     }
 

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object GnomeBaller : NpcFamily by npcFamily("Gnome baller", 626, block = {
-    cache {
+    definition {
         examine = "A bunch of legs, eyes and teeth."
     }
 

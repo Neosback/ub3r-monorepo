@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object TokXil : NpcFamily by npcFamily("Tok-Xil", 2193, block = {
-    cache {
+    definition {
         examine = "I don't like the look of those spines..."
     }
 

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object HeadMourners : NpcFamily by npcFamily("Head Mourners", 9017, block = {
-    cache {
+    definition {
         name = "Head Mourners"
     }
 

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Kolodion : NpcFamily by npcFamily("Kolodion", 910, block = {
-    cache {
+    definition {
         examine = "He looks enthusiastic."
     }
 

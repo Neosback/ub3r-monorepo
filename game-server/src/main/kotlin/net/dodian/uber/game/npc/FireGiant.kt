@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object FireGiant : NpcFamily by npcFamily("Fire giant", 2075, block = {
-    cache {
+    definition {
         examine = "A very large elemental adversary."
     }
 

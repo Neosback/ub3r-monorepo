@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Ghost : NpcFamily by npcFamily("Ghost", 92, block = {
-    cache {
+    definition {
         examine = "Eeek! A ghost! Grave of Scorpius:  Spooky."
     }
 

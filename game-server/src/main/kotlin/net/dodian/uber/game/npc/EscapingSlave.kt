@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object EscapingSlave : NpcFamily by npcFamily("Escaping slave", 826, block = {
-    cache {
+    definition {
         examine = "His job is to keep the ship in tip-top condition."
     }
 

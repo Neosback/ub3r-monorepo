@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object UnknownNpc6777 : NpcFamily by npcFamily("UnknownNpc6777", 6777, block = {
-    cache {
+    definition {
         examine = "no examine"
     }
 

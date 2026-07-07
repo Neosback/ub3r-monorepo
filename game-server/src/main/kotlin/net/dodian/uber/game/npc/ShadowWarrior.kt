@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object ShadowWarrior : NpcFamily by npcFamily("Shadow warrior", 2853, block = {
-    cache {
+    definition {
         examine = "A fighter from the supernatural world. He's a shadow of his former self."
     }
 

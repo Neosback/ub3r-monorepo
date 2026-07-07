@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Dagannoth : NpcFamily by npcFamily("Dagannoth", 1338, block = {
-    cache {
+    definition {
         examine = "A messy bird.  Smells of rotten fish."
     }
 

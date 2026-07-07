@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Zogre2 : NpcFamily by npcFamily("Zogre", 2053, block = {
-    cache {
+    definition {
         examine = "His motives are see-through."
     }
 

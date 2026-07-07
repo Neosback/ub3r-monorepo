@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object HillGiant : NpcFamily by npcFamily("Hill giant", 2098, block = {
-    cache {
+    definition {
         examine = "A very large foe."
     }
 

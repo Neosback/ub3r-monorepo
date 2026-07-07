@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Mummy : NpcFamily by npcFamily("Mummy", 950, block = {
-    cache {
+    definition {
         examine = "What a short sworded mummy"
     }
 

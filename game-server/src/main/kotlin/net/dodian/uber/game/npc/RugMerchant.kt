@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.skill.agility.AgilityTravel
 
 internal object RugMerchant : NpcFamily by npcFamily("Rug merchant", 17, block = {
-    cache {
+    definition {
         examine = "Proud owner of carpet co"
     }
 

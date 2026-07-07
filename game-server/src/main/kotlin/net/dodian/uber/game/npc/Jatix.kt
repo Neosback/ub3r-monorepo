@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.shop.ShopId
 
 internal object Jatix : NpcFamily by npcFamily("Jatix", 8532, block = {
-    cache {
+    definition {
         name = "Jatix"
         examine = "He knows about herblore"
     }

@@ -86,18 +86,14 @@ class NpcFamilyDslTest {
     }
 
     @Test
-    fun `cache override builder drops placeholder cache values`() {
-        val override = NpcCacheOverrideBuilder(100).apply {
+    fun `definition override builder strips invalid values`() {
+        val override = NpcDefinitionOverrideBuilder(100).apply {
             name = "Rat"
             examine = "no name"
-            size = 1
-            action(1, "Talk-to")
         }.build()
 
         assertEquals("Rat", override.name)
         assertNull(override.examine)
-        assertEquals(1, override.size)
-        assertEquals("Talk-to", override.actions[1])
     }
 
     @Test

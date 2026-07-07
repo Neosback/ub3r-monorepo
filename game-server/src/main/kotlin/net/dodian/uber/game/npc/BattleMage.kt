@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object BattleMage : NpcFamily by npcFamily("Battle mage", 1611, block = {
-    cache {
+    definition {
         examine = "Kills in the name of Saradomin/Zamorak/Guthix."
     }
 

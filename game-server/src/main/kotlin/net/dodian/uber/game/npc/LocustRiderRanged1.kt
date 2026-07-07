@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object LocustRiderRanged1 : NpcFamily by npcFamily("Locust rider ranged 1", 801, block = {
-    cache {
+    definition {
         examine = "Ranged warrior of scarabs"
     }
 

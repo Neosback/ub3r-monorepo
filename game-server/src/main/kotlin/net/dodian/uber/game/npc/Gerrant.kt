@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.shop.ShopId
 
 internal object Gerrant : NpcFamily by npcFamily("Gerrant", 1790, block = {
-    cache {
+    definition {
         examine = "A Fishing expert."
         name = "Gerrant"
     }

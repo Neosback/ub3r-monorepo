@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object GreenDragon : NpcFamily by npcFamily("Green dragon", 260, block = {
-    cache {
+    definition {
         examine = "Must be related to Elvarg."
     }
 

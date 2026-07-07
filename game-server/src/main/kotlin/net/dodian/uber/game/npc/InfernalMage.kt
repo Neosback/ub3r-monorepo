@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object InfernalMage : NpcFamily by npcFamily("Infernal Mage", 443, block = {
-    cache {
+    definition {
         examine = "An evil magic user."
     }
 

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object MenaphiteThugBoss : NpcFamily by npcFamily("Menaphite thug boss", 3551, block = {
-    cache {
+    definition {
         examine = "Come from a far land to be the true Pollnivneach leader"
     }
 

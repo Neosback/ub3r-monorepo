@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object PollnivneachBandit : NpcFamily by npcFamily("Pollnivneach bandit", 736, block = {
-    cache {
+    definition {
         examine = "Just following orders"
     }
 

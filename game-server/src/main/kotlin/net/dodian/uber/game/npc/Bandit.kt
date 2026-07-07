@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Bandit : NpcFamily by npcFamily("Bandit", 695, block = {
-    cache {
+    definition {
         examine = "They do not like gods"
     }
 

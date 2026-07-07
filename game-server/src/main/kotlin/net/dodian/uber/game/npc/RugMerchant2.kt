@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object RugMerchant2 : NpcFamily by npcFamily("Rug merchant", 19, block = {
-    cache {
+    definition {
         examine = "Proud owner of carpet co"
     }
 

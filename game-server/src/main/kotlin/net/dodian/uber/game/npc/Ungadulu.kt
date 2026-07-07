@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Ungadulu : NpcFamily by npcFamily("Ungadulu", 3957, block = {
-    cache {
+    definition {
         examine = "Man of herblore"
     }
 

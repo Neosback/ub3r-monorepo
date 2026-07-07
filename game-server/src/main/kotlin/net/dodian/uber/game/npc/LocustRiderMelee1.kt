@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object LocustRiderMelee1 : NpcFamily by npcFamily("Locust rider melee 1", 800, block = {
-    cache {
+    definition {
         examine = "Melee warrior of scarabs"
     }
 

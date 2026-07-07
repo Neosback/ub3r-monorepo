@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Man : NpcFamily by npcFamily("Man", 1, block = {
-    cache {
+    definition {
         examine = "A strange mole-like being. When on the wall: That white dot looks like an eye!"
     }
 

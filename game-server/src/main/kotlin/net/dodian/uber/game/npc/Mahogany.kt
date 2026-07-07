@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Mahogany : NpcFamily by npcFamily("Mahogany", 2534, block = {
-    cache {
+    definition {
         examine = "Eeek! A ghost! Grave of Scorpius:  Spooky."
     }
 

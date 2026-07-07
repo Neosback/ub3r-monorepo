@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Dwayne : NpcFamily by npcFamily("Dwayne", 2261, block = {
-    cache {
+    definition {
         examine = "I am the one and only Dwayne!"
     }
 

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Nathifa : NpcFamily by npcFamily("Nathifa", 3890, block = {
-    cache {
+    definition {
         examine = "She sell good quality pickaxe"
     }
 

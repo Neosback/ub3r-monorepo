@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object DesertWolf : NpcFamily by npcFamily("Desert wolf", 4649, block = {
-    cache {
+    definition {
         examine = "People's worse enemy"
     }
 

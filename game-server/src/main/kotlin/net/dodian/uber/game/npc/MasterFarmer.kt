@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object MasterFarmer : NpcFamily by npcFamily("Master Farmer", 5730, block = {
-    cache {
+    definition {
         name = "Master Farmer"
     }
 

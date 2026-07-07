@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Pyrefiend : NpcFamily by npcFamily("Pyrefiend", 433, block = {
-    cache {
+    definition {
         examine = "A small fire demon."
     }
 

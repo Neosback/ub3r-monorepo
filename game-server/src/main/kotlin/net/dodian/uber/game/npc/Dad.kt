@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Dad : NpcFamily by npcFamily("Dad", 4130, block = {
-    cache {
+    definition {
         examine = "An unusually large troll."
     }
 

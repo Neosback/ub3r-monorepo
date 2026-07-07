@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object MenaphiteThug : NpcFamily by npcFamily("Menaphite thug", 3549, block = {
-    cache {
+    definition {
         examine = "Just following orders"
     }
 

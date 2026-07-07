@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Werewolf : NpcFamily by npcFamily("Werewolf", 2593, block = {
-    cache {
+    definition {
         examine = "Big bad wolf"
     }
 

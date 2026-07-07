@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object LesserDemon : NpcFamily by npcFamily("Lesser demon", 2005, block = {
-    cache {
+    definition {
         examine = "Lesser, but still pretty big."
     }
 

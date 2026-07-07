@@ -40,8 +40,9 @@ class NpcFamilySpawnImportTest {
         assertTrue(actual.any { it.npcId == 1790 }, "Gerrant spawns should use 1790")
         assertFalse(actual.any { it.npcId == 1027 }, "Gerrant spawns should not use old id 1027")
         assertTrue(actual.any { it.npcId == 11435 }, "Varrock Aubury spawn should use clickable id 11435")
-        assertEquals(11435, AuburyYanille.spawns.single().npcId, "Yanille Aubury spawn should use cache-visible Aubury id 11435")
-        assertEquals("aubury.yanille", AuburyYanille.spawns.single().profile)
+        val yanilleSpawn = Aubury.spawns.first { it.profile == "aubury.yanille" }
+        assertEquals(11435, yanilleSpawn.npcId, "Yanille Aubury spawn should use cache-visible Aubury id 11435")
+        assertEquals("aubury.yanille", yanilleSpawn.profile)
         assertFalse(actual.any { it.npcId == 10681 }, "Aubury spawns should not use unclickable id 10681")
         assertFalse(actual.any { it.npcId == 637 }, "Aubury spawns should not use old id 637")
         assertEquals(11433, Sedridor.spawns.single().npcId, "Sedridor spawn should use cache-visible Archmage Sedridor id 11433")
@@ -235,8 +236,8 @@ class NpcFamilySpawnImportTest {
         )
         val validation = NpcClientOptionValidator.inspect(
             rawDefinitions = rawDefinitions,
-            contents = listOf(Monk.definition, ShopKeeper.definition, Aubury.definition, AuburyYanille.definition),
-            modules = listOf(Monk, ShopKeeper, Aubury, AuburyYanille),
+            contents = listOf(Monk.definition, ShopKeeper.definition, Aubury.definition),
+            modules = listOf(Monk, ShopKeeper, Aubury),
             spawns = listOf(
                 NpcSpawnDef(555, 2604, 3092),
                 NpcSpawnDef(2813, 3216, 3416),
@@ -248,8 +249,8 @@ class NpcFamilySpawnImportTest {
         val paths = NpcClientOptionValidator.writeReports(
             rawDefinitions = rawDefinitions,
             resolvedDefinitions = rawDefinitions,
-            contents = listOf(Monk.definition, ShopKeeper.definition, Aubury.definition, AuburyYanille.definition),
-            modules = listOf(Monk, ShopKeeper, Aubury, AuburyYanille),
+            contents = listOf(Monk.definition, ShopKeeper.definition, Aubury.definition),
+            modules = listOf(Monk, ShopKeeper, Aubury),
             spawns = listOf(
                 NpcSpawnDef(555, 2604, 3092),
                 NpcSpawnDef(2813, 3216, 3416),
@@ -314,21 +315,17 @@ class NpcFamilySpawnImportTest {
         val source = Files.readString(Path.of("src/main/kotlin/net/dodian/uber/game/npc/Aubury.kt"))
 
         assertFalse(source.contains("size = 1"))
-        assertTrue(source.contains("name = \"Aubury\""))
         assertTrue(source.contains("server {"))
         assertTrue(source.contains("deathAnimation = 2304"))
+        assertTrue(source.contains("examine = \"Runes are his passion.\""))
     }
 
     @Test
     fun `aubury uses cache-clickable ids and exposes trade plus teleport`() {
         assertTrue(Aubury.definition.npcIds.contains(11435))
-        assertTrue(AuburyYanille.definition.npcIds.contains(11435))
         assertFalse(Aubury.definition.npcIds.contains(10681))
-        assertFalse(AuburyYanille.definition.npcIds.contains(10681))
         assertEquals("trade", Aubury.definition.optionLabels[3])
-        assertEquals("trade", AuburyYanille.definition.optionLabels[3])
         assertEquals("teleport", Aubury.definition.optionLabels[4])
-        assertEquals("teleport", AuburyYanille.definition.optionLabels[4])
     }
 
     @Test
@@ -339,7 +336,6 @@ class NpcFamilySpawnImportTest {
         assertEquals(8, cowServer.hitpoints)
         assertEquals(1, cowServer.attack)
         assertEquals("Meow meow I am a cow!", cowCache.examine)
-        assertNull(cowCache.size)
     }
 
     @Test

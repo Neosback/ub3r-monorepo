@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object BanditBoss : NpcFamily by npcFamily("Bandit boss", 690, block = {
-    cache {
+    definition {
         examine = "Hates religion"
     }
 

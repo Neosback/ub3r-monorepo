@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object AbyssalGuardian : NpcFamily by npcFamily("Abyssal guardian", 2585, block = {
-    cache {
+    definition {
         examine = "It seems to have eyes in the back of its head..."
     }
 

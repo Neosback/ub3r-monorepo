@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object MithrilDragon : NpcFamily by npcFamily("Mithril Dragon", 2919, block = {
-    cache {
+    definition {
         examine = "Dwarfs would love this dragon"
     }
 

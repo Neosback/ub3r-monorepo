@@ -15,11 +15,11 @@ object RSCM {
             return
         }
         mappings.clear()
-        loadFiles(directory)
+        loadRscmFiles(directory)
         mappingsLoaded = true
     }
 
-    private fun loadFiles(directory: File) {
+    private fun loadRscmFiles(directory: File) {
         directory.listFiles { f -> f.isFile && f.name.endsWith(".rscm") }?.forEach { file ->
             val type = file.nameWithoutExtension
             val table = mappings.getOrPut(type) { mutableMapOf() }
@@ -47,7 +47,7 @@ object RSCM {
             if (mappingsLoaded) return
             val dir = File("data/mappings")
             if (dir.isDirectory) {
-                loadFiles(dir)
+                loadRscmFiles(dir)
             }
             mappingsLoaded = true
         }

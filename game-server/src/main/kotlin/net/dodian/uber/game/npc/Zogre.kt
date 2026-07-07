@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Zogre : NpcFamily by npcFamily("Zogre", 867, block = {
-    cache {
+    definition {
         examine = "A partially decomposing zombie ogre."
     }
 

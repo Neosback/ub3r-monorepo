@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object MossGiant : NpcFamily by npcFamily("Moss giant", 3851, block = {
-    cache {
+    definition {
         examine = "His beard seems to have a life of its own."
     }
 

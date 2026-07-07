@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object OgreChieftain : NpcFamily by npcFamily("Ogre chieftain", 4362, block = {
-    cache {
+    definition {
         examine = "Tough-looking."
     }
 

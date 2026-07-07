@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Gargoyle : NpcFamily by npcFamily("Gargoyle", 412, block = {
-    cache {
+    definition {
         examine = "Flies like a rock."
     }
 

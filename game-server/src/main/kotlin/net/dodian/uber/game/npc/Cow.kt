@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
 internal object Cow : NpcFamily by npcFamily("Cow", 5842, block = {
-    cache {
+    definition {
         name = "Cow"
         examine = "Meow meow I am a cow!"
     }

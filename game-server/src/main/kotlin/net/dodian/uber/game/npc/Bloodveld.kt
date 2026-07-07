@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Bloodveld : NpcFamily by npcFamily("Bloodveld", 484, block = {
-    cache {
+    definition {
         examine = "The tongue of evil."
     }
 

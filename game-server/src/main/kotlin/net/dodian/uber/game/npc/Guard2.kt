@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Guard2 : NpcFamily by npcFamily("Guard", 5421, block = {
-    cache {
+    definition {
         examine = "Chief Herald of Falador."
     }
 

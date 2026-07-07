@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object DesertLizard2 : NpcFamily by npcFamily("Desert lizard", 461, block = {
-    cache {
+    definition {
         examine = "how can it survive the heat?"
     }
 

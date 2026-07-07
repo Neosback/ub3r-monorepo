@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Scorpion : NpcFamily by npcFamily("Scorpion", 2479, block = {
-    cache {
+    definition {
         examine = "Has a nice sting to it"
     }
 

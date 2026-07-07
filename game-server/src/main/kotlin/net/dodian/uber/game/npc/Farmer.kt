@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Farmer : NpcFamily by npcFamily("Farmer", 3086, block = {
-    cache {
+    definition {
         examine = "He grows the crops in this area."
     }
 

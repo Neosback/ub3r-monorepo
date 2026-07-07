@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object AbyssalDemon : NpcFamily by npcFamily("Abyssal demon", 415, block = {
-    cache {
+    definition {
         examine = "Wonder where their whip is from?"
     }
 

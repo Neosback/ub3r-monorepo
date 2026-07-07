@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object SlashBash : NpcFamily by npcFamily("Slash Bash", 882, block = {
-    cache {
+    definition {
         examine = "A powerful looking Zogre."
     }
 

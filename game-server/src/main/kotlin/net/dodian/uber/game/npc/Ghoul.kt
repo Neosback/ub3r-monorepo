@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Ghoul : NpcFamily by npcFamily("Ghoul", 289, block = {
-    cache {
+    definition {
         examine = "It's totally savage."
     }
 

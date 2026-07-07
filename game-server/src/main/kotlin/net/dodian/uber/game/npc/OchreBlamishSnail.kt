@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object OchreBlamishSnail : NpcFamily by npcFamily("Ochre Blamish Snail", 1229, block = {
-    cache {
+    definition {
         examine = "It is the avatar of the Arzinian Being of Bordanzan, representing strength."
     }
 

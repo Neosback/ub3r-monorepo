@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object CrawlingHand : NpcFamily by npcFamily("Crawling Hand", 449, block = {
-    cache {
+    definition {
         examine = "Now THAT's handy.  I'm glad its just the hand I can see..."
     }
 

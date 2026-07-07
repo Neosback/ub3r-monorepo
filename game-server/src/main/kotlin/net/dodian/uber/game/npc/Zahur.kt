@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.shop.ShopId
 
 internal object Zahur : NpcFamily by npcFamily("Zahur", 4753, block = {
-    cache {
+    definition {
         examine = "Like to mix with herblore"
     }
 

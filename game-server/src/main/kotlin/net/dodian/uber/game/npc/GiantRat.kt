@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object GiantRat : NpcFamily by npcFamily("Giant rat", 2856, block = {
-    cache {
+    definition {
         examine = "Overgrown vermin."
     }
 

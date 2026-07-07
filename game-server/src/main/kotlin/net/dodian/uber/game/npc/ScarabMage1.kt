@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object ScarabMage1 : NpcFamily by npcFamily("Scarab mage 1", 799, block = {
-    cache {
+    definition {
         examine = "Magic warrior of scarabs"
     }
 

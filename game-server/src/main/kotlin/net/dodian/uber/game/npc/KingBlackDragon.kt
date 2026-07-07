@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object KingBlackDragon : NpcFamily by npcFamily("King black dragon", 239, block = {
-    cache {
+    definition {
         examine = "Rawr xD UwU"
     }
 

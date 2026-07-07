@@ -31,93 +31,75 @@ object RscmGenerator {
         println("Opening cache at ${cacheDir.absolutePath}...")
         val store = CacheStore(cacheDir.toPath()).open()
 
-        // 1. Items -> obj.rscm (reads from JSON)
-        generateRscmFile(
-            sourceFile = File("data/def/item/item_definitions.json"),
-            destFile = File(outputDir, "obj.rscm"),
-            gson = gson
-        )
+        writeRscm(outputDir, "obj", buildItemEntries(gson))
 
-        // 2. NPCs -> npc.rscm (decoded from cache)
         println("Decoding NPC definitions...")
         val npcDefs = NpcCacheDefinitionDecoder.decode(store)
-        val npcEntries = npcDefs.values
+        writeRscm(outputDir, "npc", buildNpcLines(npcDefs.values
             .sortedWith(compareByDescending<CacheNpcDefinition> { it.actions.filterNotNull().size }
                 .thenByDescending { it.id })
-            .map { def -> def.name to def.id }
-        writeRscmFile(npcEntries, File(outputDir, "npc.rscm"))
+            .toList()))
 
-        // 3. Objects -> loc.rscm (decoded from cache)
         println("Decoding Object definitions...")
         val objDefs = ObjectDefinitionDecoder.decode(store).definitions
-        val objEntries = objDefs.values.map { def -> def.name to def.id }
-        writeRscmFile(objEntries, File(outputDir, "loc.rscm"))
+        writeRscm(outputDir, "loc", buildLines(objDefs.values.map { it.name to it.id }))
 
-        // 4. SpotAnims -> spotanim.rscm (decoded from cache, names from rsmod spotanim.sym)
         println("Decoding SpotAnim definitions...")
         val spotAnimDefs = SpotAnimDefinitionDecoder.decode(store)
         val spotAnimSymFile = File("/Users/tylercovalt/Desktop/rsmod-main/.data/symbols/spotanim.sym")
         val spotAnimNames = parseSymFile(spotAnimSymFile)
         println("Loaded ${spotAnimNames.size} spotanim names from ${spotAnimSymFile.path}")
+        writeRscm(outputDir, "spotanim", buildLines(
+            spotAnimDefs.keys.map { id ->
+                val name = spotAnimNames[id] ?: "spotanim_$id"
+                name to id
+            }
+        ))
 
-        val spotAnimEntries = spotAnimDefs.keys.map { id ->
-            val name = spotAnimNames[id] ?: "spotanim_$id"
-            name to id
-        }
-        writeRscmFile(spotAnimEntries, File(outputDir, "spotanim.rscm"))
-
-        // 5. Projectiles -> projanim.rscm (from rsmod projanim.sym)
         println("Reading Projectile definitions...")
         val projSymFile = File("/Users/tylercovalt/Desktop/rsmod-main/.data/symbols/projanim.sym")
         val projNames = parseSymFile(projSymFile)
         println("Loaded ${projNames.size} projanim names from ${projSymFile.path}")
-        val projEntries = projNames.map { (id, name) -> name to id }
-        writeRscmFile(projEntries, File(outputDir, "projanim.rscm"))
+        writeRscm(outputDir, "projanim", buildLines(projNames.map { (id, name) -> name to id }))
 
-        // 6. Sequences -> seq.rscm (decoded from cache, names from rsmod seq.sym up to 10677)
         println("Decoding Sequence definitions...")
         val seqDefs = AnimationDefinitionDecoder.decode(store)
         val seqSymFile = File("/Users/tylercovalt/Desktop/rsmod-main/.data/symbols/seq.sym")
         val seqNames = parseSymFile(seqSymFile)
         println("Loaded ${seqNames.size} seq names from ${seqSymFile.path}")
-
         val maxSeqId = 10677
-        val seqEntries = seqDefs.keys.filter { it <= maxSeqId }.map { id ->
-            val name = seqNames[id] ?: "seq_$id"
-            name to id
-        }
-        writeRscmFile(seqEntries, File(outputDir, "seq.rscm"))
+        writeRscm(outputDir, "seq", buildLines(
+            seqDefs.keys.filter { it <= maxSeqId }.map { id ->
+                val name = seqNames[id] ?: "seq_$id"
+                name to id
+            }
+        ))
 
-        // 7. Varps -> varp.rscm (from VoidPS TOML)
         val voidPsDir = File("/Users/tylercovalt/Desktop/RSPS/game-server-main/data")
         val varps = mutableMapOf<String, Int>()
         if (voidPsDir.isDirectory) {
             println("Scanning VoidPS Varp TOML files...")
             voidPsDir.walkTopDown().filter { it.isFile && it.name.endsWith(".varps.toml") }.forEach { file ->
-                parseSectionIdToml(file).forEach { (name, id) ->
-                    varps[name] = id
-                }
+                parseSectionIdToml(file).forEach { (name, id) -> varps[name] = id }
             }
-            writeRscmFile(varps.map { it.key to it.value }, File(outputDir, "varp.rscm"))
+            writeRscm(outputDir, "varp", buildLines(varps.map { it.key to it.value }))
         }
 
-        // 8. Varbits -> varbit.rscm (from VoidPS TOML)
         val varbits = mutableMapOf<String, Int>()
         if (voidPsDir.isDirectory) {
             println("Scanning VoidPS Varbit TOML files...")
             voidPsDir.walkTopDown().filter { it.isFile && it.name.endsWith(".varbits.toml") }.forEach { file ->
-                parseSectionIdToml(file).forEach { (name, id) ->
-                    varbits[name] = id
-                }
+                parseSectionIdToml(file).forEach { (name, id) -> varbits[name] = id }
             }
-            writeRscmFile(varbits.map { it.key to it.value }, File(outputDir, "varbit.rscm"))
+            writeRscm(outputDir, "varbit", buildLines(varbits.map { it.key to it.value }))
         }
 
-        // 9. Interfaces & Components -> interface.rscm / component.rscm (directly decoded from cache)
         val ifaceNamesFile = File("/Users/tylercovalt/Desktop/RSPS/377.txt")
         if (ifaceNamesFile.exists()) {
             println("Generating Interface mappings from cache and 377 names...")
-            generateInterfaceMappings(store, ifaceNamesFile, outputDir)
+            val (ifaceLines, compLines) = buildInterfaceLines(store, ifaceNamesFile)
+            writeRscm(outputDir, "interface", ifaceLines)
+            writeRscm(outputDir, "component", compLines)
         } else {
             println("Warning: Interface names file not found at ${ifaceNamesFile.path}")
         }
@@ -125,17 +107,88 @@ object RscmGenerator {
         println("Successfully generated RSCM mapping files under ${outputDir.absolutePath}!")
     }
 
-    private fun generateInterfaceMappings(store: CacheStore, namesFile: File, outputDir: File) {
+    private fun buildNpcLines(defs: List<CacheNpcDefinition>): List<String> {
+        val existingKeys = mutableSetOf<String>()
+        val lines = mutableListOf<String>()
+        for (def in defs) {
+            val key = generateKey(def.name, def.id, existingKeys)
+            val actions = def.actions.filterNotNull()
+            if (actions.isNotEmpty()) {
+                lines.add("# ${actions.size} actions: ${actions.joinToString(", ", "\"", "\"")}")
+            } else {
+                lines.add("# 0 actions")
+            }
+            lines.add("$key=${def.id}")
+        }
+        return lines
+    }
+
+    private fun buildLines(rawEntries: List<Pair<String, Int>>): List<String> {
+        val existingKeys = mutableSetOf<String>()
+        return rawEntries.map { (rawName, id) ->
+            val key = generateKey(rawName, id, existingKeys)
+            "$key=$id"
+        }
+    }
+
+    private fun generateKey(name: String, id: Int, existing: MutableSet<String>): String {
+        val base = Namer.sanitizeRSCM(name)
+        val key = if (base.isEmpty()) "unnamed" else base
+        if (existing.add(key)) {
+            return key
+        }
+        val fallbackKey = "${key}_$id"
+        existing.add(fallbackKey)
+        return fallbackKey
+    }
+
+    private fun writeRscm(dir: File, name: String, lines: List<String>) {
+        val file = File(dir, "$name.rscm")
+        file.printWriter().use { writer ->
+            lines.forEach { writer.println(it) }
+        }
+        val entryCount = lines.count { !it.startsWith("#") }
+        println("Generated $entryCount mappings in ${file.name}")
+    }
+
+    private fun buildItemEntries(gson: Gson): List<String> {
+        var sourceFile = File("data/def/item/item_definitions.json")
+        if (!sourceFile.exists()) {
+            sourceFile = File("game-server/data/def/item/item_definitions.json")
+        }
+        if (!sourceFile.exists()) {
+            println("Warning: Item definitions not found")
+            return emptyList()
+        }
+
+        val existingKeys = mutableSetOf<String>()
+        val lines = mutableListOf<String>()
+
+        FileReader(sourceFile).use { reader ->
+            val jsonArray = gson.fromJson(reader, JsonArray::class.java)
+            for (element in jsonArray) {
+                if (element is JsonObject) {
+                    val id = element.get("id")?.asInt ?: continue
+                    val name = element.get("name")?.asString ?: "unnamed"
+                    val key = generateKey(name, id, existingKeys)
+                    lines.add("$key=$id")
+                }
+            }
+        }
+
+        return lines
+    }
+
+    private fun buildInterfaceLines(store: CacheStore, namesFile: File): Pair<List<String>, List<String>> {
         val interfaceMap = mutableMapOf<String, Int>()
         val componentMap = mutableMapOf<String, Int>()
-        
         val interfaceExistingKeys = mutableSetOf<String>()
         val componentExistingKeys = mutableSetOf<String>()
 
         val interfaces = InterfaceDefinitionDecoder.decode(store)
         if (interfaces.isEmpty()) {
             println("Warning: No interface definitions decoded from cache.")
-            return
+            return emptyList<String>() to emptyList()
         }
 
         val cleanInterfaceNames = parse377InterfaceNames(namesFile)
@@ -153,15 +206,13 @@ object RscmGenerator {
         }
 
         val rootIdToName = mutableMapOf<Int, String>()
-        
-        // Seed with 377.txt clean names
+
         for ((id, rawName) in cleanInterfaceNames.entries.sortedBy { it.key }) {
             val key = generateKey(rawName, id, interfaceExistingKeys)
             interfaceMap[key] = id
             rootIdToName[id] = key
         }
 
-        // Add any other root interfaces found in the cache (parentId == -1)
         val cacheRootIds = interfaces.values.filter { it.parentId == -1 }.map { it.id }.sorted()
         for (rootId in cacheRootIds) {
             if (rootIdToName.containsKey(rootId)) continue
@@ -184,7 +235,6 @@ object RscmGenerator {
             rootIdToName[rootId] = key
         }
 
-        // Map child components
         val childDefs = interfaces.values.filter { it.parentId != -1 }.sortedBy { it.id }
         for (def in childDefs) {
             val rootId = getRootInterfaceId(def.id)
@@ -208,19 +258,14 @@ object RscmGenerator {
             }
         }
 
-        File(outputDir, "interface.rscm").printWriter().use { writer ->
-            for ((key, id) in interfaceMap.entries.sortedBy { it.value }) {
-                writer.println("$key=$id")
-            }
-        }
-        println("Generated ${interfaceMap.size} mappings in interface.rscm")
+        val ifaceLines = interfaceMap.entries
+            .sortedBy { it.value }
+            .map { "${it.key}=${it.value}" }
+        val compLines = componentMap.entries
+            .sortedBy { it.value }
+            .map { "${it.key}=${it.value}" }
 
-        File(outputDir, "component.rscm").printWriter().use { writer ->
-            for ((key, id) in componentMap.entries.sortedBy { it.value }) {
-                writer.println("$key=$id")
-            }
-        }
-        println("Generated ${componentMap.size} mappings in component.rscm")
+        return ifaceLines to compLines
     }
 
     private fun parse377InterfaceNames(file: File): Map<Int, String> {
@@ -240,23 +285,6 @@ object RscmGenerator {
             }
         }
         return results
-    }
-
-    private fun writeRscmFile(rawEntries: List<Pair<String, Int>>, destFile: File) {
-        val entries = mutableListOf<Pair<String, Int>>()
-        val existingKeys = mutableSetOf<String>()
-
-        for ((rawName, id) in rawEntries) {
-            val key = generateKey(rawName, id, existingKeys)
-            entries.add(key to id)
-        }
-
-        destFile.printWriter().use { writer ->
-            for ((key, id) in entries.sortedBy { it.second }) {
-                writer.println("$key=$id")
-            }
-        }
-        println("Generated ${entries.size} mappings in ${destFile.name}")
     }
 
     private fun parseSectionIdToml(file: File): Map<String, Int> {
@@ -295,54 +323,4 @@ object RscmGenerator {
         }
         return results
     }
-
-    private fun generateRscmFile(sourceFile: File, destFile: File, gson: Gson) {
-        var file = sourceFile
-        if (!file.exists()) {
-            file = File("game-server/${sourceFile.path}")
-        }
-        if (!file.exists()) {
-            println("Warning: Source file not found: ${sourceFile.path} (also checked game-server/${sourceFile.path})")
-            return
-        }
-
-        val entries = mutableListOf<Pair<String, Int>>()
-        val existingKeys = mutableSetOf<String>()
-
-        FileReader(file).use { reader ->
-            val jsonArray = gson.fromJson(reader, JsonArray::class.java)
-            for (element in jsonArray) {
-                if (element is JsonObject) {
-                    val id = element.get("id")?.asInt ?: continue
-                    val name = element.get("name")?.asString ?: "unnamed"
-                    val key = generateKey(name, id, existingKeys)
-                    entries.add(key to id)
-                }
-            }
-        }
-
-        destFile.printWriter().use { writer ->
-            for ((key, id) in entries.sortedBy { it.second }) {
-                writer.println("$key=$id")
-            }
-        }
-        println("Generated ${entries.size} mappings in ${destFile.name}")
-    }
-
-    private fun generateKey(name: String, id: Int, existing: MutableSet<String>): String {
-        val base = Namer.sanitizeRSCM(name)
-        val key = if (base.isEmpty()) "unnamed" else base
-        if (existing.add(key)) {
-            return key
-        }
-        val suffixKey = "${key}_$id"
-        existing.add(suffixKey)
-        return suffixKey
-    }
 }
-
-
-
-
-
-

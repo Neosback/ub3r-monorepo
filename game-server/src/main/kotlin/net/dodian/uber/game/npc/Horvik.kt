@@ -5,11 +5,8 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.shop.ShopId
 
 internal object Horvik : NpcFamily by npcFamily("Horvik", 2882, block = {
-    cache {
+    definition {
         examine = "Yar! Shiver me timbers! (Pirate's cove)  Avast ye scurvy land lubbers! (Brimhaven)  This one's had too much to drink! (Asgarnian Ice Dungeon)"
-        name = "Horvik"
-        firstAction("Talk-to")
-        thirdAction("Trade")
     }
 
     server {

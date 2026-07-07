@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object AliTheHag : NpcFamily by npcFamily("Ali the Hag", 3541, block = {
-    cache {
+    definition {
         examine = "Not trustworthy"
     }
 

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Zahra : NpcFamily by npcFamily("Zahra", 4752, block = {
-    cache {
+    definition {
         examine = "Somewhat distance person"
     }
 

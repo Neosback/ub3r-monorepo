@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Rufus : NpcFamily by npcFamily("Rufus", 6478, block = {
-    cache {
+    definition {
         examine = "I am Rufus"
     }
 

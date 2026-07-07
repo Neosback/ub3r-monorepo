@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object JungleDemon : NpcFamily by npcFamily("Jungle Demon", 1443, block = {
-    cache {
+    definition {
         examine = "I am the master of magic!"
     }
 

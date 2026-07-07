@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object CaveBugLarva : NpcFamily by npcFamily("Cave bug larva", 1833, block = {
-    cache {
+    definition {
         examine = "I guess he sells what he steals...?"
     }
 

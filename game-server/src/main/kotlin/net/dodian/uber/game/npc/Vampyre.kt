@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Vampyre : NpcFamily by npcFamily("Vampyre", 3137, block = {
-    cache {
+    definition {
         examine = "It looks really hungry."
     }
 

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Druid : NpcFamily by npcFamily("Druid", 3098, block = {
-    cache {
+    definition {
         examine = "Loves nature."
     }
 

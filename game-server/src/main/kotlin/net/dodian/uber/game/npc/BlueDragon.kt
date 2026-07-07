@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object BlueDragon : NpcFamily by npcFamily("Blue dragon", 265, block = {
-    cache {
+    definition {
         examine = "Blue eyes nerf dragon"
     }
 

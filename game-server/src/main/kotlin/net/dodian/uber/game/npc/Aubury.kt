@@ -7,24 +7,25 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.objects.travel.EssenceMineTravel
 import net.dodian.uber.game.shop.ShopId
-import net.dodian.uber.game.rscm.asRscm
 import net.dodian.utilities.Utils
 
 private val AuburyVarrockProfile = profile("aubury.varrock")
 private val AuburyYanilleProfile = profile("aubury.yanille")
 
-internal object Aubury : NpcFamily by npcFamily("Aubury", "npc.aubury".asRscm(), block = {
-    profiles(AuburyVarrockProfile.key)
+internal object Aubury : NpcFamily by npcFamily("npc.aubury", block = {
+    profiles(
+        AuburyVarrockProfile.key,
+        AuburyYanilleProfile.key,
+    )
 
-    cache {
+    definition {
         examine = "Runes are his passion."
-        name = "Aubury"
-        firstAction("Talk-to")
-        thirdAction("Trade")
-        fourthAction("Teleport")
+
+
     }
 
     server {
+
         deathAnimation = 2304
     }
 
@@ -36,30 +37,6 @@ internal object Aubury : NpcFamily by npcFamily("Aubury", "npc.aubury".asRscm(),
 
     spawns {
         spawn(3253, 3402, walkRadius = 3, profile = AuburyVarrockProfile)
-    }
-})
-
-internal object AuburyYanille : NpcFamily by npcFamily("Aubury", "npc.aubury".asRscm(), block = {
-    profiles(AuburyYanilleProfile.key)
-
-    cache {
-        name = "Aubury"
-        firstAction("Talk-to")
-        thirdAction("Trade")
-        fourthAction("Teleport")
-    }
-
-    server {
-        deathAnimation = 2304
-    }
-
-    options {
-        talkTo(handler = ::handleAuburyTalkTo)
-        third("trade", ::handleAuburyTrade)
-        fourth("teleport", ::handleAuburyTeleport)
-    }
-
-    spawns {
         spawn(2594, 3104, walkRadius = 3, profile = AuburyYanilleProfile)
     }
 })
@@ -81,7 +58,11 @@ private fun handleAuburyTalkTo(client: Client, npc: Npc): Boolean {
             },
             DialogueOption("No thank you, then.") {
                 playerChat(DialogueEmote.DEFAULT, "Oh it's a rune shop. No thank you, then.")
-                npcChat(npc.id, DialogueEmote.DEFAULT, "Well, if you find someone who does want runes, send them my way.")
+                npcChat(
+                    npc.id,
+                    DialogueEmote.DEFAULT,
+                    "Well, if you find someone who does want runes, send them my way.",
+                )
             },
         )
     }
@@ -95,10 +76,16 @@ private fun handleAuburyTrade(client: Client, npc: Npc): Boolean {
 }
 
 private fun handleAuburyTeleport(client: Client, npc: Npc): Boolean {
-    if (npc.interactionProfile == AuburyYanilleProfile.key) {
-        client.triggerTele(3086 + Utils.random(2), 3488 + Utils.random(2), 0, false)
-    } else {
-        EssenceMineTravel.sendToEssenceMine(client)
+    when (npc.interactionProfile) {
+        AuburyYanilleProfile.key -> {
+            client.triggerTele(
+                3086 + Utils.random(2),
+                3488 + Utils.random(2),
+                0,
+                false,
+            )
+        }
+        else -> EssenceMineTravel.sendToEssenceMine(client)
     }
     return true
 }

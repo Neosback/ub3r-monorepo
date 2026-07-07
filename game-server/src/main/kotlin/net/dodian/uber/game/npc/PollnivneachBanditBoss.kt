@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object PollnivneachBanditBoss : NpcFamily by npcFamily("Pollnivneach bandit boss", 738, block = {
-    cache {
+    definition {
         examine = "Believe he is the true Pollnivneach leader"
     }
 

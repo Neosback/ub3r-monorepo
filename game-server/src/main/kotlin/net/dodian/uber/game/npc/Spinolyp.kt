@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Spinolyp : NpcFamily by npcFamily("Spinolyp", 5961, block = {
-    cache {
+    definition {
         examine = "no examine"
     }
 

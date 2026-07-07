@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object Sheep : NpcFamily by npcFamily("Sheep", 2693, block = {
-    cache {
+    definition {
         examine = "Yep. Definitely a chicken."
         name = "Sheep"
     }

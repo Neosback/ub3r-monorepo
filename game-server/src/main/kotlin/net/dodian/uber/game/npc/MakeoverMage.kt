@@ -10,7 +10,7 @@ import net.dodian.uber.game.netty.listener.out.SetTabInterface
 internal object MakeoverMage : NpcFamily by npcFamily("Makeover Mage", 1306, block = {
     ids(1307)
 
-    cache {
+    definition {
         examine = "Master of the mystical make-over."
         name = "Makeover Mage"
     }

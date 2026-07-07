@@ -1,7 +1,7 @@
 package net.dodian.uber.game.npc
 
 internal object AbyssalLeech : NpcFamily by npcFamily("Abyssal leech", 2584, block = {
-    cache {
+    definition {
         examine = "A blood-drinking denizen of the abyss."
     }
 
