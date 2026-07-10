@@ -11,7 +11,7 @@ import net.dodian.uber.game.persistence.db.dbConnection
 import spark.Spark.awaitInitialization
 import spark.Spark.get
 import spark.Spark.port
-import spark.Spark.stop
+import spark.Spark
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -41,46 +41,50 @@ object WebApi {
 
     @JvmStatic
     fun start() {
-        if (!started.compareAndSet(false, true)) {
-            return
-        }
         if (!webApiEnabled) {
             return
         }
-        port(webApiPort)
-
-
-        get("/api/server-status") { _, res ->
-            serverStatus.playersOnline = getOnlinePlayers().toSet()
-
-            res.header("Access-Control-Allow-Origin", "*")
-            res.header("Access-Control-Allow-Credentials", "true")
-            res.header("Access-Control-Allow-Methods", "*")
-            res.header("Access-Control-Allow-Headers", "*")
-            res.type("application/json")
-
-            return@get mapper.writeValueAsString(serverStatus)
+        if (!started.compareAndSet(false, true)) {
+            return
         }
+        try {
+            port(webApiPort)
 
-        get("/health") { req, res ->
-            res.header("Access-Control-Allow-Origin", "*")
-            res.type("application/json")
+            get("/api/server-status") { _, res ->
+                serverStatus.playersOnline = getOnlinePlayers().toSet()
 
-            val dbOk = try {
-                dbConnection.use { conn -> conn.isValid(2) }
-            } catch (_: Exception) {
-                false
+                res.header("Access-Control-Allow-Origin", "*")
+                res.header("Access-Control-Allow-Credentials", "true")
+                res.header("Access-Control-Allow-Methods", "*")
+                res.header("Access-Control-Allow-Headers", "*")
+                res.type("application/json")
+
+                return@get mapper.writeValueAsString(serverStatus)
             }
-            val health = mapOf(
-                "status" to if (dbOk) "UP" else "DEGRADED",
-                "database" to if (dbOk) "UP" else "DOWN",
-                "players" to PlayerRegistry.getPlayerCount(),
-                "uptimeMs" to (System.currentTimeMillis() - Server.serverStartup),
-            )
-            return@get mapper.writeValueAsString(health)
-        }
 
-        awaitInitialization()
+            get("/health") { req, res ->
+                res.header("Access-Control-Allow-Origin", "*")
+                res.type("application/json")
+
+                val dbOk = try {
+                    dbConnection.use { conn -> conn.isValid(2) }
+                } catch (_: Exception) {
+                    false
+                }
+                val health = mapOf(
+                    "status" to if (dbOk) "UP" else "DEGRADED",
+                    "database" to if (dbOk) "UP" else "DOWN",
+                    "players" to PlayerRegistry.getPlayerCount(),
+                    "uptimeMs" to (System.currentTimeMillis() - Server.serverStartup),
+                )
+                return@get mapper.writeValueAsString(health)
+            }
+
+            awaitInitialization()
+        } catch (exception: Exception) {
+            started.set(false)
+            throw exception
+        }
     }
 
     @JvmStatic
@@ -89,7 +93,7 @@ object WebApi {
             return
         }
         try {
-            stop()
+            Spark.stop()
         } catch (_: Exception) {
         }
     }

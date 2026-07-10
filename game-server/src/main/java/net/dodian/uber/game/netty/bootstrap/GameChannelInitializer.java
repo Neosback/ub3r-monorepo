@@ -1,6 +1,7 @@
 package net.dodian.uber.game.netty.bootstrap;
 
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import net.dodian.uber.game.netty.login.LoginHandshakeHandler;
@@ -12,6 +13,7 @@ public class GameChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     private static final Logger logger = LoggerFactory.getLogger(GameChannelInitializer.class);
 
+    private static final ChannelIpFilter IP_FILTER = new ChannelIpFilter();
     private final UpstreamHandler upstreamHandler = new UpstreamHandler();
 
     public GameChannelInitializer() {}
@@ -20,7 +22,10 @@ public class GameChannelInitializer extends ChannelInitializer<SocketChannel> {
     protected void initChannel(SocketChannel ch) {
         logger.debug("[Netty] Accepted connection from {}", ch.remoteAddress());
 
+        ch.pipeline().addLast("ip-filter", IP_FILTER);
         ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(30));
+
+        ch.config().setWriteBufferWaterMark(new WriteBufferWaterMark(524288, 2097152));
 
         ch.pipeline().addLast("login-handshake", new LoginHandshakeHandler());
 

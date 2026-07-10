@@ -28,7 +28,8 @@ internal object Cow : NpcFamily by npcFamily("Cow", 5842, block = {
     }
 
     options {
-        talkTo(handler = ::handleCowEventReward)
+        fourth("talk-to", handler = ::handleCowEventReward)
+        attack(handler = { _, _ -> true })
     }
 
     spawns {

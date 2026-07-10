@@ -1,6 +1,7 @@
 package net.dodian.uber.game.engine.loop
 
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.system.measureNanoTime
 import org.slf4j.LoggerFactory
 
@@ -11,6 +12,16 @@ object GameThreadIngress {
 
     @JvmStatic
     fun submitCritical(label: String, task: Runnable) {
+        if (criticalQueue.size >= MAX_CRITICAL_QUEUE) {
+            if (rejectedCriticalCount.incrementAndGet() <= 10) {
+                logger.warn(
+                    "GameThreadIngress critical queue full ({}), rejecting task: {}",
+                    criticalQueue.size,
+                    label,
+                )
+            }
+            return
+        }
         criticalQueue.add(QueuedTask(label, System.nanoTime(), task))
     }
 
@@ -21,6 +32,16 @@ object GameThreadIngress {
 
     @JvmStatic
     fun submitDeferred(label: String, task: Runnable) {
+        if (deferredQueue.size >= MAX_DEFERRED_QUEUE) {
+            if (rejectedDeferredCount.incrementAndGet() <= 10) {
+                logger.warn(
+                    "GameThreadIngress deferred queue full ({}), rejecting task: {}",
+                    deferredQueue.size,
+                    label,
+                )
+            }
+            return
+        }
         deferredQueue.add(QueuedTask(label, System.nanoTime(), task))
     }
 
@@ -53,9 +74,14 @@ object GameThreadIngress {
     }
 
     @JvmStatic
-    fun clearForTests() {
+    fun clearAll() {
         criticalQueue.clear()
         deferredQueue.clear()
+    }
+
+    @JvmStatic
+    fun clearForTests() {
+        clearAll()
     }
 
     private fun drainQueue(
@@ -163,4 +189,15 @@ object GameThreadIngress {
 
     private const val DEFAULT_CRITICAL_DRAIN_MAX = 2_000
     private const val DEFAULT_DEFERRED_DRAIN_MAX = 10_000
+    private const val MAX_CRITICAL_QUEUE = 10_000
+    private const val MAX_DEFERRED_QUEUE = 50_000
+
+    private val rejectedCriticalCount = AtomicLong()
+    private val rejectedDeferredCount = AtomicLong()
+
+    @JvmStatic
+    fun rejectedCriticalCount(): Long = rejectedCriticalCount.get()
+
+    @JvmStatic
+    fun rejectedDeferredCount(): Long = rejectedDeferredCount.get()
 }

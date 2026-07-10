@@ -172,7 +172,7 @@ private object KbdCombat : NpcAttackHandler {
                 damage,
                 if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD,
                 npc,
-                Entity.damageType.FIRE_BREATH, 
+                Entity.damageType.FIRE_BREATH,
             )
             onHit()
         }

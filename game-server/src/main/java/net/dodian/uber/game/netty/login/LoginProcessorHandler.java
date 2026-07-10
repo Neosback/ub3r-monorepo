@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -38,6 +39,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     private static final AtomicLong LOGIN_LOAD_FAILURES = new AtomicLong();
     private static final AtomicLong LOGIN_CHANNEL_CLOSES_BEFORE_FINALIZE = new AtomicLong();
     private static final AtomicLong LOGIN_INITIALIZER_FAILURES = new AtomicLong();
+    private static final ConcurrentHashMap<Long, Object> LOADING_ACCOUNTS = new ConcurrentHashMap<>();
 
     private static final int LOGIN_SUCCESS_CODE = 2;
     private static final int RSA_MAGIC          = 255;
@@ -53,6 +55,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     private String password;
 
     private int  reservedSlot = -1;
+    private long  longName = 0L;
     private boolean loginFinished = false;
 
     public LoginProcessorHandler() {}
@@ -121,7 +124,14 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     /* --------------- Login logic --------------- */
     private void processLogin(ChannelHandlerContext ctx) {
         final long acceptedAtNanos = System.nanoTime();
+
+        longName = Utils.playerNameToLong(Utils.capitalize(username.replace('_', ' ')));
+        if (LOADING_ACCOUNTS.putIfAbsent(longName, longName) != null) {
+            sendAndClose(ctx, 5); // login in progress or already online
+            return;
+        }
         if (PlayerRegistry.isPlayerOn(username)) {
+            releaseToken();
             sendAndClose(ctx, 5); // already online
             return;
         }
@@ -131,6 +141,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         if (reservedSlot == -1) {
             long failures = LOGIN_SLOT_FAILURES.incrementAndGet();
             logger.warn("Login slot reservation failed for {} failures={}", username, failures);
+            releaseToken();
             sendAndClose(ctx, 7); // world full
             return;
         }
@@ -156,13 +167,13 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         } catch (Exception ex) {
             logger.error("[Netty] Failed to create Client: {}", ex.getMessage());
             releaseSlot(reservedSlot);
+            releaseToken();
             sendAndClose(ctx, 13);
             return;
         }
         client.setPlayerName(Utils.capitalize(username.replace('_', ' ')));
         client.playerPass = password;
-        // Canonical name hash used across online maps/friends.
-        client.longName  = Utils.playerNameToLong(client.getPlayerName());
+        client.longName  = longName;
         try {
             InetSocketAddress isa = (InetSocketAddress) ctx.channel().remoteAddress();
             client.connectedFrom = isa.getAddress().getHostAddress();
@@ -196,6 +207,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                     failures
             );
             releaseSlot(slot);
+            releaseToken();
             sendAndClose(ctx, loadResult.getCode());
             return;
         }
@@ -242,6 +254,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                     PlayerRegistry.usedSlots.clear(slotCopy);
                     net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[slotCopy] = null;
                 }
+                releaseToken();
                 logger.warn(
                         "Login channel closed before game-thread finalization for {} queueWait={}ms failures={}",
                         client.getPlayerName(),
@@ -251,8 +264,27 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 return;
             }
 
+            Client previous = PlayerRegistry.playersOnline.putIfAbsent(client.longName, client);
+            if (previous != null) {
+                boolean previousStale = previous.disconnected || !previous.isActive
+                        || previous.channel == null || !previous.channel.isActive();
+                if (!previousStale) {
+                    releaseSlot(slotCopy);
+                    releaseToken();
+                    logger.warn(
+                            "Duplicate login prevented for {} queueWait={}ms — another session already active",
+                            client.getPlayerName(),
+                            queueWaitMs
+                    );
+                    channel.close();
+                    return;
+                }
+                // previous is stale; replace it
+                PlayerRegistry.playersOnline.remove(client.longName, previous);
+                PlayerRegistry.playersOnline.put(client.longName, client);
+            }
             net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[slotCopy] = client;
-            PlayerRegistry.playersOnline.put(client.longName, client);
+            releaseToken();
 
             long initializerDurationMs = 0L;
             try {
@@ -335,8 +367,11 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        if (!loginFinished && reservedSlot > 0) {
-            releaseSlot(reservedSlot);
+        if (!loginFinished) {
+            releaseToken();
+            if (reservedSlot > 0) {
+                releaseSlot(reservedSlot);
+            }
         }
         ctx.fireChannelInactive();
     }
@@ -344,9 +379,18 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         logger.warn("[Netty] Login processing error for {}", ctx.channel().remoteAddress(), cause);
-        if (!loginFinished && reservedSlot > 0) {
-            releaseSlot(reservedSlot);
+        if (!loginFinished) {
+            releaseToken();
+            if (reservedSlot > 0) {
+                releaseSlot(reservedSlot);
+            }
         }
         ctx.close();
+    }
+
+    private void releaseToken() {
+        if (longName != 0L) {
+            LOADING_ACCOUNTS.remove(longName, longName);
+        }
     }
 }

@@ -27,6 +27,7 @@ data class NpcServerPatch(
     val magic: Int? = null,
     val headIcon: Int? = null,
     val transformTo: Int? = null,
+    // Future monster fields: aggressive, attackSpeed, maxHit, slayer metadata
     val aggressive: Boolean? = null,
     val alwaysAggressive: Boolean? = null,
     val fightsBack: Boolean? = null,

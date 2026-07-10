@@ -64,6 +64,7 @@ import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher;
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService;
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
+import net.dodian.uber.game.engine.tasking.PlayerScopedCoroutineService;
 import net.dodian.uber.game.engine.systems.net.PacketRejectReason;
 import net.dodian.uber.game.engine.util.Misc;
 import net.dodian.utilities.MD5;
@@ -576,6 +577,7 @@ public class Client extends Player implements Runnable {
     public int accountServicesDialogState = 0;
     public boolean viewingAccountServices = false;
     public int accountPasswordState = 0;
+    public volatile int accountServiceRequestToken = 0;
     public java.util.List<String> modcpPlayerList = new java.util.ArrayList<>();
     public String managingName = "";
     public String bankSearchQuery = "";
@@ -690,6 +692,7 @@ public class Client extends Player implements Runnable {
             closePriceChecker();
         }
         PlayerDeferredLifecycleService.cancelAll(this);
+        PlayerScopedCoroutineService.cancelForPlayer(this, "Player destruct");
         clearVerticalTravelState();
         releaseQueuedInboundPackets();
         releaseQueuedOutboundPackets();

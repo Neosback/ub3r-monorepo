@@ -46,7 +46,7 @@ object ObjectSpawnRepository {
         val result = ArrayList<WorldObject>()
         for (file in files) {
             val content = Files.readString(file)
-            val entries = parseToml(content)
+            val entries = parseToml(content, file.toString())
             for (entry in entries) {
                 val rotationFace = parseRotation(entry.rotation) ?: entry.face ?: 0
                 val worldObj = WorldObject(entry.id, entry.x, entry.y, entry.z, entry.type, rotationFace)
@@ -81,12 +81,12 @@ object ObjectSpawnRepository {
         return result
     }
 
-    private fun parseToml(content: String): List<ObjectSpawnEntry> {
+    private fun parseToml(content: String, filePath: String): List<ObjectSpawnEntry> {
         val entries = mutableListOf<ObjectSpawnEntry>()
-        var id = 0
+        var id: Int? = null
         var name: String? = null
-        var x = 0
-        var y = 0
+        var x: Int? = null
+        var y: Int? = null
         var z = 0
         var type = 10
         var rotation: String? = null
@@ -96,19 +96,33 @@ object ObjectSpawnRepository {
         var solid: Boolean? = null
         var walkable: Boolean? = null
         var inObject = false
-        var fieldsSeen = 0
+        var lineNumber = 0
 
         fun flush() {
-            if (inObject && fieldsSeen >= 2) {
-                entries += ObjectSpawnEntry(id, name, x, y, z, type, rotation, face, sizeX, sizeY, solid, walkable)
+            if (!inObject) return
+            val effectiveId = id
+            val effectiveX = x
+            val effectiveY = y
+            if (effectiveId == null || effectiveId <= 0) {
+                throw IllegalArgumentException("$filePath:$lineNumber: object block missing valid 'id' field")
             }
-            id = 0; name = null; x = 0; y = 0; z = 0; type = 10
+            if (effectiveX == null) {
+                throw IllegalArgumentException("$filePath:$lineNumber: object block id=$effectiveId missing 'x' field")
+            }
+            if (effectiveY == null) {
+                throw IllegalArgumentException("$filePath:$lineNumber: object block id=$effectiveId missing 'y' field")
+            }
+
+            entries += ObjectSpawnEntry(effectiveId, name, effectiveX, effectiveY, z, type, rotation, face, sizeX, sizeY, solid, walkable)
+
+            id = null; name = null; x = null; y = null; z = 0; type = 10
             rotation = null; face = null; sizeX = null; sizeY = null; solid = null; walkable = null
-            inObject = false; fieldsSeen = 0
+            inObject = false
         }
 
-        for (line in content.lines()) {
-            val trimmed = line.trim()
+        for (rawLine in content.lines()) {
+            lineNumber++
+            val trimmed = rawLine.trim()
             if (trimmed.startsWith("#") || trimmed.isEmpty()) continue
 
             if (trimmed == "[[object]]") {
@@ -121,13 +135,16 @@ object ObjectSpawnRepository {
                 val parts = trimmed.split("=", limit = 2)
                 val key = parts[0].trim()
                 val raw = parts[1].trim().trim('"')
-                fieldsSeen++
                 try {
                     when (key) {
-                        "id" -> id = raw.toInt()
+                        "id" -> {
+                            val parsed = raw.toInt()
+                            if (parsed <= 0) throw IllegalArgumentException("$filePath:$lineNumber: id must be > 0, got $raw")
+                            id = parsed
+                        }
                         "name" -> name = raw
-                        "x" -> x = raw.toInt()
-                        "y" -> y = raw.toInt()
+                        "x" -> { x = raw.toInt() }
+                        "y" -> { y = raw.toInt() }
                         "z" -> z = raw.toInt()
                         "type" -> type = raw.toInt()
                         "rotation" -> rotation = raw
@@ -136,8 +153,10 @@ object ObjectSpawnRepository {
                         "sizeY" -> sizeY = raw.toIntOrNull()
                         "solid" -> solid = raw.lowercase(Locale.ROOT).toBooleanStrictOrNull()
                         "walkable" -> walkable = raw.lowercase(Locale.ROOT).toBooleanStrictOrNull()
+                        else -> throw IllegalArgumentException("$filePath:$lineNumber: unknown key '$key'")
                     }
-                } catch (_: Exception) {
+                } catch (e: NumberFormatException) {
+                    throw IllegalArgumentException("$filePath:$lineNumber: invalid value for '$key': $raw", e)
                 }
             }
         }

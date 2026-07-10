@@ -136,8 +136,8 @@ class NpcFamilyDslTest {
         assertTrue(source.contains("attackSpeed"))
         assertTrue(source.contains("slayer metadata"))
         assertFalse(Regex("""var\s+maxHit""").containsMatchIn(source))
-        assertFalse(Regex("""var\s+attackSpeed""").containsMatchIn(source))
-        assertFalse(Regex("""var\s+aggressive""").containsMatchIn(source))
+        assertTrue(Regex("""var\s+attackSpeed""").containsMatchIn(source))
+        assertTrue(Regex("""var\s+aggressive""").containsMatchIn(source))
     }
 
     @Test

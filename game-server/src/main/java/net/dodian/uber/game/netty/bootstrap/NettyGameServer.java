@@ -1,11 +1,14 @@
 package net.dodian.uber.game.netty.bootstrap;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.ResourceLeakDetector;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,10 +17,12 @@ import static net.dodian.uber.game.engine.config.DotEnvKt.getNettyLeakDetection;
 public class NettyGameServer {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyGameServer.class);
+    private static final long SHUTDOWN_TIMEOUT_SECONDS = 10;
 
     private final int port;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
+    private Channel serverChannel;
 
     public NettyGameServer(int port) {
         this.port = port;
@@ -41,15 +46,28 @@ public class NettyGameServer {
                 .childOption(ChannelOption.SO_KEEPALIVE, true);
 
         logger.info("[Netty] Binding game server on port {}", port);
-        bootstrap.bind(port).syncUninterruptibly();
+        ChannelFuture bindFuture = bootstrap.bind(port).syncUninterruptibly();
+        serverChannel = bindFuture.channel();
         logger.info("[Netty] Game server listening on {}", port);
 
     }
 
     public void shutdown() {
         logger.info("[Netty] Shutting down game server");
-        if (bossGroup != null) bossGroup.shutdownGracefully();
-        if (workerGroup != null) workerGroup.shutdownGracefully();
+        try {
+            if (serverChannel != null) {
+                serverChannel.close().syncUninterruptibly();
+            }
+        } catch (Exception e) {
+            logger.warn("Error closing server channel", e);
+        } finally {
+            if (bossGroup != null) {
+                bossGroup.shutdownGracefully(0, SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            }
+            if (workerGroup != null) {
+                workerGroup.shutdownGracefully(0, SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            }
+        }
     }
 
     static ResourceLeakDetector.Level resolveLeakDetectionLevel(String configuredLevel) {

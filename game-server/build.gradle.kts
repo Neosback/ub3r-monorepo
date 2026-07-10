@@ -98,6 +98,18 @@ tasks.register<Test>("syncTest") {
     useJUnitPlatform()
 }
 
+tasks.register("betaCheck") {
+    group = "verification"
+    description = "Comprehensive beta-readiness gate: unit tests + sync tests"
+
+    dependsOn(":game-server:check")
+    dependsOn(":game-server:syncTest")
+
+    doLast {
+        println("Beta readiness gate passed: unit tests and sync tests completed.")
+    }
+}
+
 tasks.register<JavaExec>("runSyncBenchmark") {
     group = "verification"
     description = "Run the synchronization pipeline benchmark harness"

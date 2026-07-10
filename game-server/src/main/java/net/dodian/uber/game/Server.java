@@ -15,6 +15,8 @@ import net.dodian.uber.game.activity.casino.SlotMachine;
 import net.dodian.uber.game.engine.lifecycle.EnginePluginBootstrap;
 import net.dodian.uber.game.engine.lifecycle.StartupValidationService;
 import net.dodian.uber.game.engine.loop.GameLoopService;
+import net.dodian.uber.game.engine.loop.GameThreadIngress;
+import net.dodian.uber.game.engine.loop.GameThreadTimers;
 import net.dodian.uber.game.engine.systems.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.engine.webapi.WebApi;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
@@ -110,6 +112,13 @@ public class Server {
         new CacheBootstrapService().bootstrap();
         loadObjects();
         new DoorRegistry();
+        // Install shutdown hook before starting I/O so partial startup is cleaned up.
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Shutdown hook triggered. Shutting down server...");
+            shutdown();
+            logger.info("Server shut down.");
+        }));
+
         ObjectClipService.bootstrapStartupOverlays(objects);
         EnginePluginBootstrap.bootstrap();
 
@@ -117,17 +126,9 @@ public class Server {
         logger.info("Starting Netty game server...");
         nettyServer.start();
 
-        // Add a shutdown hook to gracefully close server resources.
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutdown hook triggered. Shutting down server...");
-            shutdown();
-            logger.info("Server shut down.");
-        }));
-
 
         /* Processor for various stuff */
         gameLoopService.start();
-        System.gc();
         Login.banUid();
         logger.info("Server is now running on world " + getGameWorldId() + "!");
     }
@@ -144,7 +145,7 @@ public class Server {
             objects.clear();
             objects.addAll(ObjectDefinitionRepository.loadObjects());
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warn("Failed to load object definitions", e);
         }
 
     }
@@ -213,5 +214,8 @@ public class Server {
         } catch (Exception exception) {
             logger.warn("Failed to shutdown web API", exception);
         }
+
+        GameThreadTimers.clearAll();
+        GameThreadIngress.clearAll();
     }
 }
