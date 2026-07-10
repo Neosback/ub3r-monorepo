@@ -72,7 +72,7 @@ class NpcSpawnsBuilder internal constructor(private val primaryId: Int) {
         deathAnimation: Int? = null,
         headIcon: Int? = null,
         transformTo: Int? = null,
-        attackRange: Int = 6,
+        attackRange: Int = 0,
         alwaysActive: Boolean = false,
         block: NpcSpawnOverrideBuilder.() -> Unit = {},
     ) {
@@ -124,7 +124,7 @@ class NpcSpawnsBuilder internal constructor(private val primaryId: Int) {
         deathAnimation: Int? = null,
         headIcon: Int? = null,
         transformTo: Int? = null,
-        attackRange: Int = 6,
+        attackRange: Int = 0,
         alwaysActive: Boolean = false,
         block: NpcSpawnOverrideBuilder.() -> Unit = {},
     ) {
@@ -171,6 +171,7 @@ class NpcFamilyBuilder internal constructor(
     private val serverDefinitions = ArrayList<NpcServerDefinition>()
     private var options = emptyList<NpcOptionBinding>()
     private var spawns = emptyList<NpcSpawnDef>()
+    private var combatHandler: NpcAttackHandler? = null
 
     fun ids(vararg values: Int) {
         values.forEach { ids += it }
@@ -221,6 +222,10 @@ class NpcFamilyBuilder internal constructor(
         serverDefinitions += NpcServerDefinitionBuilder(id).apply(block).buildDefinition()
     }
 
+    fun combat(block: NpcCombatBuilder.() -> Unit) {
+        combatHandler = NpcCombatBuilder().apply(block).build()
+    }
+
     @Deprecated("Use server { }. Runtime values are server-owned NPC values.", ReplaceWith("server(block)"))
     fun runtime(block: NpcServerDefinitionBuilder.() -> Unit) {
         server(block)
@@ -253,7 +258,9 @@ class NpcFamilyBuilder internal constructor(
                 onFourthClick = handler(4),
                 onAttack = handler(5),
                 cacheOverrides = cacheOverrides.toList(),
-                serverDefinitions = serverDefinitions.toList(),
+                serverDefinitions = serverDefinitions.map { def ->
+                    if (combatHandler != null) def.copy(bossAttackHandler = combatHandler) else def
+                },
             )
         return DefaultNpcFamily(name, primaryId, finalIds, content, spawns, cacheOverrides, serverDefinitions)
     }

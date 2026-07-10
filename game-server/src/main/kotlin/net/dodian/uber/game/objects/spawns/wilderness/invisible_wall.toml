@@ -1,0 +1,65 @@
+schemaVersion = 1
+region = "wilderness"
+
+[[object]]
+id = 0
+name = "invisible wall"
+x = 2411
+y = 10432
+z = 0
+type = 10
+rotation = "EAST"
+
+[[object]]
+id = 0
+name = "invisible wall"
+x = 2441
+y = 10419
+z = 0
+type = 10
+rotation = "EAST"
+
+[[object]]
+id = 0
+name = "invisible wall"
+x = 2441
+y = 10420
+z = 0
+type = 10
+rotation = "EAST"
+
+[[object]]
+id = 0
+name = "invisible wall"
+x = 2441
+y = 10421
+z = 0
+type = 10
+rotation = "EAST"
+
+[[object]]
+id = 0
+name = "invisible wall"
+x = 2466
+y = 10447
+z = 0
+type = 10
+rotation = "EAST"
+
+[[object]]
+id = 0
+name = "invisible wall"
+x = 2472
+y = 10423
+z = 0
+type = 10
+rotation = "EAST"
+
+[[object]]
+id = 0
+name = "invisible wall"
+x = 2473
+y = 10423
+z = 0
+type = 10
+rotation = "EAST"

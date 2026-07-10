@@ -3,12 +3,15 @@ package net.dodian.uber.game.engine.webapi
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.config.webApiEnabled
 import net.dodian.uber.game.engine.config.webApiPort
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.persistence.db.dbConnection
 import spark.Spark.awaitInitialization
 import spark.Spark.get
 import spark.Spark.port
+import spark.Spark.stop
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -59,6 +62,35 @@ object WebApi {
             return@get mapper.writeValueAsString(serverStatus)
         }
 
+        get("/health") { req, res ->
+            res.header("Access-Control-Allow-Origin", "*")
+            res.type("application/json")
+
+            val dbOk = try {
+                dbConnection.use { conn -> conn.isValid(2) }
+            } catch (_: Exception) {
+                false
+            }
+            val health = mapOf(
+                "status" to if (dbOk) "UP" else "DEGRADED",
+                "database" to if (dbOk) "UP" else "DOWN",
+                "players" to PlayerRegistry.getPlayerCount(),
+                "uptimeMs" to (System.currentTimeMillis() - Server.serverStartup),
+            )
+            return@get mapper.writeValueAsString(health)
+        }
+
         awaitInitialization()
+    }
+
+    @JvmStatic
+    fun stop() {
+        if (!started.compareAndSet(true, false)) {
+            return
+        }
+        try {
+            stop()
+        } catch (_: Exception) {
+        }
     }
 }

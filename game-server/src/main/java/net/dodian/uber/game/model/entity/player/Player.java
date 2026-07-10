@@ -57,6 +57,7 @@ import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.engine.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.engine.tasking.GameTaskSet;
 import net.dodian.uber.game.engine.loop.GameCycleClock;
+import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.engine.util.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
@@ -82,6 +83,8 @@ public abstract class Player extends Entity {
     private final PlayerMovementState movementState = new PlayerMovementState(this);
     private final PlayerUpdateState updateState = new PlayerUpdateState(this);
     int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
+    public int poisonDamage = 0;
+    public int poisonTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
     public boolean busy = false, invis = false;
@@ -107,7 +110,7 @@ public abstract class Player extends Entity {
     private Entity.hitType hitType;
     private final Entity.hitType hitType2 = Entity.hitType.STANDARD;
     public boolean isNpc, morph = false;
-    public boolean initialized = false, disconnected = false, isKicked = false;
+    public volatile boolean initialized = false, disconnected = false, isKicked = false;
     public boolean isActive = false, debug = false;
     public String connectedFrom = "";
     public int ip = 0;
@@ -295,7 +298,7 @@ public abstract class Player extends Entity {
                 for(int skill = 0; skill < 4; skill++) {
                     skill = skill == 3 ? 4 : skill;
                     boostedLevel[skill] = 0;
-                    c.refreshSkill(Skill.getSkill(skill));
+                    ProgressionService.refresh(c, Skill.getSkill(skill));
                 }
                 addEffectTime(2, -1);
                 c.send(new SendMessage("Your overload effect is now over!"));
@@ -305,6 +308,10 @@ public abstract class Player extends Entity {
     }
     boolean antiFireEffect() {
         return effects.size() > 1 && effects.get(1) > 0;
+    }
+
+    boolean superAntifireEffect() {
+        return effects.size() > 3 && effects.get(3) > 0;
     }
 
     public void defaultCharacterLook(Client temp) {

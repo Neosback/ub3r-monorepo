@@ -1,7 +1,5 @@
 package net.dodian.uber.game.objects
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.objects.WorldObject
 import java.nio.file.Files
@@ -9,7 +7,7 @@ import java.nio.file.Path
 import java.util.Locale
 import java.util.stream.Collectors
 
-data class ObjectSpawnJson(
+data class ObjectSpawnEntry(
     val id: Int,
     val name: String? = null,
     val x: Int,
@@ -24,15 +22,7 @@ data class ObjectSpawnJson(
     val walkable: Boolean? = null,
 )
 
-data class ObjectSpawnFileJson(
-    val schemaVersion: Int,
-    val region: String,
-    val objects: List<ObjectSpawnJson>,
-)
-
 object ObjectSpawnRepository {
-    private val mapper = ObjectMapper().registerKotlinModule()
-
     @JvmStatic
     fun resolveSpawnsPath(): Path {
         val userDir = Path.of(System.getProperty("user.dir"))
@@ -48,33 +38,31 @@ object ObjectSpawnRepository {
         }
 
         val files = Files.walk(root).use { stream ->
-            stream.filter { Files.isRegularFile(it) && it.fileName.toString().endsWith(".json") }
+            stream.filter { Files.isRegularFile(it) && it.fileName.toString().endsWith(".toml") }
                 .sorted()
                 .collect(Collectors.toList())
         }
 
         val result = ArrayList<WorldObject>()
         for (file in files) {
-            val fileJson = Files.newBufferedReader(file).use { mapper.readValue(it, ObjectSpawnFileJson::class.java) }
-            require(fileJson.schemaVersion == 1) { "Unsupported object spawn schema version in $file: ${fileJson.schemaVersion}" }
-            
-            for (spawn in fileJson.objects) {
-                val rotationFace = parseRotation(spawn.rotation) ?: spawn.face ?: 0
-                val worldObj = WorldObject(spawn.id, spawn.x, spawn.y, spawn.z, spawn.type, rotationFace)
+            val content = Files.readString(file)
+            val entries = parseToml(content)
+            for (entry in entries) {
+                val rotationFace = parseRotation(entry.rotation) ?: entry.face ?: 0
+                val worldObj = WorldObject(entry.id, entry.x, entry.y, entry.z, entry.type, rotationFace)
                 result.add(worldObj)
 
-                // If overrides are present, register them in GameObjectData
-                if (spawn.sizeX != null || spawn.sizeY != null || spawn.solid != null || spawn.walkable != null) {
-                    val defaultData = GameObjectData.forId(spawn.id)
-                    val solid = spawn.solid ?: defaultData.isSolid()
+                if (entry.sizeX != null || entry.sizeY != null || entry.solid != null || entry.walkable != null) {
+                    val defaultData = GameObjectData.forId(entry.id)
+                    val solid = entry.solid ?: defaultData.isSolid()
                     val customData = GameObjectData(
-                        id = spawn.id,
-                        name = spawn.name ?: defaultData.name,
+                        id = entry.id,
+                        name = entry.name ?: defaultData.name,
                         description = defaultData.description,
-                        sizeX = spawn.sizeX ?: defaultData.sizeX,
-                        sizeY = spawn.sizeY ?: defaultData.sizeY,
+                        sizeX = entry.sizeX ?: defaultData.sizeX,
+                        sizeY = entry.sizeY ?: defaultData.sizeY,
                         solid = solid,
-                        impenetrable = if (spawn.walkable == true) false else defaultData.isImpenetrable(),
+                        impenetrable = if (entry.walkable == true) false else defaultData.isImpenetrable(),
                         hasActionsFlag = defaultData.hasActions(),
                         decoration = defaultData.isDecoration(),
                         walkType = 2,
@@ -91,6 +79,70 @@ object ObjectSpawnRepository {
             }
         }
         return result
+    }
+
+    private fun parseToml(content: String): List<ObjectSpawnEntry> {
+        val entries = mutableListOf<ObjectSpawnEntry>()
+        var id = 0
+        var name: String? = null
+        var x = 0
+        var y = 0
+        var z = 0
+        var type = 10
+        var rotation: String? = null
+        var face: Int? = null
+        var sizeX: Int? = null
+        var sizeY: Int? = null
+        var solid: Boolean? = null
+        var walkable: Boolean? = null
+        var inObject = false
+        var fieldsSeen = 0
+
+        fun flush() {
+            if (inObject && fieldsSeen >= 2) {
+                entries += ObjectSpawnEntry(id, name, x, y, z, type, rotation, face, sizeX, sizeY, solid, walkable)
+            }
+            id = 0; name = null; x = 0; y = 0; z = 0; type = 10
+            rotation = null; face = null; sizeX = null; sizeY = null; solid = null; walkable = null
+            inObject = false; fieldsSeen = 0
+        }
+
+        for (line in content.lines()) {
+            val trimmed = line.trim()
+            if (trimmed.startsWith("#") || trimmed.isEmpty()) continue
+
+            if (trimmed == "[[object]]") {
+                flush()
+                inObject = true
+                continue
+            }
+
+            if (inObject && trimmed.contains("=")) {
+                val parts = trimmed.split("=", limit = 2)
+                val key = parts[0].trim()
+                val raw = parts[1].trim().trim('"')
+                fieldsSeen++
+                try {
+                    when (key) {
+                        "id" -> id = raw.toInt()
+                        "name" -> name = raw
+                        "x" -> x = raw.toInt()
+                        "y" -> y = raw.toInt()
+                        "z" -> z = raw.toInt()
+                        "type" -> type = raw.toInt()
+                        "rotation" -> rotation = raw
+                        "face" -> face = raw.toIntOrNull()
+                        "sizeX" -> sizeX = raw.toIntOrNull()
+                        "sizeY" -> sizeY = raw.toIntOrNull()
+                        "solid" -> solid = raw.lowercase(Locale.ROOT).toBooleanStrictOrNull()
+                        "walkable" -> walkable = raw.lowercase(Locale.ROOT).toBooleanStrictOrNull()
+                    }
+                } catch (_: Exception) {
+                }
+            }
+        }
+        flush()
+        return entries
     }
 
     private fun parseRotation(raw: String?): Int? {

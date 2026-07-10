@@ -1,0 +1,47 @@
+schemaVersion = 1
+region = "edgeville"
+
+[[object]]
+id = 4875
+name = "stall"
+x = 3084
+y = 3483
+z = 0
+type = 10
+rotation = "NORTH"
+
+[[object]]
+id = 4876
+name = "stall"
+x = 3085
+y = 3483
+z = 0
+type = 10
+rotation = "NORTH"
+
+[[object]]
+id = 4874
+name = "stall"
+x = 3086
+y = 3483
+z = 0
+type = 10
+rotation = "NORTH"
+
+[[object]]
+id = 4877
+name = "stall"
+x = 3087
+y = 3483
+z = 0
+type = 10
+rotation = "NORTH"
+
+[[object]]
+id = 4878
+name = "stall"
+x = 3088
+y = 3483
+z = 0
+type = 10
+rotation = "NORTH"

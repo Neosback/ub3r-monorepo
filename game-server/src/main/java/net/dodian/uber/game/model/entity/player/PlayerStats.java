@@ -1,6 +1,7 @@
 package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
@@ -54,7 +55,7 @@ final class PlayerStats {
         Client c = (Client) owner;
         int maxLevel = getMaxHealth() + overHeal;
         setCurrentHealth(Math.min(getCurrentHealth() + healing, maxLevel));
-        c.refreshSkill(Skill.HITPOINTS);
+        ProgressionService.refresh(c, Skill.HITPOINTS);
     }
 
     void eat(int healing, int removeId, int removeSlot) {
@@ -82,7 +83,7 @@ final class PlayerStats {
         int currentLevel = c.getLevel(skill);
         boosted = currentLevel >= lvl + boosted ? currentLevel - lvl : boosted;
         owner.boostedLevel[skill.getId()] = boosted;
-        c.refreshSkill(skill);
+        ProgressionService.refresh(c, skill);
         c.markSaveDirty(PlayerSaveSegment.STATS.getMask());
     }
 
@@ -111,7 +112,7 @@ final class PlayerStats {
         Client c = (Client) owner;
         int maxLevel = getMaxPrayer();
         setCurrentPrayer(Math.min(getCurrentPrayer() + healing, maxLevel));
-        c.refreshSkill(Skill.PRAYER);
+        ProgressionService.refresh(c, Skill.PRAYER);
     }
 
     int determineCombatLevel() {

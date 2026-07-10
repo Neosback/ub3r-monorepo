@@ -1,0 +1,11 @@
+schemaVersion = 1
+region = "edgeville"
+
+[[object]]
+id = 13607
+name = "hermans desk"
+x = 3091
+y = 3495
+z = 0
+type = 10
+rotation = "NORTH"

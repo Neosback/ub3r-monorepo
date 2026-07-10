@@ -1,4 +1,5 @@
 package net.dodian.uber.game.netty.listener.in;
+import net.dodian.uber.game.api.content.ContentInteraction;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.Position;
@@ -118,7 +119,7 @@ public class ClickingButtonsListener implements PacketListener {
             );
         }
 
-        if (!client.validClient || !PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.BUTTON_GENERAL, 600L)) {
+        if (!client.validClient || !ContentInteraction.tryAcquireMs(client, ContentInteraction.BUTTON_GENERAL, 600L)) {
             return;
         }
 

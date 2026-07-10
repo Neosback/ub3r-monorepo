@@ -64,6 +64,11 @@ object NpcTimerScheduler {
     }
 
     @JvmStatic
+    fun removeNpc(npc: Npc) {
+        versions.remove(npc)
+    }
+
+    @JvmStatic
     fun runDue(nowMs: Long) {
         while (true) {
             val next = queue.peek() ?: break

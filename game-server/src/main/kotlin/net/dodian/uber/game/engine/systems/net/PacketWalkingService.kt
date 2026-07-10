@@ -1,4 +1,5 @@
 package net.dodian.uber.game.engine.systems.net
+import net.dodian.uber.game.api.content.ContentActions
 
 import net.dodian.uber.game.skill.thieving.PyramidPlunder
 import net.dodian.uber.game.engine.event.GameEventBus
@@ -160,7 +161,7 @@ object PacketWalkingService {
                 player.send(RemoveInterfaces())
             }
             player.rerequestAnim()
-            PlayerActionCancellationService.cancel(
+            ContentActions.cancel(
                 player,
                 PlayerActionCancelReason.MOVEMENT,
                 true,

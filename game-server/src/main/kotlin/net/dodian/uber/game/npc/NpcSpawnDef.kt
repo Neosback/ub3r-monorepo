@@ -45,7 +45,7 @@ data class NpcSpawnDef(
     val ry2: Int = 0,
     val live: Boolean = true,
     val walkRadius: Int = 0,
-    val attackRange: Int = 6,
+    val attackRange: Int = 0,
     val leashDistance: Int = 15,
     val alwaysActive: Boolean = false,
     val condition: (Client) -> Boolean = { true },

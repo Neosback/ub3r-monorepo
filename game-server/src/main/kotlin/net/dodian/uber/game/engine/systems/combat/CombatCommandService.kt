@@ -32,7 +32,11 @@ object CombatCommandService {
 
         if (matches(currentEngagement, target, intent)) {
             applyFacing(player, target)
-            player.combatEngagementState = refreshEngagement(currentEngagement!!, target, cycle)
+            player.combatEngagementState = refreshEngagement(
+                currentEngagement ?: return AttackRequestResult.REJECTED_INVALID,
+                target,
+                cycle,
+            )
             syncLegacyState(player)
             return AttackRequestResult.REFRESHED_SAME_TARGET
         }

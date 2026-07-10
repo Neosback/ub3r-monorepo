@@ -14,6 +14,7 @@ import net.dodian.uber.game.engine.systems.combat.CombatDefenderReaction;
 import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService;
 import net.dodian.uber.game.engine.systems.combat.CombatStartService;
 import net.dodian.uber.game.engine.systems.combat.CombatIntent;
+import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.engine.util.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,24 +83,56 @@ class PlayerCombatState {
 
     void dealDamage(int amt, Entity.hitType type, Entity attacker, Entity.damageType damageType) {
         Client player = (Client) owner;
+        if (owner.isDeathSequenceActive() || owner.getCurrentHealth() < 1) {
+            return;
+        }
         Npc npc = (Npc) attacker;
         int originalAmt = amt;
         String mitigationBranch = "none";
         if (damageType.equals(Entity.damageType.FIRE_BREATH)) {
-            boolean gotAntiEffect = player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 1540
-                    || player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284
-                    || owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)
-                    || owner.antiFireEffect();
-            if (npc != null && npc.getId() == 239 && gotAntiEffect) {
-                amt /= 2;
-                mitigationBranch = "fire_breath_kbd_half";
-            } else if (npc != null && npc.getId() != 239 && gotAntiEffect) {
-                amt *= 3;
-                amt /= 10;
-                mitigationBranch = "fire_breath_reduced";
+            boolean hasShield = player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 1540
+                    || player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284;
+            boolean hasProtect = owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC);
+            boolean hasAntifire = owner.antiFireEffect();
+            boolean hasSuperAntifire = owner.superAntifireEffect();
+            if (npc != null && npc.getId() == 239) {
+                if (hasSuperAntifire) {
+                    amt = 0;
+                    mitigationBranch = "kbd_superantifire";
+                } else if (hasAntifire && hasShield) {
+                    amt = 0;
+                    mitigationBranch = "kbd_antifire_shield";
+                } else if (hasAntifire && hasProtect) {
+                    amt = 0;
+                    mitigationBranch = "kbd_antifire_protect";
+                } else if (hasShield && hasProtect) {
+                    amt = 0;
+                    mitigationBranch = "kbd_shield_protect";
+                } else if (hasShield) {
+                    amt = Math.min(amt, 5);
+                    mitigationBranch = "kbd_shield";
+                } else if (hasProtect) {
+                    amt = Math.min(amt, 10);
+                    mitigationBranch = "kbd_protect";
+                } else if (hasAntifire) {
+                    amt = Math.max(amt - 15, 0);
+                    mitigationBranch = "kbd_antifire";
+                } else {
+                    mitigationBranch = "kbd_full";
+                }
+                if (amt == 0 && originalAmt > 0) {
+                    player.send(new SendMessage("You are protected against the dragonfire breath."));
+                }
             } else {
-                player.send(new SendMessage("You are badly burnt by the dragon fire!"));
-                mitigationBranch = "fire_breath_full";
+                boolean gotAntiEffect = hasShield || hasProtect || hasAntifire;
+                if (gotAntiEffect) {
+                    amt *= 3;
+                    amt /= 10;
+                    mitigationBranch = "fire_breath_reduced";
+                } else {
+                    player.send(new SendMessage("You are badly burnt by the dragon fire!"));
+                    mitigationBranch = "fire_breath_full";
+                }
             }
         } else if (damageType.equals(Entity.damageType.MELEE) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MELEE)) {
             amt /= 2;
@@ -147,7 +180,7 @@ class PlayerCombatState {
         Client player = (Client) owner;
         appendHit(amt, type);
         owner.setCurrentHealth(Math.max(owner.getCurrentHealth() - amt, 0));
-        player.refreshSkill(Skill.HITPOINTS);
+        ProgressionService.refresh(player, Skill.HITPOINTS);
         player.debug("Dealing " + amt + " damage to you (hp=" + owner.currentHealth + ")");
         if (attacker instanceof Player) {
             int totalDamage;

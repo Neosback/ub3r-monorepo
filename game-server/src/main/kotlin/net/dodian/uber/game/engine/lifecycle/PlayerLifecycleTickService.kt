@@ -1,4 +1,5 @@
 package net.dodian.uber.game.engine.lifecycle
+import net.dodian.uber.game.api.content.ContentActions
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.Entity
@@ -102,7 +103,7 @@ object PlayerLifecycleTickService {
     @JvmStatic
     fun processBeforeCombat(player: Client) {
         if (player.disconnected) {
-            PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.DISCONNECTED, false, false, false, true)
+            ContentActions.cancel(player, PlayerActionCancelReason.DISCONNECTED, false, false, false, true)
         }
         val decremented =
             decrementTimers(
@@ -117,6 +118,7 @@ object PlayerLifecycleTickService {
         player.snareTimer = decremented.snareTimer
 
         player.changeEffectTime()
+        tickPlayerPoison(player)
         if (player.genieCombatFlag && !player.isInCombat) {
             player.genieCombatFlag = false
             SkillingRandomEventService.show(player)
@@ -195,6 +197,22 @@ object PlayerLifecycleTickService {
                 player.iconTimer = 6
             }
             else -> player.iconTimer = 6
+        }
+    }
+
+    private fun tickPlayerPoison(player: Client) {
+        if (player.poisonDamage <= 0) {
+            return
+        }
+        if (player.poisonTimer > 0) {
+            player.poisonTimer--
+            return
+        }
+        player.poisonTimer = 30
+        player.dealDamage(null, player.poisonDamage, Entity.hitType.POISON)
+        player.poisonDamage--
+        if (player.poisonDamage <= 0) {
+            player.sendMessage("You have been cured of the poison.")
         }
     }
 }

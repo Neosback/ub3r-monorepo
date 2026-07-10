@@ -1,4 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
+import net.dodian.uber.game.api.content.ContentInteraction;
+import net.dodian.uber.game.api.content.ContentActions;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.engine.event.GameEventBus;
@@ -1080,7 +1082,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         isLoggingOut = true;
-        PlayerActionCancellationService.cancel(this, PlayerActionCancelReason.LOGOUT, false, false, false, true);
+        ContentActions.cancel(this, PlayerActionCancelReason.LOGOUT, false, false, false, true);
         if (!saveNeeded || !validClient || UsingAgility) {
             if (UsingAgility) {
                 xLog = true; // Existing logic for agility delay
@@ -2884,7 +2886,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void fromTrade(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
+        if (!ContentInteraction.tryAcquireMs(this, ContentInteraction.TRADE_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
             if(!canOffer)  declineTrade(); //Not sure if we need this here but..Maybe?!
             return;
         }
@@ -2953,7 +2955,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void tradeItem(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_TWO, 200L)) {
+        if (!ContentInteraction.tryAcquireMs(this, ContentInteraction.TRADE_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
         if (!Server.itemManager.isStackable(itemID))
@@ -3719,7 +3721,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void stakeItem(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
+        if (!ContentInteraction.tryAcquireMs(this, ContentInteraction.DUEL_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
             if(!canOffer) declineDuel(); //Not sure if we need this here but..Maybe?!
             return;
         }
@@ -3808,7 +3810,7 @@ public class Client extends Player implements Runnable {
             declineDuel();
             return;
         }
-        if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO, 200L)) {
+        if (!ContentInteraction.tryAcquireMs(this, ContentInteraction.DUEL_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
         Client other = getClient(duel_with);
@@ -3989,7 +3991,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void resetAction(boolean full) {
-        PlayerActionCancellationService.cancel(this, PlayerActionCancelReason.MANUAL_RESET, full, false, false, true);
+        ContentActions.cancel(this, PlayerActionCancelReason.MANUAL_RESET, full, false, false, true);
     }
 
     public void resetAction() {
@@ -4178,7 +4180,7 @@ public class Client extends Player implements Runnable {
         if (validClient(trade_reqId) && !inTrade && other.tradeRequested && other.trade_reqId == getSlot()) {
             openTrade();
             other.openTrade();
-        } else if (validClient(trade_reqId) && !inTrade && net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.TRADE_REQUEST, 1000L)) {
+        } else if (validClient(trade_reqId) && !inTrade && ContentInteraction.tryAcquireMs(this, ContentInteraction.TRADE_REQUEST, 1000L)) {
             tradeRequested = true;
             trade_reqId = id;
             GameEventBus.post(new TradeRequestEvent(this, other));
@@ -4608,7 +4610,7 @@ public class Client extends Player implements Runnable {
         Client other = getClient(duel_with);
         if (other == null || ruleIndex < 0 || ruleIndex >= duelRule.length
                 || ruleIndex == 3 || ruleIndex == 4 || ruleIndex == 5 || ruleIndex == 9 || ruleIndex == 10
-                || !net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_RULES, 800L)) {
+                || !ContentInteraction.tryAcquireMs(this, ContentInteraction.DUEL_RULES, 800L)) {
             return false;
         }
         if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
@@ -4628,7 +4630,7 @@ public class Client extends Player implements Runnable {
     public boolean toggleDuelBodyRule(int ruleIndex) {
         Client other = getClient(duel_with);
         if (other == null || ruleIndex < 0 || ruleIndex >= duelBodyRules.length
-                || !net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_BODY_RULES, 400L)) {
+                || !ContentInteraction.tryAcquireMs(this, ContentInteraction.DUEL_BODY_RULES, 400L)) {
             return false;
         }
         if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
@@ -4988,7 +4990,7 @@ public class Client extends Player implements Runnable {
     public void acceptDuelWon() {
         if (duelFight && duelWin) {
             duelWin = false;
-            if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_ACCEPT_WIN, 1000L)) {
+            if (!ContentInteraction.tryAcquireMs(this, ContentInteraction.DUEL_ACCEPT_WIN, 1000L)) {
                 return;
             }
             Client other = getClient(duel_with);

@@ -16,7 +16,10 @@ import net.dodian.uber.game.engine.lifecycle.EnginePluginBootstrap;
 import net.dodian.uber.game.engine.lifecycle.StartupValidationService;
 import net.dodian.uber.game.engine.loop.GameLoopService;
 import net.dodian.uber.game.engine.systems.world.npc.NpcTimerScheduler;
+import net.dodian.uber.game.engine.webapi.WebApi;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
+import net.dodian.uber.game.persistence.player.PlayerSaveReason;
+import net.dodian.uber.game.persistence.player.PlayerSaveService;
 import net.dodian.uber.game.persistence.world.WorldDbPollService;
 import net.dodian.uber.game.persistence.WorldSavePublisher;
 import net.dodian.uber.game.persistence.audit.AsyncSqlService;
@@ -154,6 +157,14 @@ public class Server {
         gameLoopService.stop(Duration.ofSeconds(10));
 
         try {
+            for (Client player : PlayerRegistry.playersOnline.values()) {
+                PlayerSaveService.requestSave(player, PlayerSaveReason.SHUTDOWN, true, true);
+            }
+        } catch (Exception exception) {
+            logger.warn("Failed to request final player saves during shutdown", exception);
+        }
+
+        try {
             AccountPersistenceService.shutdownAndDrain(Duration.ofSeconds(30));
         } catch (Exception exception) {
             logger.warn("Failed to drain account persistence service during shutdown", exception);
@@ -195,6 +206,12 @@ public class Server {
             }
         } catch (Exception exception) {
             logger.warn("Failed to shutdown netty server", exception);
+        }
+
+        try {
+            WebApi.stop();
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown web API", exception);
         }
     }
 }

@@ -1,4 +1,5 @@
 package net.dodian.uber.game.engine.lifecycle
+import net.dodian.uber.game.api.content.ContentActions
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
@@ -35,24 +36,24 @@ object PlayerDeathTickService {
     }
 
     private fun beginDeath(player: Client, wallClockNow: Long) {
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             player = player,
             reason = PlayerActionCancelReason.DEATH,
             fullResetAnimation = false,
             resetCompatibilityState = true,
         )
         player.combatCancellationReason = CombatCancellationReason.DEATH
+        for (npc in Server.npcManager.getNpcs()) {
+            npc.removeEnemy(player)
+        }
         player.resetAttack()
         CombatHitQueueService.clearFor(player)
-        if (player.target is Npc) {
-            val npc = Server.npcManager.getNpc(player.target.slot)
-            npc.removeEnemy(player)
-        } else {
-            val other = player.getClient(player.duel_with)
-            if (player.duel_with > 0 && player.validClient(player.duel_with) && player.inDuel && player.duelFight) {
-                other.duelWin = true
-                other.DuelVictory()
-            }
+        player.poisonDamage = 0
+        player.poisonTimer = 0
+        val other = player.getClient(player.duel_with)
+        if (player.duel_with > 0 && player.validClient(player.duel_with) && player.inDuel && player.duelFight) {
+            other.duelWin = true
+            other.DuelVictory()
         }
         player.performAnimation(836, 5)
         player.currentHealth = 0

@@ -58,6 +58,7 @@ object ObjectClipService {
                 type = 0,
                 direction = DoorRegistry.doorFace[index],
                 obj = GameObjectData.forId(objectId),
+                forceSolid = true,
             )
             appliedDoors++
         }
@@ -84,12 +85,13 @@ object ObjectClipService {
     }
 
     @JvmStatic
-    fun applyDecodedObject(position: Position, objectId: Int, type: Int, direction: Int, obj: GameObjectData?) {
+    fun applyDecodedObject(position: Position, objectId: Int, type: Int, direction: Int, obj: GameObjectData?, forceSolid: Boolean = false) {
         removeDecodedObject(position)
         if (obj == null) {
             return
         }
-        appliedClips[key(position)] = AppliedClip(position.copy(), objectId, type, direction, obj.isSolid())
+        val effectiveSolid = forceSolid || obj.isSolid()
+        appliedClips[key(position)] = AppliedClip(position.copy(), objectId, type, direction, effectiveSolid)
         collisionBuildService.applyObject(
             id = objectId,
             x = position.x,
@@ -99,12 +101,12 @@ object ObjectClipService {
             rotation = direction,
             sizeX = obj.sizeX,
             sizeY = obj.sizeY,
-            solid = obj.isSolid(),
-            walkable = obj.isWalkable(),
+            solid = effectiveSolid,
+            walkable = if (forceSolid) false else obj.isWalkable(),
             hasActions = obj.hasActions(),
             objectName = obj.name,
-            blockWalk = obj.blockWalk(),
-            blockRange = obj.blockRange(),
+            blockWalk = if (forceSolid) 2 else obj.blockWalk(),
+            blockRange = if (forceSolid) true else obj.blockRange(),
             breakRouteFinding = obj.breakRouteFinding(),
             impenetrable = if (objectId in CollisionBuildService.BLOCK_RANGE_FALSE_IDS) false else obj.isImpenetrable(),
             decoration = obj.isDecoration(),

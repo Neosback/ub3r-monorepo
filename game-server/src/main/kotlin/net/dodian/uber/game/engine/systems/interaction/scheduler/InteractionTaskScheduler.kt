@@ -1,4 +1,5 @@
 package net.dodian.uber.game.engine.systems.interaction.scheduler
+import net.dodian.uber.game.api.content.ContentActions
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.interaction.InteractionIntent
@@ -24,7 +25,7 @@ object InteractionTaskScheduler {
     @JvmStatic
     fun schedule(player: Client, intent: InteractionIntent, task: InteractionQueueTask) {
         player.cancelInteractionTask()
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             player = player,
             reason = cancelReason(intent),
             fullResetAnimation = false,

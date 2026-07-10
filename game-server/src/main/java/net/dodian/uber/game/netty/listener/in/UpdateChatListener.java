@@ -1,4 +1,5 @@
 package net.dodian.uber.game.netty.listener.in;
+import net.dodian.uber.game.api.content.ContentInteraction;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -27,7 +28,7 @@ public class UpdateChatListener implements PacketListener {
         int priv = buf.readUnsignedByte();
         buf.readUnsignedByte();
 
-        if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.CHAT_PRIVACY, 600L)) {
+        if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.CHAT_PRIVACY, 600L)) {
             return; // anti-spam
         }
         PacketConnectionService.setPrivateChatMode(client, priv);

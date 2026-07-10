@@ -106,6 +106,11 @@ class NpcManager {
                     spawn.alwaysActive,
                     spawn.condition,
                 )
+                val serverDef = serverDefinitions[spawn.npcId]
+                if (serverDef != null) {
+                    npc.setBossAttackHandler(serverDef.bossAttackHandler)
+                    npc.setBossAttackSpeedOverride(serverDef.attackSpeed)
+                }
                 loaded++
             } catch (e: RuntimeException) {
                 failed++
@@ -307,6 +312,7 @@ class NpcManager {
         npc.visible = false
         npc.removeFromChunk()
         npcMap.remove(npc.slot)
+        NpcTimerScheduler.removeNpc(npc)
     }
 
     fun getNpc(index: Int): Npc = npcMap[index]

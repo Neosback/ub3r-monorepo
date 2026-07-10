@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.shop.ShopId
 
 internal object ShopKeeper : NpcFamily by npcFamily("Shop keeper", 2813, block = {
-    cache(2813) {
+    definition(2813) {
         name = "Shop keeper"
     }
 

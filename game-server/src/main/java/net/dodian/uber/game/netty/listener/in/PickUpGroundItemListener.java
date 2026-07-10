@@ -1,4 +1,5 @@
 package net.dodian.uber.game.netty.listener.in;
+import net.dodian.uber.game.api.content.ContentInteraction;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -24,7 +25,7 @@ public class PickUpGroundItemListener implements PacketListener {
         int itemId = buf.readUnsignedShort();
         int itemX  = buf.readUnsignedShortLE();
 
-        if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.PICKUP_GROUND_ITEM, 600L) ||
+        if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.PICKUP_GROUND_ITEM, 600L) ||
                 (client.attemptGround != null
                         && client.attemptGround.id == itemId
                         && client.attemptGround.x == itemX

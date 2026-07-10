@@ -30,6 +30,8 @@ data class NpcServerPatch(
     val aggressive: Boolean? = null,
     val alwaysAggressive: Boolean? = null,
     val fightsBack: Boolean? = null,
+    val attackSpeed: Int? = null,
+    val bossAttackHandler: NpcAttackHandler? = null,
 ) {
     fun overlay(child: NpcServerPatch): NpcServerPatch =
         NpcServerPatch(
@@ -48,6 +50,8 @@ data class NpcServerPatch(
             aggressive = child.aggressive ?: aggressive,
             alwaysAggressive = child.alwaysAggressive ?: alwaysAggressive,
             fightsBack = child.fightsBack ?: fightsBack,
+            attackSpeed = child.attackSpeed ?: attackSpeed,
+            bossAttackHandler = child.bossAttackHandler ?: bossAttackHandler,
         )
 }
 
@@ -68,6 +72,8 @@ data class NpcServerDefinition(
     val aggressive: Boolean = false,
     val alwaysAggressive: Boolean = false,
     val fightsBack: Boolean = true,
+    val attackSpeed: Int? = null,
+    val bossAttackHandler: NpcAttackHandler? = null,
 ) {
     fun asPatch(): NpcServerPatch =
         NpcServerPatch(
@@ -86,6 +92,8 @@ data class NpcServerDefinition(
             aggressive = aggressive,
             alwaysAggressive = alwaysAggressive,
             fightsBack = fightsBack,
+            attackSpeed = attackSpeed,
+            bossAttackHandler = bossAttackHandler,
         )
 }
 
@@ -125,6 +133,8 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
     var aggressive: Boolean? = null
     var alwaysAggressive: Boolean? = null
     var fightsBack: Boolean? = null
+    var attackSpeed: Int? = null
+    var bossAttackHandler: NpcAttackHandler? = null
 
     fun stats(
         attack: Int? = null,
@@ -187,6 +197,8 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
             aggressive = aggressive ?: false,
             alwaysAggressive = alwaysAggressive ?: false,
             fightsBack = fightsBack ?: true,
+            attackSpeed = attackSpeed,
+            bossAttackHandler = bossAttackHandler,
         )
 
     internal fun buildPatch(): NpcServerPatch =
@@ -206,11 +218,23 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
             aggressive = aggressive,
             alwaysAggressive = alwaysAggressive,
             fightsBack = fightsBack,
+            attackSpeed = attackSpeed,
+            bossAttackHandler = bossAttackHandler,
         )
 }
 
 @Deprecated("Use NpcServerDefinitionBuilder. Runtime values are server-owned NPC values.")
 typealias NpcRuntimeDefinitionBuilder = NpcServerDefinitionBuilder
+
+class NpcCombatBuilder {
+    var handler: NpcAttackHandler? = null
+
+    fun handler(handler: NpcAttackHandler) {
+        this.handler = handler
+    }
+
+    internal fun build(): NpcAttackHandler? = handler
+}
 
 private fun cleanText(value: String?): String? =
     value

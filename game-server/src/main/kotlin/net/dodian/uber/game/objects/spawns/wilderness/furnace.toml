@@ -1,0 +1,38 @@
+schemaVersion = 1
+region = "wilderness"
+
+[[object]]
+id = 2097
+name = "furnace"
+x = 2425
+y = 10428
+z = 0
+type = 10
+rotation = "NORTH"
+
+[[object]]
+id = 16469
+name = "furnace"
+x = 2425
+y = 10430
+z = 0
+type = 10
+rotation = "EAST"
+
+[[object]]
+id = 884
+name = "furnace"
+x = 2426
+y = 10423
+z = 0
+type = 10
+rotation = "WEST"
+
+[[object]]
+id = 16469
+name = "furnace"
+x = 2470
+y = 10440
+z = 0
+type = 10
+rotation = "WEST"

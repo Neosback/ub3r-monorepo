@@ -1,4 +1,5 @@
 package net.dodian.uber.game.engine.systems.net
+import net.dodian.uber.game.api.content.ContentActions
 
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService
 import net.dodian.uber.game.model.entity.player.Client
@@ -41,7 +42,7 @@ object PacketPickupService {
             return
         }
 
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             client,
             PlayerActionCancelReason.GROUND_ITEM_INTERACTION,
             false, false, false, true

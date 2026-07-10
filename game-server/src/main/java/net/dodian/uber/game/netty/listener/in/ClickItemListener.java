@@ -1,4 +1,5 @@
 package net.dodian.uber.game.netty.listener.in;
+import net.dodian.uber.game.api.content.ContentInteraction;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher;
@@ -60,7 +61,7 @@ public class ClickItemListener implements PacketListener {
         boolean isHerb = (itemId >= 199 && itemId <= 219) || itemId == 3049 || itemId == 3051;
         if (isHerb) {
             processItemClick(client, itemId, itemSlot, interfaceId);
-        } else if (PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.CLICK_ITEM, 100L)) {
+        } else if (ContentInteraction.tryAcquireMs(client, ContentInteraction.CLICK_ITEM, 100L)) {
             processItemClick(client, itemId, itemSlot, interfaceId);
         }
     }

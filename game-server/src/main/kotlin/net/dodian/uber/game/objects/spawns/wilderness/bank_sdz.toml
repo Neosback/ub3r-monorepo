@@ -1,0 +1,20 @@
+schemaVersion = 1
+region = "wilderness"
+
+[[object]]
+id = 10583
+name = "Bank (sdz)"
+x = 2408
+y = 10410
+z = 0
+type = 10
+rotation = "EAST"
+
+[[object]]
+id = 10583
+name = "Bank (SDZ)"
+x = 2417
+y = 10436
+z = 0
+type = 10
+rotation = "EAST"

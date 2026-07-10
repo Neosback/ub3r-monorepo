@@ -1,4 +1,5 @@
 package net.dodian.uber.game.engine.systems.interaction
+import net.dodian.uber.game.api.content.ContentActions
 
 import net.dodian.uber.game.Server
 import net.dodian.cache.objects.GameObjectData
@@ -150,9 +151,6 @@ object InteractionProcessor {
                 return InteractionExecutionResult.WAITING
             }
         }
-        if (npc.position.withinDistance(player.position, 0)) {
-            return InteractionExecutionResult.WAITING
-        }
         if (intent.option != NPC_ATTACK_OPTION && !legendsGuardFrontLane) {
             settleNpcInteractionMovement(player)
         }
@@ -298,7 +296,7 @@ object InteractionProcessor {
             val playerPos = player.position.copy()
             val xDiff = kotlin.math.abs(playerPos.x - targetPosition.x)
             val yDiff = kotlin.math.abs(playerPos.y - targetPosition.y)
-            PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.OBJECT_INTERACTION, false, false, false, true)
+            ContentActions.cancel(player, PlayerActionCancelReason.OBJECT_INTERACTION, false, false, false, true)
             player.setFocus(targetPosition.x, targetPosition.y)
             if (xDiff > 5 || yDiff > 5) {
                 clear(player)
@@ -858,14 +856,14 @@ object InteractionProcessor {
     }
 
     private fun handleNpcClick1(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
-        PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
+        ContentActions.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
         player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)
         return NpcContentDispatcher.tryHandleClickTimed(player, 1, npc)
     }
 
     private fun handleNpcClick2(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
-        PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
+        ContentActions.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
         player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)
         return NpcContentDispatcher.tryHandleClickTimed(player, 2, npc)
@@ -875,7 +873,7 @@ object InteractionProcessor {
         if (player.isBusy) {
             return DispatchTiming(false, 0L, 0L, null)
         }
-        PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
+        ContentActions.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
         player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)
         return NpcContentDispatcher.tryHandleClickTimed(player, 3, npc)

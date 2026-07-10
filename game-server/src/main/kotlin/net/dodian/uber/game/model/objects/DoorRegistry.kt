@@ -1,11 +1,10 @@
 package net.dodian.uber.game.model.objects
 
 import net.dodian.uber.game.model.objects.DoorDefinitionLoader
-import net.dodian.uber.game.model.objects.DoorDefinitionRepository
 import org.slf4j.LoggerFactory
 
 class DoorRegistry @JvmOverloads constructor(
-    private val loader: DoorDefinitionLoader = DoorDefinitionRepository,
+    private val loader: DoorDefinitionLoader = TomlDoorLoader,
 ) {
     init {
         loadDefinitions()

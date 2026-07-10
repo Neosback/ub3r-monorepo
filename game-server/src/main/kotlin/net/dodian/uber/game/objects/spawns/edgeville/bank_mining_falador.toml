@@ -1,0 +1,11 @@
+schemaVersion = 1
+region = "edgeville"
+
+[[object]]
+id = 29241
+name = "Bank (mining falador)"
+x = 3083
+y = 3499
+z = 0
+type = 10
+rotation = "EAST"
