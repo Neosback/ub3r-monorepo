@@ -18,6 +18,7 @@ import net.dodian.uber.game.engine.systems.pathing.Heuristic
 import net.dodian.uber.game.engine.systems.pathing.Node
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.npc.LegendsGuard
 import org.slf4j.LoggerFactory
 
 object LegendsGuildGateService {
@@ -107,6 +108,8 @@ object LegendsGuildGateService {
         )
         openGateForNearbyPlayers()
 
+        LegendsGuard.triggerGateChat(client)
+
         val traversal =
             ActiveTraversal(
                 playerKey = key,
@@ -153,6 +156,7 @@ object LegendsGuildGateService {
             durationMs = PASSAGE_DURATION_MS,
         )
         openGateForNearbyPlayers()
+        LegendsGuard.triggerGateChat(client)
         client.sendMessage("The guard opens the gate for you.")
         return true
     }

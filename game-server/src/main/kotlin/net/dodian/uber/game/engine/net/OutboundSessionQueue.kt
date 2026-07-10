@@ -82,7 +82,7 @@ class OutboundSessionQueue {
             messages++
         }
         if (!queuedMessages.isEmpty() && channel.isWritable) {
-            logger.warn(
+            logger.debug(
                 "Outbound queue drain partial: drained={} bytes={} remaining={} remainingBytes={}",
                 messages,
                 bytes,

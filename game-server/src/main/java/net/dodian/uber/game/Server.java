@@ -129,6 +129,7 @@ public class Server {
 
         /* Processor for various stuff */
         gameLoopService.start();
+        net.dodian.uber.game.npc.LegendsGuardRankingCache.start();
         Login.banUid();
         logger.info("Server is now running on world " + getGameWorldId() + "!");
     }

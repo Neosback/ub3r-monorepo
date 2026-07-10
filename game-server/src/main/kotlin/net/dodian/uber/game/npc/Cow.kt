@@ -7,7 +7,8 @@ import net.dodian.uber.game.engine.systems.event.ServerEvent
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
-internal object Cow : NpcFamily by npcFamily("Cow", 5842, block = {
+internal object Cow : NpcFamily by npcFamily("npc.cow", block = {
+
     definition {
         name = "Cow"
         examine = "Meow meow I am a cow!"
@@ -28,7 +29,7 @@ internal object Cow : NpcFamily by npcFamily("Cow", 5842, block = {
     }
 
     options {
-        fourth("talk-to", handler = ::handleCowEventReward)
+        first("Talk-to", handler = ::handleCowEventReward)
         attack(handler = { _, _ -> true })
     }
 

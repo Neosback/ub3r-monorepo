@@ -58,7 +58,7 @@ object ObjectClipService {
                 type = 0,
                 direction = DoorRegistry.doorFace[index],
                 obj = GameObjectData.forId(objectId),
-                forceSolid = true,
+                forceSolid = DoorRegistry.doorState[index] == 0,
             )
             appliedDoors++
         }

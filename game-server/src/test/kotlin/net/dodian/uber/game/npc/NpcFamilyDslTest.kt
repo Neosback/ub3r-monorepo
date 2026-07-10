@@ -144,7 +144,7 @@ class NpcFamilyDslTest {
     fun `cow event reward binds to cache visible attack option`() {
         assertEquals("attack", Cow.definition.optionLabels[5])
         assertTrue(Cow.definition.onAttack !== NO_CLICK_HANDLER)
-        assertTrue(Cow.definition.onFirstClick === NO_CLICK_HANDLER)
+        assertTrue(Cow.definition.onFirstClick !== NO_CLICK_HANDLER)
     }
 
     @Test

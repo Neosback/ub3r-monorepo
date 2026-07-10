@@ -83,7 +83,7 @@ object DoorToggleObjectContent : ObjectContent {
                 type = 0,
                 direction = newFace,
                 obj = GameObjectData.forId(DoorRegistry.doorId[index]),
-                forceSolid = true,
+                forceSolid = DoorRegistry.doorState[index] == 0,
             )
             for (player in PlayerRegistry.players) {
                 val other = player as? Client ?: continue
