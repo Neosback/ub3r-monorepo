@@ -68,8 +68,11 @@ class RootNpcDeltaIndex {
 
     fun localActivityStamp(viewer: Client): Long {
         var stamp = 0L
-        viewer.localNpcs.forEach { npc ->
-            val state = subjectStates[npc] ?: return@forEach
+        val localNpcs = viewer.localNpcs
+        val size = viewer.localNpcSize
+        for (i in 0 until size) {
+            val npc = localNpcs[i] ?: continue
+            val state = subjectStates[npc] ?: continue
             stamp = maxOf(stamp, state.movementRevision, state.blockRevision)
         }
         return stamp

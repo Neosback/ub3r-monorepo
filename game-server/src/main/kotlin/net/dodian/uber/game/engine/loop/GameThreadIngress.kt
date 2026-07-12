@@ -11,7 +11,7 @@ object GameThreadIngress {
     private val deferredQueue = ConcurrentLinkedQueue<QueuedTask>()
 
     @JvmStatic
-    fun submitCritical(label: String, task: Runnable) {
+    fun submitCritical(label: String, task: Runnable): Boolean {
         if (criticalQueue.size >= MAX_CRITICAL_QUEUE) {
             if (rejectedCriticalCount.incrementAndGet() <= 10) {
                 logger.warn(
@@ -20,18 +20,19 @@ object GameThreadIngress {
                     label,
                 )
             }
-            return
+            return false
         }
         criticalQueue.add(QueuedTask(label, System.nanoTime(), task))
+        return true
     }
 
     @JvmStatic
-    fun submitDeferred(task: Runnable) {
-        submitDeferred("anonymous", task)
+    fun submitDeferred(task: Runnable): Boolean {
+        return submitDeferred("anonymous", task)
     }
 
     @JvmStatic
-    fun submitDeferred(label: String, task: Runnable) {
+    fun submitDeferred(label: String, task: Runnable): Boolean {
         if (deferredQueue.size >= MAX_DEFERRED_QUEUE) {
             if (rejectedDeferredCount.incrementAndGet() <= 10) {
                 logger.warn(
@@ -40,9 +41,10 @@ object GameThreadIngress {
                     label,
                 )
             }
-            return
+            return false
         }
         deferredQueue.add(QueuedTask(label, System.nanoTime(), task))
+        return true
     }
 
     @JvmStatic

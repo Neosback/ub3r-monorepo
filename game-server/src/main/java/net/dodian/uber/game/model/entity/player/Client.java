@@ -123,7 +123,6 @@ public class Client extends Player implements Runnable {
     private final String[] lastMenuText = new String[6];
     private boolean menuCacheInitialized = false;
     private long lastEffectsPeriodicDirtyAtMs = 0L;
-    private boolean outboundDirty = false;
     private int lastPlayerUpdateCapacity = 8192;
     private int lastNpcUpdateCapacity = 16384;
     /**
@@ -893,7 +892,6 @@ public class Client extends Player implements Runnable {
 
     private void releaseQueuedOutboundPackets() {
         outboundSessionQueue.releaseAll();
-        outboundDirty = false;
     }
 
     public int getPendingInboundPacketCount() {
@@ -968,7 +966,6 @@ public class Client extends Player implements Runnable {
         }
         if (shouldQueueOutbound()) {
             outboundSessionQueue.enqueue(message);
-            outboundDirty = true;
             return;
         }
         channel.writeAndFlush(message);
@@ -978,16 +975,14 @@ public class Client extends Player implements Runnable {
         if (disconnected || channel == null || !channel.isActive()) {
             return OutboundFlushStats.empty();
         }
-        if (!outboundDirty) {
+        if (outboundSessionQueue.isEmpty()) {
             return OutboundFlushStats.empty();
         }
         OutboundSessionQueue.DrainResult drain = outboundSessionQueue.drainTo(channel);
         if (drain.messageCount() <= 0) {
-            outboundDirty = !outboundSessionQueue.isEmpty();
             return OutboundFlushStats.empty();
         }
         channel.flush();
-        outboundDirty = !outboundSessionQueue.isEmpty();
         return new OutboundFlushStats(drain.messageCount(), drain.byteCount());
     }
 
@@ -1712,7 +1707,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage(blockMessage));
             return;
         }
-        if (!Server.shopping) {
+        if (!net.dodian.uber.game.engine.config.FeatureStateService.shopping.get()) {
             send(new SendMessage("Shopping have been disabled!"));
             return;
         }
@@ -1873,7 +1868,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("You are currently busy!"));
             return;
         }
-        if (!Server.dropping) {
+        if (!net.dodian.uber.game.engine.config.FeatureStateService.dropping.get()) {
             send(new SendMessage("Dropping has been disabled.  Please try again later"));
             return;
         }
@@ -2245,7 +2240,7 @@ public class Client extends Player implements Runnable {
             if (p == null || !p.isActive)
                 continue;
             Client temp = (Client) p;
-            temp.send(new SendMessage(message + ":yell:"));
+            temp.send(new SendMessage(message));
         }
     }
 
@@ -2254,7 +2249,7 @@ public class Client extends Player implements Runnable {
             if (p == null || !p.isActive || !(p.inWildy() || p.inEdgeville()))
                 continue;
             Client temp = (Client) p;
-            temp.send(new SendMessage(message + ":yell:"));
+            temp.send(new SendMessage(message));
         }
     }
 
@@ -2263,7 +2258,7 @@ public class Client extends Player implements Runnable {
             if (p == null || !p.isActive || !p.getPositionName().contains(area))
                 continue;
             Client temp = (Client) p;
-            temp.send(new SendMessage("<col=FFFF00>[Area]<col=000000> " + message + ":yell:"));
+            temp.send(new SendMessage("<col=FFFF00>[Area]<col=000000> " + message));
         }
     }
 
@@ -3262,7 +3257,7 @@ public class Client extends Player implements Runnable {
         itemID = getUnnotedItem(original) > 0 ? getUnnotedItem(original) : itemID;
         int price = ShopRulesService.sellPrice(itemID);
         /* Functions */
-        if (!Server.shopping || tradeLocked) {
+        if (!net.dodian.uber.game.engine.config.FeatureStateService.shopping.get() || tradeLocked) {
             send(new SendMessage(tradeLocked ? "You are trade locked!" : "Currently selling stuff to the store has been disabled!"));
             return;
         }
@@ -4127,7 +4122,7 @@ public class Client extends Player implements Runnable {
         Client other = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[id];
         if (other == null) return;
         setFocus(other.getPosition().getX(), other.getPosition().getY());
-        if (!Server.trading) {
+        if (!net.dodian.uber.game.engine.config.FeatureStateService.trading.get()) {
             send(new SendMessage("Trading has been temporarily disabled"));
             return;
         }
@@ -4352,7 +4347,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("You cant duel in the wilderness!"));
             return;
         }
-        if (!Server.dueling) {
+        if (!net.dodian.uber.game.engine.config.FeatureStateService.dueling.get()) {
             send(new SendMessage("Dueling has been temporarily disabled"));
             return;
         }

@@ -143,6 +143,11 @@ class ClientTitleToolbar extends JPanel
 		}
 	}
 
+	Component getComponent(final NavigationButton button)
+	{
+		return componentMap.get(button);
+	}
+
 	private void update()
 	{
 		removeAll();

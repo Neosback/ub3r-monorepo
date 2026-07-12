@@ -3,6 +3,7 @@ package net.dodian.uber.game.command.admin
 import net.dodian.uber.game.engine.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.persistence.account.Login
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
@@ -264,33 +265,33 @@ private fun handleWorldControl(context: CommandContext): Boolean {
     val toggleCommand = if (context.alias.startsWith("toggle")) context.alias.replace("_", "") else context.alias
     when {
         toggleCommand.equals("toggleyell", true) -> {
-            Server.chatOn = !Server.chatOn
-            client.yell(if (Server.chatOn) "[SERVER]: Yell has been enabled!" else "[SERVER]: Yell has been disabled!")
+            FeatureStateService.publicChatYell.set(!FeatureStateService.publicChatYell.get())
+            client.yell(if (FeatureStateService.publicChatYell.get()) "[SERVER]: Yell has been enabled!" else "[SERVER]: Yell has been disabled!")
         }
         toggleCommand.equals("togglepvp", true) -> {
-            Server.pking = !Server.pking
-            client.yell(if (Server.pking) "[SERVER]: Player Killing has been enabled!" else "[SERVER]: Player Killing  has been disabled!")
+            FeatureStateService.pvp.set(!FeatureStateService.pvp.get())
+            client.yell(if (FeatureStateService.pvp.get()) "[SERVER]: Player Killing has been enabled!" else "[SERVER]: Player Killing  has been disabled!")
         }
         toggleCommand.equals("toggletrade", true) -> {
-            Server.trading = !Server.trading
-            client.yell(if (Server.trading) "[SERVER]: Trading has been enabled!" else "[SERVER]: Trading has been disabled!")
+            FeatureStateService.trading.set(!FeatureStateService.trading.get())
+            client.yell(if (FeatureStateService.trading.get()) "[SERVER]: Trading has been enabled!" else "[SERVER]: Trading has been disabled!")
         }
         toggleCommand.equals("toggleduel", true) -> {
-            Server.dueling = !Server.dueling
-            client.yell(if (Server.dueling) "[SERVER]: Dueling has been enabled!" else "[SERVER]: Dueling has been disabled!")
+            FeatureStateService.dueling.set(!FeatureStateService.dueling.get())
+            client.yell(if (FeatureStateService.dueling.get()) "[SERVER]: Dueling has been enabled!" else "[SERVER]: Dueling has been disabled!")
         }
         toggleCommand.equals("toggledrop", true) -> {
-            Server.dropping = !Server.dropping
-            client.yell(if (Server.dropping) "[SERVER]: Dropping items has been enabled!" else "[SERVER]: Dropping items has been disabled!")
+            FeatureStateService.dropping.set(!FeatureStateService.dropping.get())
+            client.yell(if (FeatureStateService.dropping.get()) "[SERVER]: Dropping items has been enabled!" else "[SERVER]: Dropping items has been disabled!")
         }
         toggleCommand.equals("toggleshop", true) -> {
-            Server.shopping = !Server.shopping
-            client.yell(if (Server.shopping) "[SERVER]: Shops has been enabled!" else "[SERVER]: Shops has been disabled!")
+            FeatureStateService.shopping.set(!FeatureStateService.shopping.get())
+            client.yell(if (FeatureStateService.shopping.get()) "[SERVER]: Shops has been enabled!" else "[SERVER]: Shops has been disabled!")
         }
         toggleCommand.equals("togglebank", true) -> {
-            Server.banking = !Server.banking
-            client.yell(if (Server.banking) "[SERVER]: The Bank has been enabled!" else "[SERVER]: The Bank has been disabled!")
-            if (!Server.banking) {
+            FeatureStateService.banking.set(!FeatureStateService.banking.get())
+            client.yell(if (FeatureStateService.banking.get()) "[SERVER]: The Bank has been enabled!" else "[SERVER]: The Bank has been disabled!")
+            if (!FeatureStateService.banking.get()) {
                 for (player in PlayerRegistry.players) {
                     val other = player as? Client ?: continue
                     if (other.IsBanking) {

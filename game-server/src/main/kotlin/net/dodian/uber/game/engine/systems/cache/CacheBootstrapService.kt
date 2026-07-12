@@ -94,7 +94,7 @@ class CacheBootstrapService(
         var blockingObjects = 0
         var walkableObjects = 0
         val definitionCache = HashMap<Int, GameObjectData>(1024)
-        val regionObjects = HashMap<Int, MutableList<CacheCollisionAuditObject>>(regions.size)
+        val regionObjects = HashMap<Int, LongArray>(regions.size)
 
         for (region in regions) {
             val decoded = decoder.decodeRegion(region)
@@ -105,8 +105,9 @@ class CacheBootstrapService(
             }
 
             if (decoded.objects.isNotEmpty()) {
-                val auditObjects = regionObjects.getOrPut(region.regionId) { ArrayList(decoded.objects.size) }
-                decoded.objects.mapTo(auditObjects) { collisionBuildService.auditObjectResolved(it, planeResolver) }
+                regionObjects[region.regionId] = LongArray(decoded.objects.size) { index ->
+                    CacheCollisionAuditStore.pack(collisionBuildService.auditObjectResolved(decoded.objects[index], planeResolver))
+                }
             }
 
             for (obj in decoded.objects) {
@@ -123,8 +124,21 @@ class CacheBootstrapService(
 
         CacheCollisionAuditStore.publish(
             regions = regions,
-            regionObjects = regionObjects.mapValues { it.value.toList() },
+            regionObjects = regionObjects,
         )
+
+            logger.info(
+                "Cache collision audit packed: objects={}, bytes={}",
+                CacheCollisionAuditStore.packedObjectCount(),
+                CacheCollisionAuditStore.packedBytes(),
+            )
+            val matrix = CollisionManager.global().matrixMetrics()
+            logger.info(
+                "Collision matrix sparse zones: active={} payloadBytes={} estimatedDirectoryBytes={}",
+                matrix.activeZones,
+                matrix.payloadBytes,
+                matrix.estimatedDirectoryBytes,
+            )
 
         return MapDecodeSummary(
             regionCount = regions.size,

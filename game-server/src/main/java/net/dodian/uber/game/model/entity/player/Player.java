@@ -132,7 +132,8 @@ public abstract class Player extends Entity {
     public Player[] playerList = new Player[maxPlayerListSize]; // To remove -Dashboard
     public int playerListSize = 0;
     public PlayerSlotMembershipSet playersUpdating = new PlayerSlotMembershipSet(Constants.maxPlayers + 1);
-    private final Set<Npc> localNpcs = new LinkedHashSet<>(254);
+    private final Npc[] localNpcs = new Npc[255];
+    private int localNpcSize = 0;
     private long localPlayerMembershipRevision = 0L;
     private long localNpcMembershipRevision = 0L;
     private Chunk currentChunk;
@@ -1481,6 +1482,10 @@ public abstract class Player extends Entity {
         combatState.dealDamage(amt, type, attacker, dmg);
     }
 
+    public void dealDamageAfterProjectileLaunch(int amt, Entity.hitType type, Entity attacker, Entity.damageType dmg) {
+        combatState.dealDamageAfterProjectileLaunch(amt, type, attacker, dmg);
+    }
+
     public void sendAnimation(int id) {
         this.setAnimationId(id);
         getUpdateFlags().setRequired(UpdateFlag.ANIM, true);
@@ -1588,8 +1593,48 @@ public abstract class Player extends Entity {
      *
      * @return the local npcs.
      */
-    public Set<Npc> getLocalNpcs() {
+    public Npc[] getLocalNpcs() {
         return localNpcs;
+    }
+
+    public int getLocalNpcSize() {
+        return localNpcSize;
+    }
+
+    public void setLocalNpcSize(int size) {
+        this.localNpcSize = size;
+    }
+
+    public boolean addLocalNpc(Npc npc) {
+        for (int i = 0; i < localNpcSize; i++) {
+            if (localNpcs[i] == npc) {
+                return false;
+            }
+        }
+        if (localNpcSize >= localNpcs.length) {
+            return false;
+        }
+        localNpcs[localNpcSize++] = npc;
+        return true;
+    }
+
+    public boolean removeLocalNpc(Npc npc) {
+        for (int i = 0; i < localNpcSize; i++) {
+            if (localNpcs[i] == npc) {
+                int numMoved = localNpcSize - i - 1;
+                if (numMoved > 0) {
+                    System.arraycopy(localNpcs, i + 1, localNpcs, i, numMoved);
+                }
+                localNpcs[--localNpcSize] = null;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void clearLocalNpcs() {
+        java.util.Arrays.fill(localNpcs, 0, localNpcSize, null);
+        localNpcSize = 0;
     }
 
     public long getLocalPlayerMembershipRevision() {

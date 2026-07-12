@@ -218,7 +218,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
         ViewportSnapshot snapshot = SynchronizationContext.getViewportSnapshot(player);
         if (snapshot != null) {
-            java.util.Collection<Player> candidates = snapshot.getPlayers();
+            java.util.List<Player> candidates = snapshot.getPlayers();
             if (candidates.isEmpty()) {
                 return;
             }
@@ -267,10 +267,12 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     private void addLocalPlayersFromCollection(Player player,
                                                ByteMessage stream,
                                                ByteMessage updateBlock,
-                                               java.util.Collection<Player> candidates,
+                                               java.util.List<Player> candidates,
                                                int remainingAdds) {
         int playersAdded = 0;
-        for (Player other : candidates) {
+        int size = candidates.size();
+        for (int i = 0; i < size; i++) {
+            Player other = candidates.get(i);
             if (!shouldAddLocalPlayerCandidate(player, other)) {
                 continue;
             }
@@ -298,7 +300,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         Player[] prioritized = new Player[remainingAdds];
         int[] prioritizedDistances = new int[remainingAdds];
         int[] prioritizedCount = {0};
-
         Server.chunkManager.forEachUpdatePlayerCandidate(player, 16, other -> {
             if (!shouldAddLocalPlayerCandidate(player, other)) {
                 return;
@@ -324,12 +325,14 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     private void addPrioritizedLocalPlayersFromCollection(Player player,
                                                           ByteMessage stream,
                                                           ByteMessage updateBlock,
-                                                          java.util.Collection<Player> candidates,
+                                                          java.util.List<Player> candidates,
                                                           int remainingAdds) {
         Player[] prioritized = new Player[remainingAdds];
         int[] prioritizedDistances = new int[remainingAdds];
         int[] prioritizedCount = {0};
-        for (Player other : candidates) {
+        int size = candidates.size();
+        for (int i = 0; i < size; i++) {
+            Player other = candidates.get(i);
             if (!shouldAddLocalPlayerCandidate(player, other)) {
                 continue;
             }

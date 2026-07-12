@@ -5,6 +5,7 @@ import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditObject
 import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditStore
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.objects.DoorRegistry
+import net.dodian.uber.game.model.objects.TomlRemovedObjectLoader
 import net.dodian.uber.game.model.objects.WorldObject
 import net.dodian.uber.game.engine.systems.cache.CollisionBuildService
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
@@ -44,6 +45,10 @@ object ObjectClipService {
             appliedWorldObjects++
         }
 
+        // Clear cached-object collision at TOML-removed positions before
+        // door application, so stale cache data never feeds into door collision.
+        applyTomlRemovalsBeforeDoors()
+
         var appliedDoors = 0
         for (index in DoorRegistry.doorId.indices) {
             val objectId = DoorRegistry.doorId[index]
@@ -52,13 +57,21 @@ object ObjectClipService {
             if (objectId <= 0 || x <= 0 || y <= 0) {
                 continue
             }
+            val position = Position(x, y, DoorRegistry.doorHeight[index])
+            removeCachedObjectsAt(position, type = 0)
+            removeCachedObjectsAt(position, type = 9)
+
+            val isOpen = DoorRegistry.doorState[index] == 1
             applyDecodedObject(
-                position = Position(x, y, DoorRegistry.doorHeight[index]),
+                position = position,
                 objectId = objectId,
                 type = 0,
                 direction = DoorRegistry.doorFace[index],
                 obj = GameObjectData.forId(objectId),
-                forceSolid = DoorRegistry.doorState[index] == 0,
+                forceSolid = !isOpen,
+                solidOverride = if (isOpen) false else null,
+                blockWalkOverride = if (isOpen) 0 else null,
+                blockRangeOverride = if (isOpen) false else null,
             )
             appliedDoors++
         }
@@ -70,6 +83,19 @@ object ObjectClipService {
         )
 
         applyStaticOverrides(StaticObjectOverrides.all())
+    }
+
+    @JvmStatic
+    fun applyTomlRemovalsBeforeDoors() {
+        val removals = TomlRemovedObjectLoader.load()
+        for (entry in removals) {
+            val position = Position(entry.x, entry.y, entry.z)
+            removeDecodedObject(position)
+            removeCachedObjectsAt(position, entry.type)
+        }
+        if (removals.isNotEmpty()) {
+            logger.info("Applied TOML-based object removals before doors: count={}", removals.size)
+        }
     }
 
     @JvmStatic
@@ -85,12 +111,14 @@ object ObjectClipService {
     }
 
     @JvmStatic
-    fun applyDecodedObject(position: Position, objectId: Int, type: Int, direction: Int, obj: GameObjectData?, forceSolid: Boolean = false) {
+    fun applyDecodedObject(position: Position, objectId: Int, type: Int, direction: Int, obj: GameObjectData?, forceSolid: Boolean = false, solidOverride: Boolean? = null, blockWalkOverride: Int? = null, blockRangeOverride: Boolean? = null) {
         removeDecodedObject(position)
         if (obj == null) {
             return
         }
-        val effectiveSolid = forceSolid || obj.isSolid()
+        val effectiveSolid = solidOverride ?: (forceSolid || obj.isSolid())
+        val effectiveBlockWalk = blockWalkOverride ?: if (forceSolid) 2 else obj.blockWalk()
+        val effectiveBlockRange = blockRangeOverride ?: if (forceSolid) true else obj.blockRange()
         appliedClips[key(position)] = AppliedClip(position.copy(), objectId, type, direction, effectiveSolid)
         collisionBuildService.applyObject(
             id = objectId,
@@ -105,8 +133,8 @@ object ObjectClipService {
             walkable = if (forceSolid) false else obj.isWalkable(),
             hasActions = obj.hasActions(),
             objectName = obj.name,
-            blockWalk = if (forceSolid) 2 else obj.blockWalk(),
-            blockRange = if (forceSolid) true else obj.blockRange(),
+            blockWalk = effectiveBlockWalk,
+            blockRange = effectiveBlockRange,
             breakRouteFinding = obj.breakRouteFinding(),
             impenetrable = if (objectId in CollisionBuildService.BLOCK_RANGE_FALSE_IDS) false else obj.isImpenetrable(),
             decoration = obj.isDecoration(),
@@ -150,6 +178,13 @@ object ObjectClipService {
                 obj = GameObjectData.forId(override.replacementObjectId),
             )
         }
+    }
+
+    private fun removeCachedObjectsAt(position: Position, type: Int?) {
+        CacheCollisionAuditStore.objectsForTile(position.x, position.y)
+            .asSequence()
+            .filter { !it.skipped && it.x == position.x && it.y == position.y && it.plane == position.z && (type == null || it.type == type) }
+            .forEach { removeCachedObject(it) }
     }
 
     private fun removeCachedObjectsForStaticOverride(override: StaticObjectOverride) {

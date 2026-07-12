@@ -143,3 +143,48 @@ tasks {
         enabled = false
     }
 }
+
+val generateBuildConstants by tasks.registering {
+    val envFile = file("../game-server/.env")
+    inputs.file(envFile)
+
+    val outputDir = layout.buildDirectory.dir("generated/sources/buildconstants")
+    outputs.dir(outputDir)
+
+    doLast {
+        var clientVersion = 12
+        if (envFile.exists()) {
+            envFile.forEachLine { line ->
+                val trimmed = line.trim()
+                if (trimmed.startsWith("CLIENT_VERSION=")) {
+                    val parts = trimmed.split("=", limit = 2)
+                    if (parts.size == 2) {
+                        clientVersion = parts[1].trim().toIntOrNull() ?: 12
+                    }
+                }
+            }
+        }
+
+        val packageDir = file("${outputDir.get().asFile}/net/runelite/client")
+        packageDir.mkdirs()
+
+        val constantsFile = file("$packageDir/BuildConstants.java")
+        constantsFile.writeText("""
+            package net.runelite.client;
+
+            public final class BuildConstants {
+                public static final int CLIENT_VERSION = $clientVersion;
+            }
+        """.trimIndent())
+    }
+}
+
+sourceSets {
+    main {
+        java.srcDirs(layout.buildDirectory.dir("generated/sources/buildconstants"))
+    }
+}
+
+tasks.compileJava {
+    dependsOn(generateBuildConstants)
+}

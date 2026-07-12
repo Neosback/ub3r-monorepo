@@ -103,7 +103,7 @@ object ObjectSpawnRepository {
             val effectiveId = id
             val effectiveX = x
             val effectiveY = y
-            if (effectiveId == null || effectiveId <= 0) {
+            if (effectiveId == null || effectiveId < 0) {
                 throw IllegalArgumentException("$filePath:$lineNumber: object block missing valid 'id' field")
             }
             if (effectiveX == null) {
@@ -139,7 +139,7 @@ object ObjectSpawnRepository {
                     when (key) {
                         "id" -> {
                             val parsed = raw.toInt()
-                            if (parsed <= 0) throw IllegalArgumentException("$filePath:$lineNumber: id must be > 0, got $raw")
+                            if (parsed < 0) throw IllegalArgumentException("$filePath:$lineNumber: id must not be negative, got $raw")
                             id = parsed
                         }
                         "name" -> name = raw

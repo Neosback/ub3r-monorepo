@@ -154,9 +154,13 @@ object PlayerRegistry {
         val slot = client.slot
         if (slot in 1..Constants.maxPlayers) {
             synchronized(slotLock) {
-                usedSlots.clear(slot)
+                // A delayed disconnect task must never clear a newer occupant that reused
+                // this slot after the original channel died.
+                if (players[slot] === client) {
+                    players[slot] = null
+                    usedSlots.clear(slot)
+                }
             }
-            players[slot] = null
         }
 
         playersOnline.remove(client.longName, client)

@@ -2,6 +2,7 @@ package net.dodian.uber.game.engine.systems.interaction
 
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.objects.TomlRemovedObjectLoader
 
 /**
  * Authoritative overrides for static cache objects that this server intentionally
@@ -18,22 +19,50 @@ data class StaticObjectOverride(
 )
 
 object StaticObjectOverrides {
-    private val overrides =
-        objectOverrides {
+    private val overrides: List<StaticObjectOverride> by lazy {
+        val built = objectOverrides {
             plane(0) {
-                legacyDoorRemovals()
-                nightmareZoneCleanup()
-                taverleyDungeonEdits()
-                yanilleAndTrainingEdits()
-                homeAreaBoundaryEdits()
-                slayerAndDungeonEdits()
-                elementalObeliskEdits()
-                desertEdits()
+                taverleyDungeon()
+                yanilleAndCustom()
+                homeBoundary()
+                slayerDungeons()
+                obelisks()
+                desert()
             }
         }
+        built + tomlRemovedOverrides()
+    }
 
     @JvmStatic
     fun all(): List<StaticObjectOverride> = overrides
+
+    @JvmStatic
+    fun tomlRemovedOverrides(): List<StaticObjectOverride> =
+        TomlRemovedObjectLoader.load().flatMap { entry ->
+            val position = Position(entry.x, entry.y, entry.z)
+            val cachedObjects = net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditStore.objectsForTile(entry.x, entry.y)
+                .filter { !it.skipped && it.x == entry.x && it.y == entry.y && it.plane == entry.z && (entry.type == null || it.type == entry.type) }
+
+            if (cachedObjects.isNotEmpty()) {
+                cachedObjects.map { obj ->
+                    StaticObjectOverride(
+                        position = position,
+                        replacementObjectId = -1,
+                        replacementFace = -1,
+                        replacementType = obj.type,
+                    )
+                }
+            } else {
+                listOf(
+                    StaticObjectOverride(
+                        position = position,
+                        replacementObjectId = -1,
+                        replacementFace = -1,
+                        replacementType = entry.type ?: 0,
+                    )
+                )
+            }
+        }
 
     @JvmStatic
     fun replayTo(viewer: Client) {
@@ -52,22 +81,6 @@ object StaticObjectOverrides {
 private fun objectOverrides(build: StaticObjectOverrideRegistry.() -> Unit): List<StaticObjectOverride> =
     StaticObjectOverrideRegistry().apply(build).build()
 
-private fun removedDoor(x: Int, y: Int, z: Int, objectType: Int = 0): StaticObjectOverride =
-    StaticObjectOverride(
-        position = Position(x, y, z),
-        replacementObjectId = -1,
-        replacementFace = -1,
-        replacementType = objectType,
-    )
-
-private fun removedObject(x: Int, y: Int, z: Int, face: Int, objectType: Int): StaticObjectOverride =
-    StaticObjectOverride(
-        position = Position(x, y, z),
-        replacementObjectId = -1,
-        replacementFace = face,
-        replacementType = objectType,
-    )
-
 private fun replacementObject(
     x: Int,
     y: Int,
@@ -83,22 +96,6 @@ private fun replacementObject(
         replacementType = objectType,
     )
 
-private fun removedRectangle(
-    xRange: IntRange,
-    yRange: IntRange,
-    z: Int,
-    face: Int = 0,
-    objectType: Int,
-): List<StaticObjectOverride> {
-    val rows = ArrayList<StaticObjectOverride>(xRange.count() * yRange.count())
-    for (x in xRange) {
-        for (y in yRange) {
-            rows += removedObject(x, y, z, face, objectType)
-        }
-    }
-    return rows
-}
-
 private class StaticObjectOverrideRegistry {
     private val overrides = mutableListOf<StaticObjectOverride>()
 
@@ -113,37 +110,11 @@ private class PlaneStaticObjectOverrideBuilder(
     private val z: Int,
     private val sink: MutableList<StaticObjectOverride>,
 ) {
-    fun removeDoor(x: Int, y: Int, objectType: Int = 0) {
-        sink += removedDoor(x, y, z, objectType)
-    }
-
-    fun removeObject(x: Int, y: Int, face: Int = 0, objectType: Int) {
-        sink += removedObject(x, y, z, face, objectType)
-    }
-
     fun replaceObject(x: Int, y: Int, newObjectId: Int, face: Int, objectType: Int) {
         sink += replacementObject(x, y, z, newObjectId, face, objectType)
     }
 
-    fun removeRectangle(xRange: IntRange, yRange: IntRange, face: Int = 0, objectType: Int) {
-        sink += removedRectangle(xRange, yRange, z, face, objectType)
-    }
-
-    fun legacyDoorRemovals() {
-        // Legacy globally removed doors.
-        removeDoor(2669, 2713, objectType = 11)
-        removeDoor(2713, 3483)
-        removeDoor(2716, 3472)
-        removeDoor(2594, 3102)
-        removeDoor(2816, 3438)
-    }
-
-    fun nightmareZoneCleanup() {
-        // Nightmare Zone / boxed-off area cleanup.
-        removeRectangle(2600..2609, 3111..3119, objectType = 10)
-    }
-
-    fun taverleyDungeonEdits() {
+    fun taverleyDungeon() {
         // Taverley dungeon brick walls and shortcuts.
         replaceObject(2869, 9813, newObjectId = 2343, face = 0, objectType = 10)
         replaceObject(2870, 9813, newObjectId = 2343, face = 0, objectType = 10)
@@ -156,9 +127,8 @@ private class PlaneStaticObjectOverrideBuilder(
         replaceObject(2899, 9728, newObjectId = 882, face = 0, objectType = 10)
     }
 
-    fun yanilleAndTrainingEdits() {
-        // Yanille and nearby training/custom-world edits.
-        removeObject(2542, 3097, face = 0, objectType = 10)
+    fun yanilleAndCustom() {
+        // Yanille and custom-world object replacements.
         replaceObject(2572, 3105, newObjectId = 14890, face = 0, objectType = 10)
         replaceObject(2595, 3409, newObjectId = 133, face = -1, objectType = 10)
         replaceObject(2613, 3084, newObjectId = 3994, face = -3, objectType = 11)
@@ -169,12 +139,10 @@ private class PlaneStaticObjectOverrideBuilder(
         replaceObject(2733, 3374, newObjectId = 375, face = -1, objectType = 11)
         replaceObject(2942, 4688, newObjectId = 12260, face = 3, objectType = 10)
         replaceObject(2443, 5169, newObjectId = 2352, face = 0, objectType = 10)
-        // Magic Guild staircase room — open the wall box so stairs are reachable.
-        removeRectangle(2602..2604, 3078..3079, objectType = 0)
     }
 
-    fun homeAreaBoundaryEdits() {
-        // Custom area boundary to keep new players out of unfinished space.
+    fun homeBoundary() {
+        // Boundary wall to keep players out of unfinished space.
         replaceObject(2770, 3140, newObjectId = 2050, face = 0, objectType = 10)
         replaceObject(2771, 3140, newObjectId = 2050, face = 0, objectType = 10)
         replaceObject(2772, 3140, newObjectId = 2050, face = 0, objectType = 10)
@@ -183,8 +151,8 @@ private class PlaneStaticObjectOverrideBuilder(
         replaceObject(2772, 3143, newObjectId = 2050, face = 0, objectType = 10)
     }
 
-    fun slayerAndDungeonEdits() {
-        // Slayer / mining / dungeon object swaps.
+    fun slayerDungeons() {
+        // Slayer tower and dungeon object swaps.
         replaceObject(2492, 9916, newObjectId = 7491, face = 0, objectType = 10)
         replaceObject(2493, 9915, newObjectId = 7491, face = 0, objectType = 10)
         replaceObject(2661, 9815, newObjectId = 2391, face = 0, objectType = 0)
@@ -193,15 +161,15 @@ private class PlaneStaticObjectOverrideBuilder(
         replaceObject(2998, 3931, newObjectId = 6951, face = 0, objectType = 0)
     }
 
-    fun elementalObeliskEdits() {
-        // Altars and elemental obelisks.
+    fun obelisks() {
+        // Elemental obelisks and altars.
         replaceObject(2743, 3174, newObjectId = 2152, face = 0, objectType = 10)
         replaceObject(2863, 3427, newObjectId = 2151, face = 0, objectType = 10)
         replaceObject(3059, 3564, newObjectId = 2153, face = 0, objectType = 10)
         replaceObject(3531, 3536, newObjectId = 2150, face = 0, objectType = 10)
     }
 
-    fun desertEdits() {
+    fun desert() {
         // Desert region object corrections.
         replaceObject(3283, 2809, newObjectId = 20391, face = 4, objectType = 0)
         replaceObject(3284, 2809, newObjectId = 20391, face = 2, objectType = 0)

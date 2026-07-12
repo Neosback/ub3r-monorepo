@@ -1,14 +1,17 @@
 package net.dodian.uber.game.engine.net
 
 import io.netty.channel.Channel
-import java.util.ArrayDeque
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import net.dodian.uber.game.netty.codec.ByteMessage
+import org.jctools.queues.MpscArrayQueue
 import org.slf4j.LoggerFactory
 
 /**
  * Per-client queued outbound transport. Messages are appended in call order and
  * drained once per tick. Enforces per-session queue caps and respects Netty
  * writability to prevent unbounded memory growth from slow consumers.
+ * Uses JCTools lock-free MpscArrayQueue to eliminate lock overhead.
  */
 class OutboundSessionQueue {
     private val logger = LoggerFactory.getLogger(OutboundSessionQueue::class.java)
@@ -37,32 +40,32 @@ class OutboundSessionQueue {
         }
     }
 
-    private val queuedMessages = ArrayDeque<ByteMessage>()
-    private var queuedByteCount = 0L
+    private val queuedMessages = MpscArrayQueue<ByteMessage>(MAX_QUEUED_MESSAGES)
+    private val queueSize = AtomicInteger(0)
+    private val queuedByteCount = AtomicLong(0L)
 
-    @Synchronized
     fun enqueue(message: ByteMessage) {
-        if (queuedMessages.size >= MAX_QUEUED_MESSAGES) {
-            val dropped = queuedMessages.removeFirst()
-            queuedByteCount -= maxOf(0, dropped.content().writerIndex().toLong())
-            dropped.releaseAll()
+        val size = maxOf(0, message.content().writerIndex())
+        // MpscArrayQueue permits exactly one consumer. Producers must never poll to
+        // evict old messages: doing so races the game-thread drain. Drop and release
+        // the new message when saturated, preserving queue ownership and ByteBuf refs.
+        if (!queuedMessages.offer(message)) {
+            message.releaseAll()
             if (droppedCount.incrementAndGet() <= 10) {
                 logger.warn(
-                    "Outbound queue overflow: dropped oldest message remaining={} bytes={}",
-                    queuedMessages.size,
-                    queuedByteCount,
+                    "Outbound queue overflow: rejected newest message remaining={} bytes={}",
+                    queueSize.get(),
+                    queuedByteCount.get(),
                 )
             }
+            return
         }
-        val size = maxOf(0, message.content().writerIndex())
-        queuedMessages.addLast(message)
-        queuedByteCount += size
+        queueSize.incrementAndGet()
+        queuedByteCount.addAndGet(size.toLong())
     }
 
-    @Synchronized
     fun isEmpty(): Boolean = queuedMessages.isEmpty()
 
-    @Synchronized
     fun drainTo(channel: Channel): DrainResult {
         if (queuedMessages.isEmpty() || !channel.isWritable) {
             return DrainResult.empty()
@@ -71,13 +74,13 @@ class OutboundSessionQueue {
         var bytes = 0
         while (messages < MAX_DRAIN_PER_FLUSH
             && bytes < MAX_DRAIN_BYTES_PER_FLUSH
-            && !queuedMessages.isEmpty()
             && channel.isWritable
         ) {
-            val message = queuedMessages.removeFirst()
+            val message = queuedMessages.poll() ?: break
+            queueSize.decrementAndGet()
             val size = maxOf(0, message.content().writerIndex())
             bytes += size
-            queuedByteCount -= size
+            queuedByteCount.addAndGet(-size.toLong())
             channel.write(message)
             messages++
         }
@@ -86,25 +89,26 @@ class OutboundSessionQueue {
                 "Outbound queue drain partial: drained={} bytes={} remaining={} remainingBytes={}",
                 messages,
                 bytes,
-                queuedMessages.size,
-                queuedByteCount,
+                queueSize.get(),
+                queuedByteCount.get(),
             )
         }
         return DrainResult.of(messages, bytes)
     }
 
-    @Synchronized
     fun releaseAll() {
-        queuedByteCount = 0L
-        while (!queuedMessages.isEmpty()) {
-            queuedMessages.removeFirst().releaseAll()
+        queuedByteCount.set(0L)
+        queueSize.set(0)
+        while (true) {
+            val msg = queuedMessages.poll() ?: break
+            msg.releaseAll()
         }
     }
 
     companion object {
-        private val droppedCount = java.util.concurrent.atomic.AtomicLong()
+        private val droppedCount = AtomicLong()
 
-        private const val MAX_QUEUED_MESSAGES = 1000
+        private const val MAX_QUEUED_MESSAGES = 1024 // MpscArrayQueue requires power-of-two capacity
         private const val MAX_DRAIN_PER_FLUSH = 256
         private const val MAX_DRAIN_BYTES_PER_FLUSH = 65536
 

@@ -49,6 +49,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
     implementation("org.apache.logging.log4j:log4j-core:2.20.0")
     implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0")
+    implementation("org.jctools:jctools-core:4.0.5")
 
     implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
     implementation("net.dv8tion:JDA:5.0.0-beta.24")
@@ -56,6 +57,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.0")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.14.0")
     implementation("org.apache.commons:commons-compress:1.21")
 
     implementation("mysql:mysql-connector-java:8.0.29")
@@ -66,12 +68,18 @@ dependencies {
 
     implementation("io.netty:netty-all:4.1.108.Final")
     implementation("com.google.guava:guava:33.1.0-jre")
+    implementation("com.displee:rs-cache-library:8.1.0")
+    implementation("com.displee:disio:2.3")
+    implementation("it.unimi.dsi:fastutil:8.5.18")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.3")
     testImplementation("com.h2database:h2:2.2.224")
 
-    implementation("com.sparkjava:spark-kotlin:1.0.0-alpha")
+    val ktor_version = "2.3.12"
+    implementation("io.ktor:ktor-server-core:$ktor_version")
+    implementation("io.ktor:ktor-server-netty:$ktor_version")
+    implementation("io.ktor:ktor-server-cors:$ktor_version")
 
     implementation(kotlin("reflect"))
 }
@@ -115,6 +123,13 @@ tasks.register<JavaExec>("runSyncBenchmark") {
     description = "Run the synchronization pipeline benchmark harness"
     classpath = syncTestSourceSet.runtimeClasspath
     mainClass.set("net.dodian.uber.game.runtime.sync.SyncPipelineBenchmark")
+}
+
+tasks.register<JavaExec>("runCollisionMatrixBenchmark") {
+    group = "verification"
+    description = "Measures sparse collision-zone lookup throughput and retained payload size"
+    classpath = syncTestSourceSet.runtimeClasspath
+    mainClass.set("net.dodian.uber.game.runtime.sync.CollisionMatrixBenchmark")
 }
 
 tasks.register<JavaExec>("dumpObjectDefs") {

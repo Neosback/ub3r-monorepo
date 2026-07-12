@@ -1,6 +1,7 @@
 package net.dodian.uber.game.engine.systems.net
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
 import net.dodian.uber.game.skill.cooking.Cooking
 import net.dodian.uber.game.skill.herblore.Herblore
@@ -651,7 +652,7 @@ object PacketBankingService {
             }
 
             interfaceId == 3823 -> {
-                if (!Server.shopping || client.tradeLocked) {
+                if (!FeatureStateService.shopping.get() || client.tradeLocked) {
                     client.send(
                         SendMessage(
                             if (client.tradeLocked) {

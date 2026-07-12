@@ -1,8 +1,10 @@
 package net.dodian.uber.game.engine.config
 
 import io.github.cdimascio.dotenv.dotenv
+import java.math.BigInteger
 
 private val dotenv = dotenv()
+
 private fun requiredEnv(key: String): String =
     dotenv[key]
         ?: throw IllegalStateException("Missing required environment variable: $key")
@@ -11,19 +13,7 @@ private fun requiredNonBlankEnv(key: String): String =
     requiredEnv(key).takeIf { it.isNotBlank() }
         ?: throw IllegalStateException("Missing required environment variable: $key")
 
-// Server Settings
-val serverName = dotenv["SERVER_NAME"] ?: "Dodian"
-val serverPort = dotenv["SERVER_PORT"]?.toInt() ?: 43594
-val serverDebugMode = dotenv["SERVER_DEBUG_MODE"]?.toBoolean() ?: false
-val serverEnv = dotenv["SERVER_ENVIRONMENT"] ?: "prod"
-val nettyLeakDetection = dotenv["NETTY_LEAK_DETECTION"] ?: "disabled"
-val dodianLogLevel = dotenv["DODIAN_LOG_LEVEL"] ?: "info"
-val webApiEnabled = dotenv["WEB_API_ENABLED"]?.toBoolean() ?: true
-val webApiPort = dotenv["WEB_API_PORT"]?.toInt() ?: 8080
-val discordToken = dotenv["DISCORD_TOKEN"] ?: ""
-val discordChannelId = dotenv["DISCORD_CHANNEL_ID"] ?: ""
-
-// Database Settings
+// Secrets/Credentials in .env
 val databaseHost = requiredNonBlankEnv("DATABASE_HOST")
 val databasePort = dotenv["DATABASE_PORT"]?.toInt() ?: 3306
 val databaseName = requiredNonBlankEnv("DATABASE_NAME")
@@ -32,21 +22,54 @@ val databaseUsername = requiredNonBlankEnv("DATABASE_USERNAME")
 val databasePassword = dotenv["DATABASE_PASSWORD"] ?: ""
 val databaseInitialize = dotenv["DATABASE_INITIALIZE"]?.toBoolean() ?: false
 
-// Game Settings - Various
-val gameWorldId = dotenv["GAME_WORLD_ID"]?.toInt() ?: 1
-val gameConnectionsPerIp = dotenv["GAME_CONNECTIONS_PER_IP"]?.toInt() ?: 2
+val discordToken = dotenv["DISCORD_TOKEN"] ?: ""
+val discordChannelId = dotenv["DISCORD_CHANNEL_ID"] ?: ""
 
-// Game Settings - Client
+val clientVersion = dotenv["CLIENT_VERSION"]?.toInt() ?: 12
 val gameClientCustomVersion = dotenv["CLIENT_CUSTOM_VERSION"] ?: "dodian_client"
 
-// Database Pool Settings
-val databasePoolMinSize = dotenv["DATABASE_POOL_MIN_SIZE"]?.toInt() ?: 5
-val databasePoolMaxSize = dotenv["DATABASE_POOL_MAX_SIZE"]?.toInt() ?: 20
-val databasePoolConnectionTimeout = dotenv["DATABASE_POOL_CONNECTION_TIMEOUT"]?.toLong() ?: 30000L
-val databasePoolIdleTimeout = dotenv["DATABASE_POOL_IDLE_TIMEOUT"]?.toLong() ?: 600000L
-val databasePoolMaxLifetime = dotenv["DATABASE_POOL_MAX_LIFETIME"]?.toLong() ?: 1800000L
+val rsaModulus = run {
+    val str = dotenv["RSA_MODULUS"] ?: throw IllegalStateException("Missing required environment variable: RSA_MODULUS")
+    try { BigInteger(str) } catch (e: Exception) { throw IllegalStateException("RSA_MODULUS is not a valid BigInteger", e) }
+}
+val rsaExponent = run {
+    val str = dotenv["RSA_EXPONENT"] ?: throw IllegalStateException("Missing required environment variable: RSA_EXPONENT")
+    try { BigInteger(str) } catch (e: Exception) { throw IllegalStateException("RSA_EXPONENT is not a valid BigInteger", e) }
+}
+
+// Perform validation
+val _rsaValidation = run {
+    if (rsaModulus.bitLength() < 1024) {
+        throw IllegalStateException("RSA key modulus is too small (must be at least 1024 bits)")
+    }
+    val m = BigInteger.valueOf(12345)
+    val e = BigInteger.valueOf(65537)
+    val testDecrypted = m.modPow(e, rsaModulus).modPow(rsaExponent, rsaModulus)
+    if (testDecrypted != m) {
+        throw IllegalStateException("RSA private exponent and modulus do not form a matching key pair with public exponent 65537")
+    }
+}
+
+// Delegation getters for Settings.toml
+val serverName get() = SettingsLoader.settings.server.name
+val serverPort get() = SettingsLoader.settings.network.gamePort
+val serverDebugMode get() = SettingsLoader.settings.server.debug
+val serverEnv get() = SettingsLoader.settings.server.environment
+val nettyLeakDetection get() = SettingsLoader.settings.network.leakDetection
+val dodianLogLevel get() = SettingsLoader.settings.server.logLevel
+val webApiEnabled get() = SettingsLoader.settings.network.webEnabled
+val webApiPort get() = SettingsLoader.settings.network.webPort
+
+val gameWorldId get() = SettingsLoader.settings.world.worldId
+val gameConnectionsPerIp get() = SettingsLoader.settings.network.connectionsPerIp
+
+val databasePoolMinSize get() = SettingsLoader.settings.databasePool.minSize
+val databasePoolMaxSize get() = SettingsLoader.settings.databasePool.maxSize
+val databasePoolConnectionTimeout get() = SettingsLoader.settings.databasePool.connectionTimeout
+val databasePoolIdleTimeout get() = SettingsLoader.settings.databasePool.idleTimeout
+val databasePoolMaxLifetime get() = SettingsLoader.settings.databasePool.maxLifetime
 
 val runtimePhaseWarnMs = 300L
 
-// Game Settings - Multipliers
-val gameMultiplierGlobalXp = dotenv["GAME_MULTIPLIER_GLOBAL_XP"]?.toInt() ?: 1
+val gameMultiplierGlobalXp get() = SettingsLoader.settings.world.globalXpMultiplier
+val swiftFupPort get() = SettingsLoader.settings.network.swiftfupPort

@@ -25,6 +25,10 @@ import java.util.Iterator;
 public class NpcUpdating extends EntityUpdating<Npc> {
 
     private static final Logger logger = LoggerFactory.getLogger(NpcUpdating.class);
+    static final int NPC_SLOT_BITS = 14;
+    static final int NPC_DEFINITION_BITS = 16;
+    static final int NPC_SLOT_TERMINATOR = (1 << NPC_SLOT_BITS) - 1;
+    static final int MAX_NPC_DEFINITION_ID = (1 << NPC_DEFINITION_BITS) - 1;
     private static final boolean DEBUG_NPC_MOVEMENT_WRITES = false;
     private static final int MAX_LOCAL_NPC_ADDS_PER_TICK = 15;
     private static final int MAX_LOCAL_NPC_CAP = 255;
@@ -45,30 +49,40 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             stream.startBitAccess();
 
             pruneLocalNpcsToProtocolCap(player);
-            stream.putBits(8, player.getLocalNpcs().size());
-            for (Iterator<Npc> i = player.getLocalNpcs().iterator(); i.hasNext(); ) {
-                Npc npc = i.next();
+            int size = player.getLocalNpcSize();
+            stream.putBits(8, size);
+            int keep = 0;
+            for (int i = 0; i < size; i++) {
+                Npc npc = player.getLocalNpcs()[i];
+                if (npc == null) {
+                    continue;
+                }
                 boolean exceptions = removeNpc(player, npc);
                 if (player.withinDistance(npc) && npc.isVisible() && !exceptions) {
                     updateNPCMovement(npc, stream);
                     movementWrites++;
                     appendBlockUpdate(npc, updateBlock);
+                    player.getLocalNpcs()[keep++] = npc;
                 } else {
                     buf.putBits(1, 1);
                     stream.putBits(2, 3); // tells client to remove this npc from list
-                    i.remove();
                     player.bumpLocalNpcMembershipRevision();
                 }
             }
+            java.util.Arrays.fill(player.getLocalNpcs(), keep, size, null);
+            player.setLocalNpcSize(keep);
 
             int npcsAdded = 0;
-            for (Npc npc : findNearbyNpcs(player)) {
-                if (npcsAdded >= MAX_LOCAL_NPC_ADDS_PER_TICK || player.getLocalNpcs().size() >= MAX_LOCAL_NPC_CAP) {
+            java.util.List<Npc> nearby = findNearbyNpcs(player);
+            int nearbySize = nearby.size();
+            for (int k = 0; k < nearbySize; k++) {
+                Npc npc = nearby.get(k);
+                if (npcsAdded >= MAX_LOCAL_NPC_ADDS_PER_TICK || player.getLocalNpcSize() >= MAX_LOCAL_NPC_CAP) {
                     break;
                 }
                 boolean exceptions = removeNpc(player, npc);
                 if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
-                if (player.getLocalNpcs().add(npc)) {
+                if (player.addLocalNpc(npc)) {
                     player.bumpLocalNpcMembershipRevision();
                     addNpc(player, npc, stream);
                     appendBlockUpdate(npc, updateBlock);
@@ -77,7 +91,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 }
             }
             if (updateBlock.getBuffer().writerIndex() > 0) {
-                stream.putBits(14, 16383);
+                stream.putBits(NPC_SLOT_BITS, NPC_SLOT_TERMINATOR);
                 stream.endBitAccess();
                 stream.putBytes(updateBlock);
             } else {
@@ -92,35 +106,25 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         }
     }
 
-    private java.util.Collection<Npc> findNearbyNpcs(Player player) {
+    private java.util.List<Npc> findNearbyNpcs(Player player) {
         ViewportSnapshot snapshot = SynchronizationContext.getViewportSnapshot(player);
         if (snapshot != null) {
             return snapshot.getNpcs();
         }
-        if (Server.chunkManager == null) {
-            return Server.npcManager.getNpcs();
-        }
-        java.util.ArrayList<Npc> candidates = new java.util.ArrayList<>();
-        Server.chunkManager.forEachUpdateNpcCandidate(player, 16, candidates::add);
-        return candidates;
+        return new java.util.ArrayList<>(Server.npcManager.getNpcs());
     }
 
     private void pruneLocalNpcsToProtocolCap(Player player) {
-        if (player.getLocalNpcs().size() <= MAX_LOCAL_NPC_CAP) {
+        int size = player.getLocalNpcSize();
+        if (size <= MAX_LOCAL_NPC_CAP) {
             return;
         }
 
-        Iterator<Npc> iterator = player.getLocalNpcs().iterator();
-        int keep = 0;
-        while (iterator.hasNext()) {
-            iterator.next();
-            keep++;
-            if (keep <= MAX_LOCAL_NPC_CAP) {
-                continue;
-            }
-            iterator.remove();
+        for (int i = MAX_LOCAL_NPC_CAP; i < size; i++) {
+            player.getLocalNpcs()[i] = null;
             player.bumpLocalNpcMembershipRevision();
         }
+        player.setLocalNpcSize(MAX_LOCAL_NPC_CAP);
     }
 
     public static boolean removeNpc(Player player, Npc npc) {
@@ -135,7 +139,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     public void addNpc(Player player, Npc npc, ByteMessage buf) {
 
-        buf.putBits(14, npc.getSlot());
+        validateNpcSlot(npc.getSlot());
+        buf.putBits(NPC_SLOT_BITS, npc.getSlot());
         /* Position */
         Position npcPos = npc.getPosition(), plrPos = player.getPosition();
         int z = npcPos.getY() - plrPos.getY();
@@ -148,7 +153,9 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         buf.putBits(5, z); // y coordinate relative to thisPlayer
 
         buf.putBits(1, 1); // discard client walking queue on add-local
-        buf.putBits(14, displayIdFor(player, npc));
+        int displayId = displayIdFor(player, npc);
+        validateNpcDefinitionId(displayId);
+        buf.putBits(NPC_DEFINITION_BITS, displayId);
         buf.putBits(1, npc.getUpdateFlags().isUpdateRequired() ? 1 : 0);
     }
 
@@ -158,6 +165,18 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             return player.getGender() == 0 ? 1306 : 1307;
         }
         return id;
+    }
+
+    static void validateNpcSlot(int slot) {
+        if (slot < 0 || slot >= NPC_SLOT_TERMINATOR) {
+            throw new IllegalArgumentException("NPC slot cannot be encoded: " + slot);
+        }
+    }
+
+    static void validateNpcDefinitionId(int id) {
+        if (id < 0 || id > MAX_NPC_DEFINITION_ID) {
+            throw new IllegalArgumentException("NPC definition id cannot be encoded: " + id);
+        }
     }
 
     @Override

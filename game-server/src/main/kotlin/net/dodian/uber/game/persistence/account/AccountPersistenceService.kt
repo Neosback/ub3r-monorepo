@@ -6,6 +6,7 @@ import java.util.function.IntConsumer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.dodian.uber.game.model.entity.player.Client
@@ -166,6 +167,7 @@ object AccountPersistenceService {
     @JvmStatic
     fun shutdownAndDrain(timeout: Duration) {
         TickThreadBlockingGuard.requireNotGameThread("AccountPersistenceService.shutdownAndDrain")
+        scope.cancel("Account persistence shutdown")
         PlayerSaveService.shutdownAndDrain(timeout)
         DbDispatchers.shutdown(DbDispatchers.accountExecutor, timeout)
     }

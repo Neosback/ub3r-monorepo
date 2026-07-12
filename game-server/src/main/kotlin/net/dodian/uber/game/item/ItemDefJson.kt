@@ -10,6 +10,7 @@ data class ItemDefJson(
     val stackable: Boolean = false,
     val noted: Boolean = false,
     val noteable: Boolean = false,
+    val placeholder: Boolean = false,
     @SerializedName("linked_id_item") val linkedIdItem: Int? = null,
     @SerializedName("linked_id_noted") val linkedIdNoted: Int? = null,
     val cost: Int = 0,

@@ -76,6 +76,11 @@ public class ClientPluginToolbar extends JToolBar
 		}
 	}
 
+	Component getComponent(final NavigationButton button)
+	{
+		return componentMap.get(button);
+	}
+
 	private void update()
 	{
 		removeAll();

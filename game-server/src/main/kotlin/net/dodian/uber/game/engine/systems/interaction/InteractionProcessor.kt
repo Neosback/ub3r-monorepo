@@ -13,6 +13,7 @@ import net.dodian.uber.game.engine.systems.interaction.npcs.BankerApproachFallba
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentDispatcher
 import net.dodian.uber.game.engine.systems.pathing.collision.ProjectileLineService
 import net.dodian.uber.game.engine.systems.interaction.items.ItemOnNpcContentService
+import net.dodian.uber.game.engine.systems.follow.FollowRouting
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.item.ItemOnNpcEvent
 import net.dodian.uber.game.events.magic.MagicOnNpcEvent
@@ -122,9 +123,15 @@ object InteractionProcessor {
         }
 
         val legendsGuardFrontLane = isLegendsGuardFrontLaneInteraction(player, npc, intent.option)
+        val overlaps = player.position.z == npc.position.z &&
+                player.position.x >= npc.position.x &&
+                player.position.x < npc.position.x + npc.size &&
+                player.position.y >= npc.position.y &&
+                player.position.y < npc.position.y + npc.size
+
         val routeStart = System.nanoTime()
-        if (!legendsGuardFrontLane && !player.goodDistanceEntity(npc, range)) {
-            if (BankerApproachFallbackService.shouldAttemptFallback(player, npc, intent.option)) {
+        if (overlaps || (!legendsGuardFrontLane && !player.goodDistanceEntity(npc, range))) {
+            if (!overlaps && BankerApproachFallbackService.shouldAttemptFallback(player, npc, intent.option)) {
                 if (player.position.withinDistance(npc.position, 2)
                     && ProjectileLineService.hasLineOfSight(player.position, npc.position)
                 ) {
@@ -148,6 +155,18 @@ object InteractionProcessor {
                     return InteractionExecutionResult.WAITING
                 }
             } else {
+                val walkInProgress = player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr
+                val lastRouted = lastRoutePosition[intent]
+                if (walkInProgress && lastRouted != null && lastRouted == npc.position) {
+                    return InteractionExecutionResult.WAITING
+                }
+                val routed = FollowRouting.routeToEntityBoundary(player, npc.position.x, npc.position.y, npc.size, npc.position.z, targetNpc = npc)
+                if (!routed) {
+                    player.sendMessage("I can't reach that!")
+                    clear(player)
+                    return InteractionExecutionResult.CANCELLED
+                }
+                lastRoutePosition[intent] = npc.position
                 return InteractionExecutionResult.WAITING
             }
         }
@@ -697,8 +716,26 @@ object InteractionProcessor {
             return InteractionExecutionResult.CANCELLED
         }
 
+        val overlaps = player.position.z == npc.position.z &&
+                player.position.x >= npc.position.x &&
+                player.position.x < npc.position.x + npc.size &&
+                player.position.y >= npc.position.y &&
+                player.position.y < npc.position.y + npc.size
+
         val routeStart = System.nanoTime()
-        if (!player.goodDistanceEntity(npc, 1)) {
+        if (overlaps || !player.goodDistanceEntity(npc, 1)) {
+            val walkInProgress = player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr
+            val lastRouted = lastRoutePosition[intent]
+            if (walkInProgress && lastRouted != null && lastRouted == npc.position) {
+                return InteractionExecutionResult.WAITING
+            }
+            val routed = FollowRouting.routeToEntityBoundary(player, npc.position.x, npc.position.y, npc.size, npc.position.z, targetNpc = npc)
+            if (!routed) {
+                player.sendMessage("I can't reach that!")
+                clear(player)
+                return InteractionExecutionResult.CANCELLED
+            }
+            lastRoutePosition[intent] = npc.position
             return InteractionExecutionResult.WAITING
         }
         val routeNs = System.nanoTime() - routeStart
@@ -744,8 +781,26 @@ object InteractionProcessor {
             return InteractionExecutionResult.CANCELLED
         }
 
+        val overlaps = player.position.z == npc.position.z &&
+                player.position.x >= npc.position.x &&
+                player.position.x < npc.position.x + npc.size &&
+                player.position.y >= npc.position.y &&
+                player.position.y < npc.position.y + npc.size
+
         val routeStart = System.nanoTime()
-        if (!player.goodDistanceEntity(npc, 5)) {
+        if (overlaps || !player.goodDistanceEntity(npc, 5)) {
+            val walkInProgress = player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr
+            val lastRouted = lastRoutePosition[intent]
+            if (walkInProgress && lastRouted != null && lastRouted == npc.position) {
+                return InteractionExecutionResult.WAITING
+            }
+            val routed = FollowRouting.routeToEntityBoundary(player, npc.position.x, npc.position.y, npc.size, npc.position.z, targetNpc = npc)
+            if (!routed) {
+                player.sendMessage("I can't reach that!")
+                clear(player)
+                return InteractionExecutionResult.CANCELLED
+            }
+            lastRoutePosition[intent] = npc.position
             return InteractionExecutionResult.WAITING
         }
         val routeNs = System.nanoTime() - routeStart

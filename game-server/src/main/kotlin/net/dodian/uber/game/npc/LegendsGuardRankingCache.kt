@@ -1,11 +1,11 @@
 package net.dodian.uber.game.npc
 
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import net.dodian.uber.game.engine.loop.GameThreadIngress
 import net.dodian.uber.game.engine.loop.GameThreadTimers
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.persistence.DbDispatchers
+import net.dodian.uber.game.persistence.account.AccountPersistenceService
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import org.slf4j.LoggerFactory
 import java.util.LinkedHashMap
@@ -38,7 +38,7 @@ object LegendsGuardRankingCache {
     }
 
     private fun refresh() {
-        GlobalScope.launch(DbDispatchers.accountDispatcher) {
+        AccountPersistenceService.scope.launch {
             try {
                 val snapshot = DbAsyncRepository.withConnection { conn ->
                     val columns = StringBuilder()

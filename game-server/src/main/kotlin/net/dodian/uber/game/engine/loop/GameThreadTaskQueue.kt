@@ -2,13 +2,13 @@ package net.dodian.uber.game.engine.loop
 
 object GameThreadTaskQueue {
     @JvmStatic
-    fun submit(task: Runnable) {
-        submit("anonymous", task)
+    fun submit(task: Runnable): Boolean {
+        return submit("anonymous", task)
     }
 
     @JvmStatic
-    fun submit(label: String, task: Runnable) {
-        GameThreadIngress.submitDeferred(label, task)
+    fun submit(label: String, task: Runnable): Boolean {
+        return GameThreadIngress.submitDeferred(label, task)
     }
 
     @JvmStatic

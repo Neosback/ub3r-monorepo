@@ -26,6 +26,7 @@ import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
 import net.dodian.uber.game.engine.lifecycle.PlayerLifecycleTickService
 import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.engine.systems.combat.CombatRuntimeService
+import net.dodian.uber.game.engine.systems.combat.CombatReachService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.systems.world.npc.NpcTimerScheduler
 import net.dodian.uber.game.engine.util.Misc
@@ -230,7 +231,9 @@ class EntityProcessor : Runnable {
                     npc.wanderStuckTicks = 0
                     npc.damage.clear()
                     return
-                } else if (gap > npc.effectiveAttackRange) {
+                } else if (gap > npc.effectiveAttackRange ||
+                    (npc.effectiveAttackRange > 1 && !CombatReachService.hasProjectileLineOfSight(npc, finalTarget))
+                ) {
                     handleNpcCombatWalk(npc, finalTarget)
                 } else {
                     val wasFighting = npc.isFighting

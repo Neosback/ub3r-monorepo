@@ -14,6 +14,7 @@ import net.dodian.uber.game.engine.systems.combat.CombatDefenderReaction;
 import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService;
 import net.dodian.uber.game.engine.systems.combat.CombatStartService;
 import net.dodian.uber.game.engine.systems.combat.CombatIntent;
+import net.dodian.uber.game.engine.systems.combat.CombatReachService;
 import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.engine.util.Misc;
 import org.slf4j.Logger;
@@ -82,8 +83,21 @@ class PlayerCombatState {
     }
 
     void dealDamage(int amt, Entity.hitType type, Entity attacker, Entity.damageType damageType) {
+        dealDamage(amt, type, attacker, damageType, false);
+    }
+
+    void dealDamageAfterProjectileLaunch(int amt, Entity.hitType type, Entity attacker, Entity.damageType damageType) {
+        dealDamage(amt, type, attacker, damageType, true);
+    }
+
+    private void dealDamage(int amt, Entity.hitType type, Entity attacker, Entity.damageType damageType,
+                            boolean projectileAlreadyValidated) {
         Client player = (Client) owner;
         if (owner.isDeathSequenceActive() || owner.getCurrentHealth() < 1) {
+            return;
+        }
+        if (!projectileAlreadyValidated && attacker != null && requiresProjectileLineOfSight(damageType)
+                && !CombatReachService.hasProjectileLineOfSight(attacker, owner)) {
             return;
         }
         Npc npc = (Npc) attacker;
@@ -174,6 +188,12 @@ class PlayerCombatState {
                 CombatStartService.startPlayerAttack(player, (Client) attacker, CombatIntent.ATTACK_PLAYER);
             }
         }
+    }
+
+    private static boolean requiresProjectileLineOfSight(Entity.damageType type) {
+        return type == Entity.damageType.RANGED || type == Entity.damageType.MAGIC ||
+                type == Entity.damageType.JAD_RANGED || type == Entity.damageType.JAD_MAGIC ||
+                type == Entity.damageType.FIRE_BREATH;
     }
 
     private void applyDamage(Entity attacker, int amt, Entity.hitType type) {

@@ -83,6 +83,7 @@ class WorldSynchronizationService {
             }
         } finally {
             SynchronizationContext.clear()
+            viewportIndex?.release()
         }
         OperationalTelemetry.recordPhaseMillis("sync.total", (System.nanoTime() - startedNs) / 1_000_000L)
     }
@@ -130,14 +131,14 @@ class WorldSynchronizationService {
                 val membershipRevision = player.localNpcMembershipRevision
                 val decision = shouldSkipNpcSync(player, state, chunkStamp, localActivityStamp, membershipRevision)
                 if (decision == NpcSyncDecision.SKIP) {
-                    SynchronizationContext.recordNpcPacketSkipped(player.localNpcs.size)
-                    SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
+                    SynchronizationContext.recordNpcPacketSkipped(player.localNpcSize)
+                    SynchronizationContext.recordViewer(player.playerListSize, player.localNpcSize)
                     updateNpcViewerSyncState(player, chunkStamp, localActivityStamp, membershipRevision)
                     return@forEach
                 }
                 player.sendNpcSynchronization()
-                SynchronizationContext.recordNpcPacketBuilt(player.localNpcs.size)
-                SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
+                SynchronizationContext.recordNpcPacketBuilt(player.localNpcSize)
+                SynchronizationContext.recordViewer(player.playerListSize, player.localNpcSize)
                 updateNpcViewerSyncState(player, chunkStamp, localActivityStamp, membershipRevision)
             } catch (throwable: Throwable) {
                 handleViewerSyncFailure("npc-sync", player, throwable)
@@ -225,12 +226,12 @@ class WorldSynchronizationService {
             SynchronizationContext.recordNpcBuildMapRegionOrTeleport()
             return NpcSyncDecision.BUILD
         }
-        if (state.lastKnownLocalNpcCount != player.localNpcs.size) {
+        if (state.lastKnownLocalNpcCount != player.localNpcSize) {
             SynchronizationContext.recordNpcBuildLocalCountChanged()
             return NpcSyncDecision.BUILD
         }
         val snapshot = SynchronizationContext.getViewportSnapshot(player)
-        if (player.localNpcs.isEmpty() && snapshot != null && snapshot.npcs.isNotEmpty()) {
+        if (player.localNpcSize == 0 && snapshot != null && snapshot.npcs.isNotEmpty()) {
             SynchronizationContext.recordNpcBuildPendingViewport()
             return NpcSyncDecision.BUILD
         }
@@ -354,7 +355,7 @@ class WorldSynchronizationService {
         val state: ViewerNpcSyncState = npcRevisionIndex.viewerState(player)
         state.lastNpcSyncTick = tick
         state.lastNpcViewportRevision = chunkStamp
-        state.lastKnownLocalNpcCount = player.localNpcs.size
+        state.lastKnownLocalNpcCount = player.localNpcSize
         state.lastKnownMapRegionX = player.mapRegionX
         state.lastKnownMapRegionY = player.mapRegionY
         state.lastKnownPlane = player.position.z

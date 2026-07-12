@@ -2,6 +2,7 @@ package net.dodian.uber.game.model.entity.npc;
 
 import kotlin.jvm.functions.Function1;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.engine.systems.combat.CombatReachService;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.engine.event.GameEventScheduler;
 import net.dodian.uber.game.events.combat.NpcDeathEvent;
@@ -1462,6 +1463,9 @@ public class Npc extends Entity {
     }
 
     public void delayGfx(Client c, int anim, int gfx, int delay, int dmg, boolean crit, Entity npc, damageType type) {
+        if (requiresProjectileLineOfSight(type) && !CombatReachService.hasProjectileLineOfSight(this, c)) {
+            return;
+        }
         performAnimation(anim, 0);
         GameEventScheduler.runLaterMs(delay * 600, () -> {
             if(c.disconnected || c.getCurrentHealth() < 1) {
@@ -1470,12 +1474,15 @@ public class Npc extends Entity {
             if(getId() == 3127) c.stillgfx(gfx, c.getPosition().getY(), c.getPosition().getX());
             else if(getId() >= 794 && getId() <= 802) c.stillgfx(gfx, c.getPosition(), getId() == 794 || getId() == 799 ? 255 : 120);
             else c.stillgfx(gfx, getPosition().getY(), getPosition().getX());
-            c.dealDamage(dmg, crit ? Entity.hitType.CRIT : Entity.hitType.STANDARD, npc, type);
+            c.dealDamageAfterProjectileLaunch(dmg, crit ? Entity.hitType.CRIT : Entity.hitType.STANDARD, npc, type);
             if(getId() != 4303 && getId() != 4304 && getId() != 6610)
                 setLastAttack(getAttackTimer() - delay < 2 ? 1 : getAttackTimer() - delay); //Atleast 1 second delay!
         });
     }
     public void sendArrow(Client target, int startGfx, int flightGfx) {
+        if (!CombatReachService.hasProjectileLineOfSight(this, target)) {
+            return;
+        }
         int y = getId() == 239 ? getPosition().getY() + 2 : getPosition().getY();
         int x = getId() == 239 ? getPosition().getX() + 2 : getPosition().getX();
         int offsetX = (y - target.getPosition().getY()) * -1;
@@ -1486,6 +1493,12 @@ public class Npc extends Entity {
         int flightHeight = getId() == 3127 ? 143 : getId() == 796 || getId() == 801 ? 43 : height;
         setGfx(startGfx, height);
         target.arrowNpcGfx(this.getPosition(), offsetY, offsetX, 50, speed, flightGfx, flightHeight, 35, -(target.getSlot() + 1), 51, 16);
+    }
+
+    private static boolean requiresProjectileLineOfSight(damageType type) {
+        return type == damageType.RANGED || type == damageType.MAGIC ||
+                type == damageType.JAD_RANGED || type == damageType.JAD_MAGIC ||
+                type == damageType.FIRE_BREATH;
     }
 
     public void resetCombatTimer() {

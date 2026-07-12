@@ -639,7 +639,7 @@ public final class Player extends Entity implements RSPlayer {
     @Nullable
     @Override
     public String getName() {
-        return null;
+        return name;
     }
 
     @Override

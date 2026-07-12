@@ -3,6 +3,18 @@ package net.dodian.uber.game.engine.systems.pathing.collision
 class CollisionManager(
     private val matrix: CollisionMatrix = CollisionMatrix(),
 ) {
+    data class MatrixMetrics(
+        val activeZones: Int,
+        val payloadBytes: Long,
+        val estimatedDirectoryBytes: Long,
+    )
+
+    fun matrixMetrics(): MatrixMetrics =
+        MatrixMetrics(
+            activeZones = matrix.activeZoneCount(),
+            payloadBytes = matrix.zonePayloadBytes(),
+            estimatedDirectoryBytes = matrix.estimatedDirectoryBytes(),
+        )
     fun flagWall(x: Int, y: Int, z: Int, eastBlocked: Boolean) {
         if (eastBlocked) {
             wall(x, y, z, CollisionDirection.EAST)

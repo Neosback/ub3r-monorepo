@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class RSInterface {
+	private static final java.util.Set<String> MISSING_LOOSE_SPRITES = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
 	public RSInterface() {
 	}
@@ -2129,14 +2130,24 @@ public class RSInterface {
 
 	/* Other */
 	private static Sprite imageLoader(int i, String s) {
+		if (s == null || s.isEmpty()) {
+			return null;
+		}
 		long l = (StringUtils.method585(s) << 8) + (long) i;
+		String spriteKey = s + " " + i;
+		if (MISSING_LOOSE_SPRITES.contains(spriteKey)) {
+			return null;
+		}
 		Sprite sprite = (Sprite) aMRUNodes_238.get(l);
 		if (sprite != null)
 			return sprite;
 		try {
-			sprite = new Sprite(s + " " + i);
+			sprite = new Sprite(spriteKey);
 			aMRUNodes_238.put(sprite, l);
 		} catch (Exception exception) {
+			if (MISSING_LOOSE_SPRITES.add(spriteKey) && Configuration.DEBUG_MODE) {
+				System.err.println("Optional loose sprite is unavailable: " + spriteKey);
+			}
 			return null;
 		}
 		return sprite;

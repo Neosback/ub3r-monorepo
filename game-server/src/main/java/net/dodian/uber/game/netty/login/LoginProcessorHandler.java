@@ -21,6 +21,7 @@ import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.engine.loop.GameThreadIngress;
 import net.dodian.uber.game.events.player.PlayerLoginEvent;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
+import net.dodian.uber.game.engine.config.DotEnvKt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,41 +85,105 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             return false;
         }
         int version = buf.readUnsignedShort();
-        if (version != CLIENT_VERSION) {
-            logger.debug("[Netty] Unsupported client version {}", version);
-            ctx.close();
+        if (version != DotEnvKt.getClientVersion()) {
+            logger.debug("[Netty] Unsupported client version {}, expected {}", version, DotEnvKt.getClientVersion());
+            sendAndClose(ctx, 6);
             return false;
         }
         if (buf.readableBytes() < 1) return false;
         buf.readByte(); // lowMem flag
-        if (buf.readableBytes() < 9 * 4 + 2) return false;
+        if (buf.readableBytes() < 9 * 4 + 1) return false;
         buf.skipBytes(9 * 4); // CRC keys
-        int rsaLength   = buf.readUnsignedByte();
-        int rsaPacketId = buf.readUnsignedByte();
-        if (rsaPacketId != RSA_PACKET_ID) {
-            ctx.close();
-            return false;
-        }
-        if (buf.readableBytes() < rsaLength - 1) return false;
+        int rsaLength = buf.readUnsignedByte();
+        if (buf.readableBytes() < rsaLength) return false;
 
-        clientSessionKey = buf.readLong();
-        serverSessionKey = buf.readLong();
-        readString(buf); // optional server string, ignored
-        username = readString(buf);
-        password = readString(buf);
+        byte[] rsaBytes = new byte[rsaLength];
+        buf.readBytes(rsaBytes);
+
+        // Decrypt using unsigned modPow on java.math.BigInteger
+        java.math.BigInteger encrypted = new java.math.BigInteger(1, rsaBytes);
+        java.math.BigInteger decrypted = encrypted.modPow(DotEnvKt.getRsaExponent(), DotEnvKt.getRsaModulus());
+
+        byte[] decryptedBytes = decrypted.toByteArray();
+
+        ByteBuf rsaBuf = ctx.alloc().buffer(decryptedBytes.length);
+        try {
+            rsaBuf.writeBytes(decryptedBytes);
+
+            // Skip a leading zero if present
+            if (rsaBuf.readableBytes() > 0 && rsaBuf.getByte(rsaBuf.readerIndex()) == 0) {
+                rsaBuf.readByte();
+            }
+
+            if (rsaBuf.readableBytes() < 1) {
+                logger.warn("Decrypted RSA block is empty");
+                ctx.close();
+                return false;
+            }
+
+            int rsaMagic = rsaBuf.readUnsignedByte();
+            if (rsaMagic != 10) {
+                logger.warn("RSA magic check failed: expected 10, got {}", rsaMagic);
+                ctx.close();
+                return false;
+            }
+
+            if (rsaBuf.readableBytes() < 8 + 8 + 1) {
+                logger.warn("Decrypted RSA block too short");
+                ctx.close();
+                return false;
+            }
+
+            clientSessionKey = rsaBuf.readLong();
+            serverSessionKey = rsaBuf.readLong();
+
+            int secondMagic = rsaBuf.readUnsignedByte();
+            if (secondMagic != 10) {
+                logger.warn("RSA second magic check failed: expected 10, got {}", secondMagic);
+                ctx.close();
+                return false;
+            }
+
+            username = safeReadString(rsaBuf, 12);
+            password = safeReadString(rsaBuf, 20);
+
+            if (username.isEmpty() || password.isEmpty()) {
+                logger.warn("Username or password empty in decrypted RSA block");
+                ctx.close();
+                return false;
+            }
+
+            // Check for trailing non-zero data
+            while (rsaBuf.isReadable()) {
+                if (rsaBuf.readByte() != 0) {
+                    logger.warn("RSA block contains trailing non-zero data");
+                    ctx.close();
+                    return false;
+                }
+            }
+
+        } finally {
+            rsaBuf.release();
+        }
 
         logger.debug("[Netty] Login attempt {} from {}", username, ctx.channel().remoteAddress());
         return true;
     }
 
-    private static String readString(ByteBuf buf) {
+    private static String safeReadString(ByteBuf buf, int maxLength) {
         StringBuilder sb = new StringBuilder();
+        int count = 0;
         while (buf.isReadable()) {
             byte b = buf.readByte();
-            if (b == 10) break;
-            sb.append((char) b);
+            if (b == 10) {
+                break;
+            }
+            if (count < maxLength) {
+                sb.append((char) b);
+                count++;
+            }
         }
-        return sb.toString();
+        return sb.toString().trim();
     }
 
     /* --------------- Login logic --------------- */
@@ -231,7 +296,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             ctx.pipeline().remove(ConnectionLoggingHandler.class);
         }
         ctx.pipeline().addLast(new GamePacketDecoder());
-        ctx.pipeline().addLast(new ByteMessageEncoder());
+        ISAACCipher outCipher = ctx.channel().attr(OUT_CIPHER_KEY).get();
+        ctx.pipeline().addLast(new ByteMessageEncoder(outCipher));
         // ctx.pipeline().addLast(new GamePacketEncoder()); // Removed - using pure ByteMessage/Netty
         ctx.pipeline().addLast(new GamePacketHandler(client));
         ctx.pipeline().remove(this);
@@ -244,7 +310,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         final io.netty.channel.Channel channel = ctx.channel();
         final int slotCopy = slot;
         final long finalizerQueuedAtNanos = System.nanoTime();
-        GameThreadIngress.submitCritical("login-finalize", () -> {
+        boolean finalizerAccepted = GameThreadIngress.submitCritical("login-finalize", () -> {
             long finalizerStartedAtNanos = System.nanoTime();
             long queueWaitMs = (finalizerStartedAtNanos - finalizerQueuedAtNanos) / 1_000_000L;
             if (!channel.isActive() || client.disconnected) {
@@ -315,9 +381,19 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                         failures,
                         ex
                 );
+                PlayerRegistry.removePlayer(client);
+                channel.close();
             }
 
         });
+
+        if (!finalizerAccepted) {
+            logger.warn("Login finalization queue full for {}; closing session", client.getPlayerName());
+            releaseSlot(slotCopy);
+            releaseToken();
+            channel.close();
+            return;
+        }
 
         loginFinished = true;
         logger.info(

@@ -1,13 +1,12 @@
 package net.dodian.uber.game.ui
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import net.dodian.uber.game.engine.loop.GameThreadIngress
+import net.dodian.uber.game.engine.tasking.PlayerScopedCoroutineService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.netty.listener.out.ShowInterface
 import net.dodian.uber.game.netty.listener.out.SendEnterName
-import net.dodian.uber.game.persistence.DbDispatchers
+import net.dodian.uber.game.persistence.account.AccountPersistenceService
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
@@ -61,7 +60,7 @@ object AccountServices {
     @JvmStatic
     fun verifyCurrentPassword(client: Client, inputPass: String) {
         val token = ++client.accountServiceRequestToken
-        GlobalScope.launch(DbDispatchers.accountDispatcher) {
+        PlayerScopedCoroutineService.launch(client, "account-verify", AccountPersistenceService.scope) {
             try {
                 val verified = DbAsyncRepository.withConnection { conn ->
                     try {
@@ -121,7 +120,7 @@ object AccountServices {
         }
 
         val token = ++client.accountServiceRequestToken
-        GlobalScope.launch(DbDispatchers.accountDispatcher) {
+        PlayerScopedCoroutineService.launch(client, "account-change-password", AccountPersistenceService.scope) {
             try {
                 val updated = DbAsyncRepository.withConnection { conn ->
                     try {
@@ -195,7 +194,7 @@ object AccountServices {
         }
 
         val token = ++client.accountServiceRequestToken
-        GlobalScope.launch(DbDispatchers.accountDispatcher) {
+        PlayerScopedCoroutineService.launch(client, "account-status", AccountPersistenceService.scope) {
             try {
                 val status = DbAsyncRepository.withConnection { conn ->
                     try {

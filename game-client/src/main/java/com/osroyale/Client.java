@@ -431,7 +431,11 @@ public class Client extends GameEngine
 
                 entries[i] = new MenuEntryTwo();
                 entries[i].setParam1(menuActionCmd3[i]); // widget id
-                entries[i].setType(menuActionID[i]); // action effectType
+                int type = menuActionID[i];
+                if (type >= 2000) {
+                    type -= 2000;
+                }
+                entries[i].setType(type); // action effectType
                 entries[i].setIdentifier(menuActionCmd1[i]);
                 entries[i].setParam0(menuActionCmd2[i]);
                 entries[i].setParam1(menuActionCmd3[i]);
@@ -1699,17 +1703,17 @@ public class Client extends GameEngine
 
     @Override
     public String[] getPlayerOptions() {
-        return new String[0];
+        return atPlayerActions;
     }
 
     @Override
     public boolean[] getPlayerOptionsPriorities() {
-        return new boolean[0];
+        return playerOptions;
     }
 
     @Override
     public int[] getPlayerMenuTypes() {
-        return new int[0];
+        return playerMenuTypes;
     }
 
     @Override
@@ -6933,10 +6937,16 @@ public class Client extends GameEngine
     }
 
     private void addNewNpcs(final int pktSize, final Buffer stream) {
-        while (stream.bitPosition + 14 < pktSize * 8) {
-            int npcIndex = stream.readBits(14);
-            if (npcIndex == 16383) {
+        final int npcSlotBits = 14;
+        final int npcSlotTerminator = (1 << npcSlotBits) - 1;
+        final int npcAddPayloadBits = 5 + 5 + 1 + Configuration.NPC_BITS + 1;
+        while (stream.bitPosition + npcSlotBits <= pktSize * 8) {
+            int npcIndex = stream.readBits(npcSlotBits);
+            if (npcIndex == npcSlotTerminator) {
                 break;
+            }
+            if (stream.bitPosition + npcAddPayloadBits > pktSize * 8) {
+                throw new IllegalStateException("Truncated NPC addition for slot " + npcIndex);
             }
             if (npcs[npcIndex] == null) {
                 npcs[npcIndex] = new Npc();
@@ -11938,9 +11948,12 @@ public class Client extends GameEngine
                 for (int j3 = 0; j3 < 5; j3++) {
                     characterColor[j3] = 0;
                 }
-                for (int l3 = 0; l3 < 6; l3++) {
+            for (int l3 = 0; l3 < 6; l3++) {
+                if (playerMenuTypes[l3] != MenuAction.RUNELITE_PLAYER.getId()) {
                     atPlayerActions[l3] = null;
                     playerOptions[l3] = false;
+                    playerMenuTypes[l3] = 0;
+                }
                 }
                 frameMode(Settings.RESIZABLE);
                 sendFrame36(429, 1);
@@ -12559,7 +12572,11 @@ public class Client extends GameEngine
                     if (atPlayerActions[option].equalsIgnoreCase("attack") && Settings.ENTITY_ATTACK_OPTION == 3) {
                         continue;
                     }
-                    menuActionName[menuActionRow] = atPlayerActions[option] + " <col=FFFFFF>" + s;
+                    boolean runelitePlayerOption = playerMenuTypes[option] == MenuAction.RUNELITE_PLAYER.getId();
+                    menuActionName[menuActionRow] = runelitePlayerOption
+                            ? atPlayerActions[option]
+                            : atPlayerActions[option] + " <col=FFFFFF>" + s;
+                    menuActionTarget[menuActionRow] = runelitePlayerOption ? "<col=FFFFFF>" + s : null;
                     int identifier = '\0';
 
                     if (atPlayerActions[option].equalsIgnoreCase("attack")) {
@@ -12581,33 +12598,35 @@ public class Client extends GameEngine
                         identifier = '\u07D0';
                     }
 
+                    if (playerMenuTypes[option] != 0) {
+                        menuActionID[menuActionRow] = playerMenuTypes[option] + identifier;
                     // player option 1 : duel request : opcode 128
-                    if (option == 0) {
+                    } else if (option == 0) {
                         menuActionID[menuActionRow] = 561 + identifier;
                     }
 
                     // player option 2 : report abuse : opcode 153
-                    if (option == 1) {
+                    else if (option == 1) {
                         menuActionID[menuActionRow] = 779 + identifier;
                     }
 
                     // player option 3 : attack : opcode 73
-                    if (option == 2) {
+                    else if (option == 2) {
                         menuActionID[menuActionRow] = 27 + identifier;
                     }
 
                     // player option 4 : trade : opcode 139
-                    if (option == 3) {
+                    else if (option == 3) {
                         menuActionID[menuActionRow] = 577 + identifier;
                     }
 
                     // player option 5 : follow : opcode 39
-                    if (option == 4) {
+                    else if (option == 4) {
                         menuActionID[menuActionRow] = 729 + identifier;
                     }
 
                     // player option 6 : gamble : opcode 136
-                    if (option == 5) {
+                    else if (option == 5) {
                         menuActionID[menuActionRow] = 709 + identifier;
                     }
 
@@ -13088,7 +13107,7 @@ public class Client extends GameEngine
             k += 30;
             g.drawString("3: Make a report on our forums", 30, k);
             k += 30;
-            g.drawString("4: Contact a staff member on our discord - https://discord.gg/tarnishps/", 30, k);
+            g.drawString("4: Contact a staff member on our discord -https://discord.gg/m4CkqrakHn", 30, k);
             k += 30;
             g.drawString("", 30, k);
         }
@@ -15418,6 +15437,10 @@ public class Client extends GameEngine
             }
             menuOpen = true;
 
+            MenuOpened event = new MenuOpened();
+            event.setMenuEntries(getMenuEntries());
+            callbacks.post(event);
+
             if (removeShiftDropOnMenuOpen && menuActionCmd3[menuActionRow - 1] == 3214) {
                 removeShiftDropOnMenuOpen = false;
                 processRightClick();
@@ -17702,6 +17725,7 @@ public class Client extends GameEngine
                         }
                         atPlayerActions[slot2 - 1] = playerOption;
                         playerOptions[slot2 - 1] = top == 0;
+                        playerMenuTypes[slot2 - 1] = 0;
                     }
                     opcode = -1;
                     return true;
@@ -19395,6 +19419,7 @@ public class Client extends GameEngine
         aString1121 = "";
         atPlayerActions = new String[6];
         playerOptions = new boolean[6];
+        playerMenuTypes = new int[6];
         anIntArrayArrayArray1129 = new int[4][13][13];
         anInt1132 = 2;
         aClass30_Sub2_Sub1_Sub1Array1140 = new Sprite[1000];
@@ -19684,6 +19709,7 @@ public class Client extends GameEngine
     public static Player localPlayer;
     private final String[] atPlayerActions;
     private final boolean[] playerOptions;
+    private final int[] playerMenuTypes;
     private final int[][][] anIntArrayArrayArray1129;
     public static final int[] tabInterfaceIDs = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     private int cameraY;

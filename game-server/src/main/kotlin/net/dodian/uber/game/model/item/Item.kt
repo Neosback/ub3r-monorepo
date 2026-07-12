@@ -20,6 +20,8 @@ class Item(
     private val shopBuyValue: Int,
     private val bonuses: IntArray,
     private val stackable: Boolean,
+    private val noted: Boolean = false,
+    private val placeholder: Boolean = false,
     private val noteable: Boolean,
     private val tradeable: Boolean,
     private val twoHanded: Boolean,
@@ -61,7 +63,9 @@ class Item(
 
     fun getNoteable(): Boolean = noteable
 
-    fun isNoted(): Boolean = linkedItemId > 0 && linkedItemId != id
+    fun isNoted(): Boolean = noted
+
+    fun isPlaceholder(): Boolean = placeholder
 
     fun getPremium(): Boolean = premium
 
@@ -160,7 +164,7 @@ class Item(
                 else -> 0
             }
 
-            val stackable = json?.stackable ?: base.stackable
+            val stackable = (json?.stackable ?: base.stackable) || (json?.noted == true)
             val tradeable = json?.tradeable ?: base.tradeable
             val noteable = json?.noteable ?: false
             val premium = json?.members ?: false
@@ -211,6 +215,8 @@ class Item(
                 shopBuyValue = baseValue,
                 bonuses = bonuses,
                 stackable = stackable,
+                noted = json?.noted ?: false,
+                placeholder = json?.placeholder ?: false,
                 noteable = noteable,
                 tradeable = tradeable,
                 twoHanded = isTwoHanded,

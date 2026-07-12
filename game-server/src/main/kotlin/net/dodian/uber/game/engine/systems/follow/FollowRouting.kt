@@ -13,6 +13,8 @@ import net.dodian.uber.game.engine.systems.pathing.Node
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
 import net.dodian.uber.game.engine.systems.pathing.collision.InteractionReachService
 import org.slf4j.LoggerFactory
+import net.dodian.uber.game.Server
+import net.dodian.uber.game.model.entity.npc.Npc
 
 object FollowRouting {
     private val logger = LoggerFactory.getLogger(FollowRouting::class.java)
@@ -41,6 +43,27 @@ object FollowRouting {
     }
 
     @JvmStatic
+    fun isTileOccupied(x: Int, y: Int, z: Int, ignoreNpc: Npc? = null): Boolean {
+        for (p in net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players) {
+            if (p != null && p.isActive && !p.disconnected && p.position.z == z && p.position.x == x && p.position.y == y) {
+                return true
+            }
+        }
+        for (n in Server.npcManager.getNpcs()) {
+            if (n != null && n.isAlive && n != ignoreNpc && n.position.z == z) {
+                val nx = n.position.x
+                val ny = n.position.y
+                val size = n.getSize()
+                if (x >= nx && x < nx + size && y >= ny && y < ny + size) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    @JvmStatic
+    @JvmOverloads
     fun routeToEntityBoundary(
         follower: Client,
         targetX: Int,
@@ -49,11 +72,15 @@ object FollowRouting {
         z: Int,
         preferredDestination: Pair<Int, Int>? = null,
         running: Boolean = follower.buttonOnRun,
+        targetNpc: Npc? = null,
     ): Boolean {
         val normalizedTargetSize = targetSize.coerceAtLeast(1)
         val candidates = buildBoundaryCandidates(follower, targetX, targetY, normalizedTargetSize, preferredDestination)
         for (destination in candidates) {
             if (!isValidBoundaryDestination(destination, targetX, targetY, normalizedTargetSize, z)) {
+                continue
+            }
+            if (isTileOccupied(destination.first, destination.second, z, targetNpc)) {
                 continue
             }
             val searchStart = System.nanoTime()

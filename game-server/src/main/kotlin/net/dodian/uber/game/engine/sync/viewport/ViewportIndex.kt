@@ -9,12 +9,38 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.engine.sync.util.LongObjectMap
 
+object ViewportSnapshotPool {
+    private val playerListPool = ArrayDeque<ArrayList<Player>>()
+    private val npcListPool = ArrayDeque<ArrayList<Npc>>()
+
+    fun rentPlayerList(): ArrayList<Player> {
+        return if (playerListPool.isNotEmpty()) playerListPool.removeLast() else ArrayList(256)
+    }
+
+    fun rentNpcList(): ArrayList<Npc> {
+        return if (npcListPool.isNotEmpty()) npcListPool.removeLast() else ArrayList(256)
+    }
+
+    fun release(players: ArrayList<Player>, npcs: ArrayList<Npc>) {
+        players.clear()
+        npcs.clear()
+        playerListPool.addLast(players)
+        npcListPool.addLast(npcs)
+    }
+}
+
 class ViewportIndex private constructor(
     private val snapshots: IdentityHashMap<Player, ViewportSnapshot>,
     private val relevantNpcs: List<Npc>,
 ) {
     fun snapshotFor(viewer: Player): ViewportSnapshot? = snapshots[viewer]
     fun relevantNpcs(): List<Npc> = relevantNpcs
+
+    fun release() {
+        snapshots.values.distinct().forEach { snapshot ->
+            ViewportSnapshotPool.release(snapshot.players as ArrayList<Player>, snapshot.npcs as ArrayList<Npc>)
+        }
+    }
 
     companion object {
         fun build(viewers: List<Client>, distance: Int): ViewportIndex? {
@@ -48,8 +74,8 @@ class ViewportIndex private constructor(
             distance: Int,
         ): ViewportSnapshot {
             val level = center.z
-            val players = ArrayList<Player>()
-            val npcs = ArrayList<Npc>()
+            val players = ViewportSnapshotPool.rentPlayerList()
+            val npcs = ViewportSnapshotPool.rentNpcList()
             chunkManager.forEachViewableChunk(center, distance) { repo: ChunkEntityIndex ->
                 for (other in repo.getAll<Player>(EntityType.PLAYER)) {
                     if (other.isActive && other.position?.z == level) {

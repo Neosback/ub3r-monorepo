@@ -20,6 +20,7 @@ import net.dodian.uber.game.engine.loop.GameThreadTimers;
 import net.dodian.uber.game.engine.systems.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.engine.webapi.WebApi;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
+import net.dodian.uber.game.persistence.DbDispatchers;
 import net.dodian.uber.game.persistence.player.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveService;
 import net.dodian.uber.game.persistence.world.WorldDbPollService;
@@ -49,7 +50,6 @@ import static net.dodian.uber.game.persistence.db.DatabaseInitializerKt.isDataba
 public class Server {
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
 
-    public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
     public static int TICK = 600;
     public static boolean updateRunning;
     public static int updateSeconds;
@@ -71,10 +71,15 @@ public class Server {
 
 
     private static NettyGameServer nettyServer;
+    private static org.jire.swiftfup.server.net.FileServer fileServer;
     private static final GameLoopService gameLoopService = new GameLoopService();
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean(false);
 
     public static void main(String[] args) throws Exception {
+        net.dodian.uber.game.engine.config.SettingsLoader.INSTANCE.load();
+        net.dodian.uber.game.engine.config.FeatureStateService.INSTANCE.initialize(
+                net.dodian.uber.game.engine.config.SettingsLoader.INSTANCE.getSettings()
+        );
         StartupValidationService.validateOrThrow();
         net.dodian.uber.game.rscm.RSCM.load(new java.io.File("data/mappings"));
 
@@ -121,6 +126,16 @@ public class Server {
 
         ObjectClipService.bootstrapStartupOverlays(objects);
         EnginePluginBootstrap.bootstrap();
+
+        logger.info("Starting SwiftFUP server...");
+        try {
+            org.jire.swiftfup.server.net.FileResponses fileResponses = new org.jire.swiftfup.server.net.FileResponses();
+            fileResponses.load("data/cache", true);
+            fileServer = new org.jire.swiftfup.server.net.FileServer(3, fileResponses);
+            fileServer.start(DotEnvKt.getSwiftFupPort());
+        } catch (Exception e) {
+            logger.error("Failed to start SwiftFUP server", e);
+        }
 
         nettyServer = new NettyGameServer(DotEnvKt.getServerPort());
         logger.info("Starting Netty game server...");
@@ -173,6 +188,12 @@ public class Server {
         }
 
         try {
+            DbDispatchers.shutdown(DbDispatchers.commandExecutor, Duration.ofSeconds(10));
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown command DB dispatcher", exception);
+        }
+
+        try {
             WorldSavePublisher.shutdown();
         } catch (Exception exception) {
             logger.warn("Failed to shutdown world poll publisher", exception);
@@ -208,6 +229,14 @@ public class Server {
             }
         } catch (Exception exception) {
             logger.warn("Failed to shutdown netty server", exception);
+        }
+
+        try {
+            if (fileServer != null) {
+                fileServer.shutdown();
+            }
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown SwiftFUP server", exception);
         }
 
         try {

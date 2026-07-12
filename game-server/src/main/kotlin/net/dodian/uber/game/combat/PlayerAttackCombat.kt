@@ -1,6 +1,7 @@
 package net.dodian.uber.game.combat
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -75,7 +76,7 @@ fun Client.attackTarget(): CombatAttackResult? {
             resetAttack()
             return null
         }
-        if (!(duelFight && duel_with == target.slot) && !Server.pking) {
+        if (!(duelFight && duel_with == target.slot) && !FeatureStateService.pvp.get()) {
             send(SendMessage("Pking has been disabled"))
             resetAttack()
             return null

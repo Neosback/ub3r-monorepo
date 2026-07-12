@@ -77,13 +77,17 @@ object DoorToggleObjectContent : ObjectContent {
                 DoorRegistry.doorFaceClosed[index]
             }
             DoorRegistry.doorFace[index] = newFace
+            val isOpen = DoorRegistry.doorState[index] == 1
             ObjectClipService.applyDecodedObject(
                 position = Position(DoorRegistry.doorX[index], DoorRegistry.doorY[index], DoorRegistry.doorHeight[index]),
                 objectId = DoorRegistry.doorId[index],
                 type = 0,
                 direction = newFace,
                 obj = GameObjectData.forId(DoorRegistry.doorId[index]),
-                forceSolid = DoorRegistry.doorState[index] == 0,
+                forceSolid = !isOpen,
+                solidOverride = if (isOpen) false else null,
+                blockWalkOverride = if (isOpen) 0 else null,
+                blockRangeOverride = if (isOpen) false else null,
             )
             for (player in PlayerRegistry.players) {
                 val other = player as? Client ?: continue

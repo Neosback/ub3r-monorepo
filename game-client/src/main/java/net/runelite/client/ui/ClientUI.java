@@ -1021,6 +1021,37 @@ public class ClientUI
 		}
 	}
 
+	public void openPanel(final NavigationButton button, final boolean giveFocus)
+	{
+		if (button == null || button.getPanel() == null)
+		{
+			return;
+		}
+		if (currentButton != null)
+		{
+			currentButton.setSelected(false);
+		}
+		if (currentNavButton != null)
+		{
+			currentNavButton.setSelected(false);
+		}
+		final Component component = !button.isTab() && withTitleBar
+			? titleToolbar.getComponent(button)
+			: pluginToolbar.getComponent(button);
+		currentButton = component instanceof JButton ? (JButton) component : null;
+		currentNavButton = button;
+		if (currentButton != null)
+		{
+			currentButton.setSelected(true);
+		}
+		button.setSelected(true);
+		expand(button);
+		if (giveFocus)
+		{
+			button.getPanel().onActivate();
+		}
+	}
+
 	private void contract()
 	{
 		if (pluginPanel == null)

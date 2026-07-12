@@ -1,6 +1,7 @@
 package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.engine.event.GameEventScheduler
+import net.dodian.uber.game.engine.systems.combat.CombatReachService
 import net.dodian.utilities.Randoms
 import kotlin.math.floor
 import kotlin.math.max
@@ -116,6 +117,7 @@ private object KbdCombat : NpcAttackHandler {
     }
 
     private fun attackDragonfire(npc: Npc, target: Client) {
+        if (!CombatReachService.hasProjectileLineOfSight(npc, target)) return
         val damage = Randoms.randomMinusOne(FIRE_MAX_DMG + 1)
         npc.sendArrow(target, -1, PROJ_DRAGONFIRE)
         val delay = npc.getDistanceDelay(npc.calculateDistanceTo(target), true)
@@ -124,6 +126,7 @@ private object KbdCombat : NpcAttackHandler {
     }
 
     private fun attackShock(npc: Npc, target: Client) {
+        if (!CombatReachService.hasProjectileLineOfSight(npc, target)) return
         val damage = Randoms.randomMinusOne(SPECIAL_MAX_DMG + 1)
         npc.setText("Tss rawr!!")
         npc.sendArrow(target, -1, PROJ_SHOCK)
@@ -135,6 +138,7 @@ private object KbdCombat : NpcAttackHandler {
     }
 
     private fun attackIce(npc: Npc, target: Client) {
+        if (!CombatReachService.hasProjectileLineOfSight(npc, target)) return
         val damage = Randoms.randomMinusOne(SPECIAL_MAX_DMG + 1)
         npc.setText("Tsss!")
         npc.sendArrow(target, -1, PROJ_ICE)
@@ -146,6 +150,7 @@ private object KbdCombat : NpcAttackHandler {
     }
 
     private fun attackPoison(npc: Npc, target: Client) {
+        if (!CombatReachService.hasProjectileLineOfSight(npc, target)) return
         val damage = Randoms.randomMinusOne(SPECIAL_MAX_DMG + 1)
         npc.setText("Rawr!!")
         npc.sendArrow(target, -1, PROJ_POISON)

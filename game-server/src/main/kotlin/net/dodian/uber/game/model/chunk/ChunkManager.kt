@@ -13,7 +13,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Player
 
 class ChunkManager {
-    private val chunks = ConcurrentHashMap<Long, ChunkEntityIndex>()
+    private val chunks = ConcurrentHashMap<Long, ChunkEntityIndex>(6_000)
 
     fun load(chunk: Chunk): ChunkEntityIndex =
         chunks.computeIfAbsent(pack(chunk.x, chunk.y)) { ChunkEntityIndex(chunk) }

@@ -250,10 +250,6 @@ public final class Sprite extends Rasterizer2D implements RSSpritePixels {
 			loadFromImage(image, image.getWidth(), image.getHeight());
 			setTransparency(255, 0, 255);
 		} catch (Exception ex) {
-			if (Configuration.DEBUG_MODE) {
-				System.err.println("Failed to decode sprite path=" + location + img + ".png: " + ex.getMessage());
-				ex.printStackTrace();
-			}
 			throw new RuntimeException(ex);
 		}
 	}

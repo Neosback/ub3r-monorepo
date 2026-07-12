@@ -1,6 +1,7 @@
 package net.dodian.uber.game.engine.systems.net
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.widget.ChatMessageEvent
 import net.dodian.uber.game.model.entity.UpdateFlag
@@ -36,7 +37,7 @@ object PacketChatService {
             client.send(SendMessage("You are currently muted!"))
             return
         }
-        if (!Server.chatOn && client.playerRights == 0) {
+        if (!FeatureStateService.publicChatYell.get() && client.playerRights == 0) {
             client.send(SendMessage("Public chat has been temporarily restricted"))
             return
         }

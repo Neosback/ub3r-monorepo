@@ -143,10 +143,10 @@ internal object AccountLoginMapper {
             if (parse.size <= 2) {
                 continue
             }
-            val slot = parse[0].toInt()
-            val id = parse[1].toInt()
-            val amount = parse[2].toInt()
-            if (id < 66000) {
+            val slot = parse[0].toIntOrNull() ?: continue
+            val id = parse[1].toIntOrNull() ?: continue
+            val amount = parse[2].toIntOrNull() ?: continue
+            if (slot in player.playerItems.indices && id in 0 until 66000 && amount > 0) {
                 player.playerItems[slot] = id + 1
                 player.playerItemsN[slot] = amount
             }
@@ -162,10 +162,10 @@ internal object AccountLoginMapper {
             if (parse.size <= 2) {
                 continue
             }
-            val slot = parse[0].toInt()
-            val id = parse[1].toInt()
-            val amount = parse[2].toInt()
-            if (id > 24000) {
+            val slot = parse[0].toIntOrNull() ?: continue
+            val id = parse[1].toIntOrNull() ?: continue
+            val amount = parse[2].toIntOrNull() ?: continue
+            if (slot !in player.equipment.indices || id !in 0..24000 || amount <= 0) {
                 continue
             }
             if (player.checkEquip(id, slot, -1)) {
@@ -203,14 +203,27 @@ internal object AccountLoginMapper {
             if (parse.size <= 2) {
                 continue
             }
-            val slot = parse[0].toInt()
-            val id = parse[1].toInt()
-            val amount = parse[2].toInt()
+            val slot = parse[0].toIntOrNull() ?: continue
+            val rawId = parse[1].toIntOrNull() ?: continue
+            val amount = parse[2].toIntOrNull() ?: continue
             val tab = if (parse.size >= 4) parse[3].toIntOrNull()?.coerceIn(0, 9) ?: 0 else 0
-            if (id < 66600 && slot >= 0 && slot < size) {
-                player.bankItems[slot] = id + 1
-                player.bankItemsN[slot] = amount
-                player.bankSlotTabs[slot] = tab
+            if (rawId in 0 until 66600 && amount > 0 && slot in 0 until size) {
+                // Tarnish banks never retain notes. Only explicit notes are normalized;
+                // placeholders and other linked variants keep their original identity.
+                val itemId = Server.itemManager.normalizeForBank(rawId)
+                val existing = (0 until size).firstOrNull {
+                    player.bankItems[it] - 1 == itemId && player.bankItemsN[it] > 0
+                }
+                val destination = existing ?: when {
+                    player.bankItems[slot] <= 0 -> slot
+                    else -> (0 until size).firstOrNull { player.bankItems[it] <= 0 } ?: continue
+                }
+                player.bankItems[destination] = itemId + 1
+                player.bankItemsN[destination] =
+                    (player.bankItemsN[destination].toLong() + amount).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                if (existing == null) {
+                    player.bankSlotTabs[destination] = tab
+                }
             }
         }
     }

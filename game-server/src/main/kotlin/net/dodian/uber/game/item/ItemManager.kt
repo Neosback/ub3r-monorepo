@@ -108,6 +108,8 @@ open class ItemManager @JvmOverloads constructor(
                     shopBuyValue = json.cost,
                     bonuses = json.equipment?.toBonusArray() ?: IntArray(14),
                     stackable = json.stackable || json.noted,
+                    noted = json.noted,
+                    placeholder = json.placeholder,
                     noteable = json.noteable,
                     tradeable = json.tradeable,
                     twoHanded = json.equipment?.slot == "2h",
@@ -149,13 +151,15 @@ open class ItemManager @JvmOverloads constructor(
 
     fun getLinkedItemId(id: Int): Int {
         val item = items[id] ?: return 0
-        return item.linkedItemId
+        return if (item.isNoted()) item.linkedItemId else 0
     }
 
     fun getLinkedNotedId(id: Int): Int {
         val item = items[id] ?: return 0
-        return item.linkedNotedId
+        return if (!item.isNoted() && !item.isPlaceholder()) item.linkedNotedId else 0
     }
+
+    fun normalizeForBank(id: Int): Int = getLinkedItemId(id).takeIf { it > 0 } ?: id
 
     fun isStackable(id: Int): Boolean {
         val item = items[id]

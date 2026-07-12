@@ -2,6 +2,7 @@ package net.dodian.uber.game.engine.systems.combat
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.combat.attackTarget
+import net.dodian.uber.game.combat.getAttackStyle
 import net.dodian.uber.game.engine.systems.follow.FollowRouting
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.Entity
@@ -45,11 +46,14 @@ object CombatRuntimeService {
         var cooldown = CombatStartService.restoreCooldownState(player, cycleNow)
 
         val policy = CombatStartService.policyFor(player, engagement.intent)
-        if (!player.goodDistanceEntity(target, policy.attackDistance)) {
+        val projectileAttack = player.getAttackStyle() != 0
+        val reach = CombatReachService.evaluate(player, target, policy.attackDistance, projectileAttack)
+        if (reach != CombatReachResult.READY) {
             if (combatTelemetryEnabled) {
                 logger.info(
-                    "combat.telemetry phase=target_selection player={} reason=out_of_range targetType={} targetSlot={} attackDistance={}",
+                    "combat.telemetry phase=target_selection player={} reason={} targetType={} targetSlot={} attackDistance={}",
                     player.playerName,
+                    reach.name.lowercase(),
                     target.type,
                     target.slot,
                     policy.attackDistance,
@@ -207,7 +211,7 @@ object CombatRuntimeService {
         }
 
         if (refreshed) {
-            FollowRouting.routeToEntityBoundary(
+            val routed = FollowRouting.routeToEntityBoundary(
                 follower = player,
                 targetX = target.position.x,
                 targetY = target.position.y,
@@ -215,7 +219,13 @@ object CombatRuntimeService {
                 z = player.position.z,
                 preferredDestination = preferredCombatDestination(target, engagement),
                 running = true,
+                targetNpc = if (target is Npc) target else null,
             )
+            if (!routed && target is Npc) {
+                CombatCommandService.cancelEngagement(player, CombatCancellationReason.OUT_OF_RANGE)
+                player.sendMessage("I can't reach that!")
+                return
+            }
         }
         if (target is Npc) {
             player.faceNpc(target.slot)

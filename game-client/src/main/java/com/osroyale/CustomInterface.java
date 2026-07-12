@@ -3890,11 +3890,11 @@ public class CustomInterface extends RSInterface {
         addSprite(interfaceId + 29, Client.spriteCache.get(197));
         addContainer(5382, 109, 9, 89, "Withdraw-1", "Withdraw-5", "Withdraw-10", "Withdraw-All", "Withdraw-X", null, "Withdraw-All but one");
         addConfigButton(interfaceId + 72, 60_000, 233, 232, 35, 25, "Release Place Holders", 0, 5, 116);
-        addHoverButton(interfaceId + 73, "b", 1, 35, 25, "Toggle Place Holders", -1, interfaceId + 72, 1);
+        addHoverButton(interfaceId + 73, 233, 35, 25, "Toggle Place Holders", -1, interfaceId + 72, 1);
         addHoverButton(interfaceId + 74, 227, 115, 25, "Access bank pins settings", -1, interfaceId + 75, 1);
         addHoveredButton(interfaceId + 75, 228, 115, 25, interfaceId + 76);
-        addHoverButton(interfaceId + 77, "b", 1, 35, 25, "Deposit coins", -1, interfaceId + 14, 1);
-        addHoverButton(interfaceId + 78, "b:", 1, 35, 25, "Check vault", -1, interfaceId + 14, 1);
+        removeSomething(interfaceId + 77);
+        removeSomething(interfaceId + 78);
         //addText(interfaceId + 79, "Bank value: 0", tda, 0, 0xFF981F, false, true);
         addText(interfaceId + 80, "", tda, 0, 0xFF981F, false, true);
         interfaceCache[5385].width += 22;
@@ -4556,9 +4556,9 @@ public class CustomInterface extends RSInterface {
      */
     public static void equipmentTab(TextDrawingArea[] wid) {
         RSInterface Interface = interfaceCache[1644];
-        addSprite(15101, 0, "Interfaces/Equipment/bl");
-        addSprite(15102, 1, "Interfaces/Equipment/bl");
-        addSprite(15109, 2, "Interfaces/Equipment/bl");
+        removeSomething(15101);
+        removeSomething(15102);
+        removeSomething(15109);
         removeSomething(21338);
         removeSomething(21344); // remove "Stats" text
         //        removeConfig(21342);

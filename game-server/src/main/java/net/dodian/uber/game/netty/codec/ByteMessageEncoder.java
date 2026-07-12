@@ -2,31 +2,42 @@ package net.dodian.uber.game.netty.codec;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToByteEncoder;
-import io.netty.util.AttributeKey;
+import io.netty.handler.codec.MessageToMessageEncoder;
 import net.dodian.utilities.ISAACCipher;
+import java.util.List;
 
 /**
- * Very thin wrapper that simply forwards a {@link ByteBuf} message downstream without modification.
- * This exists to retain the exact pipeline structure expected by the old server code while we
- * fully migrate to Netty-based packet builders.
+ * Encodes ByteMessage instances into ByteBuf instances.
+ * Extends MessageToMessageEncoder to support true zero-copy writing of both the header and the payload.
+ * Unconditionally writes a 16-bit short for the payload length, matching this client's protocol.
  */
-public class ByteMessageEncoder extends MessageToByteEncoder<ByteMessage> {
+public class ByteMessageEncoder extends MessageToMessageEncoder<ByteMessage> {
+
+    private final ISAACCipher cipher;
+
+    public ByteMessageEncoder() {
+        this.cipher = null;
+    }
+
+    public ByteMessageEncoder(ISAACCipher cipher) {
+        this.cipher = cipher;
+    }
+
     @Override
-    protected void encode(ChannelHandlerContext ctx, ByteMessage bm, ByteBuf out) throws Exception {
-        
-            
-            int opcode = bm.getOpcode();
-            MessageType type = bm.getType();
-            ByteBuf payload = bm.content();
-            int length = payload.readableBytes();
+    protected void encode(ChannelHandlerContext ctx, ByteMessage bm, List<Object> out) throws Exception {
+        int opcode = bm.getOpcode();
+        ByteBuf payload = bm.content();
+        int length = payload.readableBytes();
 
-                        AttributeKey<ISAACCipher> key = AttributeKey.valueOf("outCipher");
-            ISAACCipher cipher = ctx.channel().attr(key).get();
-            int encOpcode = cipher == null ? opcode : (opcode + cipher.getNextKey()) & 0xFF;
+        ByteBuf header = ctx.alloc().buffer(3);
+        int encOpcode = cipher == null ? opcode : (opcode + cipher.getNextKey()) & 0xFF;
+        header.writeByte(encOpcode);
+        header.writeShort(length);
+        out.add(header);
 
-            out.writeByte(encOpcode);
-            out.writeShort(length);
-            out.writeBytes(payload, payload.readerIndex(), length);
+        if (length > 0) {
+            payload.retain();
+            out.add(payload);
         }
     }
+}

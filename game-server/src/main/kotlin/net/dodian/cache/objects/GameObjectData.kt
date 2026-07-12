@@ -40,7 +40,7 @@ class GameObjectData(
 
     companion object {
         private const val MAX_DYNAMIC_DEFINITIONS = 200_000
-        private val definitions = ConcurrentHashMap<Int, GameObjectData>()
+        private val definitions = ConcurrentHashMap<Int, GameObjectData>(55_000)
 
         @JvmStatic
         fun init() {

@@ -3,9 +3,11 @@ package net.dodian.uber.game.netty.bootstrap;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.AttributeKey;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import net.dodian.uber.game.engine.config.DotEnvKt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,48 +16,107 @@ import org.slf4j.LoggerFactory;
 public class ChannelIpFilter extends ChannelInboundHandlerAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(ChannelIpFilter.class);
+    private static final AttributeKey<Boolean> IP_LIMIT_OWNED = AttributeKey.valueOf("ipLimitOwned");
     private final ConcurrentHashMap<String, AtomicInteger> ipCounters = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> lastLogTime = new ConcurrentHashMap<>();
+
+    private static final AtomicLong currentConnections = new AtomicLong(0);
+    private static final AtomicLong rejectedConnections = new AtomicLong(0);
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         String host = hostFrom(ctx);
-        if (host == null || host.equals("127.0.0.1") || host.startsWith("192.168.") || host.startsWith("10.")) {
-            ctx.fireChannelRegistered();
-            return;
-        }
-
-        int limit = DotEnvKt.getGameConnectionsPerIp();
-        int count = ipCounters.computeIfAbsent(host, k -> new AtomicInteger()).incrementAndGet();
-        if (count > limit) {
-            ipCounters.get(host).decrementAndGet();
-            logger.warn("Connection rejected from {} (exceeds limit of {})", host, limit);
+        if (host == null) {
             ctx.close();
             return;
         }
 
+        int limit = DotEnvKt.getGameConnectionsPerIp();
+        AtomicInteger counter = ipCounters.computeIfAbsent(host, k -> new AtomicInteger(0));
+        int count = counter.incrementAndGet();
+
+        if (count > limit) {
+            counter.decrementAndGet();
+            rejectedConnections.incrementAndGet();
+            long now = System.currentTimeMillis();
+            lastLogTime.compute(host, (k, v) -> {
+                if (v == null || now - v > 5000) {
+                    logger.warn("Connection rejected from {} (exceeds limit of {})", host, limit);
+                    return now;
+                }
+                return v;
+            });
+            ctx.close();
+            return;
+        }
+
+        ctx.channel().attr(IP_LIMIT_OWNED).set(true);
+        currentConnections.incrementAndGet();
         ctx.fireChannelRegistered();
     }
 
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-        String host = hostFrom(ctx);
-        if (host != null && !host.equals("127.0.0.1") && !host.startsWith("192.168.") && !host.startsWith("10.")) {
-            AtomicInteger counter = ipCounters.get(host);
-            if (counter != null) {
-                counter.decrementAndGet();
-                ipCounters.remove(host, 0);
-            }
-        }
-
+        releaseSlot(ctx);
         ctx.fireChannelUnregistered();
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        logger.debug("Exception in IP filter for channel: {}", ctx.channel().remoteAddress(), cause);
+        releaseSlot(ctx);
+        ctx.fireExceptionCaught(cause);
+    }
+
+    private void releaseSlot(ChannelHandlerContext ctx) {
+        Boolean owned = ctx.channel().attr(IP_LIMIT_OWNED).getAndSet(false);
+        if (Boolean.TRUE.equals(owned)) {
+            String host = hostFrom(ctx);
+            if (host != null) {
+                AtomicInteger counter = ipCounters.get(host);
+                if (counter != null) {
+                    int remaining = counter.decrementAndGet();
+                    if (remaining <= 0) {
+                        ipCounters.remove(host, 0);
+                        lastLogTime.remove(host);
+                    }
+                }
+            }
+            currentConnections.decrementAndGet();
+        }
     }
 
     private static String hostFrom(ChannelHandlerContext ctx) {
         try {
             InetSocketAddress addr = (InetSocketAddress) ctx.channel().remoteAddress();
-            return addr != null ? addr.getAddress().getHostAddress() : null;
+            if (addr == null) return null;
+            java.net.InetAddress inetAddr = addr.getAddress();
+            if (inetAddr == null) return null;
+
+            if (inetAddr instanceof java.net.Inet6Address) {
+                java.net.Inet6Address ipv6 = (java.net.Inet6Address) inetAddr;
+                if (ipv6.isIPv4CompatibleAddress()) {
+                    byte[] bytes = ipv6.getAddress();
+                    byte[] ipv4Bytes = new byte[] { bytes[12], bytes[13], bytes[14], bytes[15] };
+                    return java.net.InetAddress.getByAddress(ipv4Bytes).getHostAddress();
+                }
+                byte[] bytes = ipv6.getAddress();
+                if (isIPv4Mapped(bytes)) {
+                    byte[] ipv4Bytes = new byte[] { bytes[12], bytes[13], bytes[14], bytes[15] };
+                    return java.net.InetAddress.getByAddress(ipv4Bytes).getHostAddress();
+                }
+            }
+            return inetAddr.getHostAddress();
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private static boolean isIPv4Mapped(byte[] bytes) {
+        if (bytes.length != 16) return false;
+        for (int i = 0; i < 10; i++) {
+            if (bytes[i] != 0) return false;
+        }
+        return bytes[10] == (byte)0xFF && bytes[11] == (byte)0xFF;
     }
 }

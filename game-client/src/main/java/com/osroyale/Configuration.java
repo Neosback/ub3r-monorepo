@@ -44,17 +44,17 @@ public final class Configuration {
     /**
      * State of client enabling RSA encryption.
      */
-    static boolean ENABLE_RSA = false;
+    public static final boolean ENABLE_RSA = true;
 
     /**
      * The current NPC bits.
      */
-    static final int NPC_BITS = 14;
+    static final int NPC_BITS = 16;
 
     /**
      * The current version of the client.
      */
-    public static final int CLIENT_VERSION = 317;
+    public static final int CLIENT_VERSION = net.runelite.client.BuildConstants.CLIENT_VERSION;
 
     /**
      * The name of the client.
@@ -83,7 +83,7 @@ public final class Configuration {
     /**
      * Whether to use Jire SwiftFUP update server.
      */
-    public static final boolean USE_UPDATE_SERVER = false;
+    public static final boolean USE_UPDATE_SERVER = true;
 
     public static final String UPDATE_SERVER_IP = CONNECTION.getCacheAddress();
     public static final int UPDATE_SERVER_PORT = CONNECTION.getCachePort();

@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class NpcFamilySpawnImportTest {
-    private val exportRoot = Path.of("/Users/tylercovalt/Desktop/tarnish-main/game-server/data")
+    private val exportRoot = Path.of("/Users/tylercovalt/Desktop/RSPS/tarnish-main/game-server/data")
     private val gson = Gson()
 
     @Test

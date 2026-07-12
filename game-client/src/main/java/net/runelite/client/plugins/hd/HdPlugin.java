@@ -107,7 +107,7 @@ import static org.lwjgl.opengl.GL43C.*;
 @PluginDependency(EntityHiderPlugin.class)
 @Slf4j
 public class HdPlugin extends Plugin implements DrawCallbacks {
-	public static final String DISCORD_URL = "https://discord.gg/U4p6ChjgSE";
+	public static final String DISCORD_URL = "https://discord.gg/m4CkqrakHn";
 	public static final String RUNELITE_URL = "https://runelite.net";
 
 	public static final int TEXTURE_UNIT_UI = GL_TEXTURE0; // default state

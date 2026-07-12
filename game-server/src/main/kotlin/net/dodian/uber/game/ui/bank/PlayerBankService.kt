@@ -1,6 +1,7 @@
 package net.dodian.uber.game.ui.bank
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.InventoryInterface
 import net.dodian.uber.game.netty.listener.out.SendBankItems
@@ -103,7 +104,7 @@ object PlayerBankService {
 
     @JvmStatic
     fun openUpBank(client: Client) {
-        if (!Server.banking) {
+        if (!FeatureStateService.banking.get()) {
             client.sendMessage("Banking have been disabled!")
             return
         }
