@@ -195,6 +195,16 @@ public abstract class Entity {
     }
 
     public int getSize() {
+        if (type == Type.PLAYER && this instanceof net.dodian.uber.game.model.entity.player.Player) {
+            net.dodian.uber.game.model.entity.player.Player player = (net.dodian.uber.game.model.entity.player.Player) this;
+            if (player.getPlayerNpc() >= 0) {
+                net.dodian.uber.game.engine.systems.cache.CacheNpcDefinition npcDef =
+                    net.dodian.uber.game.npc.NpcClientMorphService.INSTANCE.definition(player.getPlayerNpc());
+                if (npcDef != null) {
+                    return npcDef.getSize();
+                }
+            }
+        }
         if (type != null && type == Type.NPC && Server.npcManager.getData(((Npc) this).getId()) != null) {
             return Server.npcManager.getData(((Npc) this).getId()).getSize();
         }

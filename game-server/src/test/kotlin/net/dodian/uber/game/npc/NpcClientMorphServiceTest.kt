@@ -82,5 +82,19 @@ class NpcClientMorphServiceTest {
             transformFallbackChild = children.lastOrNull() ?: -1,
         )
 
+    @Test
+    fun `getSize returns morphed npc definition size for player`() {
+        val client = testClient()
+        NpcClientMorphService.initialize(
+            mapOf(555 to CacheNpcDefinition(id = 555, name = "Giant", size = 3))
+        )
+
+        assertEquals(1, client.size)
+
+        client.playerNpc = 555
+
+        assertEquals(3, client.size)
+    }
+
     private fun testClient(): Client = Client(null, 1)
 }

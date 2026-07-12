@@ -34,7 +34,7 @@ object CacheUtils {
     fun unpackBzip2(data: ByteArray): ByteArray =
         ByteArrayInputStream(BZIP_HEADER + data).use { input ->
             BZip2CompressorInputStream(input).use { compressed ->
-                ByteArrayOutputStream().use { output ->
+                ByteArrayOutputStream(maxOf(4096, data.size * 4)).use { output ->
                     compressed.copyTo(output)
                     output.toByteArray()
                 }
@@ -44,7 +44,7 @@ object CacheUtils {
     fun unzipGzip(data: ByteArray): ByteArray =
         ByteArrayInputStream(data).use { input ->
             GZIPInputStream(input).use { gzip ->
-                ByteArrayOutputStream().use { output ->
+                ByteArrayOutputStream(maxOf(4096, data.size * 4)).use { output ->
                     gzip.copyTo(output)
                     output.toByteArray()
                 }

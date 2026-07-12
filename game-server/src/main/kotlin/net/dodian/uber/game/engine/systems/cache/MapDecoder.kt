@@ -79,21 +79,12 @@ class MapDecoder(
 
     internal fun decodeTileGrid(region: MapIndexEntry, data: ByteArray): DecodedMapTileGrid {
         val reader = CacheBuffer(data)
+        val dummy = DecodedMapTile(0, 0, 0, 0, 0, 0, 0, 0, 0)
         val tiles =
-            Array(MAP_PLANES) { plane ->
-                Array(REGION_SIZE) { x ->
-                    Array(REGION_SIZE) { y ->
-                        DecodedMapTile(
-                            offsetX = x,
-                            offsetY = y,
-                            plane = plane,
-                            height = 0,
-                            overlay = 0,
-                            overlayType = 0,
-                            overlayOrientation = 0,
-                            attributes = 0,
-                            underlay = 0,
-                        )
+            Array(MAP_PLANES) { _ ->
+                Array(REGION_SIZE) { _ ->
+                    Array(REGION_SIZE) {
+                        dummy
                     }
                 }
             }

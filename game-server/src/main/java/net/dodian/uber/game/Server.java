@@ -137,6 +137,8 @@ public class Server {
             logger.error("Failed to start SwiftFUP server", e);
         }
 
+        System.gc();
+
         nettyServer = new NettyGameServer(DotEnvKt.getServerPort());
         logger.info("Starting Netty game server...");
         nettyServer.start();
