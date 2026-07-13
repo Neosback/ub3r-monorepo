@@ -13,7 +13,63 @@ class PlayerSaveSqlRepository(
     }
 
     fun saveEnvelope(envelope: PlayerSaveEnvelope) {
-        delegate.saveSnapshot(buildSnapshot(envelope))
+        delegate.savePrepared(buildPreparedStatements(envelope))
+    }
+
+    internal fun buildPreparedStatements(envelope: PlayerSaveEnvelope): List<PlayerSaveRepository.Statement> {
+        val stats = requireNotNull(envelope.segment<StatsSegmentSnapshot>()) { "Missing STATS segment for save envelope dbId=${envelope.dbId}" }
+        val statColumns = listOf("total", "combat") + ENABLED_SKILLS.map { it.name.lowercase() } + "totalxp"
+        val statValues = listOf(stats.totalLevel, stats.combatLevel) + stats.skillExperience.toList() + stats.totalXp
+        val statements = mutableListOf<PlayerSaveRepository.Statement>()
+        statements += PlayerSaveRepository.Statement(
+            "UPDATE ${DbTables.GAME_CHARACTERS_STATS} SET ${statColumns.joinToString(" = ?, ")} = ? WHERE uid = ?",
+            statValues + envelope.dbId,
+        )
+        if (envelope.updateProgress) {
+            statements += PlayerSaveRepository.Statement(
+                "INSERT INTO ${DbTables.GAME_CHARACTERS_STATS_PROGRESS} (${(listOf("updated", "uid") + statColumns).joinToString(", ")}) VALUES (${List(statColumns.size + 2) { "?" }.joinToString(", ")})",
+                listOf(java.sql.Timestamp(envelope.createdAt), envelope.dbId) + statValues,
+            )
+        }
+
+        val values = linkedMapOf<String, Any?>(
+            "pkrating" to 1500,
+            "lastlogin" to envelope.createdAt,
+            "health" to stats.currentHealth,
+            "fightStyle" to stats.fightType,
+            "prayer" to encodePrayer(stats),
+            "boosted" to encodeBoosted(stats),
+        )
+        envelope.segment<EquipmentSegmentSnapshot>()?.let { values["equipment"] = encodeItemSlots(it.entries) }
+        envelope.segment<InventorySegmentSnapshot>()?.let { values["inventory"] = encodeItemSlots(it.entries) }
+        envelope.segment<BankSegmentSnapshot>()?.let { values["bank"] = encodeItemSlots(it.entries) }
+        envelope.segment<SocialSegmentSnapshot>()?.let { values["friends"] = it.friends.joinToString(" ") }
+        envelope.segment<SlayerSegmentSnapshot>()?.let {
+            values["slayerData"] = it.slayerData
+            values["essence_pouch"] = it.essencePouch
+            values["autocast"] = it.autocastSpellIndex
+        }
+        envelope.segment<EffectsSegmentSnapshot>()?.let { values["effects"] = it.effects.joinToString(":") }
+        envelope.segment<PositionSegmentSnapshot>()?.let {
+            values["height"] = it.height; values["x"] = it.x; values["y"] = it.y
+        }
+        envelope.segment<FarmingSegmentSnapshot>()?.let {
+            values["farming"] = it.farming; values["dailyReward"] = encodeDailyReward(it.dailyReward)
+        }
+        envelope.segment<LooksSegmentSnapshot>()?.let {
+            values["songUnlocked"] = it.songUnlocked; values["travel"] = it.travel
+            values["look"] = it.look; values["unlocks"] = it.unlocks
+        }
+        envelope.segment<MetaSegmentSnapshot>()?.let {
+            values["news"] = it.latestNews; values["agility"] = it.agilityCourseStage
+            values["Monster_Log"] = encodeNamedCounts(it.monsterLog, ",", ";")
+            values["Boss_Log"] = encodeNamedCounts(it.bossLog, ":", " ")
+        }
+        statements += PlayerSaveRepository.Statement(
+            "UPDATE ${DbTables.GAME_CHARACTERS} SET ${values.keys.joinToString(" = ?, ")} = ? WHERE id = ?",
+            values.values.toList() + envelope.dbId,
+        )
+        return statements
     }
 
     fun buildSnapshot(envelope: PlayerSaveEnvelope): PlayerSaveSnapshot {

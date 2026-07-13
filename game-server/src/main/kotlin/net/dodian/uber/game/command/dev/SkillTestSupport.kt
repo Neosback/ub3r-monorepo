@@ -173,7 +173,7 @@ private fun clearInventory(client: Client) {
 private fun resolveSlayerTask(raw: String): net.dodian.uber.game.skill.slayer.SlayerTaskDefinition? {
     raw.toIntOrNull()?.let { return net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(it) }
     val normalized = raw.trim().lowercase().replace(" ", "_")
-    return net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.values().firstOrNull { task ->
+    return net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.VALUES.firstOrNull { task ->
         task.name.lowercase() == normalized ||
             task.textRepresentation.lowercase().replace(" ", "_") == normalized
     }

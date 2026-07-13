@@ -17,6 +17,8 @@ internal object ScarabMage1 : NpcFamily by npcFamily("Scarab mage 1", 799, block
         ranged = 1
     }
 
+    combat { handler(ScarabLocustCombat) }
+
     spawns {
         spawn(3246, 2775)
         spawn(3307, 2821)

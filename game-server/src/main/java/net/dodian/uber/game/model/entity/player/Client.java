@@ -110,7 +110,7 @@ public class Client extends Player implements Runnable {
     int otherdbId = -1;
     public int convoId = -1, nextDiag = -1, npcFace = 591;
     public boolean pLoaded = false;
-    public int maxQuests = QuestTabEntry.values().length;
+    public int maxQuests = QuestTabEntry.VALUES.length;
     public int[] quests = new int[maxQuests];
     public int[] playerBonus = new int[14];
     private final Map<Integer, String> uiTextCache = new HashMap<>();
@@ -414,7 +414,6 @@ public class Client extends Player implements Runnable {
      * @param casterX The X coordinate of the caster
      * @param offsetY The Y offset from the caster's position
      * @param offsetX The X offset from the caster's position
-     * @param angle The starting angle of the projectile
      * @param speed The speed of the projectile
      * @param gfxMoving The graphic ID of the projectile
      * @param startHeight The starting height of the projectile
@@ -425,28 +424,28 @@ public class Client extends Player implements Runnable {
      * @param initDistance The initial distance from the source
      */
     public void createProjectile(int casterY, int casterX, int offsetY,
-                               int offsetX, int angle, int speed, int gfxMoving, int startHeight,
+                               int offsetX, int speed, int gfxMoving, int startHeight,
                                int endHeight, int targetIndex, int begin, int slope, int initDistance) {
         try {
             Position casterPosition = new Position(casterX, casterY);
-            send(new Projectile(casterPosition, offsetY, offsetX, angle, speed, gfxMoving,
+            send(new Projectile(casterPosition, offsetY, offsetX, speed, gfxMoving,
                     startHeight, endHeight, targetIndex, begin, slope, initDistance));
         } catch (Exception e) {
             Server.logError(e.getMessage());
         }
     }
 
-    public void arrowGfx(int offsetY, int offsetX, int angle, int speed,
+    public void arrowGfx(int offsetY, int offsetX, int speed,
                          int gfxMoving, int startHeight, int endHeight, int index, int begin, int slope) {
         forEachProjectileViewer(viewer ->
-                viewer.createProjectile(getPosition().getY(), getPosition().getX(), offsetY, offsetX, angle, speed, gfxMoving,
+                viewer.createProjectile(getPosition().getY(), getPosition().getX(), offsetY, offsetX, speed, gfxMoving,
                         startHeight, endHeight, index, begin, slope, 64));
     }
 
-    public void arrowNpcGfx(Position pos, int offsetY, int offsetX, int angle, int speed,
+    public void arrowNpcGfx(Position pos, int offsetY, int offsetX, int speed,
                             int gfxMoving, int startHeight, int endHeight, int index, int begin, int slope) {
         forEachProjectileViewer(viewer ->
-                viewer.createProjectile(pos.getY(), pos.getX(), offsetY, offsetX, angle, speed, gfxMoving,
+                viewer.createProjectile(pos.getY(), pos.getX(), offsetY, offsetX, speed, gfxMoving,
                         startHeight, endHeight, index, begin, slope, 64));
     }
 
@@ -1282,17 +1281,22 @@ public class Client extends Player implements Runnable {
     }
 
     public int getBankAmt(int itemID) {
-        int slot = -1;
-        for (int i = 0; i < bankSize() && slot == -1; i++)
-            if (bankItems[i] == itemID + 1)
-                slot = i;
-        return slot == -1 ? 0 : bankItemsN[slot];
+        int size = bankSize();
+        for (int i = 0; i < size; i++) {
+            if (bankItems[i] == itemID + 1) {
+                return bankItemsN[i];
+            }
+        }
+        return 0;
     }
     public int getBankSlot(int itemID) {
-        int slot = -1;
-        for (int i = 0; i < bankSize() && slot == -1; i++)
-            if (bankItems[i] == itemID + 1) slot = i;
-        return slot;
+        int size = bankSize();
+        for (int i = 0; i < size; i++) {
+            if (bankItems[i] == itemID + 1) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     @Deprecated
@@ -1311,6 +1315,7 @@ public class Client extends Player implements Runnable {
         boolean bankChanged = false;
         ensureBankTabState();
         int id = getUnnotedItem(itemID);
+        int size = bankSize();
         if (id == 0) {
             if (playerItems[fromSlot] <= 0) {
                 return;
@@ -1319,22 +1324,22 @@ public class Client extends Player implements Runnable {
             if (Server.itemManager.isStackable(itemID) || playerItemsN[fromSlot] > 1) {
                 int toBankSlot = 0;
                 boolean alreadyInBank = false;
-                for (int i = 0; i < bankSize(); i++) {
+                for (int i = 0; i < size; i++) {
                     if (bankItems[i] - 1 == itemID) { //Bank starts at value 0 while items should start at -1!
                         if (playerItemsN[fromSlot] < amount) {
                             amount = playerItemsN[fromSlot];
                         }
                         alreadyInBank = true;
                         toBankSlot = i;
-                        i = bankSize() + 1;
+                        break;
                     }
                 }
 
                 if (!alreadyInBank && freeBankSlots() > 0) {
-                    for (int i = 0; i < bankSize(); i++) {
+                    for (int i = 0; i < size; i++) {
                         if (bankItems[i] <= 0) {
                             toBankSlot = i;
-                            i = bankSize() + 1;
+                            break;
                         }
                     }
                     bankItems[toBankSlot] = itemID + 1; //To continue on comment above..Dodian thing :D
@@ -1368,18 +1373,18 @@ public class Client extends Player implements Runnable {
                 int toBankSlot = 0;
                 boolean alreadyInBank = false;
 
-                for (int i = 0; i < bankSize(); i++) {
+                for (int i = 0; i < size; i++) {
                     if (bankItems[i] == playerItems[fromSlot]) {
                         alreadyInBank = true;
                         toBankSlot = i;
-                        i = bankSize() + 1;
+                        break;
                     }
                 }
                 if (!alreadyInBank && freeBankSlots() > 0) {
-                    for (int i = 0; i < bankSize(); i++) {
+                    for (int i = 0; i < size; i++) {
                         if (bankItems[i] <= 0) {
                             toBankSlot = i;
-                            i = bankSize() + 1;
+                            break;
                         }
                     }
                     int firstPossibleSlot = 0;
@@ -1390,7 +1395,7 @@ public class Client extends Player implements Runnable {
                             if ((playerItems[i]) == itemID) {
                                 firstPossibleSlot = i;
                                 itemExists = true;
-                                i = 30;
+                                break;
                             }
                         }
                         if (itemExists) {
@@ -1413,7 +1418,7 @@ public class Client extends Player implements Runnable {
                             if ((playerItems[i]) == itemID) {
                                 firstPossibleSlot = i;
                                 itemExists = true;
-                                i = 30;
+                                break;
                             }
                         }
                         if (itemExists) {
@@ -1437,21 +1442,21 @@ public class Client extends Player implements Runnable {
             if (Server.itemManager.isStackable(playerItems[fromSlot] - 1) || playerItemsN[fromSlot] > 1) {
                 int toBankSlot = 0;
                 boolean alreadyInBank = false;
-                for (int i = 0; i < bankSize(); i++) {
+                for (int i = 0; i < size; i++) {
                     if (bankItems[i] == getUnnotedItem(playerItems[fromSlot] - 1) + 1) {
                         if (playerItemsN[fromSlot] < amount) {
                             amount = playerItemsN[fromSlot];
                         }
                         alreadyInBank = true;
                         toBankSlot = i;
-                        i = bankSize() + 1;
+                        break;
                     }
                 }
                 if (!alreadyInBank && freeBankSlots() > 0) {
-                    for (int i = 0; i < bankSize(); i++) {
+                    for (int i = 0; i < size; i++) {
                         if (bankItems[i] <= 0) {
                             toBankSlot = i;
-                            i = bankSize() + 1;
+                            break;
                         }
                     }
                     bankItems[toBankSlot] = id + 1;
@@ -1483,18 +1488,18 @@ public class Client extends Player implements Runnable {
                 int toBankSlot = 0;
                 boolean alreadyInBank = false;
 
-                for (int i = 0; i < bankSize(); i++) {
+                for (int i = 0; i < size; i++) {
                     if (bankItems[i] == (playerItems[fromSlot] - 1)) {
                         alreadyInBank = true;
                         toBankSlot = i;
-                        i = bankSize() + 1;
+                        break;
                     }
                 }
                 if (!alreadyInBank && freeBankSlots() > 0) {
-                    for (int i = 0; i < bankSize(); i++) {
+                    for (int i = 0; i < size; i++) {
                         if (bankItems[i] <= 0) {
                             toBankSlot = i;
-                            i = bankSize() + 1;
+                            break;
                         }
                     }
                     int firstPossibleSlot = 0;
@@ -1505,7 +1510,7 @@ public class Client extends Player implements Runnable {
                             if ((playerItems[i]) == itemID) {
                                 firstPossibleSlot = i;
                                 itemExists = true;
-                                i = 30;
+                                break;
                             }
                         }
                         if (itemExists) {
@@ -1528,7 +1533,7 @@ public class Client extends Player implements Runnable {
                             if ((playerItems[i]) == itemID) {
                                 firstPossibleSlot = i;
                                 itemExists = true;
-                                i = 30;
+                                break;
                             }
                         }
                         if (itemExists) {
@@ -1615,8 +1620,8 @@ public class Client extends Player implements Runnable {
 
     public int freeBankSlots() {
         int freeS = 0;
-
-        for (int i = 0; i < bankSize(); i++) {
+        int size = bankSize();
+        for (int i = 0; i < size; i++) {
             if (bankItems[i] <= 0) {
                 freeS++;
             }
@@ -4069,16 +4074,21 @@ public class Client extends Player implements Runnable {
     }
 
     public void openTrade() {
+        Client other = getClient(trade_reqId);
+        if (other == null) {
+            declineTrade(false);
+            return;
+        }
         inTrade = true;
         tradeRequested = false;
         resetItems(3322);
         resetTItems(3415);
         resetOTItems(3416);
         send(new InventoryInterface(3323, 3321)); // trading window + bag
-        String out = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[trade_reqId].getPlayerName();
-        if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[trade_reqId].playerRights == 1) {
+        String out = other.getPlayerName();
+        if (other.playerRights == 1) {
             out = "@cr1@" + out;
-        } else if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[trade_reqId].playerRights == 2) {
+        } else if (other.playerRights == 2) {
             out = "@cr2@" + out;
         }
         send(new SendString("Trading With: " + out, 3417));
@@ -4092,26 +4102,84 @@ public class Client extends Player implements Runnable {
 
     public void declineTrade(boolean tellOther) {
         Client other = getClient(trade_reqId);
-        if (tellOther && other != null) {
+        boolean cancelOther = tellOther && other != null && other.inTrade && other.trade_reqId == getSlot();
+        TradeRefundPlan ownRefund = prepareTradeRefund();
+        TradeRefundPlan otherRefund = cancelOther ? other.prepareTradeRefund() : null;
+        if (ownRefund == null || (cancelOther && otherRefund == null)) {
+            logger.error("Unable to safely refund cancelled trade for player={} partner={}", getPlayerName(), other == null ? "none" : other.getPlayerName());
+            send(new SendMessage("Your trade could not be cancelled safely. Please contact staff."));
+            return;
+        }
+
+        ownRefund.commit();
+        if (otherRefund != null) {
+            otherRefund.commit();
+        }
+        finishDeclineTrade();
+        if (cancelOther) {
+            other.finishDeclineTrade();
             GameEventBus.post(new TradeCancelEvent(this, other));
         }
-        /* Prevent a dupe? */
-        inTrade = false;
-        if (tellOther && validClient(trade_reqId))
-            other.declineTrade(false);
-        /* Clear the trade! */
+    }
+
+    private TradeRefundPlan prepareTradeRefund() {
+        int[] plannedItems = Arrays.copyOf(playerItems, playerItems.length);
+        int[] plannedAmounts = Arrays.copyOf(playerItemsN, playerItemsN.length);
         for (GameItem item : offeredItems) {
-            if (item.getAmount() > 0) {
-                if (Server.itemManager.isStackable(item.getId())) {
-                    addItem(item.getId(), item.getAmount());
-                } else {
-                    for (int i = 0; i < item.getAmount(); i++) {
-                        addItem(item.getId(), 1);
+            if (item.getId() < 0 || item.getAmount() <= 0) {
+                continue;
+            }
+            if (!planTradeRefundItem(plannedItems, plannedAmounts, item.getId(), item.getAmount())) {
+                return null;
+            }
+        }
+        return new TradeRefundPlan(this, plannedItems, plannedAmounts);
+    }
+
+    private boolean planTradeRefundItem(int[] items, int[] amounts, int itemId, int amount) {
+        if (Server.itemManager.isStackable(itemId)) {
+            int slot = -1;
+            for (int i = 0; i < items.length; i++) {
+                if (items[i] == itemId + 1) {
+                    slot = i;
+                    break;
+                }
+            }
+            if (slot == -1) {
+                for (int i = 0; i < items.length; i++) {
+                    if (items[i] <= 0) {
+                        slot = i;
+                        items[i] = itemId + 1;
+                        break;
                     }
                 }
             }
+            if (slot == -1 || (long) amounts[slot] + amount > maxItemAmount) {
+                return false;
+            }
+            amounts[slot] += amount;
+            return true;
         }
+        for (int count = 0; count < amount; count++) {
+            int slot = -1;
+            for (int i = 0; i < items.length; i++) {
+                if (items[i] <= 0) {
+                    slot = i;
+                    break;
+                }
+            }
+            if (slot == -1) {
+                return false;
+            }
+            items[slot] = itemId + 1;
+            amounts[slot] = 1;
+        }
+        return true;
+    }
+
+    private void finishDeclineTrade() {
         send(new RemoveInterfaces());
+        inTrade = false;
         canOffer = true;
         tradeConfirmed = false;
         tradeConfirmed2 = false;
@@ -4123,17 +4191,34 @@ public class Client extends Player implements Runnable {
         checkItemUpdate();
     }
 
+    private static final class TradeRefundPlan {
+        private final Client client;
+        private final int[] items;
+        private final int[] amounts;
+
+        private TradeRefundPlan(Client client, int[] items, int[] amounts) {
+            this.client = client;
+            this.items = items;
+            this.amounts = amounts;
+        }
+
+        private void commit() {
+            System.arraycopy(items, 0, client.playerItems, 0, items.length);
+            System.arraycopy(amounts, 0, client.playerItemsN, 0, amounts.length);
+            client.markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
+        }
+    }
+
     public boolean validClient(int index) {
-        Client p = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[index];
-        return p != null && !p.disconnected && p.dbId > 0;
+        return PlayerRegistry.validClient(index);
     }
 
     public Client getClient(int index) {
-        return index < 0 ? null : ((Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[index]);
+        return PlayerRegistry.getClient(index);
     }
 
     public void tradeReq(int id) {
-        Client other = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[id];
+        Client other = getClient(id);
         if (other == null) return;
         setFocus(other.getPosition().getX(), other.getPosition().getY());
         if (!net.dodian.uber.game.engine.config.FeatureStateService.trading.get()) {
@@ -4956,13 +5041,19 @@ public class Client extends Player implements Runnable {
 
     public void died() {
         int highestDmg = 0, slot = -1;
-        for (Entity e : getDamage().keySet()) {
-            if (getDamage().get(e) > highestDmg) {
-                highestDmg = getDamage().get(e);
+        for (Iterator<Map.Entry<Entity, Integer>> it = getDamage().entrySet().iterator(); it.hasNext();) {
+            Map.Entry<Entity, Integer> entry = it.next();
+            Entity e = entry.getKey();
+            if (!(e instanceof Client) || !validClient(e.getSlot())) {
+                it.remove();
+                continue;
+            }
+            if (entry.getValue() > highestDmg) {
+                highestDmg = entry.getValue();
                 slot = e.getSlot();
             }
         }
-        getDamage().clear();
+        clearDamageAttribution();
         if (slot >= 0) {
             if (validClient(slot)) {
                 Ground.addFloorItem(getClient(slot), 526, 1);
@@ -5609,7 +5700,7 @@ public class Client extends Player implements Runnable {
 
     public int totalLevel() {
         int total = 0;
-        for (Skill skill : Skill.values()) {
+        for (Skill skill : Skill.VALUES) {
             if (skill.isEnabled()) {
                 total += Skills.getLevelForExperience(getExperience(skill));
             } else {

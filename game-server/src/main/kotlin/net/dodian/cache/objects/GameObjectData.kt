@@ -71,10 +71,7 @@ class GameObjectData(
 
         @JvmStatic
         fun forId(id: Int): GameObjectData {
-            if (id < 0) {
-                return fallback(id)
-            }
-            return definitions.computeIfAbsent(id) { fallback(it) }
+            return definitions[id] ?: fallback(id)
         }
 
         private fun fallback(id: Int): GameObjectData {

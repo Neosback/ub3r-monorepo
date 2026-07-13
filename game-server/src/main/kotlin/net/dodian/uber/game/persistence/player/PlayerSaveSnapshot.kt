@@ -96,7 +96,7 @@ data class PlayerSaveSnapshot(
             }
 
             prayer.append(client.currentPrayer)
-            for (pray in PrayerManager.Prayer.values()) {
+            for (pray in PrayerManager.Prayer.VALUES) {
                 if (client.prayerManager.isPrayerOn(pray)) {
                     prayer.append(':').append(pray.buttonId)
                 }

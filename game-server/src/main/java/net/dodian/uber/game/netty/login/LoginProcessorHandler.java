@@ -41,6 +41,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     private static final AtomicLong LOGIN_CHANNEL_CLOSES_BEFORE_FINALIZE = new AtomicLong();
     private static final AtomicLong LOGIN_INITIALIZER_FAILURES = new AtomicLong();
     private static final ConcurrentHashMap<Long, Object> LOADING_ACCOUNTS = new ConcurrentHashMap<>();
+    private static final LoginAttemptLimiter LOGIN_ATTEMPTS = new LoginAttemptLimiter();
 
     private static final int LOGIN_SUCCESS_CODE = 2;
     private static final int RSA_MAGIC          = 255;
@@ -65,6 +66,12 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     protected void channelRead0(ChannelHandlerContext ctx, LoginPayload payloadHolder) {
         ByteBuf in = payloadHolder.payload();
         try {
+            String remoteIp = remoteIp(ctx);
+            if (!LOGIN_ATTEMPTS.tryAcquire(remoteIp, System.currentTimeMillis())) {
+                logger.warn("[Netty] Login throttled from {}", remoteIp);
+                sendAndClose(ctx, 13);
+                return;
+            }
             if (!parseLogin(ctx, in)) {
                 return; // parseLogin already handled failure
             }
@@ -262,6 +269,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             long slotReserveDurationMs
     ) {
         if (loadResult.getCode() != 0) {
+            LOGIN_ATTEMPTS.recordFailure(remoteIp(ctx), System.currentTimeMillis());
             long failures = LOGIN_LOAD_FAILURES.incrementAndGet();
             logger.warn(
                     "Login load failed for {} code={} load={}ms pendingRetries={} failures={}",
@@ -276,6 +284,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             sendAndClose(ctx, loadResult.getCode());
             return;
         }
+
+        LOGIN_ATTEMPTS.recordSuccess(remoteIp(ctx));
 
         client.validLogin = true;
         client.playerRights = (client.playerGroup == 9 || client.playerGroup == 5) ? 1 :
@@ -403,6 +413,15 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 loadResult.getDurationMs(),
                 loadResult.getPendingRetries()
         );
+    }
+
+    private static String remoteIp(ChannelHandlerContext ctx) {
+        try {
+            InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
+            return address != null && address.getAddress() != null ? address.getAddress().getHostAddress() : null;
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     /* Slot helpers */

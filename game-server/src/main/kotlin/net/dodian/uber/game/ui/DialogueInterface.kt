@@ -94,7 +94,6 @@ object DialogueInterface : InterfaceButtonContent {
                         DialogueService.setDialogueSent(client, false)
                         client.openUpShop(ShopId.LEGACY_SHOP_2.id)
                     }
-                    1001 -> client.send(SendFrame27())
                     22 -> {
                         DialogueService.setDialogueId(client, 23)
                         DialogueService.setDialogueSent(client, false)
@@ -105,15 +104,6 @@ object DialogueInterface : InterfaceButtonContent {
                         client.send(RemoveInterfaces())
                         DialogueService.setDialogueId(client, 0)
                         DialogueService.setDialogueSent(client, false)
-                    }
-                    9 -> {
-                        if (client.determineCombatLevel() >= 80) {
-                            client.moveTo(3105, 3933, 0)
-                            client.send(RemoveInterfaces())
-                        } else {
-                            client.sendMessage("You need to be level 80 or above to enter the mage arena.")
-                            client.sendMessage("The skeletons at the varrock castle are a good place until then.")
-                        }
                     }
                 }
                 true
@@ -136,10 +126,6 @@ object DialogueInterface : InterfaceButtonContent {
                     22 -> {
                         DialogueService.setDialogueId(client, 24)
                         DialogueService.setDialogueSent(client, false)
-                    }
-                    1001 -> {
-                        client.clearWalkableInterface()
-                        client.send(RemoveInterfaces())
                     }
                     27 -> {
                         client.yellOn = false

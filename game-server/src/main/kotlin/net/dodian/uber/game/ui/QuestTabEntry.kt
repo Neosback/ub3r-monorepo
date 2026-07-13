@@ -50,14 +50,15 @@ enum class QuestTabEntry(
     fun getName(): String = questName
 
     companion object {
-        private val QUEST_SEND_VALUES = values()
+        @JvmField
+        val VALUES = values()
         private val HOURS_FORMAT = ThreadLocal.withInitial { DecimalFormat("0.000") }
         private var cachedUptimeMinutes = Long.MIN_VALUE
         private var cachedUptimeText = "@gre@[0@gre@] minutes uptime"
 
         @JvmStatic
         fun getSender(button: Int): QuestTabEntry? {
-            for (quest in QUEST_SEND_VALUES) {
+            for (quest in VALUES) {
                 if (quest.getClickId() == button) {
                     return quest
                 }
@@ -70,7 +71,7 @@ enum class QuestTabEntry(
             client.sendCachedString("Dodian Quests", 640)
             client.sendCachedString("Premium", 663)
             client.sendCachedString("Other Stuff", 682)
-            for (quest in QUEST_SEND_VALUES) {
+            for (quest in VALUES) {
                 val stage = client.quests[quest.getId()]
                 if (stage == 0) {
                     client.sendCachedString("@red@" + quest.getName(), quest.getConfig())
@@ -277,7 +278,7 @@ enum class QuestTabEntry(
 
         @JvmStatic
         fun clearQuestName(client: Client) {
-            for (quest in QUEST_SEND_VALUES) {
+            for (quest in VALUES) {
                 client.sendString("", quest.getConfig())
             }
         }

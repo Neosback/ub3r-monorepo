@@ -221,9 +221,10 @@ object PlayerSaveService {
             val elapsed =
                 withTimeoutOrNull(SAVE_REQUEST_TIMEOUT_MS) {
                     measureTimeMillis {
-                        val snapshot = repository.buildSnapshot(request.envelope)
                         if (request.envelope.finalSave || request.envelope.updateProgress) {
-                            request.shadowSnapshot?.let { shadow -> compareShadow(shadow, snapshot) }
+                            request.shadowSnapshot?.let { shadow ->
+                                compareShadow(shadow, repository.buildSnapshot(request.envelope))
+                            }
                         }
                         repository.saveEnvelope(request.envelope)
                     }

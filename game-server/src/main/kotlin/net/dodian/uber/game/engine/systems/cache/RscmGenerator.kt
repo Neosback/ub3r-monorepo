@@ -12,6 +12,7 @@ object RscmGenerator {
 
     @JvmStatic
     fun main(args: Array<String>) {
+        val locOnly = args.contains("--loc-only")
         var outputDir = File("data/mappings")
         if (File("../settings.gradle.kts").exists()) {
             outputDir = File("../game-server/data/mappings")
@@ -42,7 +43,13 @@ object RscmGenerator {
 
         println("Decoding Object definitions...")
         val objDefs = ObjectDefinitionDecoder.decode(store).definitions
-        writeRscm(outputDir, "loc", buildLines(objDefs.values.map { it.name to it.id }))
+        val alterObjectNames = loadAlterObjectNames(System.getProperty("alter.objs.path")?.let(::File))
+        writeRscm(outputDir, "loc", buildLocLines(objDefs, outputDir, alterObjectNames))
+        if (locOnly) {
+            println("Successfully generated loc.rscm under ${outputDir.absolutePath}!")
+            store.close()
+            return
+        }
 
         println("Decoding SpotAnim definitions...")
         val spotAnimDefs = SpotAnimDefinitionDecoder.decode(store)
@@ -130,6 +137,83 @@ object RscmGenerator {
             "$key=$id"
         }
     }
+
+    /**
+     * Produces a complete cache-backed loc mapping while allowing a compatible
+     * Alter object table to improve names for IDs it knows about. The override
+     * source is intentionally optional: cache IDs and existing current-only
+     * keys always survive generation.
+     */
+    private fun buildLocLines(
+        definitions: Map<Int, net.dodian.cache.objects.GameObjectData>,
+        outputDir: File,
+        alterNames: Map<Int, String>,
+    ): List<String> {
+        val existingNames = loadMappingsById(File(outputDir, "loc.rscm"))
+        data class Candidate(val id: Int, val key: String, val fromAlter: Boolean)
+
+        val candidates = definitions.values
+            .sortedBy { it.id }
+            .map { definition ->
+                val alterName = alterNames[definition.id]
+                Candidate(
+                    id = definition.id,
+                    key = alterName ?: existingNames[definition.id] ?: normalizedKey(definition.name),
+                    fromAlter = alterName != null,
+                )
+            }
+
+        val resolved = LinkedHashMap<Int, String>(candidates.size)
+        val used = mutableSetOf<String>()
+        candidates.groupBy { it.key }.toSortedMap().forEach { (key, group) ->
+            val preferred = group.firstOrNull { it.fromAlter } ?: group.minBy { it.id }
+            resolved[preferred.id] = key
+            used += key
+            group.filterNot { it === preferred }.sortedBy { it.id }.forEach { candidate ->
+                var resolvedKey = "${key}_${candidate.id}"
+                var suffix = 2
+                while (!used.add(resolvedKey)) {
+                    resolvedKey = "${key}_${candidate.id}_$suffix"
+                    suffix++
+                }
+                resolved[candidate.id] = resolvedKey
+            }
+        }
+        return resolved.entries.sortedBy { it.key }.map { (id, key) -> "$key=$id" }
+    }
+
+    private fun loadAlterObjectNames(file: File?): Map<Int, String> {
+        if (file == null || !file.isFile) {
+            println("No Alter Objs.kt supplied; retaining cache loc names.")
+            return emptyMap()
+        }
+        val names = LinkedHashMap<Int, String>()
+        file.forEachLine { line ->
+            val declaration = line.trim()
+            if (!declaration.startsWith("const val ")) return@forEachLine
+            val parts = declaration.removePrefix("const val ").split(" = ", limit = 2)
+            val id = parts.getOrNull(1)?.toIntOrNull() ?: return@forEachLine
+            val name = parts[0].takeIf { it.isNotBlank() } ?: return@forEachLine
+            names[id] = name.lowercase()
+        }
+        println("Loaded ${names.size} Alter object names from ${file.path}")
+        return names
+    }
+
+    private fun loadMappingsById(file: File): Map<Int, String> {
+        if (!file.isFile) return emptyMap()
+        val result = HashMap<Int, String>()
+        file.forEachLine { line ->
+            val separator = line.indexOf('=')
+            if (separator <= 0) return@forEachLine
+            val id = line.substring(separator + 1).trim().toIntOrNull() ?: return@forEachLine
+            result[id] = line.substring(0, separator).trim()
+        }
+        return result
+    }
+
+    private fun normalizedKey(name: String): String =
+        Namer.sanitizeRSCM(name).ifEmpty { "unnamed" }
 
     private fun generateKey(name: String, id: Int, existing: MutableSet<String>): String {
         val base = Namer.sanitizeRSCM(name)

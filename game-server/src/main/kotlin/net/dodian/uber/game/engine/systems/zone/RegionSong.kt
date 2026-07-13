@@ -35,9 +35,12 @@ enum class RegionSong(
             position.getY() <= area.maxY
 
     companion object {
+        @JvmField
+        val VALUES = values()
+
         @JvmStatic
         fun getRegionSong(position: Position): RegionSong {
-            for (song in values()) {
+            for (song in VALUES) {
                 if (song.isInArea(position)) {
                     return song
                 }

@@ -154,6 +154,12 @@ class EntityProcessor : Runnable {
             return
         }
         npc.currentGameCycle = GameCycleClock.currentCycle()
+        if (npc.currentGameCycle % 100L == 0L && npc.damage.isNotEmpty()) {
+            npc.pruneDamageAttribution { contributor ->
+                contributor is Client && contributor.isActive && !contributor.disconnected &&
+                    PlayerRegistry.validClient(contributor.slot)
+            }
+        }
 
         if (npc.coordinateState == Npc.CoordinateState.RETREATING) {
             npc.isFighting = false
@@ -229,7 +235,7 @@ class EntityProcessor : Runnable {
                     npc.isFighting = false
                     npc.retreatTimer = 0
                     npc.wanderStuckTicks = 0
-                    npc.damage.clear()
+                    npc.clearDamageAttribution()
                     return
                 } else if (gap > npc.effectiveAttackRange ||
                     (npc.effectiveAttackRange > 1 && !CombatReachService.hasProjectileLineOfSight(npc, finalTarget))

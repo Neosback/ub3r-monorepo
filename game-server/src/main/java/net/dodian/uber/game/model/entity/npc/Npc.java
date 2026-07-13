@@ -199,12 +199,11 @@ public class Npc extends Entity {
     }
 
     public Client getClient(int index) {
-        return ((Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[index]);
+        return net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(index);
     }
 
     public boolean validClient(int index) {
-        Client p = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[index];
-        return p != null && !p.disconnected && p.dbId > 0;
+        return net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.validClient(index);
     }
 
     public int getId() {
@@ -822,7 +821,7 @@ public class Npc extends Entity {
         hadFrenzy = false;
         inFrenzy = -1;
         setLastAttack(0);
-        getDamage().clear();
+        clearDamageAttribution();
         for(int i = 0; i < boostedStat.length; i++) {
             boostedStatOrig[i] = 0;
             boostedStat[i] = 0;
@@ -854,6 +853,8 @@ public class Npc extends Entity {
                     highest = damage == 0 ? -1 : damage;
                     killer = candidate;
                 }
+            } else {
+                it.remove();
             }
         }
         if (getDamage().isEmpty()) {
@@ -880,6 +881,8 @@ public class Npc extends Entity {
                     highest = damage == 0 ? -1 : damage;
                     killer = candidate;
                 }
+            } else {
+                it.remove();
             }
         }
         if (getDamage().isEmpty()) {
@@ -1150,6 +1153,10 @@ public class Npc extends Entity {
         return level[4] + boostedStat[4];
     }
 
+    public int getMaxHit() {
+        return maxHit;
+    }
+
     public double getMagic() {
         double bonus = (level[6] + boostedStat[3]) / 10D;
         return bonus <= 0.0 ? 1.0 : (1.0 + (bonus / 100D));
@@ -1239,50 +1246,6 @@ public class Npc extends Entity {
         c.setFocus(c.getPosition().getX(), c.getPosition().getY());
         boolean halfHealth = currentHealth <= maxHealth / 2;
         switch(getId()) {
-            case 799: //Scarab Mage - 66
-            case 794: //Scarab Mage - 93
-                setLastAttack(getAttackTimer());
-                if(!halfHealth) { //Magic attack
-                    hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
-                    sendArrow(c, 87, 88);
-                    delayGfx(c, 708, 89, getDistanceDelay(distance, true), hitDiff, false, this, damageType.MAGIC);
-                    //performAnimation(708, 0);
-                } else { //Melee attack
-                    hitDiff = landHit(c, true) ? Utils.random(maxHit) : 0;
-                    performAnimation(data.getAttackEmote(), 0);
-                    c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.MELEE);
-                }
-                break;
-            case 800: //Locust rider - melee - 68
-            case 795: //Locust rider - melee - 103
-                setLastAttack(getAttackTimer());
-                if(!halfHealth) { //Melee attack
-                    hitDiff = landHit(c, true) ? Utils.random(maxHit) : 0;
-                    performAnimation(data.getAttackEmote(), 0);
-                    c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    //performAnimation(708, 0);
-                } else { //Ranged attack
-                    CalculateMaxHit(false);
-                    hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
-                    sendArrow(c, -1, 276);
-                    delayGfx(c, 5446, -1, getDistanceDelay(distance, false), hitDiff, false, this, damageType.RANGED);
-                }
-                break;
-            case 801: //Locust rider - ranged - 68
-            case 796: //Locust rider - ranged - 98
-                setLastAttack(getAttackTimer());
-                if(!halfHealth) { //Ranged attack
-                    CalculateMaxHit(false);
-                    hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
-                    sendArrow(c, 23, 14);
-                    delayGfx(c, data.getAttackEmote(), -1, getDistanceDelay(distance, false), hitDiff, false, this, damageType.RANGED);
-                    //performAnimation(708, 0);
-                } else { //Magic attack
-                    hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
-                    sendArrow(c, -1, 146);
-                    delayGfx(c, 5446, 147, getDistanceDelay(distance, true), hitDiff, false, this, damageType.MAGIC);
-                }
-                break;
             case 260: //Green dragon
             case 265: //Blue Dragon
             case 247: //Red dragon
@@ -1492,7 +1455,7 @@ public class Npc extends Entity {
         int height = getId() == 3127 ? 143 : getId() == 796 || getId() == 801 ? 98 : 43;
         int flightHeight = getId() == 3127 ? 143 : getId() == 796 || getId() == 801 ? 43 : height;
         setGfx(startGfx, height);
-        target.arrowNpcGfx(this.getPosition(), offsetY, offsetX, 50, speed, flightGfx, flightHeight, 35, -(target.getSlot() + 1), 51, 16);
+        target.arrowNpcGfx(this.getPosition(), offsetY, offsetX, speed, flightGfx, flightHeight, 35, -(target.getSlot() + 1), 51, 16);
     }
 
     private static boolean requiresProjectileLineOfSight(damageType type) {

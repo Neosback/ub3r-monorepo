@@ -32,8 +32,10 @@ public enum Emotes {
         return animationId;
     }
 
+    private static final Emotes[] VALUES = values();
+
     public static void doEmote(int buttonId, Player player) {
-        for (Emotes emote : Emotes.values()) {
+        for (Emotes emote : VALUES) {
             if (emote.getButtonId() == buttonId) {
                 player.sendAnimation(emote.getAnimationId());
                 return;

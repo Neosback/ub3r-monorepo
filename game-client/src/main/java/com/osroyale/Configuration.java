@@ -8,10 +8,10 @@ package com.osroyale;
  */
 public final class Configuration {
 
-    public static final String LIVE_GAME_ADDRESS = "game.tarnishps.com";
+    public static final String LIVE_GAME_ADDRESS = "Play.dodian.net";
     public static final int LIVE_GAME_PORT = 43594;
 
-    public static final String LIVE_CACHE_ADDRESS = "cache.tarnishps.com";
+    public static final String LIVE_CACHE_ADDRESS = "Play.dodian.net";
     public static final int LIVE_CACHE_PORT = 43595;
 
     public static final String DEV_GAME_ADDRESS = "localhost";
@@ -39,7 +39,7 @@ public final class Configuration {
     /**
      * Debug the interfaces.
      */
-    static boolean DUMP_INTERFACES = false;
+    static boolean DUMP_INTERFACES = true;
 
     /**
      * State of client enabling RSA encryption.
@@ -59,7 +59,7 @@ public final class Configuration {
     /**
      * The name of the client.
      */
-    public final static String NAME = "Tarnish";
+    public final static String NAME = "Dodian 3.0";
 
     /**
      * The cache file name.

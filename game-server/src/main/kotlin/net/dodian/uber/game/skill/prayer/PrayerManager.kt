@@ -164,7 +164,9 @@ class PrayerManager(player: Player) {
         PIETY(80, 24, 707, 19827, ATTACK_PRAYER or STRENGTH_PRAYER or DEFENCE_PRAYER or MAGIC_PRAYER or RANGE_PRAYER);
 
         companion object {
-            private val BY_BUTTON = values().associateBy { it.buttonId }
+            @JvmField
+            val VALUES = values()
+            private val BY_BUTTON = VALUES.associateBy { it.buttonId }
 
             @JvmStatic
             fun forButton(button: Int): Prayer? = BY_BUTTON[button]

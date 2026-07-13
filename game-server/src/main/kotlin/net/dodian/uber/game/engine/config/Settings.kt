@@ -77,6 +77,13 @@ object SettingsLoader {
     }
 
     private fun validate() {
+        val environment = settings.server.environment.lowercase()
+        if (environment !in setOf("dev", "test", "staging", "prod", "production")) {
+            throw IllegalStateException("server.environment must be dev, test, staging, prod, or production")
+        }
+        if (environment in setOf("prod", "production") && settings.server.debug) {
+            throw IllegalStateException("server.debug must be false in production")
+        }
         // Validate ranges
         if (settings.network.gamePort !in 1..65535) {
             throw IllegalStateException("game_port must be in range 1-65535")

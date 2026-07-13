@@ -22,7 +22,6 @@ object TomlProjectileLoader {
         var id = -1
         var startHeight = 43
         var endHeight = 31
-        var curve = 16
         var delay = 51
         var slope = 16
         var inEntry = false
@@ -37,7 +36,6 @@ object TomlProjectileLoader {
                     def = ProjectileDef(
                         startHeight = startHeight,
                         endHeight = endHeight,
-                        curve = curve,
                         delay = delay,
                         slope = slope
                     )
@@ -47,7 +45,6 @@ object TomlProjectileLoader {
             id = -1
             startHeight = 43
             endHeight = 31
-            curve = 16
             delay = 51
             slope = 16
             inEntry = false
@@ -83,7 +80,6 @@ object TomlProjectileLoader {
                         }
                         "startHeight" -> startHeight = value.toInt()
                         "endHeight" -> endHeight = value.toInt()
-                        "curve" -> curve = value.toInt()
                         "delay" -> delay = value.toInt()
                         "slope" -> slope = value.toInt()
                     }

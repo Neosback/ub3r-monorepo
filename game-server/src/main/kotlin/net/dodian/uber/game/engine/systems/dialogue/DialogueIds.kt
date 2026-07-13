@@ -3,11 +3,6 @@ package net.dodian.uber.game.engine.systems.dialogue
 object DialogueIds {
 
     object Legacy {
-        const val GAMBLER_GREETING = Classic.GAMBLER_GREETING
-        const val GAMBLER_OPTIONS = Classic.GAMBLER_OPTIONS
-        const val GAMBLER_BUSY = Classic.GAMBLER_BUSY
-        const val MAGE_ARENA_OPTIONS = Classic.MAGE_ARENA_OPTIONS
-        const val WATCHER_MESSAGE = Classic.WATCHER_MESSAGE
     }
 
     object Classic {
@@ -19,12 +14,6 @@ object DialogueIds {
         const val RUNE_SHOP_REPLY = 6
         const val RUNE_SHOP_REPLY_ONE_LINE = 7
         const val PIN_NOT_IMPLEMENTED = 8
-        const val MAGE_ARENA_OPTIONS = 9
-        const val WATCHER_MESSAGE = 10
-
-        const val GAMBLER_GREETING = 1000
-        const val GAMBLER_OPTIONS = 1001
-        const val GAMBLER_BUSY = 1002
 
         const val TOGGLE_SPECIALS = 26
         const val TOGGLE_BOSS_YELL = 27
@@ -107,10 +96,6 @@ object DialogueIds {
         const val MAX_CAPE_OFFER = 6482
         const val MAX_CAPE_CONFIRM = 6483
         const val MAX_CAPE_PURCHASE = 6484
-
-        const val HOLIDAY_GREETING = 8051
-        const val HOLIDAY_INFO = 8052
-        const val HOLIDAY_OPTIONS = 8053
 
         const val ROCKSHELL_MENU = 10000
         const val PYRAMID_EXIT = 20931

@@ -46,7 +46,7 @@ object PlayerRegistry {
     @JvmStatic
     fun validClient(index: Int): Boolean {
         val player = players.getOrNull(index) as? Client ?: return false
-        return !player.disconnected && player.dbId >= 0
+        return !player.disconnected && player.dbId > 0
     }
 
     @JvmStatic

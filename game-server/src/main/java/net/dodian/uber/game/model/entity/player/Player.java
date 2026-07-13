@@ -329,10 +329,13 @@ public abstract class Player extends Entity {
         ACCURATE, RAPID, LONGRANGE, // Range weapons
         FLICK, LASH, DEFLECT, // Abyssal Whip
         SWIPE_CON, POUND_CON, // Spear
-        BLOCK_THREE // MAUL!
+        BLOCK_THREE; // MAUL!
+
+        public static final fightStyle[] VALUES = values();
     }
 
     void destruct() {
+        clearDamageAttribution();
         updateState.releaseCachedUpdateBlock();
         cancelMiningTask();
         clearMiningState();
@@ -1999,8 +2002,9 @@ public abstract class Player extends Entity {
     private static final positions[] POSITION_VALUES = positions.values();
 
     public int getSkillId(String name) {
-        for (int i = 0; i < Skill.values().length; i++)
-            if (Skill.values()[i].getName().startsWith(name.toLowerCase()))
+        Skill[] skills = Skill.VALUES;
+        for (int i = 0; i < skills.length; i++)
+            if (skills[i].getName().startsWith(name.toLowerCase()))
                 return i;
         return -1;
     }

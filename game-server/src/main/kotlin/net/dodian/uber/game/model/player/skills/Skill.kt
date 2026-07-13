@@ -59,7 +59,8 @@ enum class Skill(
     fun getLevelComponent(): Int = levelComponentId
 
     companion object {
-        private val VALUES = values()
+        @JvmField
+        val VALUES = values()
 
         @JvmStatic
         fun getSkill(id: Int): Skill? = VALUES.firstOrNull { it.skillId == id }

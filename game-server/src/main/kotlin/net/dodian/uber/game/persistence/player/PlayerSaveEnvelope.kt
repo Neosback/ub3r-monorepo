@@ -65,7 +65,7 @@ data class PlayerSaveEnvelope(
                 totalXp += experience
             }
             val prayerButtons =
-                PrayerManager.Prayer.values()
+                PrayerManager.Prayer.VALUES
                     .filter { prayer -> client.prayerManager.isPrayerOn(prayer) }
                     .map { it.buttonId }
                     .toIntArray()

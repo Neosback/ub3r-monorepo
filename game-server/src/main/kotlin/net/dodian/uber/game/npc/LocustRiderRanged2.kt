@@ -17,6 +17,8 @@ internal object LocustRiderRanged2 : NpcFamily by npcFamily("Locust rider ranged
         magic = 300
     }
 
+    combat { handler(ScarabLocustCombat) }
+
     spawns {
         spawn(3237, 2780)
     }

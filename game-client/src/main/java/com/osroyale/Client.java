@@ -5817,9 +5817,9 @@ public class Client extends GameEngine
                         }
                     } else if (MouseHandler.saveClickX >= 404 && MouseHandler.saveClickX <= 515 && MouseHandler.saveClickY >= yOffset + 482 && MouseHandler.saveClickY <= yOffset + 505) {
                         if (Utility.staff(localPlayer.privelage)) {
-                            Utility.launchURL("www.tarnishps.com/admin");
+                            Utility.launchURL("www.Dodian.net.com/admin");
                         } else {
-                            Utility.launchURL("www.tarnishps.com");
+                            Utility.launchURL("www.Dodian.net");
                         }
                     }
                 }
@@ -9240,7 +9240,7 @@ public class Client extends GameEngine
             String s2 = menuActionName[id];
             int j2 = s2.indexOf(">");
             if (j2 != -1) {
-                Utility.launchURL("www.tarnishps.com");
+                Utility.launchURL("www.Dodian.net");
                 System.out.println("here1");
             }
         }
@@ -12120,7 +12120,7 @@ public class Client extends GameEngine
             }
 
             if (response == 28) {
-                loginMessage1 = "Tarnish early access has reached it's limit!";
+                loginMessage1 = "Dodian early access has reached it's limit!";
                 loginMessage2 = "Please wait for the official release!";
                 return;
             }
@@ -13094,18 +13094,18 @@ public class Client extends GameEngine
             g.setFont(new Font("Helvetica", 1, 16));
             g.setColor(Color.yellow);
             int k = 35;
-            g.drawString("Something when wrong whilst loading Tarnish!", 30, k);
+            g.drawString("Something when wrong whilst loading Dodian!", 30, k);
             k += 50;
             g.setColor(Color.white);
             g.drawString("Please try the following to fix (in order):", 30, k);
             k += 50;
             g.setColor(Color.white);
             g.setFont(new Font("Helvetica", 1, 12));
-            g.drawString("1: Delete the cache (located in user home directory, called Tarnish.Cache)", 30, k);
+            g.drawString("1: Delete the cache (located in user home directory, called DodianOSRS.Cache)", 30, k);
             k += 30;
-            g.drawString("2: Download the latest client from www.tarnishps.com/play", 30, k);
+            g.drawString("2: Download the latest client from www.Dodian.net/play", 30, k);
             k += 30;
-            g.drawString("3: Make a report on our forums", 30, k);
+            g.drawString("3: Make a report on our forums", 30, k);//
             k += 30;
             g.drawString("4: Contact a staff member on our discord -https://discord.gg/m4CkqrakHn", 30, k);
             k += 30;

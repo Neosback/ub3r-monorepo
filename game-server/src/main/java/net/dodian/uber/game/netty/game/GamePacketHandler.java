@@ -24,6 +24,7 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
 
     private long packetWindowStartMillis = 0L;
     private int packetsInWindow = 0;
+    private int rateLimitViolations = 0;
     private boolean windowRateLimitLogged = false;
 
     private final Client client;
@@ -40,6 +41,7 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
         if (now - packetWindowStartMillis > PACKET_WINDOW_MILLIS) {
             packetWindowStartMillis = now;
             packetsInWindow = 0;
+            rateLimitViolations = 0;
             windowRateLimitLogged = false;
         }
 
@@ -55,6 +57,11 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
                     packet.opcode(), packet.size(), client.getPlayerName(),
                     NetworkConstants.PACKET_RATE_LIMIT_PER_WINDOW, PACKET_WINDOW_MILLIS);
             releasePacket(packet);
+            if (++rateLimitViolations >= NetworkConstants.PACKET_RATE_LIMIT_VIOLATIONS_BEFORE_CLOSE) {
+                logger.warn("[Netty] Closing {} after {} packet-rate violations in one window",
+                        client.getPlayerName(), rateLimitViolations);
+                ctx.close();
+            }
             return;
         }
 

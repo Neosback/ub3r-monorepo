@@ -18,6 +18,8 @@ internal object LocustRiderMelee1 : NpcFamily by npcFamily("Locust rider melee 1
         magic = 1
     }
 
+    combat { handler(ScarabLocustCombat) }
+
     spawns {
         spawn(3241, 2775)
         spawn(3317, 2828)

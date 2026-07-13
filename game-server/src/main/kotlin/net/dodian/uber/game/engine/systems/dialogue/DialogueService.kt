@@ -91,13 +91,9 @@ object DialogueService {
 
     @JvmStatic
     fun closeBlockingDialogue(client: Client, closeInterfaces: Boolean = true) {
-        val dialogueId = currentDialogueId(client)
         sessions.remove(client)
         DialoguePagingService.clear(client)
         clearIndexedDialogueState(client)
-        if (dialogueId == 1001) {
-            client.clearWalkableInterface()
-        }
         if (closeInterfaces) {
             client.send(RemoveInterfaces())
         }

@@ -75,7 +75,6 @@ class AgilityWerewolf(private val c: Client) {
                 originX,
                 offsetY,
                 offsetX,
-                50,
                 50 + (distance * 5),
                 338,
                 0,

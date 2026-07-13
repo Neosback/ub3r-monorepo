@@ -3,7 +3,12 @@ package net.dodian.uber.game.engine.systems.event
 enum class ServerEvent {
     EASTER,
     HALLOWEEN,
-    CHRISTMAS,
+    CHRISTMAS;
+
+    companion object {
+        @JvmField
+        val VALUES = values()
+    }
 }
 
 enum class EventSource {

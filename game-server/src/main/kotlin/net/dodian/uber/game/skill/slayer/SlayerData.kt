@@ -45,11 +45,14 @@ enum class SlayerTaskDefinition(
     ABYSSAL_GUARDIAN("Abyssal guardian", false, Range(1, 200), Range(10, 30), 2585);
 
     companion object {
-        @JvmStatic
-        fun forNpc(npcId: Int): SlayerTaskDefinition? = values().firstOrNull { task -> task.npcId.any { it == npcId } }
+        @JvmField
+        val VALUES = values()
 
         @JvmStatic
-        fun forOrdinal(slot: Int): SlayerTaskDefinition? = values().getOrNull(slot)
+        fun forNpc(npcId: Int): SlayerTaskDefinition? = VALUES.firstOrNull { task -> task.npcId.any { it == npcId } }
+
+        @JvmStatic
+        fun forOrdinal(slot: Int): SlayerTaskDefinition? = VALUES.getOrNull(slot)
     }
 }
 

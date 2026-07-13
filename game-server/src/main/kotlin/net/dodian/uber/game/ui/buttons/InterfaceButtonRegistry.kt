@@ -45,7 +45,6 @@ object InterfaceButtonRegistry {
         val bindings = table[normalizedId] ?: return null
         val opMatches = bindings.filter { it.opIndex == null || it.opIndex == opIndex }
         return opMatches.firstOrNull { it.requiredInterfaceId == -1 || it.requiredInterfaceId == client.activeInterfaceId }
-            ?: opMatches.firstOrNull()
     }
 
     fun tryHandle(client: Client, rawButtonId: Int, opIndex: Int): Boolean {

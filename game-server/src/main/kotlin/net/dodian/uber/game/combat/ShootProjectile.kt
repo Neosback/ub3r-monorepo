@@ -31,15 +31,14 @@ object SpotAnimNames {
 
 object ShootProjectile {
     const val DEFAULT_HEIGHT = 40
-    const val DEFAULT_CURVE = 16
     const val DEFAULT_DELAY = 51
+    /** Opcode 117's serialized trajectory-curve byte. */
     const val DEFAULT_SLOPE = 16
 }
 
 data class ProjectileDef(
     val startHeight: Int = 43,
     val endHeight: Int = 31,
-    val curve: Int = 16,
     val delay: Int = 51,
     val slope: Int = 16
 )
@@ -202,7 +201,7 @@ private fun sendProjectile(
     speed: Int,
     slope: Int
 ) {
-    val projectile = Projectile(source, targetObject, 50, speed, gfxMoving, startHeight, endHeight, targetIndex, delay, slope, 64)
+    val projectile = Projectile(source, targetObject, speed, gfxMoving, startHeight, endHeight, targetIndex, delay, slope, 64)
     for (p in PlayerRegistry.players) {
         if (p != null) {
             val viewer = p as Client

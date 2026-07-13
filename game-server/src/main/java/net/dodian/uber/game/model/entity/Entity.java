@@ -10,6 +10,7 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public abstract class Entity {
 
@@ -255,6 +256,20 @@ public abstract class Entity {
         return damage;
     }
 
+    /**
+     * Releases combat-attribution references when this entity leaves its
+     * lifecycle. Callers deliberately do not use this for a temporary loss of
+     * combat so contribution credit survives a short disengagement.
+     */
+    public void clearDamageAttribution() {
+        damage.clear();
+    }
+
+    /** Removes invalid attribution references without clearing live combat credit. */
+    public void pruneDamageAttribution(Predicate<Entity> retain) {
+        damage.entrySet().removeIf(entry -> !retain.test(entry.getKey()));
+    }
+
     public UpdateFlags getUpdateFlags() {
         return this.updateFlags;
     }
@@ -271,10 +286,14 @@ public abstract class Entity {
     public enum damageType {
         MELEE, RANGED, MAGIC, //Standard
         FIRE_BREATH, JAD_MAGIC, JAD_RANGED, //Special
-        BLOODATTACK, TRUEDAMAGE //Unique
+        BLOODATTACK, TRUEDAMAGE; //Unique
+
+        public static final damageType[] VALUES = values();
     }
     public enum hitType {
-        STANDARD, CRIT, POISON, BURN, BLEED //Bleed is custom and thus got no hitsplat yet!
+        STANDARD, CRIT, POISON, BURN, BLEED; //Bleed is custom and thus got no hitsplat yet!
+
+        public static final hitType[] VALUES = values();
     }
 
 }

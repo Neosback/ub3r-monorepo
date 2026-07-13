@@ -45,6 +45,8 @@ enum class UpdateFlag(
     }
 
     companion object {
+        @JvmField
+        val VALUES = values()
         init {
             FACE_CHARACTER.setMasks(0x1, 0x20)
             FACE_COORDINATE.setMasks(0x2, 0x4)

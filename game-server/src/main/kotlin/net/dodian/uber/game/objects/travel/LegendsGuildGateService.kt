@@ -139,6 +139,21 @@ object LegendsGuildGateService {
         return true
     }
 
+    /**
+     * The guard stands one tile outside each gate lane, so normal adjacent-NPC
+     * routing would incorrectly walk a player through the closed gate.  This is
+     * deliberate Legends Guild content, not a general interaction exception.
+     */
+    @JvmStatic
+    fun isFrontLaneInteraction(client: Client, npc: Npc, option: Int): Boolean {
+        if (option !in 1..4 || npc.id != LEGENDS_GUARD_NPC_ID || !isLegendsGuard(npc.position)) {
+            return false
+        }
+        return client.position.z == leftGate.z &&
+            client.position.x in leftGate.x..rightGate.x &&
+            client.position.y in southLeft.y..northLeft.y
+    }
+
     @JvmStatic
     fun openForGuardTalk(client: Client, npc: Npc): Boolean {
         if (npc.id != LEGENDS_GUARD_NPC_ID || !isLegendsGuard(npc.position)) {

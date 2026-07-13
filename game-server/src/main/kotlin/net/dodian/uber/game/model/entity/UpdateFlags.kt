@@ -37,7 +37,7 @@ class UpdateFlags {
 
     fun keySet(): Set<UpdateFlag> {
         val result = EnumSet.noneOf(UpdateFlag::class.java)
-        for (flag in UpdateFlag.values()) {
+        for (flag in UpdateFlag.VALUES) {
             if (isRequired(flag)) {
                 result.add(flag)
             }
@@ -47,7 +47,7 @@ class UpdateFlags {
 
     fun getMask(type: Entity.Type): Int {
         var mask = 0
-        for (flag in UpdateFlag.values()) {
+        for (flag in UpdateFlag.VALUES) {
             if (!isRequired(flag)) {
                 continue
             }
@@ -63,7 +63,7 @@ class UpdateFlags {
     override fun toString(): String {
         val builder = StringBuilder("UpdateFlags[")
         var first = true
-        for (flag in UpdateFlag.values()) {
+        for (flag in UpdateFlag.VALUES) {
             if (!isRequired(flag)) {
                 continue
             }

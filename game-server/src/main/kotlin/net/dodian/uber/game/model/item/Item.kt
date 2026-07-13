@@ -210,8 +210,9 @@ class Item(
 
             val jsonAttackAnimations: Map<String, Int>? = base.attackAnimations
             val attackAnimationsArray = if (jsonAttackAnimations != null) {
-                val array = IntArray(Player.fightStyle.values().size)
-                for (style in Player.fightStyle.values()) {
+                val styles = Player.fightStyle.VALUES
+                val array = IntArray(styles.size)
+                for (style in styles) {
                     val key = toAttackStyleKey(style)
                     val anim = jsonAttackAnimations[key] ?: 0
                     array[style.ordinal] = anim

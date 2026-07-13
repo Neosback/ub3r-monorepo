@@ -54,10 +54,11 @@ private fun handleDevDebug(context: CommandContext): Boolean {
         }
         "death" -> {
             val type = cmd[1].toInt()
-            if (type > 0 && type <= Entity.hitType.values().size) {
-                client.dealDamage(null, client.currentHealth, Entity.hitType.values()[type - 1])
+            val hitTypes = Entity.hitType.VALUES
+            if (type > 0 && type <= hitTypes.size) {
+                client.dealDamage(null, client.currentHealth, hitTypes[type - 1])
             } else {
-                context.reply("Only type 1 to ${Entity.hitType.values().size} works!")
+                context.reply("Only type 1 to ${hitTypes.size} works!")
             }
         }
         "damage" -> client.dealDamage(null, 20, Entity.hitType.CRIT)

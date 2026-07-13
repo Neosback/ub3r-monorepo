@@ -148,6 +148,11 @@ public class Server {
         gameLoopService.start();
         net.dodian.uber.game.npc.LegendsGuardRankingCache.start();
         Login.banUid();
+        try {
+            java.nio.file.Files.writeString(java.nio.file.Path.of("/tmp/ub3r-ready"), "ready\n");
+        } catch (Exception e) {
+            logger.warn("Unable to write readiness marker", e);
+        }
         logger.info("Server is now running on world " + getGameWorldId() + "!");
     }
 

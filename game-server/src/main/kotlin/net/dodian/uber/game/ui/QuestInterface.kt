@@ -8,7 +8,7 @@ import net.dodian.uber.game.ui.buttons.buttonBinding
 object QuestInterface : InterfaceButtonContent {
     private val menuButtons: IntArray =
         (
-            QuestTabEntry.values()
+            QuestTabEntry.VALUES
                 .map { it.clickId }
                 .filter { it != -1 } +
                 listOf(7333, 7383, 7339, 7334, 7338, 7340, 7341)

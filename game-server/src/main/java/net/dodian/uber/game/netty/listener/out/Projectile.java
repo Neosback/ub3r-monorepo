@@ -14,7 +14,6 @@ public class Projectile implements OutgoingPacket {
     private final Position casterPosition;
     private final int offsetY;
     private final int offsetX;
-    private final int angle;
     private final int speed;
     private final int gfxMoving;
     private final int startHeight;
@@ -25,13 +24,12 @@ public class Projectile implements OutgoingPacket {
     private final int initDistance;
     private Object targetObject = null;
 
-    public Projectile(Position casterPosition, int offsetY, int offsetX, int angle, int speed,
+    public Projectile(Position casterPosition, int offsetY, int offsetX, int speed,
                      int gfxMoving, int startHeight, int endHeight, int targetIndex,
                      int begin, int slope, int initDistance) {
         this.casterPosition = casterPosition;
         this.offsetY = offsetY;
         this.offsetX = offsetX;
-        this.angle = angle;
         this.speed = speed;
         this.gfxMoving = gfxMoving;
         this.startHeight = startHeight;
@@ -42,14 +40,13 @@ public class Projectile implements OutgoingPacket {
         this.initDistance = initDistance;
     }
 
-    public Projectile(Position casterPosition, Object targetObject, int angle, int speed,
+    public Projectile(Position casterPosition, Object targetObject, int speed,
                      int gfxMoving, int startHeight, int endHeight, int targetIndex,
                      int begin, int slope, int initDistance) {
         this.casterPosition = casterPosition;
         this.targetObject = targetObject;
         this.offsetY = 0;
         this.offsetX = 0;
-        this.angle = angle;
         this.speed = speed;
         this.gfxMoving = gfxMoving;
         this.startHeight = startHeight;

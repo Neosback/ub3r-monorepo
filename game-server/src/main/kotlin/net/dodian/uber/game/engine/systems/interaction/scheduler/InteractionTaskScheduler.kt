@@ -58,19 +58,19 @@ object InteractionTaskScheduler {
                 }
             }
             is AttackPlayerIntent -> {
-                val target = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[intent.victimIndex]
+                val target = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(intent.victimIndex)
                 if (target != null) {
                     player.setPersistedFaceCoord(target.position.x, target.position.y)
                 }
             }
             is MagicOnPlayerIntent -> {
-                val target = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[intent.victimIndex]
+                val target = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(intent.victimIndex)
                 if (target != null) {
                     player.setPersistedFaceCoord(target.position.x, target.position.y)
                 }
             }
             is PlayerInteractionIntent -> {
-                val target = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[intent.playerIndex]
+                val target = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(intent.playerIndex)
                 if (target != null) {
                     player.setPersistedFaceCoord(target.position.x, target.position.y)
                 }

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.netty;
 
 import java.math.BigInteger;
-
+import net.dodian.uber.game.engine.config.DotEnvKt;
 
 public final class NetworkConstants {
 
@@ -17,10 +17,20 @@ public final class NetworkConstants {
      */
     public static final int PACKET_RATE_LIMIT_PER_WINDOW = 200;
 
-    // TODO: Add RSA key configuration
-    public static BigInteger RSA_MODULUS;
+    /** Close a client that continues flooding after the first rejected packet. */
+    public static final int PACKET_RATE_LIMIT_VIOLATIONS_BEFORE_CLOSE = 3;
 
-    public static BigInteger RSA_EXPONENT;
+    /**
+     * Compatibility accessors for code that historically looked in network
+     * constants. RSA remains configured and validated exclusively by DotEnv.
+     */
+    public static BigInteger getRsaModulus() {
+        return DotEnvKt.getRsaModulus();
+    }
+
+    public static BigInteger getRsaExponent() {
+        return DotEnvKt.getRsaExponent();
+    }
 
     private NetworkConstants() {
         

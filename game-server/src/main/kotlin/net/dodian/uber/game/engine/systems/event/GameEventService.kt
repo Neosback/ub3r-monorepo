@@ -20,7 +20,7 @@ object GameEventService {
 
     @JvmStatic
     fun activeEvents(): Set<ServerEvent> =
-        ServerEvent.values().filterTo(linkedSetOf()) { isActive(it) }
+        ServerEvent.VALUES.filterTo(linkedSetOf()) { isActive(it) }
 
     @JvmStatic
     fun resolvedState(event: ServerEvent): ActiveServerEvent? =
