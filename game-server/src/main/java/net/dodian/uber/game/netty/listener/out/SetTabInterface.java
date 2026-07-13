@@ -15,6 +15,14 @@ public class SetTabInterface implements OutgoingPacket {
         this.subFrame = subFrame;
     }
 
+    public int mainFrame() {
+        return mainFrame;
+    }
+
+    public int subFrame() {
+        return subFrame;
+    }
+
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(248);

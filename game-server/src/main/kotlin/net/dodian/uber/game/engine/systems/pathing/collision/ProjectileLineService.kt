@@ -52,21 +52,23 @@ object ProjectileLineService {
         if (source.z != target.z) {
             return TraceResult(false, sourceTile, targetTile)
         }
-
-        val sourceTiles = source.tiles().toList()
-        val targetTiles = target.tiles().toList()
-        val candidates = sourceTiles.flatMap { start -> targetTiles.map { end -> start to end } }
-            .sortedWith(compareBy<Pair<Position, Position>>(
-                { maxOf(abs(it.second.x - it.first.x), abs(it.second.y - it.first.y)) },
-                { abs(it.second.x - it.first.x) + abs(it.second.y - it.first.y) },
-                { it.first.x }, { it.first.y }, { it.second.x }, { it.second.y },
-            ))
+        if (source.size == 1 && target.size == 1) {
+            return traceTiles(sourceTile, targetTile, collision)
+        }
 
         var firstBlocked: TraceResult? = null
-        for ((start, end) in candidates) {
-            val result = traceTiles(start, end, collision)
-            if (result.clear) return result
-            if (firstBlocked == null) firstBlocked = result
+        for (sx in source.x until source.x + source.size) {
+            for (sy in source.y until source.y + source.size) {
+                val start = Position(sx, sy, source.z)
+                for (tx in target.x until target.x + target.size) {
+                    for (ty in target.y until target.y + target.size) {
+                        val end = Position(tx, ty, target.z)
+                        val result = traceTiles(start, end, collision)
+                        if (result.clear) return result
+                        if (firstBlocked == null) firstBlocked = result
+                    }
+                }
+            }
         }
         return firstBlocked ?: TraceResult(false, sourceTile, targetTile)
     }

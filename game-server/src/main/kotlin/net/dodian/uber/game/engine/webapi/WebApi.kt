@@ -7,6 +7,8 @@ import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.plugins.ratelimit.*
+import kotlin.time.Duration.Companion.seconds
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -76,7 +78,6 @@ object WebApi {
 
     // Cache for highscores CSV responses by username (lowercase)
     private val hiscoresCache = ConcurrentHashMap<String, String>()
-    private val rateLimits = ConcurrentHashMap<String, Int>()
     private val scheduler = Executors.newSingleThreadScheduledExecutor()
 
     private fun updateHiscoresCache() {
@@ -216,10 +217,6 @@ object WebApi {
                 updateHiscoresCache()
             }, 0, 5, TimeUnit.MINUTES)
 
-            scheduler.scheduleAtFixedRate({
-                rateLimits.clear()
-            }, 1, 1, TimeUnit.MINUTES)
-
             serverEngine = embeddedServer(Netty, port = webApiPort) {
                 install(CORS) {
                     anyHost()
@@ -230,6 +227,12 @@ object WebApi {
                     allowMethod(HttpMethod.Delete)
                     allowMethod(HttpMethod.Options)
                     allowCredentials = true
+                }
+                install(RateLimit) {
+                    register {
+                        rateLimiter(limit = 30, refillPeriod = 60.seconds)
+                        requestKey { call -> call.request.local.remoteHost }
+                    }
                 }
                 routing {
                     get("/api/server-status") {
@@ -252,28 +255,23 @@ object WebApi {
                         call.respondText(mapper.writeValueAsString(health), ContentType.Application.Json)
                     }
 
-                    get("/api/hiscores") {
-                        val ip = call.request.local.remoteHost
-                        val currentCount = rateLimits.compute(ip) { _, existing -> (existing ?: 0) + 1 } ?: 1
-                        if (currentCount > 30) {
-                            call.respond(HttpStatusCode.TooManyRequests, "Too many requests. Please try again later.")
-                            return@get
-                        }
+                    rateLimit {
+                        get("/api/hiscores") {
+                            val playerName = call.request.queryParameters["player"]
+                            if (playerName == null || playerName.isBlank()) {
+                                call.respond(HttpStatusCode.BadRequest, "Missing 'player' query parameter.")
+                                return@get
+                            }
 
-                        val playerName = call.request.queryParameters["player"]
-                        if (playerName == null || playerName.isBlank()) {
-                            call.respond(HttpStatusCode.BadRequest, "Missing 'player' query parameter.")
-                            return@get
-                        }
+                            val sanitizedPlayerName = playerName.lowercase().trim().replace(" ", "_").replace("%20", "_")
+                            val csvData = hiscoresCache[sanitizedPlayerName]
+                            if (csvData == null) {
+                                call.respond(HttpStatusCode.NotFound, "Player not found.")
+                                return@get
+                            }
 
-                        val sanitizedPlayerName = playerName.lowercase().trim().replace(" ", "_").replace("%20", "_")
-                        val csvData = hiscoresCache[sanitizedPlayerName]
-                        if (csvData == null) {
-                            call.respond(HttpStatusCode.NotFound, "Player not found.")
-                            return@get
+                            call.respondText(csvData, ContentType.Text.Plain)
                         }
-
-                        call.respondText(csvData, ContentType.Text.Plain)
                     }
                 }
             }.start(wait = false)

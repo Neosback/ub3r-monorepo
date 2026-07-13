@@ -10,9 +10,9 @@ import net.dodian.uber.game.ui.buttons.buttonBinding
 
 object RewardInterface : InterfaceButtonContent {
     private val skillSelectionButtons: IntArray = intArrayOf(
-        10252, 11000, 10253, 11001, 10254, 11002, 10255, 11011,
-        11013, 11014, 11010, 11012, 11006, 11009, 11008, 11004,
-        11003, 11005, 47002, 54090, 11007,
+        2812, 2816, 2813, 2817, 2814, 2818, 2815, 2827,
+        2829, 2830, 2826, 2828, 2822, 2825, 2824, 2820,
+        2819, 2821, 47002, 54090, 2823,
     )
 
     override val bindings =

@@ -9,59 +9,23 @@ import net.dodian.uber.game.netty.listener.out.Projectile
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object SpotAnimNames {
-    private val nameToId = mapOf(
-        "bronze_arrow_travel" to 10,
-        "bronze_arrow_launch" to 19,
-        "iron_arrow_travel" to 9,
-        "iron_arrow_launch" to 18,
-        "steel_arrow_travel" to 11,
-        "steel_arrow_launch" to 20,
-        "mithril_arrow_travel" to 12,
-        "mithril_arrow_launch" to 21,
-        "adamant_arrow_travel" to 13,
-        "adamant_arrow_launch" to 22,
-        "rune_arrow_travel" to 15,
-        "rune_arrow_launch" to 24,
-        "ii_dragon_arrow_normal_projanim" to 1120,
-        "dragon_arrow_launch" to 1116,
-        "crossbowbolt_travel" to 27,
-        
-        "smoke_rush_travel" to 384,
-        "smoke_rush_impact" to 385,
-        "shadow_rush_travel" to 378,
-        "shadow_rush_impact" to 379,
-        "blood_rush_travel" to 372,
-        "blood_rush_impact" to 373,
-        "ice_rush_travel" to 360,
-        "ice_rush_impact" to 361,
-        
-        "smoke_burst_travel" to 388,
-        "smoke_burst_impact" to 389,
-        "shadow_burst_impact" to 382,
-        "spell_blood_burst_impact" to 376,
-        "ice_burst_travel" to 366,
-        "ice_burst_impact" to 367,
-        
-        "smoke_blitz_travel" to 386,
-        "smoke_blitz_impact" to 387,
-        "shadow_blitz_travel" to 380,
-        "shadow_blitz_impact" to 381,
-        "blood_blitz_travel" to 374,
-        "blood_blitz_impact" to 375,
-        "ice_blitz_travel" to 362,
-        "ice_blitz_impact" to 363,
-        
-        "smoke_barrage_travel" to 390,
-        "smoke_barrage_impact" to 391,
-        "shadow_barrage_impact" to 383,
-        "spell_blood_barrage_impact" to 377,
-        "ice_barrage_impact" to 369
-    )
+    private val nameToId: Map<String, Int>
+    private val defs: Map<String, ProjectileDef>
+
+    init {
+        val loaded = TomlProjectileLoader.load()
+        nameToId = loaded.associate { it.name to it.id }
+        defs = loaded.associate { it.name to it.def }
+    }
 
     fun getId(name: String): Int {
         val rscmId = net.dodian.uber.game.rscm.RSCM.get("spotanim", name)
         if (rscmId != -1) return rscmId
         return nameToId[name] ?: -1
+    }
+
+    fun getDef(name: String): ProjectileDef? {
+        return defs[name]
     }
 }
 
@@ -78,33 +42,6 @@ data class ProjectileDef(
     val curve: Int = 16,
     val delay: Int = 51,
     val slope: Int = 16
-)
-
-private val PROJECTILE_DEFS = mapOf(
-    // Ranged
-    "bronze_arrow_travel" to ProjectileDef(slope = 10),
-    "iron_arrow_travel" to ProjectileDef(slope = 10),
-    "steel_arrow_travel" to ProjectileDef(slope = 10),
-    "mithril_arrow_travel" to ProjectileDef(slope = 10),
-    "adamant_arrow_travel" to ProjectileDef(slope = 10),
-    "rune_arrow_travel" to ProjectileDef(slope = 10),
-    "ii_dragon_arrow_normal_projanim" to ProjectileDef(slope = 10),
-
-    // Magic
-    "smoke_rush_travel" to ProjectileDef(startHeight = 43, endHeight = 31, delay = 51),
-    "shadow_rush_travel" to ProjectileDef(startHeight = 43, endHeight = 31, delay = 51),
-    "blood_rush_travel" to ProjectileDef(startHeight = 43, endHeight = 31, delay = 51),
-    "ice_rush_travel" to ProjectileDef(startHeight = 43, endHeight = 31, delay = 51),
-    
-    "smoke_burst_travel" to ProjectileDef(startHeight = 43, endHeight = 31, delay = 51),
-    "ice_burst_travel" to ProjectileDef(startHeight = 43, endHeight = 31, delay = 51),
-    
-    "smoke_blitz_travel" to ProjectileDef(startHeight = 43, endHeight = 31, delay = 51),
-    "shadow_blitz_travel" to ProjectileDef(startHeight = 43, endHeight = 31, delay = 51),
-    "blood_blitz_travel" to ProjectileDef(startHeight = 43, endHeight = 31, delay = 51),
-    "ice_blitz_travel" to ProjectileDef(startHeight = 43, endHeight = 31, delay = 51),
-    
-    "smoke_barrage_travel" to ProjectileDef(startHeight = 43, endHeight = 31, delay = 51)
 )
 
 fun Position.shoot(
@@ -157,7 +94,7 @@ fun Entity.shoot(
     endHeight: Int? = null,
     slope: Int? = null
 ): Int {
-    val defaultDef = PROJECTILE_DEFS[gfxName]
+    val defaultDef = SpotAnimNames.getDef(gfxName)
     return projectile(
         caster = this,
         gfxName = gfxName,
@@ -179,7 +116,7 @@ fun Entity.shoot(
     endHeight: Int? = null,
     slope: Int? = null
 ): Int {
-    val defaultDef = PROJECTILE_DEFS[gfxName]
+    val defaultDef = SpotAnimNames.getDef(gfxName)
     return projectile(
         caster = this,
         gfxName = gfxName,
@@ -207,7 +144,7 @@ private fun projectile(
     val gfxId = SpotAnimNames.getId(gfxName)
     if (gfxId == -1) return -1
 
-    val defaultDef = PROJECTILE_DEFS[gfxName]
+    val defaultDef = SpotAnimNames.getDef(gfxName)
 
     val dx = kotlin.math.abs(sourceTile.x - targetTile.x)
     val dy = kotlin.math.abs(sourceTile.y - targetTile.y)

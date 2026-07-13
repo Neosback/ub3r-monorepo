@@ -115,6 +115,31 @@ class CollisionManager(
 
     fun isTileBlocked(x: Int, y: Int, z: Int): Boolean = matrix.hasFlags(x, y, z, CollisionFlag.BLOCKED)
 
+    fun isNpcEdgeTraversable(height: Int, startX: Int, startY: Int, direction: CollisionDirection): Boolean =
+        when (direction) {
+            CollisionDirection.NORTH -> isInactive(height, startX, startY + 1, CollisionFlag.WALL_SOUTH)
+            CollisionDirection.SOUTH -> isInactive(height, startX, startY - 1, CollisionFlag.WALL_NORTH)
+            CollisionDirection.EAST -> isInactive(height, startX + 1, startY, CollisionFlag.WALL_WEST)
+            CollisionDirection.WEST -> isInactive(height, startX - 1, startY, CollisionFlag.WALL_EAST)
+            CollisionDirection.NORTH_EAST ->
+                isInactive(height, startX + 1, startY + 1, CollisionFlag.WALL_WEST or CollisionFlag.WALL_SOUTH or CollisionFlag.WALL_SOUTH_WEST) &&
+                isInactive(height, startX + 1, startY, CollisionFlag.WALL_WEST) &&
+                isInactive(height, startX, startY + 1, CollisionFlag.WALL_SOUTH)
+            CollisionDirection.NORTH_WEST ->
+                isInactive(height, startX - 1, startY + 1, CollisionFlag.WALL_EAST or CollisionFlag.WALL_SOUTH or CollisionFlag.WALL_SOUTH_EAST) &&
+                isInactive(height, startX - 1, startY, CollisionFlag.WALL_EAST) &&
+                isInactive(height, startX, startY + 1, CollisionFlag.WALL_SOUTH)
+            CollisionDirection.SOUTH_EAST ->
+                isInactive(height, startX + 1, startY - 1, CollisionFlag.WALL_WEST or CollisionFlag.WALL_NORTH or CollisionFlag.WALL_NORTH_WEST) &&
+                isInactive(height, startX + 1, startY, CollisionFlag.WALL_WEST) &&
+                isInactive(height, startX, startY - 1, CollisionFlag.WALL_NORTH)
+            CollisionDirection.SOUTH_WEST ->
+                isInactive(height, startX - 1, startY - 1, CollisionFlag.WALL_EAST or CollisionFlag.WALL_NORTH or CollisionFlag.WALL_NORTH_EAST) &&
+                isInactive(height, startX - 1, startY, CollisionFlag.WALL_EAST) &&
+                isInactive(height, startX, startY - 1, CollisionFlag.WALL_NORTH)
+            CollisionDirection.NONE -> true
+        }
+
     fun canMove(
         startX: Int,
         startY: Int,

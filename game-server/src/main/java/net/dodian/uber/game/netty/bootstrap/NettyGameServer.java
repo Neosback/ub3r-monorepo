@@ -7,6 +7,10 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.ServerChannel;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.util.ResourceLeakDetector;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -19,26 +23,68 @@ public class NettyGameServer {
     private static final Logger logger = LoggerFactory.getLogger(NettyGameServer.class);
     private static final long SHUTDOWN_TIMEOUT_SECONDS = 10;
 
+    public interface EpollAvailabilityChecker {
+        boolean isAvailable();
+        Throwable unavailabilityCause();
+    }
+
+    public static final EpollAvailabilityChecker DEFAULT_CHECKER = new EpollAvailabilityChecker() {
+        @Override
+        public boolean isAvailable() {
+            return Epoll.isAvailable();
+        }
+
+        @Override
+        public Throwable unavailabilityCause() {
+            return Epoll.unavailabilityCause();
+        }
+    };
+
     private final int port;
+    private final EpollAvailabilityChecker epollChecker;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private Channel serverChannel;
 
     public NettyGameServer(int port) {
+        this(port, DEFAULT_CHECKER);
+    }
+
+    public NettyGameServer(int port, EpollAvailabilityChecker epollChecker) {
         this.port = port;
+        this.epollChecker = epollChecker;
     }
 
     public void start() {
-        String configuredLevel = System.getProperty("netty.leakDetection", getNettyLeakDetection());
+        String configuredLevel;
+        try {
+            configuredLevel = System.getProperty("netty.leakDetection", getNettyLeakDetection());
+        } catch (Throwable t) {
+            configuredLevel = System.getProperty("netty.leakDetection", "disabled");
+        }
         ResourceLeakDetector.Level leakDetectionLevel = resolveLeakDetectionLevel(configuredLevel);
         ResourceLeakDetector.setLevel(leakDetectionLevel);
         logger.info("[Netty] Resource leak detection {} ({})", leakDetectionLevel, describeLeakDetectionSource(configuredLevel));
 
-        bossGroup = new NioEventLoopGroup(1);
-        workerGroup = new NioEventLoopGroup();
+        boolean useEpoll = epollChecker.isAvailable();
+        Class<? extends ServerChannel> channelClass;
+        if (useEpoll) {
+            logger.info("[Netty] Using Epoll transport.");
+            bossGroup = new EpollEventLoopGroup(1);
+            workerGroup = new EpollEventLoopGroup();
+            channelClass = EpollServerSocketChannel.class;
+        } else {
+            Throwable cause = epollChecker.unavailabilityCause();
+            logger.info("[Netty] Epoll transport is unavailable, falling back to NIO. Reason: {}",
+                cause != null ? cause.toString() : "Unsupported platform/OS");
+            bossGroup = new NioEventLoopGroup(1);
+            workerGroup = new NioEventLoopGroup();
+            channelClass = NioServerSocketChannel.class;
+        }
+
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup)
-                .channel(NioServerSocketChannel.class)
+                .channel(channelClass)
                 .option(ChannelOption.SO_REUSEADDR, true)
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .childHandler(new GameChannelInitializer())

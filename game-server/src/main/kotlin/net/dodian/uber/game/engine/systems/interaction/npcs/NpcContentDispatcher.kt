@@ -7,6 +7,7 @@ import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.npc.NpcClickEvent
 import net.dodian.uber.game.api.content.ContentDispatchTiming
 import net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher
+import net.dodian.uber.game.npc.*
 
 object NpcContentDispatcher {
     @JvmStatic
@@ -36,11 +37,19 @@ object NpcContentDispatcher {
         }
         val handlerStart = System.nanoTime()
         val handled = ContentErrorPolicy.runBoolean(client, "npc.dispatch.click.$option") {
+            val opt = when (option) {
+                1 -> net.dodian.uber.game.api.interaction.InteractionOption.FIRST
+                2 -> net.dodian.uber.game.api.interaction.InteractionOption.SECOND
+                3 -> net.dodian.uber.game.api.interaction.InteractionOption.THIRD
+                4 -> net.dodian.uber.game.api.interaction.InteractionOption.FOURTH
+                else -> net.dodian.uber.game.api.interaction.InteractionOption.FIRST
+            }
+            val ctx = net.dodian.uber.game.api.interaction.NpcInteractionContext(client, opt, npc)
             when (option) {
-                1 -> content.onFirstClick(client, npc)
-                2 -> content.onSecondClick(client, npc)
-                3 -> content.onThirdClick(client, npc)
-                4 -> content.onFourthClick(client, npc)
+                1 -> content.handleFirstClick(ctx)
+                2 -> content.handleSecondClick(ctx)
+                3 -> content.handleThirdClick(ctx)
+                4 -> content.handleFourthClick(ctx)
                 else -> false
             }
         }
@@ -58,7 +67,14 @@ object NpcContentDispatcher {
             return ContentDispatchTiming(false, resolveNs, 0L, null)
         }
         val handlerStart = System.nanoTime()
-        val handled = ContentErrorPolicy.runBoolean(client, "npc.dispatch.attack") { content.onAttack(client, npc) }
+        val handled = ContentErrorPolicy.runBoolean(client, "npc.dispatch.attack") {
+            val ctx = net.dodian.uber.game.api.interaction.NpcInteractionContext(
+                client,
+                net.dodian.uber.game.api.interaction.InteractionOption.ATTACK,
+                npc
+            )
+            content.handleAttack(ctx)
+        }
         val handlerNs = System.nanoTime() - handlerStart
         return ContentDispatchTiming(handled, resolveNs, handlerNs, content.name)
     }

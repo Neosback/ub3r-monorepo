@@ -32,12 +32,14 @@ object ViewportSnapshotPool {
 class ViewportIndex private constructor(
     private val snapshots: IdentityHashMap<Player, ViewportSnapshot>,
     private val relevantNpcs: List<Npc>,
+    private val uniqueSnapshots: List<ViewportSnapshot>,
 ) {
     fun snapshotFor(viewer: Player): ViewportSnapshot? = snapshots[viewer]
     fun relevantNpcs(): List<Npc> = relevantNpcs
 
     fun release() {
-        snapshots.values.distinct().forEach { snapshot ->
+        for (i in 0 until uniqueSnapshots.size) {
+            val snapshot = uniqueSnapshots[i]
             ViewportSnapshotPool.release(snapshot.players as ArrayList<Player>, snapshot.npcs as ArrayList<Npc>)
         }
     }
@@ -49,6 +51,7 @@ class ViewportIndex private constructor(
             val snapshots = IdentityHashMap<Player, ViewportSnapshot>(viewers.size)
             val relevantNpcSeen = IdentityHashMap<Npc, Boolean>()
             val relevantNpcs = ArrayList<Npc>()
+            val uniqueSnapshots = ArrayList<ViewportSnapshot>()
             viewers.forEach { viewer ->
                 val position = viewer.position ?: return@forEach
                 val centerChunkX = position.chunkX
@@ -56,7 +59,9 @@ class ViewportIndex private constructor(
                 val neighborhoodKey = pack(centerChunkX, centerChunkY, position.z)
                 val snapshot =
                     neighborhoodCache.getOrPut(neighborhoodKey) {
-                        buildNeighborhood(chunkManager, position, distance)
+                        val newSnapshot = buildNeighborhood(chunkManager, position, distance)
+                        uniqueSnapshots.add(newSnapshot)
+                        newSnapshot
                     }
                 snapshots[viewer] = snapshot
                 snapshot.npcs.forEach { npc ->
@@ -65,7 +70,7 @@ class ViewportIndex private constructor(
                     }
                 }
             }
-            return ViewportIndex(snapshots, relevantNpcs)
+            return ViewportIndex(snapshots, relevantNpcs, uniqueSnapshots)
         }
 
         private fun buildNeighborhood(

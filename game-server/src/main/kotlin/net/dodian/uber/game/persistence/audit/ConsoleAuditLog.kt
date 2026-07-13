@@ -285,6 +285,10 @@ object ConsoleAuditLog {
 
     @JvmStatic
     fun interfaceOpen(player: Player, interfaceId: Int, via: String) {
+        if (net.dodian.uber.game.engine.config.gameWorldId == 2) {
+            val details = getInterfaceDetails(interfaceId)
+            println("[W2-INTERFACE] Player '${player.playerName}' opened interface $interfaceId via $via. Details:\n$details")
+        }
         if (!interfaceLogger.isInfoEnabled) return
         interfaceLogger.info(
             "INTERFACE OPEN | {} | interface={} | via={}",
@@ -292,6 +296,118 @@ object ConsoleAuditLog {
             interfaceId,
             via,
         )
+    }
+
+    private fun getInterfaceDetails(interfaceId: Int): String {
+        val def = net.dodian.uber.game.engine.systems.cache.CacheInterfaceDefinitions.get(interfaceId)
+        if (def != null) {
+            val sb = StringBuilder()
+            sb.append("  Type: ${def.type}, ParentId: ${def.parentId}")
+            if (def.width > 0 || def.height > 0) {
+                sb.append(", Size: ${def.width}x${def.height}")
+            }
+            if (def.tooltip.isNotEmpty()) {
+                sb.append(", Tooltip: '${def.tooltip}'")
+            }
+            if (def.spellName.isNotEmpty()) {
+                sb.append(", Spell: '${def.spellName}'")
+            }
+            if (def.disabledMessage.isNotEmpty()) {
+                sb.append(", Text: '${def.disabledMessage}'")
+            }
+            val actionsList = def.actions?.filterNotNull()?.filter { it.isNotEmpty() }
+            if (actionsList != null && actionsList.isNotEmpty()) {
+                sb.append(", Actions: $actionsList")
+            }
+
+            val children = def.children
+            if (children != null && children.isNotEmpty()) {
+                val childDetails = mutableListOf<String>()
+                for (childId in children) {
+                    val childDef = net.dodian.uber.game.engine.systems.cache.CacheInterfaceDefinitions.get(childId)
+                    if (childDef != null) {
+                        val parts = mutableListOf<String>()
+                        if (childDef.disabledMessage.isNotEmpty()) {
+                            parts.add("text='${childDef.disabledMessage}'")
+                        }
+                        if (childDef.tooltip.isNotEmpty()) {
+                            parts.add("tooltip='${childDef.tooltip}'")
+                        }
+                        val childActions = childDef.actions?.filterNotNull()?.filter { it.isNotEmpty() }
+                        if (childActions != null && childActions.isNotEmpty()) {
+                            parts.add("actions=$childActions")
+                        }
+                        if (parts.isNotEmpty()) {
+                            childDetails.add("    Child $childId: ${parts.joinToString(", ")}")
+                        }
+                    } else {
+                        val customChild = CustomInterfaceRegistry.get(childId)
+                        if (customChild != null) {
+                            val parts = mutableListOf<String>()
+                            if (customChild.text.isNotEmpty()) {
+                                parts.add("text='${customChild.text}'")
+                            }
+                            if (customChild.tooltip.isNotEmpty()) {
+                                parts.add("tooltip='${customChild.tooltip}'")
+                            }
+                            if (parts.isNotEmpty()) {
+                                childDetails.add("    Child $childId [Custom]: ${parts.joinToString(", ")}")
+                            }
+                        }
+                    }
+                }
+                if (childDetails.isNotEmpty()) {
+                    sb.append("\n  Children:\n").append(childDetails.joinToString("\n"))
+                }
+            }
+            return sb.toString()
+        }
+
+        val customDef = CustomInterfaceRegistry.get(interfaceId) ?: return "  No cache or custom definition found."
+        val sb = StringBuilder()
+        sb.append("  [CUSTOM INTERFACE] Id: ${customDef.id}")
+        if (customDef.text.isNotEmpty()) {
+            sb.append(", Text: '${customDef.text}'")
+        }
+        if (customDef.tooltip.isNotEmpty()) {
+            sb.append(", Tooltip: '${customDef.tooltip}'")
+        }
+        if (customDef.children.isNotEmpty()) {
+            val childDetails = mutableListOf<String>()
+            for (childId in customDef.children) {
+                val childDef = net.dodian.uber.game.engine.systems.cache.CacheInterfaceDefinitions.get(childId)
+                if (childDef != null) {
+                    val parts = mutableListOf<String>()
+                    if (childDef.disabledMessage.isNotEmpty()) {
+                        parts.add("text='${childDef.disabledMessage}'")
+                    }
+                    if (childDef.tooltip.isNotEmpty()) {
+                        parts.add("tooltip='${childDef.tooltip}'")
+                    }
+                    if (parts.isNotEmpty()) {
+                        childDetails.add("    Child $childId: ${parts.joinToString(", ")}")
+                    }
+                } else {
+                    val customChild = CustomInterfaceRegistry.get(childId)
+                    if (customChild != null) {
+                        val parts = mutableListOf<String>()
+                        if (customChild.text.isNotEmpty()) {
+                            parts.add("text='${customChild.text}'")
+                        }
+                        if (customChild.tooltip.isNotEmpty()) {
+                            parts.add("tooltip='${customChild.tooltip}'")
+                        }
+                        if (parts.isNotEmpty()) {
+                            childDetails.add("    Child $childId [Custom]: ${parts.joinToString(", ")}")
+                        }
+                    }
+                }
+            }
+            if (childDetails.isNotEmpty()) {
+                sb.append("\n  Children:\n").append(childDetails.joinToString("\n"))
+            }
+        }
+        return sb.toString()
     }
 
     @JvmStatic
@@ -364,5 +480,96 @@ object ConsoleAuditLog {
     private fun shopName(shopId: Int): String =
         net.dodian.uber.game.shop.ShopCatalog.find(shopId)?.name
             ?: "shop#$shopId"
+}
+
+object CustomInterfaceRegistry {
+    data class CustomInterface(
+        val id: Int,
+        val type: Int = 0,
+        val parentId: Int = -1,
+        var text: String = "",
+        val children: MutableList<Int> = mutableListOf(),
+        var tooltip: String = ""
+    )
+
+    private val customInterfaces = java.util.concurrent.ConcurrentHashMap<Int, CustomInterface>()
+    private val initialized = java.util.concurrent.atomic.AtomicBoolean(false)
+
+    @JvmStatic
+    fun get(id: Int): CustomInterface? {
+        if (initialized.compareAndSet(false, true)) {
+            initialize()
+        }
+        return customInterfaces[id]
+    }
+
+    @JvmStatic
+    fun startBackgroundLoad() {
+        if (initialized.compareAndSet(false, true)) {
+            net.dodian.uber.game.persistence.DbDispatchers.accountExecutor.execute {
+                initialize()
+            }
+        }
+    }
+
+    private fun initialize() {
+        try {
+            val file = java.io.File("game-client/src/main/java/com/osroyale/CustomInterface.java")
+            val targetFile = if (file.exists()) file else {
+                val alternative = java.io.File("../game-client/src/main/java/com/osroyale/CustomInterface.java")
+                if (alternative.exists()) alternative else null
+            }
+            if (targetFile == null) return
+            
+            val lines = targetFile.readLines()
+            var currentInterface: CustomInterface? = null
+            
+            val addTabInterfaceRegex = Regex("""addTabInterface\(\s*(\d+)\s*\)""")
+            val addInterfaceRegex = Regex("""addInterface\(\s*(\d+)\s*\)""")
+            val addTextRegex = Regex("""addText\(\s*(\d+)\s*,\s*"([^"]*)"\s*""")
+            val addHoverButtonRegex = Regex("""addHoverButton\(\s*(\d+)\s*,\s*[^,]+,\s*[^,]+,\s*[^,]+,\s*"([^"]*)"\s*""")
+            val childRegex = Regex("""\w+\.child\(\s*\d+\s*,\s*(\d+)\s*,"""")
+            
+            for (line in lines) {
+                val trimmed = line.trim()
+                
+                val tabMatch = addTabInterfaceRegex.find(trimmed)
+                val ifaceMatch = addInterfaceRegex.find(trimmed)
+                if (tabMatch != null) {
+                    val id = tabMatch.groupValues[1].toInt()
+                    currentInterface = CustomInterface(id)
+                    customInterfaces[id] = currentInterface
+                } else if (ifaceMatch != null) {
+                    val id = ifaceMatch.groupValues[1].toInt()
+                    currentInterface = CustomInterface(id)
+                    customInterfaces[id] = currentInterface
+                }
+                
+                val textMatch = addTextRegex.find(trimmed)
+                if (textMatch != null) {
+                    val id = textMatch.groupValues[1].toInt()
+                    val text = textMatch.groupValues[2]
+                    val item = customInterfaces.getOrPut(id) { CustomInterface(id) }
+                    item.text = text
+                }
+                
+                val hoverMatch = addHoverButtonRegex.find(trimmed)
+                if (hoverMatch != null) {
+                    val id = hoverMatch.groupValues[1].toInt()
+                    val tooltip = hoverMatch.groupValues[2]
+                    val item = customInterfaces.getOrPut(id) { CustomInterface(id) }
+                    item.tooltip = tooltip
+                }
+                
+                val childMatch = childRegex.find(trimmed)
+                if (childMatch != null && currentInterface != null) {
+                    val childId = childMatch.groupValues[1].toInt()
+                    currentInterface.children.add(childId)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }
 

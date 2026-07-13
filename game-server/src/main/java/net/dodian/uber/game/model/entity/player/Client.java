@@ -553,8 +553,8 @@ public class Client extends Player implements Runnable {
             12207, 12208, 12209, 12210, 12211, 12212, 12213, 12214, 12215, 12216, 12217, 12218, 12219, 12220, 12221, 12222,
             12223};
 
-    public int[] statId = {10252, 11000, 10253, 11001, 10254, 11002, 10255, 11011, 11013, 11014, 11010, 11012, 11006,
-            11009, 11008, 11004, 11003, 11005, 47002, 54090, 11007};
+    public int[] statId = {2812, 2816, 2813, 2817, 2814, 2818, 2815, 2827, 2829, 2830, 2826, 2828, 2822,
+            2825, 2824, 2820, 2819, 2821, 47002, 54090, 2823};
     public String[] BonusName = {"Stab", "Slash", "Crush", "Magic", "Range", "Stab", "Slash", "Crush", "Magic", "Range",
             "Melee Str", "Ranged Str", "Magic Dmg", "Prayer"};
 
@@ -1024,6 +1024,9 @@ public class Client extends Player implements Runnable {
         } else if (packet instanceof SendChatboxInterface) {
             openedInterfaceId = ((SendChatboxInterface) packet).frame();
             openedVia = "Frame164";
+        } else if (packet instanceof SetTabInterface) {
+            openedInterfaceId = ((SetTabInterface) packet).mainFrame();
+            openedVia = "SetTabInterface";
         } else if (packet instanceof RemoveInterfaces) {
             closedVia = "RemoveInterfaces";
             activeInterfaceId = -1;
@@ -2573,61 +2576,64 @@ public class Client extends Player implements Runnable {
     }
 
     public void loadAndShowModcpDetails(String targetName, boolean isOnline, String ipAddress) {
-        final String[] resultData = new String[4]; // [realName, rankName, createdDate, lastLoginDate]
-        resultData[0] = targetName;
-        resultData[1] = "Player";
-        resultData[2] = "N/A";
-        resultData[3] = "N/A";
+        net.dodian.uber.game.persistence.DbDispatchers.accountExecutor.execute(() -> {
+            final String[] resultData = new String[4]; // [realName, rankName, createdDate, lastLoginDate]
+            resultData[0] = targetName;
+            resultData[1] = "Player";
+            resultData[2] = "N/A";
+            resultData[3] = "N/A";
 
-        try {
-            net.dodian.uber.game.persistence.repository.DbAsyncRepository.withConnection(conn -> {
-                try {
-                    String query = "SELECT c.name, c.lastlogin, u.joindate, u.usergroupid " +
-                                   "FROM characters c " +
-                                   "LEFT JOIN user u ON LOWER(c.name) = LOWER(u.username) " +
-                                   "WHERE LOWER(c.name) = ?";
-                    java.sql.PreparedStatement ps = conn.prepareStatement(query);
-                    ps.setString(1, targetName.trim().toLowerCase());
-                    java.sql.ResultSet rs = ps.executeQuery();
-                    if (rs.next()) {
-                        resultData[0] = rs.getString("name");
-                        int mgroup = rs.getInt("usergroupid");
-                        int rights = (mgroup == 9 || mgroup == 5) ? 1 : ((mgroup == 6 || mgroup == 18 || mgroup == 10) ? 2 : 0);
-                        resultData[1] = rights == 1 ? "Moderator" : rights >= 2 ? "Administrator" : "Player";
+            try {
+                net.dodian.uber.game.persistence.repository.DbAsyncRepository.withConnection(conn -> {
+                    try {
+                        String query = "SELECT c.name, c.lastlogin, u.joindate, u.usergroupid " +
+                                       "FROM characters c " +
+                                       "LEFT JOIN user u ON LOWER(c.name) = LOWER(u.username) " +
+                                       "WHERE LOWER(c.name) = ?";
+                        java.sql.PreparedStatement ps = conn.prepareStatement(query);
+                        ps.setString(1, targetName.trim().toLowerCase());
+                        java.sql.ResultSet rs = ps.executeQuery();
+                        if (rs.next()) {
+                            resultData[0] = rs.getString("name");
+                            int mgroup = rs.getInt("usergroupid");
+                            int rights = (mgroup == 9 || mgroup == 5) ? 1 : ((mgroup == 6 || mgroup == 18 || mgroup == 10) ? 2 : 0);
+                            resultData[1] = rights == 1 ? "Moderator" : rights >= 2 ? "Administrator" : "Player";
 
-                        long joinSeconds = rs.getLong("joindate");
-                        if (joinSeconds > 0) {
-                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
-                            resultData[2] = sdf.format(new java.util.Date(joinSeconds * 1000L));
-                        }
+                            long joinSeconds = rs.getLong("joindate");
+                            if (joinSeconds > 0) {
+                                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                                resultData[2] = sdf.format(new java.util.Date(joinSeconds * 1000L));
+                            }
 
-                        String lastLoginStr = rs.getString("lastlogin");
-                        if (lastLoginStr != null && !lastLoginStr.isEmpty() && !lastLoginStr.equals("0")) {
-                            try {
-                                long lastLoginMs = Long.parseLong(lastLoginStr);
-                                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
-                                resultData[3] = sdf.format(new java.util.Date(lastLoginMs));
-                            } catch (NumberFormatException e) {
-                                resultData[3] = lastLoginStr;
+                            String lastLoginStr = rs.getString("lastlogin");
+                            if (lastLoginStr != null && !lastLoginStr.isEmpty() && !lastLoginStr.equals("0")) {
+                                try {
+                                    long lastLoginMs = Long.parseLong(lastLoginStr);
+                                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
+                                    resultData[3] = sdf.format(new java.util.Date(lastLoginMs));
+                                } catch (NumberFormatException e) {
+                                    resultData[3] = lastLoginStr;
+                                }
                             }
                         }
+                    } catch (java.sql.SQLException e) {
+                        e.printStackTrace();
                     }
-                } catch (java.sql.SQLException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            });
-        } catch (Exception e) {
-            // ignore
-        }
+                    return null;
+                });
+            } catch (Exception e) {
+                // ignore
+            }
 
-        // Send strings to the client
-        send(new SendString(resultData[0], 36706));
-        send(new SendString(resultData[1], 36708));
-        send(new SendString(resultData[2], 36710)); // Created date
-        send(new SendString("Last Login:", 36711)); // Change label from "Play Time:" to "Last Login:"
-        send(new SendString(resultData[3], 36712)); // Last login value
-        send(new SendString(isOnline ? ipAddress : "Offline", 36714)); // IP address
+            net.dodian.uber.game.engine.loop.GameThreadIngress.submitCritical("modcp-details", () -> {
+                send(new SendString(resultData[0], 36706));
+                send(new SendString(resultData[1], 36708));
+                send(new SendString(resultData[2], 36710)); // Created date
+                send(new SendString("Last Login:", 36711)); // Change label from "Play Time:" to "Last Login:"
+                send(new SendString(resultData[3], 36712)); // Last login value
+                send(new SendString(isOnline ? ipAddress : "Offline", 36714)); // IP address
+            });
+        });
     }
 
     public void openModcpList() {
@@ -2761,21 +2767,25 @@ public class Client extends Player implements Runnable {
                     other.mutedTill = muteTime;
                     other.sendMessage("You have been muted for 24 hours by " + playerName + ".");
                 } else {
-                    try {
-                        net.dodian.uber.game.persistence.repository.DbAsyncRepository.withConnection(conn -> {
-                            try {
-                                java.sql.PreparedStatement ps = conn.prepareStatement("UPDATE characters SET unmutetime = ? WHERE name = ?");
-                                ps.setLong(1, muteTime);
-                                ps.setString(2, targetName);
-                                ps.executeUpdate();
-                            } catch (java.sql.SQLException e) {
-                                e.printStackTrace();
-                            }
-                            return null;
-                        });
-                    } catch (Exception e) {
-                        sendMessage("Error muting offline player: " + e.getMessage());
-                    }
+                    net.dodian.uber.game.persistence.DbDispatchers.accountExecutor.execute(() -> {
+                        try {
+                            net.dodian.uber.game.persistence.repository.DbAsyncRepository.withConnection(conn -> {
+                                try {
+                                    java.sql.PreparedStatement ps = conn.prepareStatement("UPDATE characters SET unmutetime = ? WHERE name = ?");
+                                    ps.setLong(1, muteTime);
+                                    ps.setString(2, targetName);
+                                    ps.executeUpdate();
+                                } catch (java.sql.SQLException e) {
+                                    e.printStackTrace();
+                                }
+                                return null;
+                            });
+                        } catch (Exception e) {
+                            net.dodian.uber.game.engine.loop.GameThreadIngress.submitCritical("mute-error", () -> {
+                                sendMessage("Error muting offline player: " + e.getMessage());
+                            });
+                        }
+                    });
                 }
                 sendMessage("You have muted " + targetName + " for 24 hours.");
             } else if (option == 3) { // Unmute
@@ -2783,20 +2793,24 @@ public class Client extends Player implements Runnable {
                     other.mutedTill = 0;
                     other.sendMessage("You have been unmuted by " + playerName + ".");
                 } else {
-                    try {
-                        net.dodian.uber.game.persistence.repository.DbAsyncRepository.withConnection(conn -> {
-                            try {
-                                java.sql.PreparedStatement ps = conn.prepareStatement("UPDATE characters SET unmutetime = 0 WHERE name = ?");
-                                ps.setString(1, targetName);
-                                ps.executeUpdate();
-                            } catch (java.sql.SQLException e) {
-                                e.printStackTrace();
-                            }
-                            return null;
-                        });
-                    } catch (Exception e) {
-                        sendMessage("Error unmuting offline player: " + e.getMessage());
-                    }
+                    net.dodian.uber.game.persistence.DbDispatchers.accountExecutor.execute(() -> {
+                        try {
+                            net.dodian.uber.game.persistence.repository.DbAsyncRepository.withConnection(conn -> {
+                                try {
+                                    java.sql.PreparedStatement ps = conn.prepareStatement("UPDATE characters SET unmutetime = 0 WHERE name = ?");
+                                    ps.setString(1, targetName);
+                                    ps.executeUpdate();
+                                } catch (java.sql.SQLException e) {
+                                    e.printStackTrace();
+                                }
+                                return null;
+                            });
+                        } catch (Exception e) {
+                            net.dodian.uber.game.engine.loop.GameThreadIngress.submitCritical("unmute-error", () -> {
+                                sendMessage("Error unmuting offline player: " + e.getMessage());
+                            });
+                        }
+                    });
                 }
                 sendMessage("You have unmuted " + targetName + ".");
             }

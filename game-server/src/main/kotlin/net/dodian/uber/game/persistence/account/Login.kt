@@ -10,10 +10,11 @@ import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.engine.config.gameWorldId
 import org.slf4j.LoggerFactory
 
+import net.dodian.uber.game.persistence.DbDispatchers
+
 class Login {
     private val logger = LoggerFactory.getLogger(Login::class.java)
 
-    @Synchronized
     fun sendSession(
         dbId: Int,
         clientPid: Int,
@@ -22,25 +23,27 @@ class Login {
         start: Long,
         end: Long,
     ) {
-        try {
-            DbAsyncRepository.withConnection { conn ->
-                val query =
-                    "INSERT INTO ${DbTables.GAME_PLAYER_SESSIONS} (dbid, client, duration, hostname, start, end, world) VALUES (?, ?, ?, ?, ?, ?, ?)"
-                conn.prepareStatement(query).use { statement ->
-                    statement.setInt(1, dbId)
-                    statement.setInt(2, clientPid)
-                    statement.setInt(3, elapsed)
-                    statement.setString(4, connectedFrom)
-                    statement.setLong(5, start)
-                    statement.setLong(6, end)
-                    statement.setInt(7, gameWorldId)
-                    statement.executeUpdate()
+        DbDispatchers.accountExecutor.execute {
+            try {
+                DbAsyncRepository.withConnection { conn ->
+                    val query =
+                        "INSERT INTO ${DbTables.GAME_PLAYER_SESSIONS} (dbid, client, duration, hostname, start, end, world) VALUES (?, ?, ?, ?, ?, ?, ?)"
+                    conn.prepareStatement(query).use { statement ->
+                        statement.setInt(1, dbId)
+                        statement.setInt(2, clientPid)
+                        statement.setInt(3, elapsed)
+                        statement.setString(4, connectedFrom)
+                        statement.setLong(5, start)
+                        statement.setLong(6, end)
+                        statement.setInt(7, gameWorldId)
+                        statement.executeUpdate()
+                    }
                 }
+            } catch (exception: SQLException) {
+                logger.error("Failed to record player session for dbId={}", dbId, exception)
+            } catch (exception: RuntimeException) {
+                logger.error("Failed to record player session for dbId={}", dbId, exception)
             }
-        } catch (exception: SQLException) {
-            logger.error("Failed to record player session for dbId={}", dbId, exception)
-        } catch (exception: RuntimeException) {
-            logger.error("Failed to record player session for dbId={}", dbId, exception)
         }
     }
 

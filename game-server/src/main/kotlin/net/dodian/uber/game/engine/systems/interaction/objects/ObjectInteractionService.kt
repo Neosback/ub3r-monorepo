@@ -209,34 +209,68 @@ object ObjectInteractionService {
             for (resolution in candidates) {
                 val content = resolution.content
                 try {
+                    val apiCtx = when (context.type) {
+                        ObjectInteractionType.CLICK -> {
+                            val opt = when (context.option) {
+                                1 -> net.dodian.uber.game.api.interaction.InteractionOption.FIRST
+                                2 -> net.dodian.uber.game.api.interaction.InteractionOption.SECOND
+                                3 -> net.dodian.uber.game.api.interaction.InteractionOption.THIRD
+                                4 -> net.dodian.uber.game.api.interaction.InteractionOption.FOURTH
+                                5 -> net.dodian.uber.game.api.interaction.InteractionOption.FIFTH
+                                else -> net.dodian.uber.game.api.interaction.InteractionOption.FIRST
+                            }
+                            net.dodian.uber.game.api.interaction.ObjectInteractionContext(
+                                player = context.client,
+                                option = opt,
+                                objectId = context.objectId,
+                                position = context.position,
+                                definition = context.obj
+                            )
+                        }
+
+                        ObjectInteractionType.USE_ITEM -> {
+                            net.dodian.uber.game.api.interaction.ObjectInteractionContext(
+                                player = context.client,
+                                option = net.dodian.uber.game.api.interaction.InteractionOption.USE_ITEM,
+                                objectId = context.objectId,
+                                position = context.position,
+                                definition = context.obj,
+                                itemPayload = net.dodian.uber.game.api.interaction.ItemPayload(
+                                    itemId = context.itemId ?: -1,
+                                    itemSlot = context.itemSlot ?: -1,
+                                    interfaceId = context.interfaceId ?: -1
+                                )
+                            )
+                        }
+
+                        ObjectInteractionType.MAGIC -> {
+                            net.dodian.uber.game.api.interaction.ObjectInteractionContext(
+                                player = context.client,
+                                option = net.dodian.uber.game.api.interaction.InteractionOption.MAGIC,
+                                objectId = context.objectId,
+                                position = context.position,
+                                definition = context.obj,
+                                spellPayload = net.dodian.uber.game.api.interaction.SpellPayload(
+                                    spellId = context.spellId ?: -1
+                                )
+                            )
+                        }
+                    }
+
                     val handlerStart = System.nanoTime()
                     val handled = when (context.type) {
                         ObjectInteractionType.CLICK -> when (context.option) {
-                            1 -> content.onFirstClick(context.client, context.objectId, context.position, context.obj)
-                            2 -> content.onSecondClick(context.client, context.objectId, context.position, context.obj)
-                            3 -> content.onThirdClick(context.client, context.objectId, context.position, context.obj)
-                            4 -> content.onFourthClick(context.client, context.objectId, context.position, context.obj)
-                            5 -> content.onFifthClick(context.client, context.objectId, context.position, context.obj)
+                            1 -> content.onFirstClick(apiCtx)
+                            2 -> content.onSecondClick(apiCtx)
+                            3 -> content.onThirdClick(apiCtx)
+                            4 -> content.onFourthClick(apiCtx)
+                            5 -> content.onFifthClick(apiCtx)
                             else -> false
                         }
 
-                        ObjectInteractionType.USE_ITEM -> content.onUseItem(
-                            client = context.client,
-                            objectId = context.objectId,
-                            position = context.position,
-                            obj = context.obj,
-                            itemId = context.itemId ?: -1,
-                            itemSlot = context.itemSlot ?: -1,
-                            interfaceId = context.interfaceId ?: -1,
-                        )
+                        ObjectInteractionType.USE_ITEM -> content.onUseItem(apiCtx)
 
-                        ObjectInteractionType.MAGIC -> content.onMagic(
-                            client = context.client,
-                            objectId = context.objectId,
-                            position = context.position,
-                            obj = context.obj,
-                            spellId = context.spellId ?: -1,
-                        )
+                        ObjectInteractionType.MAGIC -> content.onMagic(apiCtx)
                     }
                     handlerNs += System.nanoTime() - handlerStart
                     if (handled) {

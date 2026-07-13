@@ -4,32 +4,50 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.rscm.asRscm
 
+import net.dodian.uber.game.api.interaction.GameContentDsl
+import net.dodian.uber.game.api.interaction.NpcInteractionContext
+
+@GameContentDsl
 class NpcOptionsBuilder internal constructor() {
     private val bindings = ArrayList<NpcOptionBinding>()
 
     fun first(label: String = "first", handler: NpcClickHandler) = bind(1, label, handler)
+    fun first(label: String = "first", handler: (NpcInteractionContext) -> Boolean) = bindContext(1, label, handler)
     fun second(label: String = "second", handler: NpcClickHandler) = bind(2, label, handler)
+    fun second(label: String = "second", handler: (NpcInteractionContext) -> Boolean) = bindContext(2, label, handler)
     fun third(label: String = "third", handler: NpcClickHandler) = bind(3, label, handler)
+    fun third(label: String = "third", handler: (NpcInteractionContext) -> Boolean) = bindContext(3, label, handler)
     fun fourth(label: String = "fourth", handler: NpcClickHandler) = bind(4, label, handler)
+    fun fourth(label: String = "fourth", handler: (NpcInteractionContext) -> Boolean) = bindContext(4, label, handler)
     fun attack(label: String = "attack", handler: NpcClickHandler) = bind(5, label, handler)
+    fun attack(label: String = "attack", handler: (NpcInteractionContext) -> Boolean) = bindContext(5, label, handler)
 
     fun talkTo(label: String = "talk-to", handler: NpcClickHandler) = first(label, handler)
+    fun talkTo(label: String = "talk-to", handler: (NpcInteractionContext) -> Boolean) = first(label, handler)
     fun trade(label: String = "trade", handler: NpcClickHandler) = second(label, handler)
+    fun trade(label: String = "trade", handler: (NpcInteractionContext) -> Boolean) = second(label, handler)
 
     internal fun build(): List<NpcOptionBinding> = bindings.toList()
 
     private fun bind(option: Int, label: String, handler: NpcClickHandler) {
         require(bindings.none { it.option == option }) { "Duplicate NPC option $option" }
-        bindings += NpcOptionBinding(option, label, handler)
+        bindings += NpcOptionBinding(option, label, handler = handler)
+    }
+
+    private fun bindContext(option: Int, label: String, handler: NpcContextClickHandler) {
+        require(bindings.none { it.option == option }) { "Duplicate NPC option $option" }
+        bindings += NpcOptionBinding(option, label, contextHandler = handler)
     }
 }
 
 data class NpcOptionBinding(
     val option: Int,
     val label: String,
-    val handler: NpcClickHandler,
+    val handler: NpcClickHandler = NO_CLICK_HANDLER,
+    val contextHandler: NpcContextClickHandler = NO_CONTEXT_CLICK_HANDLER,
 )
 
+@GameContentDsl
 class NpcSpawnsBuilder internal constructor(private val primaryId: Int) {
     private val values = ArrayList<NpcSpawnDef>()
 
@@ -161,6 +179,7 @@ class NpcSpawnsBuilder internal constructor(private val primaryId: Int) {
     internal fun build(): List<NpcSpawnDef> = values.toList()
 }
 
+@GameContentDsl
 class NpcFamilyBuilder internal constructor(
     private val name: String,
     private val primaryId: Int,
@@ -246,6 +265,8 @@ class NpcFamilyBuilder internal constructor(
         val optionLabels = options.associate { it.option to it.label }
         fun handler(option: Int): NpcClickHandler =
             options.firstOrNull { it.option == option }?.handler ?: NO_CLICK_HANDLER
+        fun contextHandler(option: Int): NpcContextClickHandler =
+            options.firstOrNull { it.option == option }?.contextHandler ?: NO_CONTEXT_CLICK_HANDLER
         val content =
             NpcContentDefinition(
                 name = name,
@@ -257,6 +278,11 @@ class NpcFamilyBuilder internal constructor(
                 onThirdClick = handler(3),
                 onFourthClick = handler(4),
                 onAttack = handler(5),
+                onFirstClickCtx = contextHandler(1),
+                onSecondClickCtx = contextHandler(2),
+                onThirdClickCtx = contextHandler(3),
+                onFourthClickCtx = contextHandler(4),
+                onAttackCtx = contextHandler(5),
                 cacheOverrides = cacheOverrides.toList(),
                 serverDefinitions = serverDefinitions.map { def ->
                     if (combatHandler != null) def.copy(bossAttackHandler = combatHandler) else def

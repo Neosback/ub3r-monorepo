@@ -2,6 +2,7 @@ package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.engine.systems.cache.CacheNpcDefinition
 import net.dodian.uber.game.rscm.asRscmSeq
+import net.dodian.uber.game.api.interaction.GameContentDsl
 
 data class NpcCacheOverride(
     val id: Int,
@@ -106,6 +107,7 @@ data class NpcDisplayOverride(
     val transformTo: Int? = null,
 )
 
+@GameContentDsl
 class NpcDefinitionOverrideBuilder internal constructor(private val id: Int) {
     var name: String? = null
     var examine: String? = null
@@ -118,6 +120,7 @@ class NpcDefinitionOverrideBuilder internal constructor(private val id: Int) {
         )
 }
 
+@GameContentDsl
 class NpcServerDefinitionBuilder internal constructor(private val id: Int? = null) {
     var attackAnimation: Int? = null
     var defenceAnimation: Int? = null
@@ -227,6 +230,7 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
 @Deprecated("Use NpcServerDefinitionBuilder. Runtime values are server-owned NPC values.")
 typealias NpcRuntimeDefinitionBuilder = NpcServerDefinitionBuilder
 
+@GameContentDsl
 class NpcCombatBuilder {
     var handler: NpcAttackHandler? = null
 

@@ -1,8 +1,8 @@
 package net.dodian.uber.game.engine.systems.interaction.commands
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.persistence.audit.CommandLog
+import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 
 internal fun recordStaffCommand(client: Client, rawCommand: String) {
-    CommandLog.recordCommand(client, rawCommand)
+    ConsoleAuditLog.command(client, rawCommand)
 }

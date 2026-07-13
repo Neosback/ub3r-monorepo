@@ -67,6 +67,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.7")
 
     implementation("io.netty:netty-all:4.1.108.Final")
+    implementation("io.netty:netty-transport-native-epoll:4.1.108.Final:linux-x86_64")
+    implementation("io.netty:netty-transport-native-epoll:4.1.108.Final:linux-aarch_64")
     implementation("com.google.guava:guava:33.1.0-jre")
     implementation("com.displee:rs-cache-library:8.1.0")
     implementation("com.displee:disio:2.3")
@@ -80,6 +82,7 @@ dependencies {
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("io.ktor:ktor-server-cors:$ktor_version")
+    implementation("io.ktor:ktor-server-rate-limit:$ktor_version")
 
     implementation(kotlin("reflect"))
 }

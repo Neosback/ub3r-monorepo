@@ -1,6 +1,7 @@
 package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.api.interaction.GameContentDsl
 
 const val NORTH = 0
 const val NORTH_EAST = 1
@@ -65,6 +66,7 @@ data class NpcSpawnDef(
     val transformTo: Int? get() = overrides.transformTo
 }
 
+@GameContentDsl
 class NpcSpawnOverrideBuilder internal constructor(private var spawn: NpcSpawnDef) {
     private val server = NpcServerDefinitionBuilder()
     var attack: Int?

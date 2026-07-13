@@ -25,7 +25,6 @@ import net.dodian.uber.game.persistence.player.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveService;
 import net.dodian.uber.game.persistence.world.WorldDbPollService;
 import net.dodian.uber.game.persistence.WorldSavePublisher;
-import net.dodian.uber.game.persistence.audit.AsyncSqlService;
 import net.dodian.uber.game.persistence.audit.ChatLog;
 import net.dodian.uber.game.persistence.world.ObjectDefinitionRepository;
 import net.dodian.uber.game.engine.config.DotEnvKt;
@@ -145,6 +144,7 @@ public class Server {
 
 
         /* Processor for various stuff */
+        net.dodian.uber.game.persistence.audit.CustomInterfaceRegistry.startBackgroundLoad();
         gameLoopService.start();
         net.dodian.uber.game.npc.LegendsGuardRankingCache.start();
         Login.banUid();
@@ -213,11 +213,7 @@ public class Server {
             logger.warn("Failed to shutdown chat log service", exception);
         }
 
-        try {
-            AsyncSqlService.shutdown(Duration.ofSeconds(10));
-        } catch (Exception exception) {
-            logger.warn("Failed to shutdown async SQL service", exception);
-        }
+
 
         try {
             closeConnectionPool();

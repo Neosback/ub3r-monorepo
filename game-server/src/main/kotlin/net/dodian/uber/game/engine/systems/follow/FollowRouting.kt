@@ -11,6 +11,7 @@ import net.dodian.uber.game.engine.systems.pathing.AStarPathfindingAlgorithm
 import net.dodian.uber.game.engine.systems.pathing.Heuristic
 import net.dodian.uber.game.engine.systems.pathing.Node
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
+import net.dodian.uber.game.engine.systems.pathing.collision.CollisionDirection
 import net.dodian.uber.game.engine.systems.pathing.collision.InteractionReachService
 import org.slf4j.LoggerFactory
 import net.dodian.uber.game.Server
@@ -296,7 +297,8 @@ object FollowRouting {
         if (abs(stepX) > 1 || abs(stepY) > 1) {
             return false
         }
-        return collisionManager.traversable(nearestX, nearestY, z, stepX, stepY)
+        val direction = CollisionDirection.fromDelta(stepX, stepY)
+        return collisionManager.isNpcEdgeTraversable(z, x, y, direction)
     }
 
     private fun validatePath(startX: Int, startY: Int, z: Int, path: ArrayDeque<Node>): ArrayDeque<Node> {

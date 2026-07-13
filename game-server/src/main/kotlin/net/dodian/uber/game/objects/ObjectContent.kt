@@ -5,6 +5,8 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.api.content.ContentObjectInteractionPolicy
 
+import net.dodian.uber.game.api.interaction.ObjectInteractionContext
+
 interface ObjectContent {
     val objectIds: IntArray
         get() = intArrayOf()
@@ -36,6 +38,35 @@ interface ObjectContent {
         obj: GameObjectData?,
         spellId: Int,
     ): Boolean = false
+
+    fun onFirstClick(context: ObjectInteractionContext): Boolean =
+        onFirstClick(context.player, context.objectId, context.position, context.definition)
+    fun onSecondClick(context: ObjectInteractionContext): Boolean =
+        onSecondClick(context.player, context.objectId, context.position, context.definition)
+    fun onThirdClick(context: ObjectInteractionContext): Boolean =
+        onThirdClick(context.player, context.objectId, context.position, context.definition)
+    fun onFourthClick(context: ObjectInteractionContext): Boolean =
+        onFourthClick(context.player, context.objectId, context.position, context.definition)
+    fun onFifthClick(context: ObjectInteractionContext): Boolean =
+        onFifthClick(context.player, context.objectId, context.position, context.definition)
+    fun onUseItem(context: ObjectInteractionContext): Boolean =
+        onUseItem(
+            client = context.player,
+            objectId = context.objectId,
+            position = context.position,
+            obj = context.definition,
+            itemId = context.itemPayload?.itemId ?: -1,
+            itemSlot = context.itemPayload?.itemSlot ?: -1,
+            interfaceId = context.itemPayload?.interfaceId ?: -1
+        )
+    fun onMagic(context: ObjectInteractionContext): Boolean =
+        onMagic(
+            client = context.player,
+            objectId = context.objectId,
+            position = context.position,
+            obj = context.definition,
+            spellId = context.spellPayload?.spellId ?: -1
+        )
 
     fun clickInteractionPolicy(
         option: Int,
