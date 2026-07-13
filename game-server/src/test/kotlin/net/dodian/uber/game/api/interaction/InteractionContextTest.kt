@@ -62,7 +62,14 @@ class InteractionContextTest {
             }
         }
         val client = Client(null, 1)
-        val result = content.onFirstClick(client, 100, Position(10, 10, 0), null)
+        val context = ObjectInteractionContext(
+            player = client,
+            option = InteractionOption.FIRST,
+            objectId = 100,
+            position = Position(10, 10, 0),
+            definition = null
+        )
+        val result = content.onFirstClick(context)
         assertTrue(called)
         assertTrue(result)
     }

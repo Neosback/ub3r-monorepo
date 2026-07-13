@@ -18,14 +18,13 @@ fun parseItemsJsonDir(dirPath: String): List<ItemDefJson> {
     if (!dir.exists() || !dir.isDirectory) return emptyList()
     val gson = Gson()
     return dir.listFiles { f -> f.isFile && f.name.endsWith(".json") }
-        ?.mapNotNull { file ->
+        ?.map { file ->
             try {
                 JsonReader(FileReader(file)).use { reader ->
                     gson.fromJson<ItemDefJson>(reader, ItemDefJson::class.java)
                 }
             } catch (e: Exception) {
-                System.err.println("Failed to parse items-json file ${file.name}: ${e.message}")
-                null
+                throw IllegalStateException("Failed to parse items-json file ${file.name}: ${e.message}", e)
             }
         } ?: emptyList()
 }
@@ -40,8 +39,7 @@ fun parseItemDefsFile(filePath: String): List<ItemDefBase> {
             gson.fromJson<List<ItemDefBase>>(reader, type)
         }
     } catch (e: Exception) {
-        System.err.println("Failed to parse item definitions: ${e.message}")
-        emptyList()
+        throw IllegalStateException("Failed to parse item definitions: ${e.message}", e)
     }
 }
 
@@ -50,7 +48,7 @@ open class ItemManager @JvmOverloads constructor(
     private val globalSpawnBootstrap: (() -> Unit)? = null,
 ) {
     @JvmField
-    val items: MutableMap<Int, Item> = LinkedHashMap()
+    var items: Array<Item?> = arrayOfNulls(35000)
 
     private val logger = LoggerFactory.getLogger(ItemManager::class.java)
     private val defaultStandAnim = 808
@@ -73,9 +71,26 @@ open class ItemManager @JvmOverloads constructor(
     }
 
     open fun loadItems() {
-        items.clear()
-        items.putAll(definitionLoader?.invoke() ?: loadItemsFromJson())
-        logger.info("Loaded {} item definitions.", items.size)
+        val loaded = definitionLoader?.invoke() ?: loadItemsFromJson()
+        
+        // Integrity check: assert noted/unnoted item references point to existing items
+        for (item in loaded.values) {
+            if (item.isNoted() && item.linkedItemId > 0 && !loaded.containsKey(item.linkedItemId)) {
+                throw IllegalStateException("Item definition validation failed: Item ID ${item.id} (${item.getName()}) is noted but its linkedItemId ${item.linkedItemId} does not exist.")
+            }
+            if (!item.isNoted() && !item.isPlaceholder() && item.linkedNotedId > 0 && !loaded.containsKey(item.linkedNotedId)) {
+                throw IllegalStateException("Item definition validation failed: Item ID ${item.id} (${item.getName()}) is noteable but its linkedNotedId ${item.linkedNotedId} does not exist.")
+            }
+        }
+
+        val maxId = loaded.keys.maxOrNull() ?: 0
+        val size = maxOf(35000, maxId + 1)
+        val newItems = arrayOfNulls<Item>(size)
+        for ((id, item) in loaded) {
+            newItems[id] = item
+        }
+        items = newItems
+        logger.info("Loaded {} item definitions.", loaded.size)
     }
 
     private fun loadItemsFromJson(): Map<Int, Item> {
@@ -144,125 +159,130 @@ open class ItemManager @JvmOverloads constructor(
         return loaded
     }
 
+    private fun getItem(id: Int): Item? {
+        if (id < 0 || id >= items.size) return null
+        return items[id]
+    }
+
     fun isNote(id: Int): Boolean {
-        val item = items[id]
+        val item = getItem(id)
         return item != null && id >= 0 && item.isNoted()
     }
 
     fun getLinkedItemId(id: Int): Int {
-        val item = items[id] ?: return 0
+        val item = getItem(id) ?: return 0
         return if (item.isNoted()) item.linkedItemId else 0
     }
 
     fun getLinkedNotedId(id: Int): Int {
-        val item = items[id] ?: return 0
+        val item = getItem(id) ?: return 0
         return if (!item.isNoted() && !item.isPlaceholder()) item.linkedNotedId else 0
     }
 
     fun normalizeForBank(id: Int): Int = getLinkedItemId(id).takeIf { it > 0 } ?: id
 
     fun isStackable(id: Int): Boolean {
-        val item = items[id]
+        val item = getItem(id)
         return item != null && id >= 0 && item.getStackable()
     }
 
     fun isTwoHanded(id: Int): Boolean {
-        val item = items[id]
+        val item = getItem(id)
         return id >= 0 && item != null && item.getTwoHanded()
     }
 
     fun getSlot(id: Int): Int {
         if (id < 0) return 3
-        val item = items[id] ?: return 3
+        val item = getItem(id) ?: return 3
         return item.slot
     }
 
     fun getStandAnim(id: Int): Int {
         if (id < 1) return defaultStandAnim
-        val item = items[id] ?: return defaultStandAnim
+        val item = getItem(id) ?: return defaultStandAnim
         return item.getStandAnim()
     }
 
     fun getWalkAnim(id: Int): Int {
         if (id < 1) return defaultWalkAnim
-        val item = items[id] ?: return defaultWalkAnim
+        val item = getItem(id) ?: return defaultWalkAnim
         return item.getWalkAnim()
     }
 
     fun getRunAnim(id: Int): Int {
         if (id < 1) return defaultRunAnim
-        val item = items[id] ?: return defaultRunAnim
+        val item = getItem(id) ?: return defaultRunAnim
         return item.getRunAnim()
     }
 
     fun getAttackAnim(id: Int): Int {
         if (id < 1) return defaultAttackAnim
-        val item = items[id] ?: return defaultAttackAnim
+        val item = getItem(id) ?: return defaultAttackAnim
         return item.getAttackAnim()
     }
 
     fun isPremium(id: Int): Boolean {
         if (id < 0) return false
-        val item = items[id] ?: return false
+        val item = getItem(id) ?: return false
         return item.getPremium()
     }
 
     fun isTradable(id: Int): Boolean {
         if (id < 0 || id == 4084) return false
-        val item = items[id] ?: return false
+        val item = getItem(id) ?: return false
         return item.getTradeable()
     }
 
     fun getBonus(id: Int, bonus: Int): Int {
         if (id < 0 || bonus < 0) return 0
-        val item = items[id] ?: return 0
+        val item = getItem(id) ?: return 0
         val bonuses = item.getBonuses()
         return if (bonus < bonuses.size) bonuses[bonus] else 0
     }
 
     fun isFullBody(id: Int): Boolean {
         if (id < 0) return false
-        val item = items[id]
+        val item = getItem(id)
         return item != null && item.slot == 4 && item.full
     }
 
     fun isFullHelm(id: Int): Boolean {
         if (id < 0) return false
-        val item = items[id]
+        val item = getItem(id)
         return item != null && item.slot == 0 && item.full
     }
 
     fun isMask(id: Int): Boolean {
         if (id < 0) return false
-        val item = items[id]
+        val item = getItem(id)
         return item != null && item.slot == 0 && item.mask
     }
 
-    fun getShopSellValue(id: Int): Int = items[id]?.getShopSellValue() ?: 1
+    fun getShopSellValue(id: Int): Int = getItem(id)?.getShopSellValue() ?: 1
 
-    fun getShopBuyValue(id: Int): Int = items[id]?.getShopBuyValue() ?: 0
+    fun getShopBuyValue(id: Int): Int = getItem(id)?.getShopBuyValue() ?: 0
 
-    fun getAlchemy(id: Int): Int = items[id]?.getAlchemy() ?: 0
+    fun getAlchemy(id: Int): Int = getItem(id)?.getAlchemy() ?: 0
 
     fun getName(id: Int): String =
-        items[id]?.getName()?.replace("_", " ")
+        getItem(id)?.getName()?.replace("_", " ")
             ?: "Database Error. Please contact admins with this error code: ITEM_NAME_$id"
 
-    fun getExamine(id: Int): String = items[id]?.getDescription()?.replace("_", " ") ?: ""
+    fun getExamine(id: Int): String = getItem(id)?.getDescription()?.replace("_", " ") ?: ""
 
-    fun getWeight(id: Int): Double = items[id]?.weight ?: 0.0
+    fun getWeight(id: Int): Double = getItem(id)?.weight ?: 0.0
 
-    fun getAttackSpeed(id: Int): Int = items[id]?.attackSpeed ?: 4
+    fun getAttackSpeed(id: Int): Int = getItem(id)?.attackSpeed ?: 4
 
-    fun getWeaponType(id: Int): String = items[id]?.weaponType ?: ""
+    fun getWeaponType(id: Int): String = getItem(id)?.weaponType ?: ""
 
-    fun getStances(id: Int): Array<ItemWeaponStance> = items[id]?.stances ?: emptyArray()
+    fun getStances(id: Int): Array<ItemWeaponStance> = getItem(id)?.stances ?: emptyArray()
 
     fun getItemName(c: Client, name: String) {
         var send = false
         val normalizedName = name.replace("_", " ")
-        for (item in items.values) {
-            if (normalizedName.equals(item.getName().replace("_", " "), ignoreCase = true) &&
+        for (item in items) {
+            if (item != null && normalizedName.equals(item.getName().replace("_", " "), ignoreCase = true) &&
                 item.getDescription() != "null"
             ) {
                 var prefix = ""

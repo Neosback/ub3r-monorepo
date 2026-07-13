@@ -18,56 +18,6 @@ object ObjectInteractionService {
     private val reentrancyGuard = ThreadLocal.withInitial { mutableSetOf<String>() }
 
     @JvmStatic
-    fun tryHandleClick(
-        client: Client,
-        option: Int,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-    ): Boolean {
-        return tryHandleTimed(ObjectInteractionContext.click(client, option, objectId, position, obj)).handled
-    }
-
-    @JvmStatic
-    fun tryHandleUseItem(
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        itemId: Int,
-        itemSlot: Int,
-        interfaceId: Int,
-    ): Boolean {
-        return tryHandleTimed(
-            ObjectInteractionContext.useItem(
-                client = client,
-                objectId = objectId,
-                position = position,
-                obj = obj,
-                itemId = itemId,
-                itemSlot = itemSlot,
-                interfaceId = interfaceId,
-            ),
-        ).handled
-    }
-
-    @JvmStatic
-    fun tryHandleMagic(
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        spellId: Int,
-    ): Boolean {
-        return tryHandleTimed(ObjectInteractionContext.magic(client, objectId, position, obj, spellId)).handled
-    }
-
-    @JvmStatic
-    fun tryHandle(context: ObjectInteractionContext): Boolean {
-        return tryHandleTimed(context).handled
-    }
-
-    @JvmStatic
     fun tryHandleTimed(context: ObjectInteractionContext): DispatchTiming {
         val key = buildReentrancyKey(context)
         val active = reentrancyGuard.get()

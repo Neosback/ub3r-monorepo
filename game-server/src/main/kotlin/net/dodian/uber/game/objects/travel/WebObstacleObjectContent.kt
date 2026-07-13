@@ -9,10 +9,15 @@ import net.dodian.uber.game.model.objects.WorldObject
 import net.dodian.uber.game.api.content.ContentInteraction
 import net.dodian.uber.game.engine.util.Misc
 
+import net.dodian.uber.game.api.interaction.ObjectInteractionContext
+
 object WebObstacleObjectContent : ObjectContent {
     override val objectIds: IntArray = TravelObjectIds.webObstacleObjects
 
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+    override fun onFirstClick(context: ObjectInteractionContext): Boolean {
+        val client = context.player
+        val objectId = context.objectId
+        val position = context.position
         if (Misc.chance(100) <= 50) {
             client.sendMessage("You failed to cut the web!")
             return true

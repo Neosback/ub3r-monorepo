@@ -5,10 +5,15 @@ import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 
+import net.dodian.uber.game.api.interaction.ObjectInteractionContext
+
 object PartyRoomObjectContent : ObjectContent {
     override val objectIds: IntArray = PartyRoomObjectIds.allObjectIds
 
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+    override fun onFirstClick(context: ObjectInteractionContext): Boolean {
+        val client = context.player
+        val objectId = context.objectId
+        val position = context.position
         if (objectId in PartyRoomObjectIds.balloonObjectIds && PartyRoomBalloons.lootBalloon(client, position.copy())) {
             return true
         }

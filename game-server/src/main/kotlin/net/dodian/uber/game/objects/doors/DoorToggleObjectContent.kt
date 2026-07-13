@@ -9,6 +9,8 @@ import net.dodian.uber.game.model.objects.DoorRegistry
 import net.dodian.uber.game.engine.systems.interaction.ObjectClipService
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
+import net.dodian.uber.game.api.interaction.ObjectInteractionContext
+
 object DoorToggleObjectContent : ObjectContent {
     override fun bindings(): List<ObjectBinding> {
         val dynamicDoorBindings = DoorRegistry.doorId.indices
@@ -40,7 +42,10 @@ object DoorToggleObjectContent : ObjectContent {
             .sorted()
             .toIntArray()
 
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+    override fun onFirstClick(context: ObjectInteractionContext): Boolean {
+        val client = context.player
+        val objectId = context.objectId
+        val position = context.position
         if ((position.x == 2758 || position.x == 2757) && position.y == 3482 &&
             (objectId == 1558 || (objectId == 1557 && client.distanceToPoint(2758, 3482) < 5 && client.playerRights > 0))
         ) {

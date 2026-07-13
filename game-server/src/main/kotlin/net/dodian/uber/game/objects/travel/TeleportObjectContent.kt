@@ -9,10 +9,15 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.util.Misc
 import java.util.Random
 
+import net.dodian.uber.game.api.interaction.ObjectInteractionContext
+
 object TeleportObjectContent : ObjectContent {
     override val objectIds: IntArray = TravelObjectIds.teleportObjects
 
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+    override fun onFirstClick(context: ObjectInteractionContext): Boolean {
+        val client = context.player
+        val objectId = context.objectId
+        val position = context.position
         return when (objectId) {
             1294 -> {
                 client.transport(Position(2485, 9912, 0))
@@ -254,10 +259,10 @@ object TeleportObjectContent : ObjectContent {
         }
     }
 
-    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId == 823) {
+    override fun onSecondClick(context: ObjectInteractionContext): Boolean {
+        if (context.objectId == 823) {
             val random = Random()
-            client.moveTo(2602 + random.nextInt(5), 3162 + random.nextInt(5), client.position.z)
+            context.player.moveTo(2602 + random.nextInt(5), 3162 + random.nextInt(5), context.player.position.z)
             return true
         }
         return false

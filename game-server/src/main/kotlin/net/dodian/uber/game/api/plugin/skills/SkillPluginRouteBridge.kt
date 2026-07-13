@@ -3,6 +3,10 @@ package net.dodian.uber.game.api.plugin.skills
 import net.dodian.uber.game.item.ItemContent
 import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
+import net.dodian.uber.game.api.interaction.ObjectInteractionContext
+import net.dodian.uber.game.api.interaction.InteractionOption
+import net.dodian.uber.game.api.interaction.ItemPayload
+import net.dodian.uber.game.api.interaction.SpellPayload
 
 fun SkillPluginBuilder.bindObjectContentClick(
     preset: PolicyPreset,
@@ -10,12 +14,27 @@ fun SkillPluginBuilder.bindObjectContentClick(
     content: ObjectContent,
 ) {
     objectClick(preset = preset, option = option, *content.objectIds) { client, objectId, position, obj ->
+        val opt = when (option) {
+            1 -> InteractionOption.FIRST
+            2 -> InteractionOption.SECOND
+            3 -> InteractionOption.THIRD
+            4 -> InteractionOption.FOURTH
+            5 -> InteractionOption.FIFTH
+            else -> InteractionOption.FIRST
+        }
+        val context = ObjectInteractionContext(
+            player = client,
+            option = opt,
+            objectId = objectId,
+            position = position,
+            definition = obj
+        )
         when (option) {
-            1 -> content.onFirstClick(client, objectId, position, obj)
-            2 -> content.onSecondClick(client, objectId, position, obj)
-            3 -> content.onThirdClick(client, objectId, position, obj)
-            4 -> content.onFourthClick(client, objectId, position, obj)
-            5 -> content.onFifthClick(client, objectId, position, obj)
+            1 -> content.onFirstClick(context)
+            2 -> content.onSecondClick(context)
+            3 -> content.onThirdClick(context)
+            4 -> content.onFourthClick(context)
+            5 -> content.onFifthClick(context)
             else -> false
         }
     }
@@ -27,15 +46,15 @@ fun SkillPluginBuilder.bindObjectContentUseItem(
     itemIds: IntArray = intArrayOf(-1),
 ) {
     itemOnObject(preset = preset, *content.objectIds, itemIds = itemIds) { client, objectId, position, obj, itemId, itemSlot, interfaceId ->
-        content.onUseItem(
-            client = client,
+        val context = ObjectInteractionContext(
+            player = client,
+            option = InteractionOption.USE_ITEM,
             objectId = objectId,
             position = position,
-            obj = obj,
-            itemId = itemId,
-            itemSlot = itemSlot,
-            interfaceId = interfaceId,
+            definition = obj,
+            itemPayload = ItemPayload(itemId, itemSlot, interfaceId)
         )
+        content.onUseItem(context)
     }
 }
 
@@ -45,13 +64,15 @@ fun SkillPluginBuilder.bindObjectContentMagic(
     spellIds: IntArray = intArrayOf(-1),
 ) {
     magicOnObject(preset, *content.objectIds, spellIds = spellIds) { client, objectId, position, obj, spellId ->
-        content.onMagic(
-            client = client,
+        val context = ObjectInteractionContext(
+            player = client,
+            option = InteractionOption.MAGIC,
             objectId = objectId,
             position = position,
-            obj = obj,
-            spellId = spellId,
+            definition = obj,
+            spellPayload = SpellPayload(spellId)
         )
+        content.onMagic(context)
     }
 }
 

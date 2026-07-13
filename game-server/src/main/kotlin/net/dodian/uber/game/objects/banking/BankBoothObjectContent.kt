@@ -5,6 +5,8 @@ import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 
+import net.dodian.uber.game.api.interaction.ObjectInteractionContext
+
 object BankBoothObjectContent : ObjectContent {
     override val objectIds: IntArray = BankingObjectIds.boothObjects
 
@@ -12,25 +14,26 @@ object BankBoothObjectContent : ObjectContent {
     // the generic footprint+type+rotation reach in InteractionReachService — same as every other
     // walk-up-and-use object. The object's real type/rotation now comes from the cache (Geometry.getObject).
 
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        client.openUpBankRouted()
+    override fun onFirstClick(context: ObjectInteractionContext): Boolean {
+        context.player.openUpBankRouted()
         return true
     }
 
-    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        client.openUpBankRouted()
+    override fun onSecondClick(context: ObjectInteractionContext): Boolean {
+        context.player.openUpBankRouted()
         return true
     }
 
-    override fun onThirdClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+    override fun onThirdClick(context: ObjectInteractionContext): Boolean {
+        val client = context.player
         client.setRefundList()
         client.refundSlot = 0
         client.setRefundOptions()
         return true
     }
 
-    override fun onFourthClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        client.sendMessage("This bank options are not working currently!")
+    override fun onFourthClick(context: ObjectInteractionContext): Boolean {
+        context.player.sendMessage("This bank options are not working currently!")
         return true
     }
 }

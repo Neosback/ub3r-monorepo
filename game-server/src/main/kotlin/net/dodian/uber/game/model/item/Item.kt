@@ -9,6 +9,7 @@ import net.dodian.uber.game.item.ItemWeaponStance
 import net.dodian.uber.game.item.toRequiredArray
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.engine.systems.animation.AttackAnimationService
+import net.dodian.uber.game.engine.systems.animation.toAttackStyleKey
 
 class Item(
     val id: Int,
@@ -96,8 +97,17 @@ class Item(
 
     override fun toString(): String =
         "$name ($id); slot $slot; standAnim $standAnim; walkAnim $walkAnim; runAnim $runAnim; attackAnim $attackAnim"
-
     companion object {
+        const val FLAG_STACKABLE = 1 shl 0
+        const val FLAG_NOTED = 1 shl 1
+        const val FLAG_PLACEHOLDER = 1 shl 2
+        const val FLAG_NOTEABLE = 1 shl 3
+        const val FLAG_TRADEABLE = 1 shl 4
+        const val FLAG_TWO_HANDED = 1 shl 5
+        const val FLAG_FULL = 1 shl 6
+        const val FLAG_MASK = 1 shl 7
+        const val FLAG_PREMIUM = 1 shl 8
+
         const val DEFAULT_ATTACK_ANIM = 806
 
         private val defaultStandAnim = 808
@@ -199,6 +209,16 @@ class Item(
             val runAnim = base.runAnimation ?: defaultRunAnim
 
             val jsonAttackAnimations: Map<String, Int>? = base.attackAnimations
+            val attackAnimationsArray = if (jsonAttackAnimations != null) {
+                val array = IntArray(Player.fightStyle.values().size)
+                for (style in Player.fightStyle.values()) {
+                    val key = toAttackStyleKey(style)
+                    val anim = jsonAttackAnimations[key] ?: 0
+                    array[style.ordinal] = anim
+                }
+                array
+            } else null
+
             val jsonBlockAnimation: Int = base.blockAnimation ?: 0
 
             val linkedItemId = json?.linkedIdItem ?: base.unnotedId ?: 0
@@ -252,7 +272,7 @@ class Item(
                 weaponType = weaponType,
                 stances = stances,
                 requirements = requirements,
-                attackAnimations = jsonAttackAnimations,
+                attackAnimations = attackAnimationsArray,
                 blockAnimation = jsonBlockAnimation,
             )
         }

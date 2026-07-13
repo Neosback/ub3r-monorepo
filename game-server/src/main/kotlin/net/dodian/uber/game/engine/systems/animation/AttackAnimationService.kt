@@ -119,8 +119,7 @@ object AttackAnimationService {
 
     private fun resolveJsonAttackAnim(item: Item, weaponStyle: Player.fightStyle): Int {
         val anims = item.attackAnimations ?: return 0
-        val styleKey = weaponStyle.toAttackStyleKey()
-        return anims[styleKey] ?: 0
+        return anims.getOrNull(weaponStyle.ordinal) ?: 0
     }
 
     private fun resolveDefault(
@@ -255,31 +254,31 @@ object AttackAnimationService {
         Player.fightStyle.BLOCK -> SCYTHE_BLOCK
         else -> SCYTHE_REAP
     }
+}
 
-    private fun Player.fightStyle.toAttackStyleKey(): String = when (this) {
-        Player.fightStyle.PUNCH -> "UNARMED_PUNCH"
-        Player.fightStyle.KICK -> "UNARMED_KICK"
-        Player.fightStyle.BLOCK -> "UNARMED_BLOCK"
-        Player.fightStyle.STAB -> "SWORD_STAB"
-        Player.fightStyle.LUNGE_STR -> "SWORD_LUNGE"
-        Player.fightStyle.SLASH -> "SWORD_SLASH"
-        Player.fightStyle.CONTROLLED -> "SCIMITAR_LUNGE"
-        Player.fightStyle.CHOP -> "SCIMITAR_CHOP"
-        Player.fightStyle.LUNGE -> "SCIMITAR_LUNGE"
-        Player.fightStyle.HACK -> "BATTLEAXE_HACK"
-        Player.fightStyle.SMASH -> "BATTLEAXE_SMASH"
-        Player.fightStyle.POUND -> "WARHAMMER_POUND"
-        Player.fightStyle.PUMMEL -> "WARHAMMER_PUMMEL"
-        Player.fightStyle.SPIKE -> "MACE_SPIKE"
-        Player.fightStyle.JAB -> "SCYTHE_JAB"
-        Player.fightStyle.SWIPE -> "HALBERD_SWIPE"
-        Player.fightStyle.FEND -> "HALBERD_FEND"
-        Player.fightStyle.IMPALE -> "PICKAXE_IMPALE"
-        Player.fightStyle.FLICK -> "WHIP_FLICK"
-        Player.fightStyle.LASH -> "WHIP_LASH"
-        Player.fightStyle.DEFLECT -> "WHIP_DEFLECT"
-        Player.fightStyle.SWIPE_CON -> "SPEAR_SWIPE"
-        Player.fightStyle.POUND_CON -> "SPEAR_POUND"
-        else -> ""
-    }
+internal fun toAttackStyleKey(style: Player.fightStyle): String = when (style) {
+    Player.fightStyle.PUNCH -> "UNARMED_PUNCH"
+    Player.fightStyle.KICK -> "UNARMED_KICK"
+    Player.fightStyle.BLOCK -> "UNARMED_BLOCK"
+    Player.fightStyle.STAB -> "SWORD_STAB"
+    Player.fightStyle.LUNGE_STR -> "SWORD_LUNGE"
+    Player.fightStyle.SLASH -> "SWORD_SLASH"
+    Player.fightStyle.CONTROLLED -> "SCIMITAR_LUNGE"
+    Player.fightStyle.CHOP -> "SCIMITAR_CHOP"
+    Player.fightStyle.LUNGE -> "SCIMITAR_LUNGE"
+    Player.fightStyle.HACK -> "BATTLEAXE_HACK"
+    Player.fightStyle.SMASH -> "BATTLEAXE_SMASH"
+    Player.fightStyle.POUND -> "WARHAMMER_POUND"
+    Player.fightStyle.PUMMEL -> "WARHAMMER_PUMMEL"
+    Player.fightStyle.SPIKE -> "MACE_SPIKE"
+    Player.fightStyle.JAB -> "SCYTHE_JAB"
+    Player.fightStyle.SWIPE -> "HALBERD_SWIPE"
+    Player.fightStyle.FEND -> "HALBERD_FEND"
+    Player.fightStyle.IMPALE -> "PICKAXE_IMPALE"
+    Player.fightStyle.FLICK -> "WHIP_FLICK"
+    Player.fightStyle.LASH -> "WHIP_LASH"
+    Player.fightStyle.DEFLECT -> "WHIP_DEFLECT"
+    Player.fightStyle.SWIPE_CON -> "SPEAR_SWIPE"
+    Player.fightStyle.POUND_CON -> "SPEAR_POUND"
+    else -> ""
 }

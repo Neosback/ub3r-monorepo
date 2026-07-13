@@ -6,10 +6,15 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 
+import net.dodian.uber.game.api.interaction.ObjectInteractionContext
+
 object PassageObjectContent : ObjectContent {
     override val objectIds: IntArray = TravelObjectIds.passageObjects
 
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+    override fun onFirstClick(context: ObjectInteractionContext): Boolean {
+        val client = context.player
+        val objectId = context.objectId
+        val position = context.position
         return when (objectId) {
             23271 -> {
                 client.transport(Position(position.x, position.y + if (client.position.y == 3523) -1 else 2, position.z))

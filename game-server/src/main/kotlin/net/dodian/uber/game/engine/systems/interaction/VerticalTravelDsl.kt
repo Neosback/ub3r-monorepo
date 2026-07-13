@@ -9,6 +9,8 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.api.content.ContentInteraction
 import net.dodian.uber.game.api.content.ContentObjectInteractionPolicy
+import net.dodian.uber.game.api.interaction.ObjectInteractionContext
+import net.dodian.uber.game.api.interaction.InteractionOption
 
 data class VerticalTravelAction(
     val option: Int,
@@ -168,14 +170,14 @@ abstract class VerticalTravelDslObjectContent(
         objectIds = ids.sorted().toIntArray()
     }
 
-    final override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean =
-        dispatch(option = 1, client = client, objectId = objectId, position = position, obj = obj)
+    final override fun onFirstClick(context: ObjectInteractionContext): Boolean =
+        dispatch(option = 1, context = context)
 
-    final override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean =
-        dispatch(option = 2, client = client, objectId = objectId, position = position, obj = obj)
+    final override fun onSecondClick(context: ObjectInteractionContext): Boolean =
+        dispatch(option = 2, context = context)
 
-    final override fun onThirdClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean =
-        dispatch(option = 3, client = client, objectId = objectId, position = position, obj = obj)
+    final override fun onThirdClick(context: ObjectInteractionContext): Boolean =
+        dispatch(option = 3, context = context)
 
     final override fun clickInteractionPolicy(
         option: Int,
@@ -186,15 +188,12 @@ abstract class VerticalTravelDslObjectContent(
 
     private fun dispatch(
         option: Int,
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
+        context: ObjectInteractionContext,
     ): Boolean {
         val optionHandlers = handlers[option] ?: return false
-        val objectHandlers = optionHandlers[objectId] ?: return false
+        val objectHandlers = optionHandlers[context.objectId] ?: return false
         for (handler in objectHandlers) {
-            if (handler(client, objectId, position, obj)) {
+            if (handler(context.player, context.objectId, context.position, context.definition)) {
                 return true
             }
         }

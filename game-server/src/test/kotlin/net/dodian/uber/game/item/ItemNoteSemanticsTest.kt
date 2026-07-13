@@ -9,6 +9,13 @@ import org.junit.jupiter.api.Test
 class ItemNoteSemanticsTest {
     @Test
     fun `explicit notes are stackable and normalize through their declared partner`() {
+        val unnoted = item(
+            id = 24403,
+            json = ItemDefJson(
+                id = 24403,
+                name = "Twisted boots (t2)",
+            ),
+        )
         val note = item(
             id = 24454,
             json = ItemDefJson(
@@ -18,7 +25,7 @@ class ItemNoteSemanticsTest {
                 linkedIdItem = 24403,
             ),
         )
-        val manager = manager(note)
+        val manager = manager(unnoted, note)
 
         assertTrue(manager.isStackable(24454))
         assertTrue(manager.isNote(24454))
