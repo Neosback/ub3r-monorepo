@@ -2,7 +2,6 @@ package net.dodian.uber.game.skill.cooking
 
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
@@ -14,7 +13,6 @@ import net.dodian.uber.game.skill.runtime.action.RunningProductionAction
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.skill.runtime.action.productionAction
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentUseItem
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import java.util.Collections
@@ -142,42 +140,25 @@ object Cooking {
     }
 }
 
-private class RangeObjectContent : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(26181, 114, 4172)
-
-    override fun onUseItem(
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        itemId: Int,
-        itemSlot: Int,
-        interfaceId: Int,
-    ): Boolean {
-        if (objectId == 26181 && itemId == 401) {
-            val amount = client.getInvAmt(401)
-            repeat(amount) {
-                client.deleteItem(401, 1)
-                client.addItem(1781, 1)
-            }
-            client.checkItemUpdate()
-            client.sendMessage("You burn all your seaweed into ashes.")
-            return true
-        }
-
-        client.setInteractionAnchor(position.x, position.y, position.z)
-        Cooking.attempt(client, itemId)
-        return true
-    }
-}
-
 object CookingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Cooking", skill = Skill.COOKING) {
-            val rangeObjects = RangeObjectContent()
-            bindObjectContentUseItem(
-                preset = PolicyPreset.PRODUCTION,
-                content = rangeObjects,
-            )
+            val rangeObjectIds = intArrayOf(26181, 114, 4172)
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = rangeObjectIds) { client, objectId, position, obj, itemId, itemSlot, interfaceId ->
+                if (objectId == 26181 && itemId == 401) {
+                    val amount = client.getInvAmt(401)
+                    repeat(amount) {
+                        client.deleteItem(401, 1)
+                        client.addItem(1781, 1)
+                    }
+                    client.checkItemUpdate()
+                    client.sendMessage("You burn all your seaweed into ashes.")
+                    true
+                } else {
+                    client.setInteractionAnchor(position.x, position.y, position.z)
+                    Cooking.attempt(client, itemId)
+                    true
+                }
+            }
         }
 }

@@ -7,6 +7,8 @@ import net.dodian.uber.game.item.ItemRequirement
 import net.dodian.uber.game.item.ItemWeaponDef
 import net.dodian.uber.game.item.ItemWeaponStance
 import net.dodian.uber.game.item.toRequiredArray
+import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.engine.systems.animation.AttackAnimationService
 
 class Item(
     val id: Int,
@@ -19,15 +21,15 @@ class Item(
     private val shopSellValue: Int,
     private val shopBuyValue: Int,
     private val bonuses: IntArray,
-    private val stackable: Boolean,
-    private val noted: Boolean = false,
-    private val placeholder: Boolean = false,
-    private val noteable: Boolean,
-    private val tradeable: Boolean,
-    private val twoHanded: Boolean,
-    val full: Boolean,
-    val mask: Boolean,
-    private val premium: Boolean,
+    stackable: Boolean,
+    noted: Boolean = false,
+    placeholder: Boolean = false,
+    noteable: Boolean = false,
+    tradeable: Boolean = true,
+    twoHanded: Boolean = false,
+    full: Boolean = false,
+    mask: Boolean = false,
+    premium: Boolean = false,
     val examine: String,
     private val alchemy: Int,
     val weight: Double = 0.0,
@@ -38,9 +40,23 @@ class Item(
     val weaponType: String = "",
     val stances: Array<ItemWeaponStance> = emptyArray(),
     val requirements: IntArray = IntArray(23),
-    val attackAnimations: Map<String, Int>? = null,
+    val attackAnimations: IntArray? = null,
     val blockAnimation: Int = 0,
 ) {
+    private val flags: Int = run {
+        var f = 0
+        if (stackable) f = f or FLAG_STACKABLE
+        if (noted) f = f or FLAG_NOTED
+        if (placeholder) f = f or FLAG_PLACEHOLDER
+        if (noteable) f = f or FLAG_NOTEABLE
+        if (tradeable) f = f or FLAG_TRADEABLE
+        if (twoHanded) f = f or FLAG_TWO_HANDED
+        if (full) f = f or FLAG_FULL
+        if (mask) f = f or FLAG_MASK
+        if (premium) f = f or FLAG_PREMIUM
+        f
+    }
+
     fun getName(): String = name
 
     fun getStandAnim(): Int = standAnim
@@ -57,23 +73,26 @@ class Item(
 
     fun getAlchemy(): Int = alchemy
 
-    fun getStackable(): Boolean = stackable
+    fun getStackable(): Boolean = (flags and FLAG_STACKABLE) != 0
 
-    fun getTradeable(): Boolean = tradeable
+    fun getTradeable(): Boolean = (flags and FLAG_TRADEABLE) != 0
 
-    fun getNoteable(): Boolean = noteable
+    fun getNoteable(): Boolean = (flags and FLAG_NOTEABLE) != 0
 
-    fun isNoted(): Boolean = noted
+    fun isNoted(): Boolean = (flags and FLAG_NOTED) != 0
 
-    fun isPlaceholder(): Boolean = placeholder
+    fun isPlaceholder(): Boolean = (flags and FLAG_PLACEHOLDER) != 0
 
-    fun getPremium(): Boolean = premium
+    fun getPremium(): Boolean = (flags and FLAG_PREMIUM) != 0
 
-    fun getTwoHanded(): Boolean = twoHanded
+    fun getTwoHanded(): Boolean = (flags and FLAG_TWO_HANDED) != 0
 
     fun getBonuses(): IntArray = bonuses
 
     fun getDescription(): String = examine
+
+    val full: Boolean get() = (flags and FLAG_FULL) != 0
+    val mask: Boolean get() = (flags and FLAG_MASK) != 0
 
     override fun toString(): String =
         "$name ($id); slot $slot; standAnim $standAnim; walkAnim $walkAnim; runAnim $runAnim; attackAnim $attackAnim"

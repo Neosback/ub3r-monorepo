@@ -1,7 +1,6 @@
 package net.dodian.uber.game.skill.crafting
 
 import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -15,8 +14,6 @@ import net.dodian.uber.game.engine.systems.action.ProductionRequest
 import net.dodian.uber.game.api.content.ContentActions
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentClick
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentUseItem
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 
 object Crafting {
@@ -463,82 +460,43 @@ object ResourceFilling {
     }
 }
 
-private class ResourceFillingObjectContent : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(
-        873, 874, 878, 879, 884,
-        6232, 6249,
-        8689,
-        12279,
-        14868, 14890,
-        20358,
-        25929,
-    )
-
-    override fun onUseItem(
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        itemId: Int,
-        itemSlot: Int,
-        interfaceId: Int,
-    ): Boolean {
-        if (objectId == 879 || objectId == 873 || objectId == 874 || objectId == 6232 ||
-            objectId == 12279 || objectId == 14868 || objectId == 20358 || objectId == 25929
-        ) {
-            return ResourceFilling.handleObjectUse(client, objectId)
-        }
-        if (objectId == 884 || objectId == 878 || objectId == 6249) {
-            return ResourceFilling.handleObjectUse(client, objectId)
-        }
-        if (objectId == 14890) {
-            return ResourceFilling.handleObjectUse(client, objectId)
-        }
-        if (objectId == 8689 && itemId == 1925) {
-            client.setFocus(position.x, position.y)
-            client.deleteItem(itemId, 1)
-            client.addItem(itemId + 2, 1)
-            client.checkItemUpdate()
-            return true
-        }
-        return false
-    }
-}
-
-private class SpinningWheelObjectContent : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(14889, 14896, 14909, 25824)
-
-    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        return when (objectId) {
-            14889, 25824 -> {
-                client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
-                Crafting.startSpinning(client)
-                true
-            }
-            14896, 14909 -> {
-                client.addItem(1779, 1)
-                client.checkItemUpdate()
-                true
-            }
-            else -> false
-        }
-    }
-}
-
 object CraftingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Crafting", skill = Skill.CRAFTING) {
-            val spinningWheelObjects = SpinningWheelObjectContent()
-            val resourceFillingObjects = ResourceFillingObjectContent()
+            val spinningWheelIds = intArrayOf(14889, 14896, 14909, 25824)
+            val resourceFillingIds = intArrayOf(
+                873, 874, 878, 879, 884, 6232, 6249, 8689, 12279, 14868, 14890, 20358, 25929
+            )
 
-            bindObjectContentClick(
-                preset = PolicyPreset.PRODUCTION,
-                option = 2,
-                content = spinningWheelObjects,
-            )
-            bindObjectContentUseItem(
-                preset = PolicyPreset.PRODUCTION,
-                content = resourceFillingObjects,
-            )
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 2, *spinningWheelIds) { client, objectId, position, obj ->
+                when (objectId) {
+                    14889, 25824 -> {
+                        client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
+                        Crafting.startSpinning(client)
+                        true
+                    }
+                    14896, 14909 -> {
+                        client.addItem(1779, 1)
+                        client.checkItemUpdate()
+                        true
+                    }
+                    else -> false
+                }
+            }
+
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = resourceFillingIds) { client, objectId, position, obj, itemId, itemSlot, interfaceId ->
+                if (objectId == 879 || objectId == 873 || objectId == 874 || objectId == 6232 ||
+                    objectId == 12279 || objectId == 14868 || objectId == 20358 || objectId == 25929 ||
+                    objectId == 884 || objectId == 878 || objectId == 6249 || objectId == 14890
+                ) {
+                    ResourceFilling.handleObjectUse(client, objectId)
+                } else if (objectId == 8689 && itemId == 1925) {
+                    client.setFocus(position.x, position.y)
+                    client.deleteItem(itemId, 1)
+                    client.addItem(itemId + 2, 1)
+                    client.checkItemUpdate()
+                    true
+                } else false
+            }
         }
 }

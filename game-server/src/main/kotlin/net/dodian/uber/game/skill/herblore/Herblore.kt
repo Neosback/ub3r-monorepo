@@ -1,6 +1,5 @@
 package net.dodian.uber.game.skill.herblore
 
-import net.dodian.uber.game.item.ItemContent
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.npc.HerbloreNpcDialogue
 import net.dodian.uber.game.model.entity.player.Client
@@ -9,7 +8,6 @@ import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.bindItemContentClick
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 
@@ -66,13 +64,13 @@ object Herblore {
                 client.checkItemUpdate()
                 HerbloreNpcDialogue.showBatchResultAndContinue(client, request.npcId, "Here is your all of ", "$amount ${client.getItemName(id).lowercase()}")
             } else {
-                client.showNPCChat(request.npcId, 605, arrayOf("You need 1 herb and 200 coins", "for me to grind it for you."))
+                DialogueService.showNpcChat(client, request.npcId, 605, arrayOf("You need 1 herb and 200 coins", "for me to grind it for you."))
             }
             return
         }
 
         if (!client.playerHasItem(HerbloreData.VIAL_OF_WATER_ID)) {
-            client.showNPCChat(request.npcId, 605, arrayOf("You need noted vial of water for me to do that!"))
+            DialogueService.showNpcChat(client, request.npcId, 605, arrayOf("You need noted vial of water for me to do that!"))
             return
         }
 
@@ -95,7 +93,8 @@ object Herblore {
             client.checkItemUpdate()
             HerbloreNpcDialogue.showBatchResultAndContinue(client, request.npcId, "Here is your all of ", "$amount ${client.getItemName(id).lowercase()}")
         } else {
-            client.showNPCChat(
+            DialogueService.showNpcChat(
+                client,
                 request.npcId,
                 605,
                 arrayOf(
@@ -107,74 +106,59 @@ object Herblore {
     }
 }
 
-object GrimyHerbItems : ItemContent {
-    override val itemIds: IntArray = HerbloreData.herbDefinitions.map { it.grimyId }.toIntArray()
-
-    override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
-        val herb = HerbloreData.findHerbDefinitionByGrimy(itemId) ?: return false
-        val herbloreLevel = Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))
-        val requiredLevel = herb.requiredLevel
-        if (herbloreLevel < requiredLevel) {
-            client.sendMessage("You need level $requiredLevel herblore to clean this herb.")
-            return true
-        }
-        ProgressionService.addXp(client, herb.cleaningExperience, Skill.HERBLORE)
-        client.deleteItem(itemId, itemSlot, 1)
-        client.addItemSlot(herb.cleanId, 1, itemSlot)
-        client.sendMessage("You clean the ${client.getItemName(itemId)}.")
-        return true
-    }
-}
-
-object HerbloreSuppliesItems : ItemContent {
-    override val itemIds: IntArray = intArrayOf(11877, 11879, 12859)
-
-    override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
-        when (itemId) {
-            11877 -> {
-                client.deleteItem(11877, itemSlot, 1)
-                if (!client.playerHasItem(230)) {
-                    client.addItemSlot(230, 100, itemSlot)
-                } else {
-                    client.addItem(230, 100)
-                }
-                return true
-            }
-            11879 -> {
-                client.deleteItem(11879, itemSlot, 1)
-                if (!client.playerHasItem(228)) {
-                    client.addItemSlot(228, 100, itemSlot)
-                } else {
-                    client.addItem(228, 100)
-                }
-                return true
-            }
-            12859 -> {
-                client.deleteItem(12859, itemSlot, 1)
-                if (!client.playerHasItem(222)) {
-                    client.addItemSlot(222, 100, itemSlot)
-                } else {
-                    client.addItem(222, 100)
-                }
-                return true
-            }
-        }
-        return false
-    }
-}
-
 object HerbloreSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Herblore", skill = Skill.HERBLORE) {
-            bindItemContentClick(
-                preset = PolicyPreset.PRODUCTION,
-                option = 1,
-                content = GrimyHerbItems,
-            )
-            bindItemContentClick(
-                preset = PolicyPreset.PRODUCTION,
-                option = 1,
-                content = HerbloreSuppliesItems,
-            )
+            val grimyHerbIds = HerbloreData.herbDefinitions.map { it.grimyId }.toIntArray()
+            itemClick(preset = PolicyPreset.PRODUCTION, option = 1, *grimyHerbIds) { client, itemId, itemSlot, interfaceId ->
+                val herb = HerbloreData.findHerbDefinitionByGrimy(itemId)
+                if (herb != null) {
+                    val herbloreLevel = Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))
+                    val requiredLevel = herb.requiredLevel
+                    if (herbloreLevel < requiredLevel) {
+                        client.sendMessage("You need level $requiredLevel herblore to clean this herb.")
+                    } else {
+                        ProgressionService.addXp(client, herb.cleaningExperience, Skill.HERBLORE)
+                        client.deleteItem(itemId, itemSlot, 1)
+                        client.addItemSlot(herb.cleanId, 1, itemSlot)
+                        client.sendMessage("You clean the ${client.getItemName(itemId)}.")
+                    }
+                    true
+                } else false
+            }
+
+            val supplyIds = intArrayOf(11877, 11879, 12859)
+            itemClick(preset = PolicyPreset.PRODUCTION, option = 1, *supplyIds) { client, itemId, itemSlot, interfaceId ->
+                when (itemId) {
+                    11877 -> {
+                        client.deleteItem(11877, itemSlot, 1)
+                        if (!client.playerHasItem(230)) {
+                            client.addItemSlot(230, 100, itemSlot)
+                        } else {
+                            client.addItem(230, 100)
+                        }
+                        true
+                    }
+                    11879 -> {
+                        client.deleteItem(11879, itemSlot, 1)
+                        if (!client.playerHasItem(228)) {
+                            client.addItemSlot(228, 100, itemSlot)
+                        } else {
+                            client.addItem(228, 100)
+                        }
+                        true
+                    }
+                    12859 -> {
+                        client.deleteItem(12859, itemSlot, 1)
+                        if (!client.playerHasItem(222)) {
+                            client.addItemSlot(222, 100, itemSlot)
+                        } else {
+                            client.addItem(222, 100)
+                        }
+                        true
+                    }
+                    else -> false
+                }
+            }
         }
 }

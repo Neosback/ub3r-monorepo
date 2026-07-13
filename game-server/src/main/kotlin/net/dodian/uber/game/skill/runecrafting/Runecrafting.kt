@@ -1,8 +1,6 @@
 package net.dodian.uber.game.skill.runecrafting
 
 import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.item.ItemContent
-import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -11,8 +9,6 @@ import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.bindItemContentClick
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentClick
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.util.Misc
 import org.slf4j.LoggerFactory
@@ -130,38 +126,17 @@ object Runecrafting {
     }
 }
 
-object RunePouchItems : ItemContent {
-    override val itemIds: IntArray = intArrayOf(
-        5508, 5509, 5510, 5511, 5512, 5513, 5514, 5515,
-    )
-
-    override fun onSecondClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
-        return Runecrafting.checkPouch(client, itemId)
-    }
-}
-
-private class RunecraftingObjectContent : ObjectContent {
-    override val objectIds: IntArray = RunecraftingData.altarObjectIds
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        val altar = RunecraftingData.byObjectId(objectId) ?: return false
-        return Runecrafting.start(client, altar.request)
-    }
-}
-
 object RunecraftingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Runecrafting", skill = Skill.RUNECRAFTING) {
-            val runecraftingObjects = RunecraftingObjectContent()
-            bindObjectContentClick(
-                preset = PolicyPreset.GATHERING,
-                option = 1,
-                content = runecraftingObjects,
-            )
-            bindItemContentClick(
-                preset = PolicyPreset.GATHERING,
-                option = 2,
-                content = RunePouchItems,
-            )
+            objectClick(preset = PolicyPreset.GATHERING, option = 1, *RunecraftingData.altarObjectIds) { client, objectId, position, obj ->
+                val altar = RunecraftingData.byObjectId(objectId)
+                if (altar != null) Runecrafting.start(client, altar.request) else false
+            }
+
+            val pouchIds = intArrayOf(5508, 5509, 5510, 5511, 5512, 5513, 5514, 5515)
+            itemClick(preset = PolicyPreset.GATHERING, option = 2, *pouchIds) { client, itemId, itemSlot, interfaceId ->
+                Runecrafting.checkPouch(client, itemId)
+            }
         }
 }

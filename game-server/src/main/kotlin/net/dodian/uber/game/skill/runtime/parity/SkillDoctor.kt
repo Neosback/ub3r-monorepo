@@ -1,11 +1,8 @@
 package net.dodian.uber.game.skill.runtime.parity
 
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skill.herblore.GrimyHerbItems
-import net.dodian.uber.game.skill.herblore.HerbloreSuppliesItems
-import net.dodian.uber.game.skill.slayer.SlayerGemItems
-import net.dodian.uber.game.skill.slayer.SlayerMaskItems
-import net.dodian.uber.game.skill.prayer.BuryBonesItems
+import net.dodian.uber.game.skill.herblore.HerbloreData
+import net.dodian.uber.game.skill.prayer.PrayerRouteIds
 import net.dodian.uber.game.skill.thieving.ThievingObjectComponents
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
@@ -218,7 +215,7 @@ object SkillDoctor {
     private fun scanMappedRouteOwnership(skillSnapshot: SkillPluginSnapshot): List<SkillDoctorFinding> {
         val findings = mutableListOf<SkillDoctorFinding>()
 
-        BuryBonesItems.itemIds.forEach { itemId ->
+        PrayerRouteIds.BONE_ITEM_IDS.forEach { itemId ->
             if (skillSnapshot.itemBinding(option = 1, itemId = itemId) == null) {
                 findings += SkillDoctorFinding(
                     code = "missing-route-ownership",
@@ -242,7 +239,8 @@ object SkillDoctor {
             }
         }
 
-        GrimyHerbItems.itemIds.forEach { itemId ->
+        val grimyHerbIds = HerbloreData.herbDefinitions.map { it.grimyId }.toIntArray()
+        grimyHerbIds.forEach { itemId ->
             if (skillSnapshot.itemBinding(option = 1, itemId = itemId) == null) {
                 findings += SkillDoctorFinding(
                     code = "missing-route-ownership",
@@ -250,7 +248,8 @@ object SkillDoctor {
                 )
             }
         }
-        HerbloreSuppliesItems.itemIds.forEach { itemId ->
+        val suppliesIds = intArrayOf(11877, 11879, 12859)
+        suppliesIds.forEach { itemId ->
             if (skillSnapshot.itemBinding(option = 1, itemId = itemId) == null) {
                 findings += SkillDoctorFinding(
                     code = "missing-route-ownership",
@@ -259,7 +258,8 @@ object SkillDoctor {
             }
         }
 
-        SlayerGemItems.itemIds.forEach { itemId ->
+        val slayerGemIds = intArrayOf(4155)
+        slayerGemIds.forEach { itemId ->
             for (option in 1..3) {
                 if (skillSnapshot.itemBinding(option = option, itemId = itemId) == null) {
                     findings += SkillDoctorFinding(
@@ -269,7 +269,8 @@ object SkillDoctor {
                 }
             }
         }
-        SlayerMaskItems.itemIds.forEach { itemId ->
+        val slayerMaskIds = intArrayOf(11784, 11864, 11865)
+        slayerMaskIds.forEach { itemId ->
             if (skillSnapshot.itemBinding(option = 3, itemId = itemId) == null) {
                 findings += SkillDoctorFinding(
                     code = "missing-route-ownership",

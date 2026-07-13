@@ -1,8 +1,6 @@
 package net.dodian.uber.game.skill.prayer
 
 import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.item.ItemContent
-import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -11,9 +9,6 @@ import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.bindItemContentClick
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentClick
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentUseItem
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 
 object Prayer {
@@ -83,67 +78,32 @@ object Prayer {
     fun startAltarOfferingAction(client: Client) = PrayerActions.startAltarOfferingAction(client)
 }
 
-private class AltarObjectContent : ObjectContent {
-    override val objectIds: IntArray = PrayerRouteIds.ALTAR_OBJECT_IDS
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (client.currentPrayer < client.maxPrayer) {
-            client.pray(client.maxPrayer)
-            client.sendMessage("You restore your prayer points!")
-        } else {
-            client.sendMessage("You are at maximum prayer points!")
-        }
-        return true
-    }
-
-    override fun onUseItem(
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        itemId: Int,
-        itemSlot: Int,
-        interfaceId: Int,
-    ): Boolean {
-        if (objectId != PrayerRouteIds.MAIN_ALTAR_OBJECT_ID) {
-            return false
-        }
-        if (Bones.getBone(itemId) == null || !client.playerHasItem(itemId) || client.skillingEventState.isRandomEventOpen) {
-            client.resetAction()
-            return false
-        }
-        client.setInteractionAnchor(position.x, position.y, position.z)
-        Prayer.startOffering(client, PrayerOfferingRequest(itemId, position.x, position.y))
-        return true
-    }
-}
-
-object BuryBonesItems : ItemContent {
-    override val itemIds: IntArray = PrayerRouteIds.BONE_ITEM_IDS
-
-    override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
-        return Prayer.attempt(client, itemId, itemSlot)
-    }
-}
-
 object PrayerSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Prayer", skill = Skill.PRAYER) {
-            val altarObjects = AltarObjectContent()
-            bindObjectContentClick(
-                preset = PolicyPreset.PRODUCTION,
-                option = 1,
-                content = altarObjects,
-            )
-            bindObjectContentUseItem(
-                preset = PolicyPreset.PRODUCTION,
-                content = altarObjects,
-                itemIds = PrayerRouteIds.BONE_ITEM_IDS,
-            )
-            bindItemContentClick(
-                preset = PolicyPreset.PRODUCTION,
-                option = 1,
-                content = BuryBonesItems,
-            )
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *PrayerRouteIds.ALTAR_OBJECT_IDS) { client, objectId, position, obj ->
+                if (client.currentPrayer < client.maxPrayer) {
+                    client.pray(client.maxPrayer)
+                    client.sendMessage("You restore your prayer points!")
+                } else {
+                    client.sendMessage("You are at maximum prayer points!")
+                }
+                true
+            }
+
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = intArrayOf(PrayerRouteIds.MAIN_ALTAR_OBJECT_ID), itemIds = PrayerRouteIds.BONE_ITEM_IDS) { client, objectId, position, obj, itemId, itemSlot, interfaceId ->
+                if (Bones.getBone(itemId) == null || !client.playerHasItem(itemId) || client.skillingEventState.isRandomEventOpen) {
+                    client.resetAction()
+                    false
+                } else {
+                    client.setInteractionAnchor(position.x, position.y, position.z)
+                    Prayer.startOffering(client, PrayerOfferingRequest(itemId, position.x, position.y))
+                    true
+                }
+            }
+
+            itemClick(preset = PolicyPreset.PRODUCTION, option = 1, *PrayerRouteIds.BONE_ITEM_IDS) { client, itemId, itemSlot, interfaceId ->
+                Prayer.attempt(client, itemId, itemSlot)
+            }
         }
 }

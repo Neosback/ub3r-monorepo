@@ -1,7 +1,6 @@
 package net.dodian.uber.game.skill.thieving
 
 import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.Entity
@@ -109,249 +108,209 @@ object Thieving {
         }
 }
 
-private class StallObjectContent : ObjectContent {
-    override val objectIds: IntArray = ThievingObjectComponents.stallObjects
+object ThievingSkillPlugin : SkillPlugin {
+    override val definition =
+        skillPlugin(name = "Thieving", skill = Skill.THIEVING) {
+            val stallObjects = ThievingObjectComponents.stallObjects
+            val chestObjects = ThievingObjectComponents.chestObjects
+            val plunderObjects = ThievingObjectComponents.plunderObjects
+            val firstClickObjects = (chestObjects + plunderObjects).distinct().toIntArray()
+            val secondClickObjects = (stallObjects + chestObjects + plunderObjects).distinct().toIntArray()
 
-    override fun clickInteractionPolicy(
-        option: Int,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-    ): ContentObjectInteractionPolicy? {
-        if (option != 2) {
-            return null
-        }
-        return ContentInteraction.nearestBoundaryCardinalPolicy()
-    }
-
-    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        Thieving.attempt(client, objectId, position)
-        return true
-    }
-}
-
-private class ChestObjectContent : ObjectContent {
-    override val objectIds: IntArray = ThievingObjectComponents.chestObjects
-
-    override fun clickInteractionPolicy(
-        option: Int,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-    ): ContentObjectInteractionPolicy? {
-        if (option != 1 && option != 2) {
-            return null
-        }
-        return ContentInteraction.nearestBoundaryCardinalPolicy()
-    }
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId == 6847 || objectId == 20873) {
-            Thieving.attempt(client, objectId, position)
-            return true
-        }
-        if (objectId == 375 && position.x == 2593 && position.y == 3108 && client.position.z == 1) {
-            if (client.skillingEventState.isChestEventPendingMove) {
-                return true
-            }
-            if (client.getLevel(Skill.THIEVING) < 70) {
-                client.sendMessage("You must be level 70 thieving to open this chest")
-                return true
-            }
-            if (client.freeSlots() < 1) {
-                client.sendMessage("You need atleast one free inventory slot!")
-                return true
-            }
-            if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.YANILLE_CHEST, 1200L)) {
-                return true
-            }
-            val emptyObj = WorldObject(378, position.x, position.y, client.position.z, 10, 2, objectId)
-            if (!GlobalObject.addGlobalObject(emptyObj, 12000)) {
-                return true
-            }
-            val roll = Math.random() * 100
-            if (roll <= 0.3) {
-                val items = intArrayOf(2577, 2579, 2631)
-                val itemId = items[(Math.random() * items.size).toInt()]
-                client.sendMessage("You have recieved a ${client.getItemName(itemId)}!")
-                client.addItem(itemId, 1)
-                ItemLog.playerGathering(client, itemId, 1, client.position.copy(), "Thieving")
-                client.yell("[Server] - ${client.playerName} has just received from the Yanille chest a  ${client.getItemName(itemId)}")
-            } else {
-                val coins = 300 + Utils.random(1200)
-                client.sendMessage("You find $coins coins inside the chest")
-                client.addItem(995, coins)
-                ItemLog.playerGathering(client, 995, coins, client.position.copy(), "Thieving")
-            }
-            if (client.equipment[Equipment.Slot.HEAD.id] == 2631) {
-                ProgressionService.addXp(client, 300, Skill.THIEVING)
-            }
-            client.checkItemUpdate()
-            val state = client.skillingEventState
-            client.skillingEventState = state.withChestEventCount(state.chestEventCount + 1)
-            client.stillgfx(444, position.y, position.x)
-            SkillingRandomEventService.trigger(client, 900)
-            return true
-        }
-        if (objectId == 375 && position.x == 2733 && position.y == 3374) {
-            if (client.skillingEventState.isChestEventPendingMove) {
-                return true
-            }
-            if (!client.premium) {
-                client.resetPos()
-                return true
-            }
-            if (client.getLevel(Skill.THIEVING) < 85) {
-                client.sendMessage("You must be level 85 thieving to open this chest")
-                return true
-            }
-            if (client.freeSlots() < 1) {
-                client.sendMessage("You need atleast one free inventory slot!")
-                return true
-            }
-            if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.LEGENDS_CHEST, 1200L)) {
-                return true
-            }
-            val emptyObj = WorldObject(378, position.x, position.y, position.z, 11, -1, objectId)
-            if (!GlobalObject.addGlobalObject(emptyObj, 15000)) {
-                return true
-            }
-            val roll = Math.random() * 100
-            if (roll <= 0.3) {
-                val items = intArrayOf(1050, 2581, 2631)
-                val itemId = items[(Math.random() * items.size).toInt()]
-                client.sendMessage("You have recieved a ${client.getItemName(itemId)}!")
-                client.addItem(itemId, 1)
-                ItemLog.playerGathering(client, itemId, 1, client.position.copy(), "Thieving")
-                client.yell("[Server] - ${client.playerName} has just received from the Legends chest a  ${client.getItemName(itemId)}")
-            } else {
-                val coins = 500 + Utils.random(2000)
-                client.sendMessage("You find $coins coins inside the chest")
-                client.addItem(995, coins)
-                ItemLog.playerGathering(client, 995, coins, client.position.copy(), "Thieving")
-            }
-            if (client.equipment[Equipment.Slot.HEAD.id] == 2631) {
-                ProgressionService.addXp(client, 500, Skill.THIEVING)
-            }
-            client.checkItemUpdate()
-            val state = client.skillingEventState
-            client.skillingEventState = state.withChestEventCount(state.chestEventCount + 1)
-            client.stillgfx(444, position.y, position.x)
-            SkillingRandomEventService.trigger(client, 1500)
-            return true
-        }
-        return false
-    }
-
-    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        return when (objectId) {
-            378 -> {
-                client.sendMessage("This chest is empty!")
-                true
-            }
-            11729, 11730, 11731, 11732, 11733, 11734 -> {
-                Thieving.attempt(client, objectId, position)
-                true
-            }
-            else -> false
-        }
-    }
-}
-
-private class PlunderObjectContent : ObjectContent {
-    override val objectIds: IntArray = ThievingObjectComponents.plunderObjects
-
-    override fun clickInteractionPolicy(
-        option: Int,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-    ): ContentObjectInteractionPolicy? {
-        if (option != 1 && option != 2) {
-            return null
-        }
-        return ContentInteraction.nearestBoundaryCardinalPolicy()
-    }
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        return when {
-            objectId in 26622..26625 -> {
-                if (client.getLevel(Skill.THIEVING) < 21 || client.stunTimer > 0) {
-                    client.send(
-                        SendMessage(
-                            if (client.getLevel(Skill.THIEVING) < 21) {
-                                "You need level 21 thieving to enter."
+            objectClick(preset = PolicyPreset.GATHERING, option = 1, *firstClickObjects) { client, objectId, position, obj ->
+                if (objectId in chestObjects) {
+                    if (objectId == 6847 || objectId == 20873) {
+                        Thieving.attempt(client, objectId, position)
+                        true
+                    } else if (objectId == 375 && position.x == 2593 && position.y == 3108 && client.position.z == 1) {
+                        if (client.skillingEventState.isChestEventPendingMove) {
+                            true
+                        } else if (client.getLevel(Skill.THIEVING) < 70) {
+                            client.sendMessage("You must be level 70 thieving to open this chest")
+                            true
+                        } else if (client.freeSlots() < 1) {
+                            client.sendMessage("You need atleast one free inventory slot!")
+                            true
+                        } else if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.YANILLE_CHEST, 1200L)) {
+                            true
+                        } else {
+                            val emptyObj = WorldObject(378, position.x, position.y, client.position.z, 10, 2, objectId)
+                            if (!GlobalObject.addGlobalObject(emptyObj, 12000)) {
+                                true
                             } else {
-                                "You are stunned!"
-                            },
-                        ),
-                    )
-                    return true
-                }
-                if (PyramidPlunder.isEntryDoor(position)) {
-                    val chance = Misc.random(255)
-                    if (chance <= (client.getLevel(Skill.THIEVING) * 2.5).toInt()) {
-                        client.transport(Position(1934, 4450, 2))
-                    } else {
-                        client.dealDamage(null, Misc.random(3), Entity.hitType.STANDARD)
-                        client.stunTimer = 4
+                                val roll = Math.random() * 100
+                                if (roll <= 0.3) {
+                                    val items = intArrayOf(2577, 2579, 2631)
+                                    val itemId = items[(Math.random() * items.size).toInt()]
+                                    client.sendMessage("You have recieved a ${client.getItemName(itemId)}!")
+                                    client.addItem(itemId, 1)
+                                    ItemLog.playerGathering(client, itemId, 1, client.position.copy(), "Thieving")
+                                    client.yell("[Server] - ${client.playerName} has just received from the Yanille chest a  ${client.getItemName(itemId)}")
+                                } else {
+                                    val coins = 300 + Utils.random(1200)
+                                    client.sendMessage("You find $coins coins inside the chest")
+                                    client.addItem(995, coins)
+                                    ItemLog.playerGathering(client, 995, coins, client.position.copy(), "Thieving")
+                                }
+                                if (client.equipment[Equipment.Slot.HEAD.id] == 2631) {
+                                    ProgressionService.addXp(client, 300, Skill.THIEVING)
+                                }
+                                client.checkItemUpdate()
+                                val state = client.skillingEventState
+                                client.skillingEventState = state.withChestEventCount(state.chestEventCount + 1)
+                                client.stillgfx(444, position.y, position.x)
+                                SkillingRandomEventService.trigger(client, 900)
+                                true
+                            }
+                        }
+                    } else if (objectId == 375 && position.x == 2733 && position.y == 3374) {
+                        if (client.skillingEventState.isChestEventPendingMove) {
+                            true
+                        } else if (!client.premium) {
+                            client.resetPos()
+                            true
+                        } else if (client.getLevel(Skill.THIEVING) < 85) {
+                            client.sendMessage("You must be level 85 thieving to open this chest")
+                            true
+                        } else if (client.freeSlots() < 1) {
+                            client.sendMessage("You need atleast one free inventory slot!")
+                            true
+                        } else if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.LEGENDS_CHEST, 1200L)) {
+                            true
+                        } else {
+                            val emptyObj = WorldObject(378, position.x, position.y, position.z, 11, -1, objectId)
+                            if (!GlobalObject.addGlobalObject(emptyObj, 15000)) {
+                                true
+                            } else {
+                                val roll = Math.random() * 100
+                                if (roll <= 0.3) {
+                                    val items = intArrayOf(1050, 2581, 2631)
+                                    val itemId = items[(Math.random() * items.size).toInt()]
+                                    client.sendMessage("You have recieved a ${client.getItemName(itemId)}!")
+                                    client.addItem(itemId, 1)
+                                    ItemLog.playerGathering(client, itemId, 1, client.position.copy(), "Thieving")
+                                    client.yell("[Server] - ${client.playerName} has just received from the Legends chest a  ${client.getItemName(itemId)}")
+                                } else {
+                                    val coins = 500 + Utils.random(2000)
+                                    client.sendMessage("You find $coins coins inside the chest")
+                                    client.addItem(995, coins)
+                                    ItemLog.playerGathering(client, 995, coins, client.position.copy(), "Thieving")
+                                }
+                                if (client.equipment[Equipment.Slot.HEAD.id] == 2631) {
+                                    ProgressionService.addXp(client, 500, Skill.THIEVING)
+                                }
+                                client.checkItemUpdate()
+                                val state = client.skillingEventState
+                                client.skillingEventState = state.withChestEventCount(state.chestEventCount + 1)
+                                client.stillgfx(444, position.y, position.x)
+                                SkillingRandomEventService.trigger(client, 1500)
+                                true
+                            }
+                        }
+                    } else false
+                } else { // plunderObjects
+                    when {
+                        objectId in 26622..26625 -> {
+                            if (client.getLevel(Skill.THIEVING) < 21 || client.stunTimer > 0) {
+                                client.send(
+                                    SendMessage(
+                                        if (client.getLevel(Skill.THIEVING) < 21) {
+                                            "You need level 21 thieving to enter."
+                                        } else {
+                                            "You are stunned!"
+                                        },
+                                    ),
+                                )
+                                true
+                            } else {
+                                if (PyramidPlunder.isEntryDoor(position)) {
+                                    val chance = Misc.random(255)
+                                    if (chance <= (client.getLevel(Skill.THIEVING) * 2.5).toInt()) {
+                                        client.transport(Position(1934, 4450, 2))
+                                    } else {
+                                        client.dealDamage(null, Misc.random(3), Entity.hitType.STANDARD)
+                                        client.stunTimer = 4
+                                    }
+                                } else {
+                                    client.transport(Position(1968, 4420, 2))
+                                }
+                                true
+                            }
+                        }
+                        objectId in 26618..26621 -> {
+                            if (PyramidPlunder.roomNumber(client) + 1 == 8) {
+                                true
+                            } else {
+                                if (PyramidPlunder.canOpenNextRoomDoor(client, objectId)) {
+                                    PyramidPlunder.advanceRoom(client)
+                                } else if (PyramidPlunder.openDoor(client, objectId)) {
+                                    client.sendMessage("This tomb door lead nowhere.")
+                                } else {
+                                    PyramidPlunder.toggleObstacle(client, objectId)
+                                }
+                                true
+                            }
+                        }
+                        objectId == 20932 -> {
+                            client.transport(PyramidPlunder.endPosition())
+                            true
+                        }
+                        objectId == 20931 -> {
+                            DialogueService.setDialogueId(client, 20931)
+                            DialogueService.setDialogueSent(client, false)
+                            true
+                        }
+                        objectId == 26616 || objectId == 26626 -> {
+                            PyramidPlunder.toggleObstacle(client, objectId)
+                            true
+                        }
+                        objectId == 26580 || objectId in 26600..26613 -> {
+                            PyramidPlunder.toggleObstacle(client, objectId)
+                            true
+                        }
+                        objectId == 20275 -> {
+                            client.transport(Position(2799, 5160, 0))
+                            client.setFocus(2799, 5159)
+                            true
+                        }
+                        objectId == 20277 -> {
+                            client.transport(Position(3315, 2796, 0))
+                            client.setFocus(3315, 2797)
+                            true
+                        }
+                        else -> false
                     }
-                } else {
-                    client.transport(Position(1968, 4420, 2))
                 }
-                true
             }
-            objectId in 26618..26621 -> {
-                if (PyramidPlunder.roomNumber(client) + 1 == 8) {
-                    return true
-                }
-                if (PyramidPlunder.canOpenNextRoomDoor(client, objectId)) {
-                    PyramidPlunder.advanceRoom(client)
-                } else if (PyramidPlunder.openDoor(client, objectId)) {
-                    client.sendMessage("This tomb door lead nowhere.")
-                } else {
-                    PyramidPlunder.toggleObstacle(client, objectId)
-                }
-                true
-            }
-            objectId == 20932 -> {
-                client.transport(PyramidPlunder.endPosition())
-                true
-            }
-            objectId == 20931 -> {
-                DialogueService.setDialogueId(client, 20931)
-                DialogueService.setDialogueSent(client, false)
-                true
-            }
-            objectId == 26616 || objectId == 26626 -> {
-                PyramidPlunder.toggleObstacle(client, objectId)
-                true
-            }
-            objectId == 26580 || objectId in 26600..26613 -> {
-                PyramidPlunder.toggleObstacle(client, objectId)
-                true
-            }
-            objectId == 20275 -> {
-                client.transport(Position(2799, 5160, 0))
-                client.setFocus(2799, 5159)
-                true
-            }
-            objectId == 20277 -> {
-                client.transport(Position(3315, 2796, 0))
-                client.setFocus(3315, 2797)
-                true
-            }
-            else -> false
-        }
-    }
 
-    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId == 20931) {
-            PyramidPlunder.reset(client)
-            return true
+            objectClick(preset = PolicyPreset.GATHERING, option = 2, *secondClickObjects) { client, objectId, position, obj ->
+                when {
+                    objectId in stallObjects -> {
+                        Thieving.attempt(client, objectId, position)
+                        true
+                    }
+                    objectId in chestObjects -> {
+                        when (objectId) {
+                            378 -> {
+                                client.sendMessage("This chest is empty!")
+                                true
+                            }
+                            11729, 11730, 11731, 11732, 11733, 11734 -> {
+                                Thieving.attempt(client, objectId, position)
+                                true
+                            }
+                            else -> false
+                        }
+                    }
+                    else -> { // plunderObjects
+                        if (objectId == 20931) {
+                            PyramidPlunder.reset(client)
+                            true
+                        } else false
+                    }
+                }
+            }
         }
-        return false
-    }
 }
 
 data class PyramidPlunderGlobalState(
@@ -579,32 +538,4 @@ object PyramidPlunder {
         }
         client.varbit(821, config)
     }
-}
-
-object ThievingSkillPlugin : SkillPlugin {
-    override val definition =
-        skillPlugin(name = "Thieving", skill = Skill.THIEVING) {
-            val stallObjects = StallObjectContent()
-            val chestObjects = ChestObjectContent()
-            val plunderObjects = PlunderObjectContent()
-            val firstClickObjects =
-                (chestObjects.objectIds + plunderObjects.objectIds).distinct().toIntArray()
-            val secondClickObjects =
-                (stallObjects.objectIds + chestObjects.objectIds + plunderObjects.objectIds).distinct().toIntArray()
-
-            objectClick(preset = PolicyPreset.GATHERING, option = 1, *firstClickObjects) { client, objectId, position, obj ->
-                if (objectId in chestObjects.objectIds) {
-                    chestObjects.onFirstClick(client, objectId, position, obj)
-                } else {
-                    plunderObjects.onFirstClick(client, objectId, position, obj)
-                }
-            }
-            objectClick(preset = PolicyPreset.GATHERING, option = 2, *secondClickObjects) { client, objectId, position, obj ->
-                when {
-                    objectId in stallObjects.objectIds -> stallObjects.onSecondClick(client, objectId, position, obj)
-                    objectId in chestObjects.objectIds -> chestObjects.onSecondClick(client, objectId, position, obj)
-                    else -> plunderObjects.onSecondClick(client, objectId, position, obj)
-                }
-            }
-        }
 }

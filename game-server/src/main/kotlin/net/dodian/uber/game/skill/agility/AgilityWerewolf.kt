@@ -12,6 +12,7 @@ import net.dodian.uber.game.skill.agility.runtime.AgilityPassageOverlayService
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator
 import net.dodian.uber.game.engine.util.Misc
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 
 class AgilityWerewolf(private val c: Client) {
     fun giveEndExperience(xp: Int, ringCheck: Boolean) {
@@ -286,12 +287,12 @@ class AgilityWerewolf(private val c: Client) {
 
     fun handStick() {
         if (c.playerHasItem(4179)) {
-            c.showNPCChat(5927, 616, arrayOf("Thank you for that juicy stick.", "Have some agility knowledge!"))
+            DialogueService.showNpcChat(c, 5927, 616, arrayOf("Thank you for that juicy stick.", "Have some agility knowledge!"))
             c.deleteItem(4179, 1)
             c.checkItemUpdate()
             giveEndExperience(4000, false)
         } else {
-            c.showNPCChat(5927, 616, arrayOf("You do not have a stick to give me!"))
+            DialogueService.showNpcChat(c, 5927, 616, arrayOf("You do not have a stick to give me!"))
         }
     }
 }

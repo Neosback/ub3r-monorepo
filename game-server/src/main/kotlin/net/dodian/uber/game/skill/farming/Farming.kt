@@ -4,7 +4,6 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonPrimitive
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.objects.ObjectBinding
-import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -16,7 +15,6 @@ import net.dodian.uber.game.api.content.ContentRuntimeApi
 import net.dodian.uber.game.api.content.dialogue.DialogueOption
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentUseItem
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.util.Misc
@@ -752,116 +750,6 @@ object FarmingObjectComponents {
         .toIntArray()
 }
 
-private class CompostBinObjectContent : ObjectContent {
-    private val compostBinIds: IntArray = FarmingData.compostBin.values()
-        .map { it.objectId }
-        .distinct()
-        .sorted()
-        .toIntArray()
-
-    override val objectIds: IntArray = compostBinIds
-
-    override fun bindings(): List<ObjectBinding> {
-        return objectIds.map { ObjectBinding(objectId = it, priority = 100) }
-    }
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        with(client.farming) { client.interactBin(objectId, 1) }
-        return true
-    }
-
-    override fun onFifthClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        with(client.farming) { client.interactBin(objectId, 5) }
-        return true
-    }
-
-    override fun onUseItem(
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        itemId: Int,
-        itemSlot: Int,
-        interfaceId: Int,
-    ): Boolean {
-        return with(client.farming) { client.interactItemBin(objectId, itemId) }
-    }
-}
-
-private class FarmingPatchGuideObjectContent : ObjectContent {
-    private val guideObjects = intArrayOf(
-        7577, 7578, 7579, 7580,
-        7847, 7848, 7849, 7850,
-        7962, 7963, 7964, 7965, 26579,
-        8150, 8151, 8152, 8153, 27115,
-        8389, 8390, 8391, 19147,
-        8550, 8551, 8552, 8553, 8554, 8555, 8556, 8557, 27113, 27114,
-        27111,
-    )
-
-    override val objectIds: IntArray = guideObjects.distinct().sorted().toIntArray()
-
-    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId == 7962) {
-            client.sendMessage("You inspect the monolith, but can't make sense of the inscription.")
-            return true
-        }
-        return false
-    }
-
-    override fun onFourthClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        return when {
-            (objectId in 8550..8557) || objectId == 27114 || objectId == 27113 -> {
-                SkillGuide.open(client, Skill.FARMING.id, 0)
-                true
-            }
-            (objectId in 7847..7850) || objectId == 27111 -> {
-                SkillGuide.open(client, Skill.FARMING.id, 1)
-                true
-            }
-            objectId in 7577..7580 -> {
-                SkillGuide.open(client, Skill.FARMING.id, 2)
-                true
-            }
-            (objectId in 8150..8153) || objectId == 27115 -> {
-                SkillGuide.open(client, Skill.FARMING.id, 3)
-                true
-            }
-            (objectId in 8389..8391) || objectId == 19147 -> {
-                SkillGuide.open(client, Skill.FARMING.id, 4)
-                true
-            }
-            (objectId in 7962..7965) || objectId == 26579 -> {
-                SkillGuide.open(client, Skill.FARMING.id, 5)
-                true
-            }
-            else -> false
-        }
-    }
-
-    override fun onFifthClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean = false
-}
-
-private class FarmingPatchObjectContent : ObjectContent {
-    override val objectIds: IntArray = FarmingObjectComponents.patchObjects
-
-    override fun bindings(): List<ObjectBinding> {
-        return objectIds.map { ObjectBinding(objectId = it, priority = 100) }
-    }
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        return with(client.farming) { client.clickPatch(objectId) }
-    }
-
-    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId == 7962) {
-            return false
-        }
-        with(client.farming) { client.inspectPatch(objectId) }
-        return true
-    }
-}
-
 fun Client.markFarmingDirty() {
     farmingJson.refreshSaveSnapshot()
     markSaveDirty(PlayerSaveSegment.FARMING.mask)
@@ -871,33 +759,89 @@ fun Client.markFarmingDirty() {
 object FarmingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Farming", skill = Skill.FARMING) {
-            val compostBinObjects = CompostBinObjectContent()
-            val farmingPatchGuideObjects = FarmingPatchGuideObjectContent()
-            val farmingPatchObjects = FarmingPatchObjectContent()
-            val firstClickObjects = (compostBinObjects.objectIds + farmingPatchObjects.objectIds).distinct().toIntArray()
-            val secondClickObjects = (farmingPatchGuideObjects.objectIds + farmingPatchObjects.objectIds).distinct().toIntArray()
+            val compostBinIds = FarmingData.compostBin.values()
+                .map { it.objectId }
+                .distinct()
+                .sorted()
+                .toIntArray()
+
+            val guideObjects = intArrayOf(
+                7577, 7578, 7579, 7580,
+                7847, 7848, 7849, 7850,
+                7962, 7963, 7964, 7965, 26579,
+                8150, 8151, 8152, 8153, 27115,
+                8389, 8390, 8391, 19147,
+                8550, 8551, 8552, 8553, 8554, 8555, 8556, 8557, 27113, 27114,
+                27111,
+            ).distinct().sorted().toIntArray()
+
+            val patchObjects = FarmingObjectComponents.patchObjects
+
+            val firstClickObjects = (compostBinIds + patchObjects).distinct().toIntArray()
+            val secondClickObjects = (guideObjects + patchObjects).distinct().toIntArray()
 
             objectClick(preset = PolicyPreset.GATHERING, option = 1, *firstClickObjects) { client, objectId, position, obj ->
-                if (objectId in compostBinObjects.objectIds) {
-                    compostBinObjects.onFirstClick(client, objectId, position, obj)
+                if (objectId in compostBinIds) {
+                    with(client.farming) { client.interactBin(objectId, 1) }
+                    true
                 } else {
-                    farmingPatchObjects.onFirstClick(client, objectId, position, obj)
+                    with(client.farming) { client.clickPatch(objectId) }
                 }
             }
+
             objectClick(preset = PolicyPreset.GATHERING, option = 2, *secondClickObjects) { client, objectId, position, obj ->
-                val guideHandled = objectId in farmingPatchGuideObjects.objectIds &&
-                        farmingPatchGuideObjects.onSecondClick(client, objectId, position, obj)
-                guideHandled || farmingPatchObjects.onSecondClick(client, objectId, position, obj)
+                if (objectId in guideObjects) {
+                    if (objectId == 7962) {
+                        client.sendMessage("You inspect the monolith, but can't make sense of the inscription.")
+                        true
+                    } else false
+                } else {
+                    if (objectId == 7962) {
+                        false
+                    } else {
+                        with(client.farming) { client.inspectPatch(objectId) }
+                        true
+                    }
+                }
             }
-            objectClick(preset = PolicyPreset.GATHERING, option = 4, *farmingPatchGuideObjects.objectIds) { client, objectId, position, obj ->
-                farmingPatchGuideObjects.onFourthClick(client, objectId, position, obj)
+
+            objectClick(preset = PolicyPreset.GATHERING, option = 4, *guideObjects) { client, objectId, position, obj ->
+                when {
+                    (objectId in 8550..8557) || objectId == 27114 || objectId == 27113 -> {
+                        SkillGuide.open(client, Skill.FARMING.id, 0)
+                        true
+                    }
+                    (objectId in 7847..7850) || objectId == 27111 -> {
+                        SkillGuide.open(client, Skill.FARMING.id, 1)
+                        true
+                    }
+                    objectId in 7577..7580 -> {
+                        SkillGuide.open(client, Skill.FARMING.id, 2)
+                        true
+                    }
+                    (objectId in 8150..8153) || objectId == 27115 -> {
+                        SkillGuide.open(client, Skill.FARMING.id, 3)
+                        true
+                    }
+                    (objectId in 8389..8391) || objectId == 19147 -> {
+                        SkillGuide.open(client, Skill.FARMING.id, 4)
+                        true
+                    }
+                    (objectId in 7962..7965) || objectId == 26579 -> {
+                        SkillGuide.open(client, Skill.FARMING.id, 5)
+                        true
+                    }
+                    else -> false
+                }
             }
-            objectClick(preset = PolicyPreset.GATHERING, option = 5, *compostBinObjects.objectIds) { client, objectId, position, obj ->
-                compostBinObjects.onFifthClick(client, objectId, position, obj)
+
+            objectClick(preset = PolicyPreset.GATHERING, option = 5, *compostBinIds) { client, objectId, position, obj ->
+                with(client.farming) { client.interactBin(objectId, 5) }
+                true
             }
-            bindObjectContentUseItem(
-                preset = PolicyPreset.GATHERING,
-                content = compostBinObjects,
-            )
+
+            itemOnObject(preset = PolicyPreset.GATHERING, objectIds = compostBinIds) { client, objectId, position, obj, itemId, itemSlot, interfaceId ->
+                with(client.farming) { client.interactItemBin(objectId, itemId) }
+            }
         }
 }

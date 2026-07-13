@@ -23,6 +23,7 @@ import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.util.Misc
 
 class Agility(private val c: Client) {
@@ -912,10 +913,10 @@ object WerewolfCourseObjectBindings : FirstClickDslObjectContent(
         objectAction(WerewolfCourseObjectComponents.ENTRY_GATE) { client, _, position, _ ->
             if (client.getLevel(Skill.AGILITY) >= 60) {
                 client.ReplaceObject(position.x, position.y, WerewolfCourseObjectComponents.ENTRY_GATE, 2, 10)
-                client.showNPCChat(5928, 601, arrayOf("Welcome to the werewolf agility course!"))
+                DialogueService.showNpcChat(client, 5928, 601, arrayOf("Welcome to the werewolf agility course!"))
                 client.transport(Position(3549, 9865, 0))
             } else {
-                client.showNPCChat(5928, 616, arrayOf("Go and train your agility!"))
+                DialogueService.showNpcChat(client, 5928, 616, arrayOf("Go and train your agility!"))
             }
             true
         }
@@ -1022,10 +1023,10 @@ object AgilitySkillPlugin : SkillPlugin {
                     objectId == WerewolfCourseObjectComponents.ENTRY_GATE -> {
                         if (client.getLevel(Skill.AGILITY) >= 60) {
                             client.ReplaceObject(position.x, position.y, WerewolfCourseObjectComponents.ENTRY_GATE, 2, 10)
-                            client.showNPCChat(5928, 601, arrayOf("Welcome to the werewolf agility course!"))
+                            DialogueService.showNpcChat(client, 5928, 601, arrayOf("Welcome to the werewolf agility course!"))
                             client.transport(Position(3549, 9865, 0))
                         } else {
-                            client.showNPCChat(5928, 616, arrayOf("Go and train your agility!"))
+                            DialogueService.showNpcChat(client, 5928, 616, arrayOf("Go and train your agility!"))
                         }
                     }
                     else -> return@objectClick false

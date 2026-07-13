@@ -1,7 +1,6 @@
 package net.dodian.uber.game.skill.smithing
 
 import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.skill.crafting.Crafting
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
@@ -17,9 +16,7 @@ import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.skill.runtime.action.ActionStopReason
 import net.dodian.uber.game.skill.runtime.action.CycleSignal
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentClick
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentMagic
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentUseItem
+import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.skills.SkillPolicyMetrics
 import net.dodian.uber.game.engine.systems.skills.SkillPolicyResult
 import net.dodian.uber.game.engine.systems.skills.SkillPolicyRoute
@@ -155,143 +152,136 @@ object SmithingObjectComponents {
     val smeltingInterfaceFurnaces = intArrayOf(3994, 2030, 16469, 29662)
 }
 
-private class AnvilObjectContent : ObjectContent {
-    override val objectIds: IntArray = SmithingObjectComponents.anvilObjects
+object SmithingSkillPlugin : SkillPlugin {
+    override val definition =
+        skillPlugin(name = "Smithing", skill = Skill.SMITHING) {
+            val anvilObjects = SmithingObjectComponents.anvilObjects
+            val furnaceObjects = SmithingObjectComponents.furnaceObjects
+            val smeltingInterfaceFurnaces = SmithingObjectComponents.smeltingInterfaceFurnaces
 
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId != 2097) {
-            return false
-        }
-        val barId = SmithingInterface.firstBarInInventory(client)
-        if (barId != -1) {
-            client.setInteractionAnchor(position.x, position.y, position.z)
-            Smithing.openSmithing(client, barId, position.x, position.y)
-        } else {
-            client.sendMessage("You do not have any bars to smith!")
-        }
-        return true
-    }
-
-    override fun onUseItem(
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        itemId: Int,
-        itemSlot: Int,
-        interfaceId: Int,
-    ): Boolean {
-        if (objectId != 2097 && objectId != 2783) {
-            return false
-        }
-
-        if (objectId == 2097 && (itemId == 1540 || itemId == 11286)) {
-            if (!client.playerHasItem(2347)) {
-                client.sendMessage("You need a hammer!")
-            } else if (itemId == 1540 && !client.playerHasItem(11286)) {
-                client.sendMessage("You need a draconic visage!")
-            } else if (itemId == 11286 && !client.playerHasItem(1540)) {
-                client.sendMessage("You need a anti-dragon shield!")
-            } else if (client.getLevel(Skill.SMITHING) < 90) {
-                client.sendMessage("You need level 90 smithing to do this!")
-            } else {
-                client.deleteItem(itemId, itemSlot, 1)
-                client.deleteItem(if (itemId == 1540) 11286 else 1540, 1)
-                client.addItemSlot(11284, 1, itemSlot)
-                client.checkItemUpdate()
-                ProgressionService.addXp(client, 15000, Skill.SMITHING)
-                client.sendMessage("Your smithing craft made a Dragonfire shield out of the visage.")
+            // Option 1 Anvils
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *anvilObjects) { client, objectId, position, obj ->
+                if (objectId == 2097) {
+                    val barId = SmithingInterface.firstBarInInventory(client)
+                    if (barId != -1) {
+                        client.setInteractionAnchor(position.x, position.y, position.z)
+                        Smithing.openSmithing(client, barId, position.x, position.y)
+                    } else {
+                        client.sendMessage("You do not have any bars to smith!")
+                    }
+                    true
+                } else false
             }
-            return true
-        }
-        if (SmithingInterface.resolveTierId(itemId) != -1) {
-            client.setInteractionAnchor(position.x, position.y, position.z)
-            Smithing.openSmithing(client, itemId, position.x, position.y)
-            return true
-        }
-        return false
-    }
-}
 
-private class FurnaceObjectContent : ObjectContent {
-    override val objectIds: IntArray = SmithingObjectComponents.furnaceObjects
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId !in SmithingObjectComponents.smeltingInterfaceFurnaces) {
-            return false
-        }
-        Smithing.openSmelting(client)
-        return true
-    }
-
-    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId in SmithingObjectComponents.smeltingInterfaceFurnaces) {
-            Smithing.openSmelting(client)
-            return true
-        }
-        return false
-    }
-
-    override fun onUseItem(
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        itemId: Int,
-        itemSlot: Int,
-        interfaceId: Int,
-    ): Boolean {
-        if (objectId !in SmithingObjectComponents.smeltingInterfaceFurnaces) {
-            return false
-        }
-        if (itemId == 1783 || itemId == 1781) {
-            client.send(RemoveInterfaces())
-            if (!client.playerHasItem(1783) || !client.playerHasItem(1781)) {
-                client.sendMessage("You need one bucket of sand and one soda ash")
-                return true
+            // Option 1 Furnaces
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *smeltingInterfaceFurnaces) { client, objectId, position, obj ->
+                Smithing.openSmelting(client)
+                true
             }
-            ContentActions.queueProductionSelection(
-                client,
-                ContentProductionRequest(
-                    skillId = Skill.CRAFTING.id,
-                    productId = 1775,
-                    amountPerCycle = 1,
-                    primaryItemId = 1783,
-                    secondaryItemId = 1781,
-                    experiencePerUnit = 80,
-                    animationId = 899,
-                    tickDelay = 3,
-                    completionMessage = "You smelt soda ash with the sand and made molten glass.",
-                    mode = ContentProductionMode.MOLTEN_GLASS,
-                ),
-            )
-            return true
-        }
 
-        if (itemId == 2357) {
-            Crafting.openGoldJewelry(client)
-            return true
-        }
-        SmithingInterface.selectPendingRecipeFromOre(client, itemId)
-        Smithing.openSmelting(client)
-        return true
-    }
+            // Option 2 Furnaces
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 2, *smeltingInterfaceFurnaces) { client, objectId, position, obj ->
+                Smithing.openSmelting(client)
+                true
+            }
 
-    override fun onMagic(
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        spellId: Int,
-    ): Boolean {
-        return when {
-            objectId == 2151 && spellId == 1179 -> chargeOrb(client, 55, 571, 725, "You charge the orb with the power of water.")
-            objectId == 2150 && spellId == 1182 -> chargeOrb(client, 60, 575, 800, "You charge the orb with the power of earth.")
-            objectId == 2153 && spellId == 1184 -> chargeOrb(client, 65, 569, 875, "You charge the orb with the power of fire.")
-            objectId == 2152 && spellId == 1186 -> chargeOrb(client, 70, 573, 950, "You charge the orb with the power of air.")
-            else -> false
+            // Use Item on Anvils
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = anvilObjects) { client, objectId, position, obj, itemId, itemSlot, interfaceId ->
+                if (objectId == 2097 && (itemId == 1540 || itemId == 11286)) {
+                    if (!client.playerHasItem(2347)) {
+                        client.sendMessage("You need a hammer!")
+                    } else if (itemId == 1540 && !client.playerHasItem(11286)) {
+                        client.sendMessage("You need a draconic visage!")
+                    } else if (itemId == 11286 && !client.playerHasItem(1540)) {
+                        client.sendMessage("You need a anti-dragon shield!")
+                    } else if (client.getLevel(Skill.SMITHING) < 90) {
+                        client.sendMessage("You need level 90 smithing to do this!")
+                    } else {
+                        client.deleteItem(itemId, itemSlot, 1)
+                        client.deleteItem(if (itemId == 1540) 11286 else 1540, 1)
+                        client.addItemSlot(11284, 1, itemSlot)
+                        client.checkItemUpdate()
+                        ProgressionService.addXp(client, 15000, Skill.SMITHING)
+                        client.sendMessage("Your smithing craft made a Dragonfire shield out of the visage.")
+                    }
+                    true
+                } else if (SmithingInterface.resolveTierId(itemId) != -1) {
+                    client.setInteractionAnchor(position.x, position.y, position.z)
+                    Smithing.openSmithing(client, itemId, position.x, position.y)
+                    true
+                } else false
+            }
+
+            // Use Item on Furnaces
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = smeltingInterfaceFurnaces) { client, objectId, position, obj, itemId, itemSlot, interfaceId ->
+                if (itemId == 1783 || itemId == 1781) {
+                    client.send(RemoveInterfaces())
+                    if (!client.playerHasItem(1783) || !client.playerHasItem(1781)) {
+                        client.sendMessage("You need one bucket of sand and one soda ash")
+                    } else {
+                        ContentActions.queueProductionSelection(
+                            client,
+                            ContentProductionRequest(
+                                skillId = Skill.CRAFTING.id,
+                                productId = 1775,
+                                amountPerCycle = 1,
+                                primaryItemId = 1783,
+                                secondaryItemId = 1781,
+                                experiencePerUnit = 80,
+                                animationId = 899,
+                                tickDelay = 3,
+                                completionMessage = "You smelt soda ash with the sand and made molten glass.",
+                                mode = ContentProductionMode.MOLTEN_GLASS,
+                            ),
+                        )
+                    }
+                    true
+                } else if (itemId == 2357) {
+                    Crafting.openGoldJewelry(client)
+                    true
+                } else {
+                    SmithingInterface.selectPendingRecipeFromOre(client, itemId)
+                    Smithing.openSmelting(client)
+                    true
+                }
+            }
+
+            // Magic on Furnaces/Obelisks
+            val magicObeliskIds = intArrayOf(2150, 2151, 2152, 2153)
+            magicOnObject(preset = PolicyPreset.PRODUCTION, objectIds = magicObeliskIds, spellIds = intArrayOf(1179, 1182, 1184, 1186)) { client, objectId, position, obj, spellId ->
+                when {
+                    objectId == 2151 && spellId == 1179 -> chargeOrb(client, 55, 571, 725, "You charge the orb with the power of water.")
+                    objectId == 2150 && spellId == 1182 -> chargeOrb(client, 60, 575, 800, "You charge the orb with the power of earth.")
+                    objectId == 2153 && spellId == 1184 -> chargeOrb(client, 65, 569, 875, "You charge the orb with the power of fire.")
+                    objectId == 2152 && spellId == 1186 -> chargeOrb(client, 70, 573, 950, "You charge the orb with the power of air.")
+                    else -> false
+                }
+            }
+
+            SmithingData.smeltingButtonMappings
+                .groupBy { it.barId to it.amount }
+                .values
+                .forEach { mappings ->
+                    val primary = mappings.first()
+                    button(
+                        preset = PolicyPreset.PRODUCTION,
+                        requiredInterfaceId = Smithing.smeltingInterfaceId(),
+                        rawButtonIds = mappings.map { it.buttonId }.distinct().toIntArray(),
+                    ) { client, _, _ ->
+                        SmithingInterface.startFromMapping(client, primary)
+                    }
+                }
+
+            SmithingData.smeltingRecipes.forEachIndexed { index, recipe ->
+                button(
+                    preset = PolicyPreset.PRODUCTION,
+                    requiredInterfaceId = Smithing.smeltingInterfaceId(),
+                    rawButtonIds = intArrayOf(SmithingData.frameIds()[index]),
+                ) { client, _, _ ->
+                    SmithingInterface.selectPendingRecipe(client, recipe.barId)
+                }
+            }
         }
-    }
 
     private fun chargeOrb(client: Client, levelReq: Int, resultItem: Int, exp: Int, message: String): Boolean {
         if (client.getLevel(Skill.MAGIC) < levelReq) {
@@ -319,64 +309,4 @@ private class FurnaceObjectContent : ObjectContent {
         )
         return true
     }
-}
-
-object SmithingSkillPlugin : SkillPlugin {
-    override val definition =
-        skillPlugin(name = "Smithing", skill = Skill.SMITHING) {
-            val anvilObjects = AnvilObjectContent()
-            val furnaceObjects = FurnaceObjectContent()
-
-            bindObjectContentClick(
-                preset = PolicyPreset.PRODUCTION,
-                option = 1,
-                content = anvilObjects,
-            )
-            bindObjectContentUseItem(
-                preset = PolicyPreset.PRODUCTION,
-                content = anvilObjects,
-            )
-            bindObjectContentClick(
-                preset = PolicyPreset.PRODUCTION,
-                option = 1,
-                content = furnaceObjects,
-            )
-            bindObjectContentClick(
-                preset = PolicyPreset.PRODUCTION,
-                option = 2,
-                content = furnaceObjects,
-            )
-            bindObjectContentUseItem(
-                preset = PolicyPreset.PRODUCTION,
-                content = furnaceObjects,
-            )
-            bindObjectContentMagic(
-                preset = PolicyPreset.PRODUCTION,
-                content = furnaceObjects,
-            )
-
-            SmithingData.smeltingButtonMappings
-                .groupBy { it.barId to it.amount }
-                .values
-                .forEach { mappings ->
-                    val primary = mappings.first()
-                    button(
-                        preset = PolicyPreset.PRODUCTION,
-                        requiredInterfaceId = Smithing.smeltingInterfaceId(),
-                        rawButtonIds = mappings.map { it.buttonId }.distinct().toIntArray(),
-                    ) { client, _, _ ->
-                        SmithingInterface.startFromMapping(client, primary)
-                    }
-                }
-
-            SmithingData.smeltingRecipes.forEachIndexed { index, recipe ->
-                button(
-                    preset = PolicyPreset.PRODUCTION,
-                    requiredInterfaceId = Smithing.smeltingInterfaceId(),
-                    rawButtonIds = intArrayOf(SmithingData.frameIds()[index]),
-                ) { client, _, _ ->
-                    SmithingInterface.selectPendingRecipe(client, recipe.barId)
-                }
-            }
-        }
 }
