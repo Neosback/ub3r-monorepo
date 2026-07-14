@@ -6983,11 +6983,9 @@ public class Client extends GameEngine
     }
 
     public void processGameLoop() {
-        if (Configuration.USE_UPDATE_SERVER) {
-            final FileRequests fileRequests = swiftFUP.getFileRequests();
-            if (fileRequests != null) {
-                fileRequests.processDecompressedResponses();
-            }
+        final FileRequests fileRequests = swiftFUP.getFileRequests();
+        if (fileRequests != null) {
+            fileRequests.processDecompressedResponses();
         }
 
         callbacks.tick();
@@ -8033,30 +8031,28 @@ public class Client extends GameEngine
 
         byte[] data = fileStores[0].readFile(groupID);
 
-        if (Configuration.USE_UPDATE_SERVER) {
-            final FileRequests fileRequests = swiftFUP.getFileRequests();
+        final FileRequests fileRequests = swiftFUP.getFileRequests();
 
-            final int filePair = FilePair.create(0, groupID);
+        final int filePair = FilePair.create(0, groupID);
 
-            if (data != null && !fileRequests.checksum(filePair, data)) {
-                data = null;
+        if (data != null && !fileRequests.checksum(filePair, data)) {
+            data = null;
 
-                drawLoadingText(loadingPercent, displayName + " checksum did not pass");
-                //System.out.println("did not pass checksum, data set to null");
-            }
+            drawLoadingText(loadingPercent, displayName + " checksum did not pass");
+            //System.out.println("did not pass checksum, data set to null");
+        }
 
-            if (data == null) {
-                drawLoadingText(loadingPercent, "Requesting " + displayName + "...");
+        if (data == null) {
+            drawLoadingText(loadingPercent, "Requesting " + displayName + "...");
 
-                final FileRequest request = fileRequests.filePair(filePair);
-                //fileClient.flush();
+            final FileRequest request = fileRequests.filePair(filePair);
+            //fileClient.flush();
 
-                try {
-                    data = request.get(1, TimeUnit.HOURS).getData();
-                } catch (final InterruptedException | ExecutionException | TimeoutException e) {
-                    log.error("Failed to get stream loader data \"" + displayName + "\"", e);
-                    return null;
-                }
+            try {
+                data = request.get(1, TimeUnit.HOURS).getData();
+            } catch (final InterruptedException | ExecutionException | TimeoutException e) {
+                log.error("Failed to get stream loader data \"" + displayName + "\"", e);
+                return null;
             }
         }
 
@@ -12680,7 +12676,6 @@ public class Client extends GameEngine
 
         Settings.load();
         Ping.runPing();
-        CacheDownloader.init();
 
         try {
             cache_dat = new RandomAccessFile(Utility.findcachedir() + "main_file_cache.dat", "rw");
@@ -12719,46 +12714,31 @@ public class Client extends GameEngine
             }
         }
 
-        if (!Configuration.USE_UPDATE_SERVER) {
-            LocalCacheAudit.Result audit = LocalCacheAudit.audit(Paths.get(Utility.findcachedir()));
-            for (String warning : audit.warnings()) {
-                System.err.println("Local cache warning: " + warning);
-            }
-            if (!audit.failures().isEmpty()) {
-                for (String failure : audit.failures()) {
-                    System.err.println("Local cache failure: " + failure);
-                }
-                throw new IllegalStateException("Local cache audit failed: " + audit.failures().size() + " required checks failed");
-            }
-        }
+        drawLoadingText(11, "Initializing SwiftFUP...");
+        swiftFUP = SwiftFUP.create(this, this);
 
-        if (Configuration.USE_UPDATE_SERVER) {
-            drawLoadingText(11, "Initializing SwiftFUP...");
-            swiftFUP = SwiftFUP.create(this, this);
+        drawLoadingText(12, "Initializing SwiftFUP file requests...");
+        final FileRequests fileRequests = swiftFUP.initializeFileRequests();
 
-            drawLoadingText(12, "Initializing SwiftFUP file requests...");
-            final FileRequests fileRequests = swiftFUP.initializeFileRequests();
+        drawLoadingText(13, "Initializing SwiftFUP file client...");
 
-            drawLoadingText(13, "Initializing SwiftFUP file client...");
+        final SocketAddress swiftClientSocketAddress =
+                new InetSocketAddress(Configuration.UPDATE_SERVER_IP, Configuration.UPDATE_SERVER_PORT);
 
-            final SocketAddress swiftClientSocketAddress =
-                    new InetSocketAddress(Configuration.UPDATE_SERVER_IP, Configuration.UPDATE_SERVER_PORT);
+        swiftFUP.initializeFileClient(
+                FileClientGroups.ONE_THREAD,
+                () -> drawLoadingText(14, "Initializing SwiftFUP file client..."),
+                null,
+                swiftClientSocketAddress
+        );
 
-            swiftFUP.initializeFileClient(
-                    FileClientGroups.ONE_THREAD,
-                    () -> drawLoadingText(14, "Initializing SwiftFUP file client..."),
-                    null,
-                    swiftClientSocketAddress
-            );
+        drawLoadingText(15, "Initializing SwiftFUP auto-processor...");
+        swiftFUP.startAutoProcessor();
 
-            drawLoadingText(15, "Initializing SwiftFUP auto-processor...");
-            swiftFUP.startAutoProcessor();
-
-            drawLoadingText(17, "Requesting SwiftFUP checksums...");
-            final FileRequest fileChecksumsRequest = fileRequests.checksums();
-            while (!fileChecksumsRequest.isDone()) {
-                drawLoadingText(18, "Processing SwiftFUP checksums...");
-            }
+        drawLoadingText(17, "Requesting SwiftFUP checksums...");
+        final FileRequest fileChecksumsRequest = fileRequests.checksums();
+        while (!fileChecksumsRequest.isDone()) {
+            drawLoadingText(18, "Processing SwiftFUP checksums...");
         }
 
         drawSmoothLoading(19, "Loading stream loaders...");
@@ -19661,8 +19641,6 @@ public class Client extends GameEngine
 
     public volatile SwiftFUP swiftFUP;
     public volatile OnDemandFetcher onDemandFetcher;
-    private int missingFileLogCount;
-
     private int lastRegionChunkX;
     private int lastRegionChunkY;
     private int anInt1071;
@@ -20144,22 +20122,7 @@ public class Client extends GameEngine
     public final boolean loadData(final int indexID,
                                    final int fileID,
                                   final boolean flush) {
-        if (Configuration.USE_UPDATE_SERVER) {
-            swiftFUP.getFileRequests().file(indexID + 1, fileID);
-        } else {
-            byte[] data = fileStores[indexID + 1].readFile(fileID);
-            if (data != null) {
-                byte[] decompressed = LocalCacheProvider.decodeOnDemand(data);
-                FileResponse response = new FileResponse(FilePair.create(indexID + 1, fileID), decompressed);
-                response.setDecompressedData(decompressed);
-                processOnDemandQueue(response);
-            } else if (missingFileLogCount < 50) {
-                missingFileLogCount++;
-                if (missingFileLogCount <= 5) {
-                    System.err.println("Missing cache file: index=" + (indexID + 1) + " file=" + fileID);
-                }
-            }
-        }
+        swiftFUP.getFileRequests().file(indexID + 1, fileID);
         return true;
     }
 

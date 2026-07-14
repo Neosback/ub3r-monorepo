@@ -263,13 +263,6 @@ public final class NpcDefinition {
                 entityDef.actions[0] = "Open";
                 break;
 
-            /* Farming */
-            case 3258:
-                entityDef.name = "Farming store";
-                entityDef.actions = new String[5];
-                entityDef.actions[0] = "Open";
-                break;
-
             /* Achievement */
             case 5527:
                 entityDef.actions = new String[5];

@@ -5,9 +5,12 @@ import com.google.gson.reflect.TypeToken
 import java.nio.file.Files
 import java.nio.file.Path
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
+import net.dodian.uber.game.api.plugin.skills.SkillNpcClickBinding
+import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.engine.systems.cache.CacheNpcDefinition
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertSame
@@ -33,6 +36,8 @@ class NpcFamilySpawnImportTest {
     fun `known migrated ids use final ids`() {
         val actual = kotlinSpawnKeys()
 
+        assertTrue(actual.any { it.npcId == 3258 }, "Druid spawns should use current-cache id 3258")
+        assertFalse(actual.any { it.npcId == 3098 }, "Druid spawns should not use old id 3098")
         assertTrue(actual.any { it.npcId == 3295 }, "Hero spawns should use 3295")
         assertFalse(actual.any { it.npcId == 3106 }, "Hero spawns should not use old id 3106")
         assertTrue(actual.any { it.npcId == 5420 }, "Watchman spawns should use 5420")
@@ -47,6 +52,41 @@ class NpcFamilySpawnImportTest {
         assertFalse(actual.any { it.npcId == 637 }, "Aubury spawns should not use old id 637")
         assertEquals(11433, Sedridor.spawns.single().npcId, "Sedridor spawn should use cache-visible Archmage Sedridor id 11433")
         assertFalse(actual.any { it.npcId == 5034 }, "Sedridor spawn should not use blank cache id 5034")
+    }
+
+    @Test
+    fun `restored npc families bind current cache option slots`() {
+        assertEquals("talk-to", GnomeTrainer.definition.optionLabels[1])
+        assertEquals("talk-to", CustomsOfficier.definition.optionLabels[1])
+        assertEquals("pay-fare", CustomsOfficier.definition.optionLabels[3])
+        assertEquals("talk-to", ArmourSalesman.definition.optionLabels[1])
+        assertEquals("trade", ArmourSalesman.definition.optionLabels[3])
+        assertEquals(9, GnomeTrainer.spawns.size)
+    }
+
+    @Test
+    fun `druid migration removes stale client identity override and examine loot side effect`() {
+        val clientNpcDefinitions = Files.readString(Path.of("../game-client/src/main/java/com/osroyale/NpcDefinition.java"))
+        val playerSource = Files.readString(Path.of("src/main/java/net/dodian/uber/game/model/entity/player/Player.java"))
+        val examineBody = playerSource.substringAfter("public void examineNpc").substringBefore("public void examineObject")
+
+        assertFalse(clientNpcDefinitions.contains("case 3258:"))
+        assertFalse(examineBody.contains("checkLoot"))
+        assertEquals(3258, Druid.primaryId)
+        assertTrue(Druid.spawns.all { it.npcId == 3258 })
+    }
+
+    @Test
+    fun `interface audit identifies bank and read only bank style views`() {
+        val client = Client(null, 1)
+        client.bankStyleViewOpen = true
+        client.bankStyleViewTitle = "Loot preview"
+        assertTrue(ConsoleAuditLog.interfaceDetails(client, 60000).contains("Bank-style read-only view"))
+        assertTrue(ConsoleAuditLog.interfaceDetails(client, 60000).contains("Loot preview"))
+
+        client.bankStyleViewOpen = false
+        client.IsBanking = true
+        assertTrue(ConsoleAuditLog.interfaceDetails(client, 60000).contains("Player bank"))
     }
 
     @Test
@@ -181,6 +221,88 @@ class NpcFamilySpawnImportTest {
     }
 
     @Test
+    fun `npc client option validator reports live identity and handler gaps`() {
+        val report = NpcClientOptionValidator.inspect(
+            rawDefinitions = mapOf(3098 to rawNpc(3098, "Stonemason", "Talk-to", null, "Trade", null, null)),
+            contents = listOf(
+                NpcContentDefinition(name = "Druid", npcIds = intArrayOf(3098))
+            ),
+            modules = listOf(
+                object : NpcModule {
+                    override val definition = NpcContentDefinition(name = "Druid", npcIds = intArrayOf(3098))
+                }
+            ),
+            spawns = listOf(NpcSpawnDef(3098, 2884, 3430)),
+        )
+
+        assertEquals("Stonemason", report.identityMismatches.single().cacheName)
+        assertEquals(setOf(1, 3), report.missingVisibleHandlers.map { it.option }.toSet())
+        assertEquals(1, report.liveCapabilities.single().liveSpawnCount)
+    }
+
+    @Test
+    fun `npc client option validator recognizes skill owned actions`() {
+        val skillBinding = SkillNpcClickBinding(
+            preset = PolicyPreset.GATHERING,
+            option = 1,
+            npcIds = intArrayOf(1510),
+            handler = { _, _ -> true },
+        )
+        val report = NpcClientOptionValidator.inspect(
+            rawDefinitions = mapOf(1510 to rawNpc(1510, "Fishing spot", "Cage", null, null, null, null)),
+            contents = emptyList(),
+            spawns = listOf(NpcSpawnDef(1510, 2800, 3400)),
+            skillNpcBindings = listOf(skillBinding),
+        )
+
+        assertTrue(report.missingVisibleHandlers.isEmpty())
+        assertEquals("skill", report.liveCapabilities.single().dispatchOwners[1])
+    }
+
+    @Test
+    fun `npc client option validator reports effective client override conflicts`() {
+        val report = NpcClientOptionValidator.inspect(
+            rawDefinitions = mapOf(3258 to rawNpc(3258, "Druid", "Talk-to", "Attack", null, null, null)),
+            contents = emptyList(),
+            spawns = listOf(NpcSpawnDef(3258, 2884, 3430)),
+            effectiveClientOverrides = mapOf(
+                3258 to NpcEffectiveClientOverride(
+                    id = 3258,
+                    name = "Farming store",
+                    actions = arrayOf("Open", null, null, null, null),
+                )
+            ),
+        )
+
+        assertEquals("Farming store", report.effectiveClientOverrideConflicts.single().effectiveName)
+    }
+
+    @Test
+    fun `npc client override parser resolves stacked ids names and action slots`() {
+        val overrides = NpcClientOptionValidator.parseEffectiveClientOverrides(
+            source = """
+                switch (npcId) {
+                    case 3258:
+                    case 3259:
+                        entityDef.name = "Farming store";
+                        entityDef.actions = new String[5];
+                        entityDef.actions[0] = "Open";
+                        entityDef.actions[2] = "Trade";
+                        break;
+                }
+            """.trimIndent(),
+            rawDefinitions = mapOf(
+                3258 to rawNpc(3258, "Druid", "Talk-to", "Attack", null, null, null),
+                3259 to rawNpc(3259, "Druid", "Talk-to", "Attack", null, null, null),
+            ),
+        )
+
+        assertEquals(setOf(3258, 3259), overrides.keys)
+        assertEquals("Farming store", overrides.getValue(3258).name)
+        assertEquals(listOf("Open", null, "Trade", null, null), overrides.getValue(3259).actions?.toList())
+    }
+
+    @Test
     fun `npc client option validator rejects registered content ids missing from raw cache`() {
         val report = NpcClientOptionValidator.inspect(
             rawDefinitions = emptyMap(),
@@ -271,6 +393,7 @@ class NpcFamilySpawnImportTest {
         assertTrue(runtimeJson.contains("\"morphVariables\""))
         assertTrue(runtimeJson.contains("\"module\" : \"Monk\""))
         assertTrue(runtimeJson.contains("\"uniqueLiveSpawnIds\" : 4"))
+        assertTrue(Files.readString(paths.migrationBacklog).contains("\"missingVisibleHandlers\""))
     }
 
     @Test
@@ -403,6 +526,7 @@ class NpcFamilySpawnImportTest {
             npcId == 10681 && x == 3253 && y == 3402 && z == 0 -> 11435
             npcId == 10681 && x == 2594 && y == 3104 && z == 0 -> 11435
             npcId == 5034 && x == 2590 && y == 3086 && z == 0 -> 11433
+            npcId == 3098 -> 3258
             else -> npcId
         }
 

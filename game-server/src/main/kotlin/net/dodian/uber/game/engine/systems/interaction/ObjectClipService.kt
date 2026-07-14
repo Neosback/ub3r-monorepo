@@ -61,18 +61,7 @@ object ObjectClipService {
             removeCachedObjectsAt(position, type = 0)
             removeCachedObjectsAt(position, type = 9)
 
-            val isOpen = DoorRegistry.doorState[index] == 1
-            applyDecodedObject(
-                position = position,
-                objectId = objectId,
-                type = 0,
-                direction = DoorRegistry.doorFace[index],
-                obj = GameObjectData.forId(objectId),
-                forceSolid = !isOpen,
-                solidOverride = if (isOpen) false else null,
-                blockWalkOverride = if (isOpen) 0 else null,
-                blockRangeOverride = if (isOpen) false else null,
-            )
+            applyDoor(position, objectId, DoorRegistry.doorFace[index])
             appliedDoors++
         }
 
@@ -138,6 +127,25 @@ object ObjectClipService {
             breakRouteFinding = obj.breakRouteFinding(),
             impenetrable = if (objectId in CollisionBuildService.BLOCK_RANGE_FALSE_IDS) false else obj.isImpenetrable(),
             decoration = obj.isDecoration(),
+        )
+    }
+
+    /**
+     * Applies a configured door as a solid straight wall at its current face.
+     *
+     * Opening a door changes its face, rather than removing its collision: the old doorway edge
+     * becomes traversable and the rotated door panel blocks its new edge.  Keeping this here makes
+     * startup overlays and live door toggles use the exact same collision policy.
+     */
+    @JvmStatic
+    fun applyDoor(position: Position, objectId: Int, face: Int) {
+        applyDecodedObject(
+            position = position,
+            objectId = objectId,
+            type = 0,
+            direction = face,
+            obj = GameObjectData.forId(objectId),
+            forceSolid = true,
         )
     }
 
@@ -242,14 +250,14 @@ object ObjectClipService {
             rotation = existing.direction,
             sizeX = definition.sizeX,
             sizeY = definition.sizeY,
-            solid = definition.isSolid(),
-            walkable = definition.isWalkable(),
+            solid = existing.solid,
+            walkable = !existing.solid,
             hasActions = definition.hasActions(),
             objectName = definition.name,
-            blockWalk = definition.blockWalk(),
-            blockRange = definition.blockRange(),
+            blockWalk = if (existing.solid) 2 else 0,
+            blockRange = existing.solid,
             breakRouteFinding = definition.breakRouteFinding(),
-            impenetrable = definition.isImpenetrable(),
+            impenetrable = if (existing.solid) definition.isImpenetrable() else false,
             decoration = definition.isDecoration(),
         )
     }

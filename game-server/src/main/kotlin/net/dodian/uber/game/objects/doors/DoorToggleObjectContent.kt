@@ -1,6 +1,5 @@
 package net.dodian.uber.game.objects.doors
 
-import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.objects.ObjectBinding
 import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.Position
@@ -82,17 +81,10 @@ object DoorToggleObjectContent : ObjectContent {
                 DoorRegistry.doorFaceClosed[index]
             }
             DoorRegistry.doorFace[index] = newFace
-            val isOpen = DoorRegistry.doorState[index] == 1
-            ObjectClipService.applyDecodedObject(
+            ObjectClipService.applyDoor(
                 position = Position(DoorRegistry.doorX[index], DoorRegistry.doorY[index], DoorRegistry.doorHeight[index]),
                 objectId = DoorRegistry.doorId[index],
-                type = 0,
-                direction = newFace,
-                obj = GameObjectData.forId(DoorRegistry.doorId[index]),
-                forceSolid = !isOpen,
-                solidOverride = if (isOpen) false else null,
-                blockWalkOverride = if (isOpen) 0 else null,
-                blockRangeOverride = if (isOpen) false else null,
+                face = newFace,
             )
             for (player in PlayerRegistry.players) {
                 val other = player as? Client ?: continue
@@ -111,4 +103,3 @@ object DoorToggleObjectContent : ObjectContent {
         return true
     }
 }
-

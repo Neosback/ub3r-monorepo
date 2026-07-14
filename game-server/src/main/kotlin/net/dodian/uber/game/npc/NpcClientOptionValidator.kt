@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import java.nio.file.Files
 import java.nio.file.Path
+import net.dodian.uber.game.api.plugin.skills.SkillNpcClickBinding
 import net.dodian.uber.game.engine.systems.cache.CacheNpcDefinition
 import net.dodian.uber.game.engine.systems.cache.CacheVarbitDefinition
 import org.slf4j.LoggerFactory
@@ -14,6 +15,67 @@ object NpcClientOptionValidator {
     private val mapper = ObjectMapper()
         .registerKotlinModule()
         .enable(SerializationFeature.INDENT_OUTPUT)
+
+    internal fun loadEffectiveClientOverrides(
+        rawDefinitions: Map<Int, CacheNpcDefinition>,
+    ): Map<Int, NpcEffectiveClientOverride> {
+        val sourcePath = listOf(
+            Path.of("game-client/src/main/java/com/osroyale/NpcDefinition.java"),
+            Path.of("../game-client/src/main/java/com/osroyale/NpcDefinition.java"),
+        ).firstOrNull(Files::isRegularFile) ?: run {
+            logger.warn("Client NPC override source was not found; effective-client override diagnostics are unavailable.")
+            return emptyMap()
+        }
+        return parseEffectiveClientOverrides(Files.readString(sourcePath), rawDefinitions)
+    }
+
+    internal fun parseEffectiveClientOverrides(
+        source: String,
+        rawDefinitions: Map<Int, CacheNpcDefinition>,
+    ): Map<Int, NpcEffectiveClientOverride> {
+        val uncommented = source.replace(Regex("/\\*.*?\\*/", setOf(RegexOption.DOT_MATCHES_ALL)), "")
+        val casePattern = Regex("\\bcase\\s+(\\d+)\\s*:")
+        val namePattern = Regex("entityDef\\.name\\s*=\\s*\"([^\"]*)\"")
+        val actionPattern = Regex("entityDef\\.actions\\[(\\d+)]\\s*=\\s*\"([^\"]*)\"")
+        val resetPattern = Regex("entityDef\\.actions\\s*=\\s*new\\s+String\\s*\\[5]")
+        val overrides = linkedMapOf<Int, NpcEffectiveClientOverride>()
+        val ids = arrayListOf<Int>()
+        val actions = linkedMapOf<Int, String>()
+        var name: String? = null
+        var resetActions = false
+
+        fun flush() {
+            for (id in ids) {
+                val raw = rawDefinitions[id]
+                val effectiveActions = when {
+                    resetActions -> arrayOfNulls<String>(5)
+                    actions.isNotEmpty() -> raw?.actions?.copyOf() ?: arrayOfNulls(5)
+                    else -> null
+                }
+                actions.forEach { (slot, action) ->
+                    if (slot in 0..4) effectiveActions?.set(slot, action)
+                }
+                if (name != null || effectiveActions != null) {
+                    overrides[id] = NpcEffectiveClientOverride(id, name, effectiveActions)
+                }
+            }
+            ids.clear()
+            actions.clear()
+            name = null
+            resetActions = false
+        }
+
+        for (line in uncommented.lineSequence()) {
+            val cases = casePattern.findAll(line).map { it.groupValues[1].toInt() }.toList()
+            if (cases.isNotEmpty()) ids += cases
+            namePattern.find(line)?.let { name = it.groupValues[1] }
+            if (resetPattern.containsMatchIn(line)) resetActions = true
+            actionPattern.find(line)?.let { actions[it.groupValues[1].toInt()] = it.groupValues[2] }
+            if (ids.isNotEmpty() && Regex("\\bbreak\\s*;").containsMatchIn(line)) flush()
+        }
+        flush()
+        return overrides
+    }
 
     fun validate(
         rawDefinitions: Map<Int, CacheNpcDefinition>,
@@ -43,9 +105,16 @@ object NpcClientOptionValidator {
         contents: Collection<NpcContentDefinition>,
         modules: Collection<NpcModule> = emptyList(),
         spawns: Collection<NpcSpawnDef> = emptyList(),
+        skillNpcBindings: Collection<SkillNpcClickBinding> = emptyList(),
+        eventNpcOptions: Set<NpcOptionKey> = emptySet(),
+        effectiveClientOverrides: Map<Int, NpcEffectiveClientOverride> = emptyMap(),
     ): NpcClientOptionValidationReport {
         val failures = ArrayList<String>()
         val warnings = ArrayList<String>()
+        val identityMismatches = ArrayList<NpcIdentityMismatch>()
+        val missingVisibleHandlers = ArrayList<NpcMissingVisibleHandler>()
+        val effectiveClientOverrideConflicts = ArrayList<NpcEffectiveClientOverrideConflict>()
+        val liveCapabilities = ArrayList<NpcLiveCapability>()
         var interactiveModules = 0
         var checkedOptions = 0
         var contentIdsChecked = 0
@@ -102,6 +171,88 @@ object NpcClientOptionValidator {
             }
         }
 
+        val liveSpawnCounts = spawns.asSequence()
+            .filter { it.live }
+            .groupingBy { it.npcId }
+            .eachCount()
+        val modulesByNpcId = modules
+            .flatMap { module -> module.definition.npcIds.distinct().map { it to module } }
+            .groupBy({ it.first }, { it.second })
+        val contentOwners = contentDefinitions
+            .flatMap { content ->
+                handlerLabels(content).flatMap { (option, label) ->
+                    content.npcIds.distinct().map { npcId -> NpcOptionKey(npcId, option) to "npc:${content.name}:$label" }
+                }
+            }
+            .toMap()
+        val skillOwners = skillNpcBindings
+            .flatMap { binding ->
+                binding.npcIds.distinct().map { npcId ->
+                    NpcOptionKey(npcId, binding.option) to "skill"
+                }
+            }
+            .toMap()
+
+        for ((npcId, spawnCount) in liveSpawnCounts.toSortedMap()) {
+            val raw = rawDefinitions[npcId] ?: continue
+            val dispatchOwners = linkedMapOf<Int, String>()
+            raw.actions.forEachIndexed { index, action ->
+                if (action.isNullOrBlank()) return@forEachIndexed
+                val key = NpcOptionKey(npcId, index + 1)
+                val owner = contentOwners[key] ?: skillOwners[key] ?: if (key in eventNpcOptions) "event" else null
+                if (owner != null) dispatchOwners[index + 1] = owner
+            }
+            val effective = effectiveClientOverrides[npcId]
+            liveCapabilities += NpcLiveCapability(
+                runtimeId = npcId,
+                cacheName = raw.name,
+                effectiveClientName = effective?.name ?: raw.name,
+                visibleActions = (effective?.actions ?: raw.actions).toList(),
+                dispatchOwners = dispatchOwners,
+                liveSpawnCount = spawnCount,
+            )
+            for (module in modulesByNpcId[npcId].orEmpty().distinctBy { it.definition.name }) {
+                if (!sameVisibleName(raw.name, module.definition.name)) {
+                    identityMismatches += NpcIdentityMismatch(
+                        npcId = npcId,
+                        module = module.definition.name,
+                        cacheName = raw.name,
+                        liveSpawnCount = spawnCount,
+                    )
+                }
+            }
+
+            raw.actions.forEachIndexed { index, action ->
+                val visibleAction = action?.trim().orEmpty()
+                if (visibleAction.isEmpty() || visibleAction.equals("attack", ignoreCase = true)) return@forEachIndexed
+                val key = NpcOptionKey(npcId, index + 1)
+                val owner = contentOwners[key] ?: skillOwners[key] ?: if (key in eventNpcOptions) "event" else null
+                if (owner == null) {
+                    missingVisibleHandlers += NpcMissingVisibleHandler(
+                        npcId = npcId,
+                        cacheName = raw.name,
+                        option = index + 1,
+                        action = visibleAction,
+                        liveSpawnCount = spawnCount,
+                    )
+                }
+            }
+
+            if (effective == null) continue
+            val nameConflict = effective.name?.takeIf { it.isNotBlank() && !sameVisibleName(it, raw.name) }
+            val actionConflict = effective.actions?.takeIf { !it.contentEquals(raw.actions) }
+            if (nameConflict != null || actionConflict != null) {
+                effectiveClientOverrideConflicts += NpcEffectiveClientOverrideConflict(
+                    npcId = npcId,
+                    cacheName = raw.name,
+                    effectiveName = effective.name ?: raw.name,
+                    cacheActions = raw.actions.toList(),
+                    effectiveActions = effective.actions?.toList() ?: raw.actions.toList(),
+                    liveSpawnCount = spawnCount,
+                )
+            }
+        }
+
         return NpcClientOptionValidationReport(
             moduleCount = modules.size,
             contentIdsChecked = contentIdsChecked,
@@ -110,6 +261,10 @@ object NpcClientOptionValidator {
             checkedOptions = checkedOptions,
             failures = failures,
             warnings = warnings,
+            identityMismatches = identityMismatches,
+            missingVisibleHandlers = missingVisibleHandlers,
+            effectiveClientOverrideConflicts = effectiveClientOverrideConflicts,
+            liveCapabilities = liveCapabilities,
         )
     }
 
@@ -126,6 +281,7 @@ object NpcClientOptionValidator {
         Files.createDirectories(reportsDir)
         val cachePath = reportsDir.resolve("npc-cache-definitions.json")
         val runtimePath = reportsDir.resolve("npc-runtime-validation.json")
+        val backlogPath = reportsDir.resolve("npc-interaction-migration-backlog.json")
         mapper.writeValue(cachePath.toFile(), rawDefinitions.values.sortedBy { it.id }.map { cacheDumpRow(it, varbits) })
         mapper.writeValue(
             runtimePath.toFile(),
@@ -157,8 +313,16 @@ object NpcClientOptionValidator {
                     },
             ),
         )
-        logger.info("NPC diagnostics wrote {} and {}", cachePath, runtimePath)
-        return NpcDiagnosticsReportPaths(cachePath, runtimePath)
+        mapper.writeValue(
+            backlogPath.toFile(),
+            NpcInteractionMigrationBacklog(
+                identityMismatches = validation.identityMismatches,
+                missingVisibleHandlers = validation.missingVisibleHandlers,
+                effectiveClientOverrideConflicts = validation.effectiveClientOverrideConflicts,
+            ),
+        )
+        logger.info("NPC diagnostics wrote {}, {}, and {}", cachePath, runtimePath, backlogPath)
+        return NpcDiagnosticsReportPaths(cachePath, runtimePath, backlogPath)
     }
 
     private fun moduleDumpRow(
@@ -275,11 +439,11 @@ object NpcClientOptionValidator {
 
     private fun handlerLabels(content: NpcContentDefinition): List<Pair<Int, String>> {
         val labels = ArrayList<Pair<Int, String>>(5)
-        if (content.onFirstClick !== NO_CLICK_HANDLER) labels += 1 to (content.optionLabel(1) ?: "first")
-        if (content.onSecondClick !== NO_CLICK_HANDLER) labels += 2 to (content.optionLabel(2) ?: "second")
-        if (content.onThirdClick !== NO_CLICK_HANDLER) labels += 3 to (content.optionLabel(3) ?: "third")
-        if (content.onFourthClick !== NO_CLICK_HANDLER) labels += 4 to (content.optionLabel(4) ?: "fourth")
-        if (content.onAttack !== NO_CLICK_HANDLER) labels += 5 to (content.optionLabel(5) ?: "attack")
+        if (content.onFirstClick !== NO_CLICK_HANDLER || content.onFirstClickCtx !== NO_CONTEXT_CLICK_HANDLER) labels += 1 to (content.optionLabel(1) ?: "first")
+        if (content.onSecondClick !== NO_CLICK_HANDLER || content.onSecondClickCtx !== NO_CONTEXT_CLICK_HANDLER) labels += 2 to (content.optionLabel(2) ?: "second")
+        if (content.onThirdClick !== NO_CLICK_HANDLER || content.onThirdClickCtx !== NO_CONTEXT_CLICK_HANDLER) labels += 3 to (content.optionLabel(3) ?: "third")
+        if (content.onFourthClick !== NO_CLICK_HANDLER || content.onFourthClickCtx !== NO_CONTEXT_CLICK_HANDLER) labels += 4 to (content.optionLabel(4) ?: "fourth")
+        if (content.onAttack !== NO_CLICK_HANDLER || content.onAttackCtx !== NO_CONTEXT_CLICK_HANDLER) labels += 5 to (content.optionLabel(5) ?: "attack")
         return labels
     }
 
@@ -312,6 +476,10 @@ data class NpcClientOptionValidationReport(
     val checkedOptions: Int,
     val failures: List<String>,
     val warnings: List<String>,
+    val identityMismatches: List<NpcIdentityMismatch> = emptyList(),
+    val missingVisibleHandlers: List<NpcMissingVisibleHandler> = emptyList(),
+    val effectiveClientOverrideConflicts: List<NpcEffectiveClientOverrideConflict> = emptyList(),
+    val liveCapabilities: List<NpcLiveCapability> = emptyList(),
 ) {
     val optionViolations: List<String> get() = failures
     val nameWarnings: List<String> get() = warnings
@@ -320,6 +488,54 @@ data class NpcClientOptionValidationReport(
 data class NpcDiagnosticsReportPaths(
     val cacheDefinitions: Path,
     val runtimeValidation: Path,
+    val migrationBacklog: Path,
+)
+
+data class NpcOptionKey(val npcId: Int, val option: Int)
+
+data class NpcEffectiveClientOverride(
+    val id: Int,
+    val name: String? = null,
+    val actions: Array<String?>? = null,
+)
+
+data class NpcIdentityMismatch(
+    val npcId: Int,
+    val module: String,
+    val cacheName: String,
+    val liveSpawnCount: Int,
+)
+
+data class NpcMissingVisibleHandler(
+    val npcId: Int,
+    val cacheName: String,
+    val option: Int,
+    val action: String,
+    val liveSpawnCount: Int,
+)
+
+data class NpcEffectiveClientOverrideConflict(
+    val npcId: Int,
+    val cacheName: String,
+    val effectiveName: String,
+    val cacheActions: List<String?>,
+    val effectiveActions: List<String?>,
+    val liveSpawnCount: Int,
+)
+
+data class NpcInteractionMigrationBacklog(
+    val identityMismatches: List<NpcIdentityMismatch>,
+    val missingVisibleHandlers: List<NpcMissingVisibleHandler>,
+    val effectiveClientOverrideConflicts: List<NpcEffectiveClientOverrideConflict>,
+)
+
+data class NpcLiveCapability(
+    val runtimeId: Int,
+    val cacheName: String,
+    val effectiveClientName: String,
+    val visibleActions: List<String?>,
+    val dispatchOwners: Map<Int, String>,
+    val liveSpawnCount: Int,
 )
 
 data class NpcCacheDefinitionDump(

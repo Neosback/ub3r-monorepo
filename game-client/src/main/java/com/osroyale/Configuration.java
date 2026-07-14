@@ -39,7 +39,7 @@ public final class Configuration {
     /**
      * Debug the interfaces.
      */
-    static boolean DUMP_INTERFACES = true;
+    static boolean DUMP_INTERFACES = false;
 
     /**
      * State of client enabling RSA encryption.
@@ -81,7 +81,7 @@ public final class Configuration {
     };
 
     /**
-     * Whether to use Jire SwiftFUP update server.
+     * SwiftFUP is the authoritative source for cache archives.
      */
     public static final boolean USE_UPDATE_SERVER = true;
 

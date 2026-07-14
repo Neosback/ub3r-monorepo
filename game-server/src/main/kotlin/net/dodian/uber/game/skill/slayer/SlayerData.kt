@@ -20,7 +20,7 @@ enum class SlayerTaskDefinition(
     FIRE_GIANTS("Fire Giants", false, Range(1, 200), Range(30, 80), 2075),
     MUMMY("Mummy", true, Range(1, 200), Range(30, 80), 950),
     ICE_GIANT("Ice Giants", false, Range(30, 60), Range(30, 50), 2085),
-    DRUID("Druids", false, Range(1, 30), Range(20, 35), 3098),
+    DRUID("Druids", false, Range(1, 30), Range(20, 35), 3258),
     GREATER_DEMON("Greater Demon", true, Range(55, 200), Range(30, 60), 2025),
     BERSERK_BARBARIAN_SPIRIT("Berserk Barbarian Spirits", true, Range(70, 200), Range(25, 60), 5565),
     MITHRIL_DRAGON("Mithril Dragons", true, Range(83, 200), Range(10, 25), 2919),

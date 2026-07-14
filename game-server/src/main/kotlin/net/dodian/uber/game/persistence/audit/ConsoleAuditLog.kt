@@ -286,7 +286,7 @@ object ConsoleAuditLog {
     @JvmStatic
     fun interfaceOpen(player: Player, interfaceId: Int, via: String) {
         if (net.dodian.uber.game.engine.config.gameWorldId == 2) {
-            val details = getInterfaceDetails(interfaceId)
+            val details = interfaceDetails(player, interfaceId)
             println("[W2-INTERFACE] Player '${player.playerName}' opened interface $interfaceId via $via. Details:\n$details")
         }
         if (!interfaceLogger.isInfoEnabled) return
@@ -298,7 +298,18 @@ object ConsoleAuditLog {
         )
     }
 
-    private fun getInterfaceDetails(interfaceId: Int): String {
+    internal fun interfaceDetails(player: Player, interfaceId: Int): String {
+        if (interfaceId == 60000) {
+            val client = player as? net.dodian.uber.game.model.entity.player.Client
+            return when {
+                player.bankStyleViewOpen ->
+                    "  [CUSTOM INTERFACE] Bank-style read-only view, Title: '${client?.bankStyleViewTitle.orEmpty()}'"
+                player.IsBanking ->
+                    "  [CUSTOM INTERFACE] Player bank"
+                else ->
+                    "  [CUSTOM INTERFACE] Bank container shell (not currently banking)"
+            }
+        }
         val def = net.dodian.uber.game.engine.systems.cache.CacheInterfaceDefinitions.get(interfaceId)
         if (def != null) {
             val sb = StringBuilder()
@@ -572,4 +583,3 @@ object CustomInterfaceRegistry {
         }
     }
 }
-

@@ -127,14 +127,10 @@ public class Server {
         EnginePluginBootstrap.bootstrap();
 
         logger.info("Starting SwiftFUP server...");
-        try {
-            org.jire.swiftfup.server.net.FileResponses fileResponses = new org.jire.swiftfup.server.net.FileResponses();
-            fileResponses.load("data/cache", true);
-            fileServer = new org.jire.swiftfup.server.net.FileServer(3, fileResponses);
-            fileServer.start(DotEnvKt.getSwiftFupPort());
-        } catch (Exception e) {
-            logger.error("Failed to start SwiftFUP server", e);
-        }
+        org.jire.swiftfup.server.net.FileResponses fileResponses = new org.jire.swiftfup.server.net.FileResponses();
+        fileResponses.load("data/cache", true);
+        fileServer = new org.jire.swiftfup.server.net.FileServer(3, fileResponses);
+        fileServer.start(DotEnvKt.getSwiftFupPort());
 
         System.gc();
 

@@ -33,6 +33,8 @@ object NpcDefinitionRepository {
                 contents = ContentModuleIndex.npcContents,
                 modules = ContentModuleIndex.npcModules,
                 spawns = NpcSpawnRepository.all(),
+                skillNpcBindings = ContentModuleIndex.skillPlugins.flatMap { it.definition.npcBindings },
+                effectiveClientOverrides = NpcClientOptionValidator.loadEffectiveClientOverrides(rawDefinitions),
             )
             NpcClientOptionValidator.writeReports(
                 rawDefinitions = rawDefinitions,

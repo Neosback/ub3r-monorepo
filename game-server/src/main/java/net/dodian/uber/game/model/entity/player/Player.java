@@ -2125,8 +2125,6 @@ public abstract class Player extends Entity {
     public void examineNpc(Client c, int npcId) {
         NpcData n = Server.npcManager.getData(npcId);
         if (n == null) { return; } //No data!
-        if (!n.getDrops().isEmpty())
-            checkLoot(c, n);
         if(!n.getExamine().isEmpty())
             c.send(new SendMessage(n.getExamine()));
     }
