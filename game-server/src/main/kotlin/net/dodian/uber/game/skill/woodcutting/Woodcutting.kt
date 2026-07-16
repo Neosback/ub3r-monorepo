@@ -225,7 +225,7 @@ object WoodcuttingSkillPlugin : SkillPlugin {
                 preset = PolicyPreset.GATHERING,
                 option = 1,
                 *WoodcuttingData.allTreeObjectIds,
-            ) { client, objectId, position, obj ->
+            ) { (client, objectId, position, obj) ->
                 Woodcutting.attempt(client, objectId, position, obj)
             }
         }

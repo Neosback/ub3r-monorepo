@@ -13,7 +13,7 @@ fun SkillPluginBuilder.bindObjectContentClick(
     option: Int,
     content: ObjectContent,
 ) {
-    objectClick(preset = preset, option = option, *content.objectIds) { client, objectId, position, obj ->
+    objectClick(preset = preset, option = option, *content.objectIds) { interaction ->
         val opt = when (option) {
             1 -> InteractionOption.FIRST
             2 -> InteractionOption.SECOND
@@ -23,11 +23,11 @@ fun SkillPluginBuilder.bindObjectContentClick(
             else -> InteractionOption.FIRST
         }
         val context = ObjectInteractionContext(
-            player = client,
+            player = interaction.player.protocolClient(),
             option = opt,
-            objectId = objectId,
-            position = position,
-            definition = obj
+            objectId = interaction.objectId,
+            position = interaction.position,
+            definition = interaction.definition
         )
         when (option) {
             1 -> content.onFirstClick(context)
@@ -45,14 +45,14 @@ fun SkillPluginBuilder.bindObjectContentUseItem(
     content: ObjectContent,
     itemIds: IntArray = intArrayOf(-1),
 ) {
-    itemOnObject(preset = preset, *content.objectIds, itemIds = itemIds) { client, objectId, position, obj, itemId, itemSlot, interfaceId ->
+    itemOnObject(preset = preset, *content.objectIds, itemIds = itemIds) { interaction ->
         val context = ObjectInteractionContext(
-            player = client,
+            player = interaction.player.protocolClient(),
             option = InteractionOption.USE_ITEM,
-            objectId = objectId,
-            position = position,
-            definition = obj,
-            itemPayload = ItemPayload(itemId, itemSlot, interfaceId)
+            objectId = interaction.objectId,
+            position = interaction.position,
+            definition = interaction.definition,
+            itemPayload = ItemPayload(interaction.itemId, interaction.itemSlot, interaction.interfaceId)
         )
         content.onUseItem(context)
     }
@@ -63,14 +63,14 @@ fun SkillPluginBuilder.bindObjectContentMagic(
     content: ObjectContent,
     spellIds: IntArray = intArrayOf(-1),
 ) {
-    magicOnObject(preset, *content.objectIds, spellIds = spellIds) { client, objectId, position, obj, spellId ->
+    magicOnObject(preset, *content.objectIds, spellIds = spellIds) { interaction ->
         val context = ObjectInteractionContext(
-            player = client,
+            player = interaction.player.protocolClient(),
             option = InteractionOption.MAGIC,
-            objectId = objectId,
-            position = position,
-            definition = obj,
-            spellPayload = SpellPayload(spellId)
+            objectId = interaction.objectId,
+            position = interaction.position,
+            definition = interaction.definition,
+            spellPayload = SpellPayload(interaction.spellId)
         )
         content.onMagic(context)
     }
@@ -81,11 +81,11 @@ fun SkillPluginBuilder.bindItemContentClick(
     option: Int,
     content: ItemContent,
 ) {
-    itemClick(preset = preset, option = option, *content.itemIds) { client, itemId, itemSlot, interfaceId ->
+    itemClick(preset = preset, option = option, *content.itemIds) { interaction ->
         when (option) {
-            1 -> content.onFirstClick(client, itemId, itemSlot, interfaceId)
-            2 -> content.onSecondClick(client, itemId, itemSlot, interfaceId)
-            3 -> content.onThirdClick(client, itemId, itemSlot, interfaceId)
+            1 -> content.onFirstClick(interaction.player.protocolClient(), interaction.itemId, interaction.itemSlot, interaction.interfaceId)
+            2 -> content.onSecondClick(interaction.player.protocolClient(), interaction.itemId, interaction.itemSlot, interaction.interfaceId)
+            3 -> content.onThirdClick(interaction.player.protocolClient(), interaction.itemId, interaction.itemSlot, interaction.interfaceId)
             else -> false
         }
     }

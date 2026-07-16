@@ -246,7 +246,7 @@ class NpcFamilySpawnImportTest {
             preset = PolicyPreset.GATHERING,
             option = 1,
             npcIds = intArrayOf(1510),
-            handler = { _, _ -> true },
+            handler = { true },
         )
         val report = NpcClientOptionValidator.inspect(
             rawDefinitions = mapOf(1510 to rawNpc(1510, "Fishing spot", "Cage", null, null, null, null)),

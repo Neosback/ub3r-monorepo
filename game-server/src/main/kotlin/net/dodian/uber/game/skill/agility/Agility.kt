@@ -957,7 +957,7 @@ object AgilitySkillPlugin : SkillPlugin {
 
     override val definition =
         skillPlugin(name = "Agility", skill = Skill.AGILITY) {
-            objectClick(preset = PolicyPreset.MOVEMENT_LOCKED, option = 1, *agilityObjectIds) { client, objectId, position, _ ->
+            objectClick(preset = PolicyPreset.MOVEMENT_LOCKED, option = 1, *agilityObjectIds) { (client, objectId, position, _) ->
                 when {
                     objectId == GnomeCourseObjectComponents.LOG_BALANCE ->
                         Agility(client).GnomeLog(

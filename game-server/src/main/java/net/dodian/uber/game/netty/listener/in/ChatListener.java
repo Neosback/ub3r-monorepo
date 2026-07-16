@@ -2,7 +2,8 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.DecodedPublicChat;
+import net.dodian.uber.game.netty.codec.PublicChatCodec;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
@@ -32,15 +33,23 @@ public class ChatListener implements PacketListener {
             return;
         }
 
-        int color = buf.readUnsignedByte();
-        int effects = buf.readUnsignedByte();
-        String chat = ByteBufReader.readTerminatedString(buf, 256);
-        byte[] chatBytes = chat.getBytes();
+        byte[] payload = new byte[buf.readableBytes()];
+        buf.readBytes(payload);
+        DecodedPublicChat decoded = PublicChatCodec.decode(payload);
+        if (decoded == null) {
+            return;
+        }
 
-        PacketChatService.handlePublicChat(client, color, effects, chat, chatBytes);
+        PacketChatService.handlePublicChat(
+                client,
+                decoded.getColor(),
+                decoded.getEffects(),
+                decoded.getMessage(),
+                decoded.getMessage().getBytes(java.nio.charset.StandardCharsets.ISO_8859_1)
+        );
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Chat from {}: {}", client.getPlayerName(), chat);
+            logger.debug("Chat from {}: {}", client.getPlayerName(), decoded.getMessage());
         }
     }
 }

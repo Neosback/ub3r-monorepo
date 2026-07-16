@@ -70,6 +70,7 @@ import net.dodian.uber.game.engine.util.Misc;
 import net.dodian.utilities.MD5;
 import net.dodian.utilities.Utils;
 import net.dodian.uber.game.engine.systems.skills.ProgressionService;
+import net.dodian.uber.game.engine.systems.inventory.EconomyTransaction;
 import net.dodian.uber.game.skill.agility.AgilityTicketExchangeService;
 
 import java.util.*;
@@ -252,11 +253,6 @@ public class Client extends Player implements Runnable {
      * Refreshes a skill's level and experience on the client.
      * @param skill The skill to refresh
      */
-    @Deprecated
-    public void refreshSkill(Skill skill) {
-        ProgressionService.refresh(this, skill);
-    }
-
     public void sendCachedString(String text, int lineId) {
         String previous = uiTextCache.get(lineId);
         if (previous != null && previous.equals(text)) {
@@ -1062,11 +1058,6 @@ public class Client extends Player implements Runnable {
         sendString(autoRetaliate ? "Auto Retaliate (On)" : "Auto Retaliate (Off)", 3983);
     }
 
-    @Deprecated
-    public void setSkillLevel(Skill skill, int currentLevel, int XP) {
-        ProgressionService.setSkillLevel(this, skill, currentLevel, XP);
-    }
-
 
     public void logout() {
         send(new SendMessage("Please wait... logging out may take time"));
@@ -1176,7 +1167,9 @@ public class Client extends Player implements Runnable {
             send(new RemoveInterfaces());
             return;
         }
-        boolean bankChanged = false;
+        if (fromSlot < 0 || fromSlot >= bankItems.length || bankItems[fromSlot] - 1 != itemID) {
+            return;
+        }
         int id = getNotedItem(itemID);
         if (amount == -2) { //draw all from bank!
             if (!takeAsNote && !Server.itemManager.isStackable(itemID))
@@ -1184,89 +1177,16 @@ public class Client extends Player implements Runnable {
             else
                 amount = freeSlots() == 0 && !playerHasItem(id == 0 ? itemID : id) ? 1 : bankItemsN[fromSlot];
         }
-        if (bankItems[fromSlot] - 1 != itemID || (bankItems[fromSlot] - 1 != itemID && bankItemsN[fromSlot] != amount)) {
+        if (amount <= 0) {
             return;
         }
-        if (amount > 0) {
-            if (bankItems[fromSlot] > 0) {
-                if (!takeAsNote) {
-                    if (Server.itemManager.isStackable(itemID)) {
-                        if (bankItemsN[fromSlot] > amount) {
-                            if (addItem((bankItems[fromSlot] - 1), amount)) {
-                                bankItemsN[fromSlot] -= amount;
-                                bankChanged = true;
-                            }
-                        } else {
-                            if (addItem(itemID, bankItemsN[fromSlot])) {
-                                bankItems[fromSlot] = 0;
-                                bankItemsN[fromSlot] = 0;
-                                bankChanged = true;
-                            }
-                        }
-                    } else {
-                        while (amount > 0) {
-                            if (bankItemsN[fromSlot] > 0) {
-                                if (addItem(itemID, 1)) {
-                                    bankItemsN[fromSlot] -= 1;
-                                    bankChanged = true;
-                                    amount--;
-                                } else {
-                                    amount = 0;
-                                }
-                            } else {
-                                amount = 0;
-                            }
-                        }
-                    }
-                } else if (id > 0) {
-                    if (bankItemsN[fromSlot] > amount) {
-                        if (addItem(id, amount)) {
-                            bankItemsN[fromSlot] -= amount;
-                            bankChanged = true;
-                        }
-                    } else {
-                        if (addItem(id, bankItemsN[fromSlot])) {
-                            bankItems[fromSlot] = 0;
-                            bankItemsN[fromSlot] = 0;
-                            bankChanged = true;
-                        }
-                    }
-                } else {
-                    send(new SendMessage(Server.itemManager.getName(itemID) + " can't be drawn as note."));
-                    if (Server.itemManager.isStackable(itemID)) {
-                        if (bankItemsN[fromSlot] > amount) {
-                            if (addItem(itemID, amount)) {
-                                bankItemsN[fromSlot] -= amount;
-                                bankChanged = true;
-                            }
-                        } else {
-                            if (addItem(itemID, bankItemsN[fromSlot])) {
-                                bankItems[fromSlot] = 0;
-                                bankItemsN[fromSlot] = 0;
-                                bankChanged = true;
-                            }
-                        }
-                    } else {
-                        while (amount > 0) {
-                            if (bankItemsN[fromSlot] > 0) {
-                                if (addItem(itemID, 1)) {
-                                    bankItemsN[fromSlot] -= 1;
-                                    bankChanged = true;
-                                    amount--;
-                                } else {
-                                    amount = 0;
-                                }
-                            } else {
-                                amount = 0;
-                            }
-                        }
-                    }
-                }
-            }
+        int receivedItemId = takeAsNote && id > 0 ? id : itemID;
+        if (takeAsNote && id <= 0) {
+            send(new SendMessage(Server.itemManager.getName(itemID) + " can't be drawn as note."));
         }
-        checkItemUpdate();
-        if (bankChanged) {
-            markSaveDirty(PlayerSaveSegment.BANK.getMask());
+        amount = Math.min(amount, bankItemsN[fromSlot]);
+        if (!EconomyTransaction.transferBankToInventory(this, itemID, fromSlot, amount, receivedItemId)) {
+            send(new SendMessage("Not enough space in your inventory."));
         }
     }
 
@@ -1299,12 +1219,10 @@ public class Client extends Player implements Runnable {
         return -1;
     }
 
-    @Deprecated
-    public boolean giveExperience(int amount, Skill skill) {
-        return ProgressionService.addXp(this, amount, skill);
-    }
-
     public void bankItem(int itemID, int fromSlot, int amount) {
+        if (bankItemTransactional(itemID, fromSlot, amount)) {
+            return;
+        }
         if (playerItemsN[fromSlot] <= 0 || playerItems[fromSlot] <= 0 || playerItems[fromSlot] - 1 != itemID) {
             return;
         }
@@ -1555,6 +1473,38 @@ public class Client extends Player implements Runnable {
         if (bankChanged) {
             markSaveDirty(PlayerSaveSegment.BANK.getMask());
         }
+    }
+
+    /**
+     * Compatibility entry point for the legacy bank packet.  It intentionally
+     * returns true for rejected requests too, so runtime bank mutations never
+     * fall through to the old piecemeal implementation below.
+     */
+    private boolean bankItemTransactional(int itemID, int fromSlot, int amount) {
+        if (!IsBanking || fromSlot < 0 || fromSlot >= playerItems.length
+                || playerItems[fromSlot] != itemID + 1 || playerItemsN[fromSlot] <= 0) {
+            return true;
+        }
+        ensureBankTabState();
+        int unnoted = getUnnotedItem(itemID);
+        int bankItemId = unnoted > 0 ? unnoted : itemID;
+        int available = Server.itemManager.isStackable(itemID) ? playerItemsN[fromSlot] : getInvAmt(itemID);
+        int requested = Math.min(Math.max(amount, 0), available);
+        if (requested == 0) {
+            return true;
+        }
+        boolean newBankEntry = getBankSlot(bankItemId) < 0;
+        if (!EconomyTransaction.transferInventoryToBank(this, itemID, fromSlot, requested, bankItemId)) {
+            send(new SendMessage("Bank full!"));
+            return true;
+        }
+        if (newBankEntry) {
+            int bankSlot = getBankSlot(bankItemId);
+            if (bankSlot >= 0) {
+                bankSlotTabs[bankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
+            }
+        }
+        return true;
     }
 
     public void resetItems(int WriteFrame) {
@@ -1815,60 +1765,15 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean addItem(int item, int amount) {
-        if (item < 0 || amount < 1) {
-            return false;
-        }
-        amount = !Server.itemManager.isStackable(item) ? 1 : amount;
-        if ((freeSlots() >= amount && !Server.itemManager.isStackable(item)) || freeSlots() > 0) {
-            for (int i = 0; i < playerItems.length; i++) {
-                if (playerItems[i] == (item + 1) && Server.itemManager.isStackable(item) && playerItems[i] > 0) {
-                    playerItems[i] = (item + 1);
-                    if ((playerItemsN[i] + amount) < maxItemAmount && (playerItemsN[i] + amount) > -1) {
-                        playerItemsN[i] += amount;
-                    } else {
-                        playerItemsN[i] = maxItemAmount;
-                    }
-                    markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
-                    return true;
-                }
-            }
-            for (int i = 0; i < playerItems.length; i++) {
-                if (playerItems[i] <= 0) {
-                    playerItems[i] = item + 1;
-                    playerItemsN[i] = Math.min(amount, maxItemAmount);
-                    markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
-                    return true;
-                }
-            }
-            return false;
-        } else if (contains(item) && Server.itemManager.isStackable(item)) {
-            int slot = -1;
-            for (int i = 0; i < playerItems.length; i++) {
-                if (playerItems[i] == item + 1) {
-                    slot = i;
-                    break;
-                }
-            }
-            if ((long) playerItemsN[slot] + (long) amount > (long) Integer.MAX_VALUE) {
-                send(new SendMessage("Failed! Reached max item amount!"));
-                return false;
-            }
-            playerItemsN[slot] = playerItemsN[slot] + amount;
-            markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
-            checkItemUpdate();
-            return true;
-        } else {
+        boolean committed = EconomyTransaction.addToInventory(this, item, amount);
+        if (!committed && item >= 0 && amount > 0) {
             send(new SendMessage("Not enough space in your inventory."));
-            return false;
         }
+        return committed;
     }
 
     public void addItemSlot(int item, int amount, int slot) {
-        item++;
-        playerItems[slot] = item;
-        playerItemsN[slot] = amount;
-        markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
-        checkItemUpdate();
+        EconomyTransaction.replaceInventorySlot(this, slot, item, amount);
     }
 
     public void dropItem(int id, int slot) {
@@ -1900,17 +1805,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void deleteItem(int id, int slot, int amount) {
-        if (slot > -1 && slot < playerItems.length) {
-            if ((playerItems[slot] - 1) == id) {
-                if (playerItemsN[slot] > amount) {
-                    playerItemsN[slot] -= amount;
-                } else {
-                    playerItemsN[slot] = 0;
-                    playerItems[slot] = 0;
-                }
-                markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
-            }
-        }
+        EconomyTransaction.removeFromInventory(this, id, slot, amount);
     }
 
     public void deleteItemBank(int id, int slot, int amount) {
@@ -2926,38 +2821,8 @@ public class Client extends Player implements Runnable {
             } else
                 count = offeredItems.get(fromSlot).getAmount();
             amount = Math.min(amount, count);
-            boolean found = false;
-            for (GameItem item : offeredItems) {
-                if (item.getId() == itemID) {
-                    if (item.isStackable()) {
-                        if (amount < item.getAmount())
-                            offeredItems.set(fromSlot, new GameItem(item.getId(), item.getAmount() - amount));
-                        else
-                            offeredItems.remove(item);
-                        found = true;
-                    } else {
-            /*if (item.getAmount() > amount) {
-              item.removeAmount(amount);
-              found = true;
-            } else {
-              amount = item.getAmount();
-              found = true;
-              offeredItems.remove(item);
-            }*/
-                        if (amount == 1) {
-                            offeredItems.remove(item);
-                            found = true;
-                        } else {
-                            offeredItems.remove(item);
-                            addItem(itemID, 1);
-                            amount--;
-                        }
-                    }
-                    if (found) { //If found add item to inventory!
-                        addItem(itemID, amount);
-                        break;
-                    }
-                }
+            if (!EconomyTransaction.moveOfferToInventory(this, itemID, fromSlot, amount)) {
+                return;
             }
             tradeConfirmed = false;
             other.tradeConfirmed = false;
@@ -2996,33 +2861,8 @@ public class Client extends Player implements Runnable {
             send(new SendMessage(other.getPlayerName() + " already have the ring. Wait until after May!"));
             return;
         }
-        if (Server.itemManager.isStackable(itemID)) {
-            boolean inTrade = false;
-            for (GameItem item : offeredItems) {
-                if (item.getId() == itemID) {
-                    inTrade = true;
-                    item.addAmount(amount);
-                    deleteItem(itemID, fromSlot, amount);
-                    break;
-                }
-            }
-            if (!inTrade) {
-                offeredItems.add(new GameItem(itemID, amount));
-                deleteItem(itemID, fromSlot, amount);
-            }
-        } else {
-            for (int a = 1; a <= amount; a++) {
-                if (a == 1) {
-                    offeredItems.add(new GameItem(itemID, 1));
-                    deleteItem(itemID, fromSlot, amount);
-                } else {
-                    int slot = findItem(itemID, playerItems, playerItemsN);
-                    if (slot >= 0 && slot < 28)
-                        //tradeItem(itemID, slot, 1);
-                        offeredItems.add(new GameItem(itemID, 1));
-                    deleteItem(itemID, slot, amount);
-                }
-            }
+        if (!EconomyTransaction.moveInventoryToOffer(this, itemID, fromSlot, amount)) {
+            return;
         }
         resetItems(3322);
         resetTItems(3415);
@@ -3766,33 +3606,8 @@ public class Client extends Player implements Runnable {
             send(new SendMessage(other.getPlayerName() + " already have the ring. Wait until after May!"));
             return;
         }
-        if (Server.itemManager.isStackable(itemID)) {
-            boolean inTrade = false;
-            for (GameItem item : offeredItems) {
-                if (item.getId() == itemID) {
-                    inTrade = true;
-                    item.addAmount(amount);
-                    deleteItem(itemID, fromSlot, amount);
-                    break;
-                }
-            }
-            if (!inTrade) {
-                offeredItems.add(new GameItem(itemID, amount));
-                deleteItem(itemID, fromSlot, amount);
-            }
-        } else {
-            for (int a = 1; a <= amount; a++) {
-                if (a == 1) {
-                    offeredItems.add(new GameItem(itemID, 1));
-                    deleteItem(itemID, fromSlot, amount);
-                } else {
-                    int slot = findItem(itemID, playerItems, playerItemsN);
-                    if (slot >= 0 && slot < 28)
-                        //tradeItem(itemID, slot, 1);
-                        offeredItems.add(new GameItem(itemID, 1));
-                    deleteItem(itemID, slot, amount);
-                }
-            }
+        if (!EconomyTransaction.moveInventoryToOffer(this, itemID, fromSlot, amount)) {
+            return;
         }
         duelConfirmed = false;
         other.duelConfirmed = false;
@@ -3848,30 +3663,8 @@ public class Client extends Player implements Runnable {
         } else
             count = offeredItems.get(fromSlot).getAmount();
         amount = Math.min(amount, count);
-        boolean found = false;
-        for (GameItem item : offeredItems) {
-            if (item.getId() == itemID) {
-                if (item.isStackable()) {
-                    if (amount < item.getAmount())
-                        offeredItems.set(fromSlot, new GameItem(item.getId(), item.getAmount() - amount));
-                    else
-                        offeredItems.remove(item);
-                    found = true;
-                } else {
-                    if (amount == 1) {
-                        offeredItems.remove(item);
-                        found = true;
-                    } else {
-                        offeredItems.remove(item);
-                        addItem(itemID, 1);
-                        amount--;
-                    }
-                }
-                if (found) { //If found add item to inventory!
-                    addItem(itemID, amount);
-                    break;
-                }
-            }
+        if (!EconomyTransaction.moveOfferToInventory(this, itemID, fromSlot, amount)) {
+            return;
         }
         duelConfirmed = false;
         long timeNow = System.currentTimeMillis();
@@ -4354,39 +4147,39 @@ public class Client extends Player implements Runnable {
 
     public void giveItems() {
         Client other = getClient(trade_reqId);
-        if (validClient(trade_reqId)) {
-            try {
-                CopyOnWriteArrayList<GameItem> offerCopy = new CopyOnWriteArrayList<>();
-                CopyOnWriteArrayList<GameItem> otherOfferCopy = new CopyOnWriteArrayList<>();
-                for (GameItem item : other.offeredItems) {
-                    otherOfferCopy.add(new GameItem(item.getId(), item.getAmount()));
-                }
-                for (GameItem item : offeredItems) {
-                    offerCopy.add(new GameItem(item.getId(), item.getAmount()));
-                }
-                for (GameItem item : other.offeredItems) {
-                    if (item.getId() > 0) {
-                        addItem(item.getId(), item.getAmount());
-                        println("TradeConfirmed, item=" + item.getId());
-                    }
-                }
-                if (this.dbId > other.dbId)
-                    TradeLog.recordTrade(dbId, other.dbId, offerCopy, otherOfferCopy, true);
-                if (this.dbId > other.dbId) {
-                    GameEventBus.post(new TradeCompleteEvent(this, other));
-                }
-                send(new RemoveInterfaces());
-                tradeResetNeeded = true;
-                PlayerDeferredLifecycleService.signalTradeFinalizeReady(this);
-                saveStats(PlayerSaveReason.TRADE, false, false);
-                tradeSuccessful = true;
-                faceTarget(-1);
-                checkItemUpdate();
-                //System.out.println("trade succesful");
-            } catch (Exception e) {
-                logger.warn("Giving items failed for {}", getPlayerName(), e);
-            }
+        if (!validClient(trade_reqId) || tradeSuccessful || other.tradeSuccessful) {
+            return;
         }
+        try {
+            CopyOnWriteArrayList<GameItem> offerCopy = new CopyOnWriteArrayList<>();
+            CopyOnWriteArrayList<GameItem> otherOfferCopy = new CopyOnWriteArrayList<>();
+            for (GameItem item : offeredItems) offerCopy.add(new GameItem(item.getId(), item.getAmount()));
+            for (GameItem item : other.offeredItems) otherOfferCopy.add(new GameItem(item.getId(), item.getAmount()));
+
+            // Both inventories and both offer lists are staged before either player sees a change.
+            if (!EconomyTransaction.settleTrade(this, other)) {
+                send(new SendMessage("Your trade could not be completed because one inventory is full."));
+                other.send(new SendMessage("Your trade could not be completed because one inventory is full."));
+                return;
+            }
+            if (this.dbId > other.dbId) {
+                TradeLog.recordTrade(dbId, other.dbId, offerCopy, otherOfferCopy, true);
+                GameEventBus.post(new TradeCompleteEvent(this, other));
+            }
+            completeTradeSettlement(this);
+            completeTradeSettlement(other);
+        } catch (Exception e) {
+            logger.warn("Giving items failed for {}", getPlayerName(), e);
+        }
+    }
+
+    private static void completeTradeSettlement(Client client) {
+        client.send(new RemoveInterfaces());
+        client.tradeResetNeeded = true;
+        client.tradeSuccessful = true;
+        PlayerDeferredLifecycleService.signalTradeFinalizeReady(client);
+        client.saveStats(PlayerSaveReason.TRADE, false, false);
+        client.faceTarget(-1);
     }
 
     public void resetTrade() {
@@ -4396,6 +4189,7 @@ public class Client extends Player implements Runnable {
         canOffer = true;
         tradeConfirmed = false;
         tradeConfirmed2 = false;
+        tradeSuccessful = false;
         send(new RemoveInterfaces());
         tradeResetNeeded = false;
         send(new SendString("Are you sure you want to make this trade?", 3535));

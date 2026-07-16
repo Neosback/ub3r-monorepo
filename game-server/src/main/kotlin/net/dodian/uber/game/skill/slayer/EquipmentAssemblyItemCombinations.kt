@@ -2,6 +2,7 @@ package net.dodian.uber.game.skill.slayer
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.engine.systems.inventory.inventoryTransaction
 
 object EquipmentAssemblyItemCombinations {
     private val slayerHelmItems = intArrayOf(4155, 4156, 4164, 4166, 4168, 4551, 6720, 8923, 11784, 8921)
@@ -38,13 +39,13 @@ object EquipmentAssemblyItemCombinations {
         }
 
         val slayerHelm = if (client.playerHasItem(slayerHelmItems[slayerHelmItems.size - 2])) 11865 else 11864
-        for (index in 0 until slayerHelmItems.size - 2) {
-            client.deleteItem(slayerHelmItems[index], 1)
+        val assembled = client.inventoryTransaction {
+            for (index in 0 until slayerHelmItems.size - 2) remove(slayerHelmItems[index], 1)
+            remove(if (slayerHelm == 11865) slayerHelmItems[slayerHelmItems.size - 2] else slayerHelmItems[slayerHelmItems.size - 1], 1)
+            add(slayerHelm, 1)
         }
-        client.deleteItem(if (slayerHelm == 11865) slayerHelmItems[slayerHelmItems.size - 2] else slayerHelmItems[slayerHelmItems.size - 1], 1)
-        client.addItem(slayerHelm, 1)
+        if (!assembled) return true
         client.sendMessage("You assemble the items together and made a ${client.getItemName(slayerHelm).lowercase()}.")
-        client.checkItemUpdate()
         return true
     }
 }

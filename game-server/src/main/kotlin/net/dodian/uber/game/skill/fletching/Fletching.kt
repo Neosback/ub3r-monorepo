@@ -165,7 +165,7 @@ object FletchingSkillPlugin : SkillPlugin {
             val logIds = FletchingData.bowLogs.map { it.logItemId }.distinct()
             for (knifeId in knifeIds) {
                 for (logId in logIds) {
-                    itemOnItem(preset = PolicyPreset.PRODUCTION, leftItemId = knifeId, rightItemId = logId) { client, itemUsed, otherItem ->
+                    itemOnItem(preset = PolicyPreset.PRODUCTION, leftItemId = knifeId, rightItemId = logId) { (client, itemUsed, otherItem) ->
                         val usedLogId = if (itemUsed == knifeId) otherItem else itemUsed
                         val logIndex = FletchingData.bowLogs.indexOfFirst { it.logItemId == usedLogId }
                         if (logIndex < 0) {

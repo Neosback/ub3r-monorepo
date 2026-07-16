@@ -72,11 +72,11 @@ object FiremakingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Firemaking", skill = Skill.FIREMAKING) {
             for (logId in logIds) {
-                itemOnItem(preset = PolicyPreset.PRODUCTION, leftItemId = TINDERBOX, rightItemId = logId) { client, itemUsed, otherItem ->
+                itemOnItem(preset = PolicyPreset.PRODUCTION, leftItemId = TINDERBOX, rightItemId = logId) { (client, itemUsed, otherItem) ->
                     Firemaking.handleItemCombination(client, itemUsed, otherItem)
                 }
             }
-            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = intArrayOf(FIRE_OBJECT_ID), itemIds = logIds) { client, objectId, position, obj, itemId, itemSlot, interfaceId ->
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = intArrayOf(FIRE_OBJECT_ID), itemIds = logIds) { (client, objectId, position, obj, itemId, itemSlot, interfaceId) ->
                 Firemaking.handleLogOnFire(client, itemId)
             }
         }

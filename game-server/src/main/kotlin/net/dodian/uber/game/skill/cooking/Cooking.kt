@@ -144,7 +144,7 @@ object CookingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Cooking", skill = Skill.COOKING) {
             val rangeObjectIds = intArrayOf(26181, 114, 4172)
-            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = rangeObjectIds) { client, objectId, position, obj, itemId, itemSlot, interfaceId ->
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = rangeObjectIds) { (client, objectId, position, obj, itemId, itemSlot, interfaceId) ->
                 if (objectId == 26181 && itemId == 401) {
                     val amount = client.getInvAmt(401)
                     repeat(amount) {

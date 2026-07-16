@@ -1,9 +1,5 @@
 package net.dodian.uber.game.api.plugin.skills
 
-import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.entity.npc.Npc
-import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.skill.runtime.action.SkillStateCoordinator
@@ -25,7 +21,7 @@ class SkillPluginBuilder internal constructor(
         preset: PolicyPreset,
         option: Int = 1,
         vararg objectIds: Int,
-        handler: (client: Client, objectId: Int, position: Position, obj: GameObjectData?) -> Boolean,
+        handler: (SkillObjectInteraction) -> Boolean,
     ) {
         require(option in 1..5) { "Object option must be between 1 and 5." }
         require(objectIds.isNotEmpty()) { "Object click binding requires at least one object id." }
@@ -36,7 +32,7 @@ class SkillPluginBuilder internal constructor(
         preset: PolicyPreset,
         option: Int,
         vararg npcIds: Int,
-        handler: (client: Client, npc: Npc) -> Boolean,
+        handler: (SkillNpcInteraction) -> Boolean,
     ) {
         require(option in 1..4) { "NPC option must be between 1 and 4." }
         require(npcIds.isNotEmpty()) { "Npc click binding requires at least one npc id." }
@@ -47,7 +43,7 @@ class SkillPluginBuilder internal constructor(
         preset: PolicyPreset,
         leftItemId: Int,
         rightItemId: Int,
-        handler: (client: Client, itemUsed: Int, otherItem: Int) -> Boolean,
+        handler: (SkillItemOnItemInteraction) -> Boolean,
     ) {
         require(leftItemId >= 0 && rightItemId >= 0) { "Item ids must be non-negative." }
         itemOnItemBindings += SkillItemOnItemBinding(preset, leftItemId, rightItemId, handler)
@@ -57,7 +53,7 @@ class SkillPluginBuilder internal constructor(
         preset: PolicyPreset,
         option: Int,
         vararg itemIds: Int,
-        handler: (client: Client, itemId: Int, itemSlot: Int, interfaceId: Int) -> Boolean,
+        handler: (SkillItemInteraction) -> Boolean,
     ) {
         require(option in 1..3) { "Item option must be between 1 and 3." }
         require(itemIds.isNotEmpty()) { "Item click binding requires at least one item id." }
@@ -68,15 +64,7 @@ class SkillPluginBuilder internal constructor(
         preset: PolicyPreset,
         vararg objectIds: Int,
         itemIds: IntArray = intArrayOf(-1),
-        handler: (
-            client: Client,
-            objectId: Int,
-            position: Position,
-            obj: GameObjectData?,
-            itemId: Int,
-            itemSlot: Int,
-            interfaceId: Int,
-        ) -> Boolean,
+        handler: (SkillItemOnObjectInteraction) -> Boolean,
     ) {
         require(objectIds.isNotEmpty()) { "Item-on-object binding requires at least one object id." }
         require(itemIds.isNotEmpty()) { "Item-on-object binding requires at least one item id or wildcard (-1)." }
@@ -92,13 +80,7 @@ class SkillPluginBuilder internal constructor(
         preset: PolicyPreset,
         vararg objectIds: Int,
         spellIds: IntArray = intArrayOf(-1),
-        handler: (
-            client: Client,
-            objectId: Int,
-            position: Position,
-            obj: GameObjectData?,
-            spellId: Int,
-        ) -> Boolean,
+        handler: (SkillMagicOnObjectInteraction) -> Boolean,
     ) {
         require(objectIds.isNotEmpty()) { "Magic-on-object binding requires at least one object id." }
         require(spellIds.isNotEmpty()) { "Magic-on-object binding requires at least one spell id or wildcard (-1)." }
@@ -115,7 +97,7 @@ class SkillPluginBuilder internal constructor(
         requiredInterfaceId: Int = -1,
         opIndex: Int? = null,
         vararg rawButtonIds: Int,
-        handler: (client: Client, rawButtonId: Int, op: Int) -> Boolean,
+        handler: (SkillButtonInteraction) -> Boolean,
     ) {
         require(rawButtonIds.isNotEmpty()) { "Button binding requires at least one raw button id." }
         require(requiredInterfaceId >= -1) { "Button requiredInterfaceId must be -1 or a non-negative interface id." }
@@ -128,16 +110,16 @@ class SkillPluginBuilder internal constructor(
 
     fun startSession(sessionKey: String) {
         composeLifecycle(
-            onStart = { SkillStateCoordinator.beginSession(it, sessionKey) },
+            onStart = { SkillStateCoordinator.beginSession(it.protocolClient(), sessionKey) },
         )
     }
 
     fun requireSession(sessionKey: String) {
         composeLifecycle(
             onAttempt = { client ->
-                val existing = client.activeSkillSessionKey
+                val existing = client.protocolClient().activeSkillSessionKey
                 if (existing != null && existing != sessionKey) {
-                    client.sendMessage("You are already doing another skill action.")
+                    client.ui.message("You are already doing another skill action.")
                 }
             },
         )
@@ -145,15 +127,15 @@ class SkillPluginBuilder internal constructor(
 
     fun endSession(sessionKey: String) {
         composeLifecycle(
-            onStop = { SkillStateCoordinator.endSession(it, sessionKey) },
+            onStop = { SkillStateCoordinator.endSession(it.protocolClient(), sessionKey) },
         )
     }
 
     private fun composeLifecycle(
-        onAttempt: ((Client) -> Unit)? = null,
-        onStart: ((Client) -> Unit)? = null,
-        onCycle: ((Client) -> Unit)? = null,
-        onStop: ((Client) -> Unit)? = null,
+        onAttempt: ((SkillPlayer) -> Unit)? = null,
+        onStart: ((SkillPlayer) -> Unit)? = null,
+        onCycle: ((SkillPlayer) -> Unit)? = null,
+        onStop: ((SkillPlayer) -> Unit)? = null,
     ) {
         lifecycle =
             SkillPluginLifecycleHooks(
@@ -165,9 +147,9 @@ class SkillPluginBuilder internal constructor(
     }
 
     private fun compose(
-        first: ((Client) -> Unit)?,
-        second: ((Client) -> Unit)?,
-    ): ((Client) -> Unit)? {
+        first: ((SkillPlayer) -> Unit)?,
+        second: ((SkillPlayer) -> Unit)?,
+    ): ((SkillPlayer) -> Unit)? {
         if (first == null) return second
         if (second == null) return first
         return { client ->
@@ -193,24 +175,24 @@ class SkillPluginBuilder internal constructor(
 }
 
 class SkillPluginLifecycleBuilder internal constructor() {
-    private var onAttempt: ((Client) -> Unit)? = null
-    private var onStart: ((Client) -> Unit)? = null
-    private var onCycle: ((Client) -> Unit)? = null
-    private var onStop: ((Client) -> Unit)? = null
+    private var onAttempt: ((SkillPlayer) -> Unit)? = null
+    private var onStart: ((SkillPlayer) -> Unit)? = null
+    private var onCycle: ((SkillPlayer) -> Unit)? = null
+    private var onStop: ((SkillPlayer) -> Unit)? = null
 
-    fun onAttempt(handler: (Client) -> Unit) {
+    fun onAttempt(handler: (SkillPlayer) -> Unit) {
         onAttempt = handler
     }
 
-    fun onStart(handler: (Client) -> Unit) {
+    fun onStart(handler: (SkillPlayer) -> Unit) {
         onStart = handler
     }
 
-    fun onCycle(handler: (Client) -> Unit) {
+    fun onCycle(handler: (SkillPlayer) -> Unit) {
         onCycle = handler
     }
 
-    fun onStop(handler: (Client) -> Unit) {
+    fun onStop(handler: (SkillPlayer) -> Unit) {
         onStop = handler
     }
 

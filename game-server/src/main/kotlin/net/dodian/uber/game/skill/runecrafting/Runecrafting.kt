@@ -129,13 +129,13 @@ object Runecrafting {
 object RunecraftingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Runecrafting", skill = Skill.RUNECRAFTING) {
-            objectClick(preset = PolicyPreset.GATHERING, option = 1, *RunecraftingData.altarObjectIds) { client, objectId, position, obj ->
+            objectClick(preset = PolicyPreset.GATHERING, option = 1, *RunecraftingData.altarObjectIds) { (client, objectId, position, obj) ->
                 val altar = RunecraftingData.byObjectId(objectId)
                 if (altar != null) Runecrafting.start(client, altar.request) else false
             }
 
             val pouchIds = intArrayOf(5508, 5509, 5510, 5511, 5512, 5513, 5514, 5515)
-            itemClick(preset = PolicyPreset.GATHERING, option = 2, *pouchIds) { client, itemId, itemSlot, interfaceId ->
+            itemClick(preset = PolicyPreset.GATHERING, option = 2, *pouchIds) { (client, itemId, itemSlot, interfaceId) ->
                 Runecrafting.checkPouch(client, itemId)
             }
         }

@@ -1,7 +1,7 @@
 package net.dodian.utilities
 
 object TextCodec {
-    private val decodeBuf = CharArray(4096)
+    private val decodeBuffers = ThreadLocal.withInitial { CharArray(4096) }
 
     @JvmField
     val xlateTable: CharArray =
@@ -92,6 +92,7 @@ object TextCodec {
         packedData: ByteArray,
         size: Int,
     ): String {
+        val decodeBuf = decodeBuffers.get()
         var idx = 0
         var highNibble = -1
         for (i in 0 until size * 2) {

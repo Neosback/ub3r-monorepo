@@ -1,11 +1,7 @@
 package net.dodian.uber.game.api.plugin.skills
 
-import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.api.plugin.PluginModuleMetadata
 import net.dodian.uber.game.api.plugin.PluginModuleMetadataProvider
-import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.entity.npc.Npc
-import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.engine.systems.action.UnifiedPolicyDsl
@@ -36,66 +32,52 @@ data class SkillPluginDefinition(
 )
 
 data class SkillPluginLifecycleHooks(
-    val onAttempt: ((Client) -> Unit)? = null,
-    val onStart: ((Client) -> Unit)? = null,
-    val onCycle: ((Client) -> Unit)? = null,
-    val onStop: ((Client) -> Unit)? = null,
+    val onAttempt: ((SkillPlayer) -> Unit)? = null,
+    val onStart: ((SkillPlayer) -> Unit)? = null,
+    val onCycle: ((SkillPlayer) -> Unit)? = null,
+    val onStop: ((SkillPlayer) -> Unit)? = null,
 )
 
 data class SkillObjectClickBinding(
     val preset: PolicyPreset,
     val option: Int,
     val objectIds: IntArray,
-    val handler: (client: Client, objectId: Int, position: Position, obj: GameObjectData?) -> Boolean,
+    val handler: (SkillObjectInteraction) -> Boolean,
 )
 
 data class SkillNpcClickBinding(
     val preset: PolicyPreset,
     val option: Int,
     val npcIds: IntArray,
-    val handler: (client: Client, npc: Npc) -> Boolean,
+    val handler: (SkillNpcInteraction) -> Boolean,
 )
 
 data class SkillItemOnItemBinding(
     val preset: PolicyPreset,
     val leftItemId: Int,
     val rightItemId: Int,
-    val handler: (client: Client, itemUsed: Int, otherItem: Int) -> Boolean,
+    val handler: (SkillItemOnItemInteraction) -> Boolean,
 )
 
 data class SkillItemClickBinding(
     val preset: PolicyPreset,
     val option: Int,
     val itemIds: IntArray,
-    val handler: (client: Client, itemId: Int, itemSlot: Int, interfaceId: Int) -> Boolean,
+    val handler: (SkillItemInteraction) -> Boolean,
 )
 
 data class SkillItemOnObjectBinding(
     val preset: PolicyPreset,
     val objectIds: IntArray,
     val itemIds: IntArray,
-    val handler: (
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        itemId: Int,
-        itemSlot: Int,
-        interfaceId: Int,
-    ) -> Boolean,
+    val handler: (SkillItemOnObjectInteraction) -> Boolean,
 )
 
 data class SkillMagicOnObjectBinding(
     val preset: PolicyPreset,
     val objectIds: IntArray,
     val spellIds: IntArray,
-    val handler: (
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        spellId: Int,
-    ) -> Boolean,
+    val handler: (SkillMagicOnObjectInteraction) -> Boolean,
 )
 
 data class SkillButtonBinding(
@@ -103,7 +85,7 @@ data class SkillButtonBinding(
     val rawButtonIds: IntArray,
     val requiredInterfaceId: Int = -1,
     val opIndex: Int? = null,
-    val handler: (client: Client, rawButtonId: Int, opIndex: Int) -> Boolean,
+    val handler: (SkillButtonInteraction) -> Boolean,
 )
 
 fun SkillObjectClickBinding.objectPolicy() = UnifiedPolicyDsl.toObjectPolicy(preset)

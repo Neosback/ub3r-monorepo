@@ -110,7 +110,7 @@ object HerbloreSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Herblore", skill = Skill.HERBLORE) {
             val grimyHerbIds = HerbloreData.herbDefinitions.map { it.grimyId }.toIntArray()
-            itemClick(preset = PolicyPreset.PRODUCTION, option = 1, *grimyHerbIds) { client, itemId, itemSlot, interfaceId ->
+            itemClick(preset = PolicyPreset.PRODUCTION, option = 1, *grimyHerbIds) { (client, itemId, itemSlot, interfaceId) ->
                 val herb = HerbloreData.findHerbDefinitionByGrimy(itemId)
                 if (herb != null) {
                     val herbloreLevel = Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))
@@ -128,7 +128,7 @@ object HerbloreSkillPlugin : SkillPlugin {
             }
 
             val supplyIds = intArrayOf(11877, 11879, 12859)
-            itemClick(preset = PolicyPreset.PRODUCTION, option = 1, *supplyIds) { client, itemId, itemSlot, interfaceId ->
+            itemClick(preset = PolicyPreset.PRODUCTION, option = 1, *supplyIds) { (client, itemId, itemSlot, interfaceId) ->
                 when (itemId) {
                     11877 -> {
                         client.deleteItem(11877, itemSlot, 1)

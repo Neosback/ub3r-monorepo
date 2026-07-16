@@ -16,40 +16,16 @@ Use this as the default pattern when adding a new skill or extending an existing
 ```kotlin
 package net.dodian.uber.game.skill.example
 
-import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.item.ItemContent
-import net.dodian.uber.game.objects.ObjectContent
-import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.bindItemContentClick
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentClick
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentMagic
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentUseItem
+import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 
 object ExampleSkill {
     @JvmStatic
-    fun start(client: Client, request: ExampleRequest): Boolean {
+    fun start(player: SkillPlayer, request: ExampleRequest): Boolean {
         // domain logic only
-        return true
-    }
-}
-
-private class ExampleObjectContent : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(1234)
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        return ExampleSkill.start(client, ExampleRequest(objectId, position))
-    }
-}
-
-private class ExampleItemContent : ItemContent {
-    override val itemIds: IntArray = intArrayOf(5678)
-
-    override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
         return true
     }
 }
@@ -57,29 +33,16 @@ private class ExampleItemContent : ItemContent {
 object ExampleSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Example", skill = Skill.EXAMPLE) {
-            val exampleObjects = ExampleObjectContent()
-            val exampleItems = ExampleItemContent()
-
-            bindObjectContentClick(
-                preset = PolicyPreset.GATHERING,
-                option = 1,
-                content = exampleObjects,
-            )
-            bindObjectContentUseItem(
-                preset = PolicyPreset.GATHERING,
-                content = exampleObjects,
-                itemIds = exampleItems.itemIds,
-            )
-            bindObjectContentMagic(
-                preset = PolicyPreset.GATHERING,
-                content = exampleObjects,
-                spellIds = intArrayOf(1179),
-            )
-            bindItemContentClick(
-                preset = PolicyPreset.GATHERING,
-                option = 1,
-                content = exampleItems,
-            )
+            objectClick(preset = PolicyPreset.GATHERING, option = 1, 1234) { interaction ->
+                val player = interaction.player
+                if (!player.inventory.contains(5678)) {
+                    player.ui.message("You need the required item.")
+                    false
+                } else {
+                    player.actions.animate(867)
+                    player.skills.gainXp(25, Skill.EXAMPLE)
+                }
+            }
         }
 }
 ```
@@ -137,6 +100,10 @@ Expose only:
 Keep wrapper content objects `internal` unless another package truly needs them.
 
 Prefer private wrapper classes instantiated inside `*SkillPlugin` (plugin-owned instances). Avoid singleton `object ... : ObjectContent` wrappers in skill modules.
+
+Do not import, accept, or expose `Client` from a skill module. Use the typed
+interaction object and its `SkillPlayer` capabilities instead. The dispatcher
+is the only layer allowed to adapt a protocol player into skill content.
 
 ### 2. Put behavior in the domain object, not the plugin body
 

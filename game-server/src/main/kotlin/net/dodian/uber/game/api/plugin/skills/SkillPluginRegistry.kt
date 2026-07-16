@@ -116,8 +116,9 @@ internal class SkillPluginRegistryEngine {
     private fun rebuildSnapshotLocked() {
         snapshot = buildSnapshot(definitions)
         logger.info(
-            "skills bootstrapped {} plugins (object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, magicOnObject={}, button={})",
+            "skills bootstrapped {} plugins [{}] (object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, magicOnObject={}, button={})",
             definitions.size,
+            definitions.joinToString { "${it.definition.name}:${it.definition.skill.name}" },
             snapshot.objectBindingCount,
             snapshot.npcBindingCount,
             snapshot.itemOnItemBindingCount,
@@ -140,6 +141,10 @@ internal class SkillPluginRegistryEngine {
 
         source.forEach { plugin ->
             val definition = plugin.definition
+            require(definition.name.isNotBlank()) { "Skill plugin ${plugin::class.java.name} has a blank name" }
+            require(definition.skill in net.dodian.uber.game.model.player.skills.Skill.VALUES) {
+                "Skill plugin ${definition.name} declares an unknown skill ${definition.skill}"
+            }
 
             definition.objectBindings.forEach { binding ->
                 binding.objectIds.forEach { objectId ->

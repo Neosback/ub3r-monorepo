@@ -12,6 +12,7 @@ import net.dodian.uber.game.api.content.ContentProductionMode
 import net.dodian.uber.game.api.content.ContentProductionRequest
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
+import net.dodian.uber.game.engine.systems.inventory.inventoryTransaction
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.skill.runtime.action.ActionStopReason
 import net.dodian.uber.game.skill.runtime.action.CycleSignal
@@ -91,21 +92,19 @@ object Smithing {
                 return false
             }
         }
-        player.performAnimation(SMELT_ANIMATION, 0)
-        recipe.oreRequirements.forEach { requirement ->
-            repeat(requirement.amount) {
-                player.deleteItem(requirement.itemId, 1)
-            }
-        }
         val success = recipe.successChancePercent >= 100 || Range(1, 100).value <= recipe.successChancePercent + ((player.getLevel(Skill.SMITHING) + 1) / 4)
+        val committed = player.inventoryTransaction {
+            recipe.oreRequirements.forEach { requirement -> remove(requirement.itemId, requirement.amount) }
+            if (success) add(recipe.barId, 1)
+        }
+        if (!committed) return false
+        player.performAnimation(SMELT_ANIMATION, 0)
         if (success) {
-            player.addItem(recipe.barId, 1)
             ProgressionService.addXp(player, recipe.experience, Skill.SMITHING)
             SkillingRandomEventService.trigger(player, recipe.experience)
         } else if (recipe.failureMessage != null) {
             player.sendMessage(recipe.failureMessage)
         }
-        player.checkItemUpdate()
         return true
     }
 
@@ -160,7 +159,7 @@ object SmithingSkillPlugin : SkillPlugin {
             val smeltingInterfaceFurnaces = SmithingObjectComponents.smeltingInterfaceFurnaces
 
             // Option 1 Anvils
-            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *anvilObjects) { client, objectId, position, obj ->
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *anvilObjects) { (client, objectId, position, obj) ->
                 if (objectId == 2097) {
                     val barId = SmithingInterface.firstBarInInventory(client)
                     if (barId != -1) {
@@ -174,19 +173,19 @@ object SmithingSkillPlugin : SkillPlugin {
             }
 
             // Option 1 Furnaces
-            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *smeltingInterfaceFurnaces) { client, objectId, position, obj ->
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *smeltingInterfaceFurnaces) { (client, objectId, position, obj) ->
                 Smithing.openSmelting(client)
                 true
             }
 
             // Option 2 Furnaces
-            objectClick(preset = PolicyPreset.PRODUCTION, option = 2, *smeltingInterfaceFurnaces) { client, objectId, position, obj ->
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 2, *smeltingInterfaceFurnaces) { (client, objectId, position, obj) ->
                 Smithing.openSmelting(client)
                 true
             }
 
             // Use Item on Anvils
-            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = anvilObjects) { client, objectId, position, obj, itemId, itemSlot, interfaceId ->
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = anvilObjects) { (client, objectId, position, obj, itemId, itemSlot, interfaceId) ->
                 if (objectId == 2097 && (itemId == 1540 || itemId == 11286)) {
                     if (!client.playerHasItem(2347)) {
                         client.sendMessage("You need a hammer!")
@@ -213,7 +212,7 @@ object SmithingSkillPlugin : SkillPlugin {
             }
 
             // Use Item on Furnaces
-            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = smeltingInterfaceFurnaces) { client, objectId, position, obj, itemId, itemSlot, interfaceId ->
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = smeltingInterfaceFurnaces) { (client, objectId, position, obj, itemId, itemSlot, interfaceId) ->
                 if (itemId == 1783 || itemId == 1781) {
                     client.send(RemoveInterfaces())
                     if (!client.playerHasItem(1783) || !client.playerHasItem(1781)) {
@@ -248,7 +247,7 @@ object SmithingSkillPlugin : SkillPlugin {
 
             // Magic on Furnaces/Obelisks
             val magicObeliskIds = intArrayOf(2150, 2151, 2152, 2153)
-            magicOnObject(preset = PolicyPreset.PRODUCTION, objectIds = magicObeliskIds, spellIds = intArrayOf(1179, 1182, 1184, 1186)) { client, objectId, position, obj, spellId ->
+            magicOnObject(preset = PolicyPreset.PRODUCTION, objectIds = magicObeliskIds, spellIds = intArrayOf(1179, 1182, 1184, 1186)) { (client, objectId, position, obj, spellId) ->
                 when {
                     objectId == 2151 && spellId == 1179 -> chargeOrb(client, 55, 571, 725, "You charge the orb with the power of water.")
                     objectId == 2150 && spellId == 1182 -> chargeOrb(client, 60, 575, 800, "You charge the orb with the power of earth.")
@@ -267,7 +266,7 @@ object SmithingSkillPlugin : SkillPlugin {
                         preset = PolicyPreset.PRODUCTION,
                         requiredInterfaceId = Smithing.smeltingInterfaceId(),
                         rawButtonIds = mappings.map { it.buttonId }.distinct().toIntArray(),
-                    ) { client, _, _ ->
+                    ) { (client, _, _) ->
                         SmithingInterface.startFromMapping(client, primary)
                     }
                 }
@@ -277,7 +276,7 @@ object SmithingSkillPlugin : SkillPlugin {
                     preset = PolicyPreset.PRODUCTION,
                     requiredInterfaceId = Smithing.smeltingInterfaceId(),
                     rawButtonIds = intArrayOf(SmithingData.frameIds()[index]),
-                ) { client, _, _ ->
+                ) { (client, _, _) ->
                     SmithingInterface.selectPendingRecipe(client, recipe.barId)
                 }
             }

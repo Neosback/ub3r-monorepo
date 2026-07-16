@@ -342,7 +342,7 @@ object MiningSkillPlugin : SkillPlugin {
                 preset = PolicyPreset.GATHERING,
                 option = 1,
                 *MiningData.allRockObjectIds,
-            ) { client, objectId, position, _ ->
+            ) { (client, objectId, position, _) ->
                 Mining.attempt(client, objectId, position)
             }
         }

@@ -212,13 +212,13 @@ object FishingSkillPlugin : SkillPlugin {
             val secondNpcIds = byOption[2].orEmpty().map { it.objectId }.distinct().toIntArray()
 
             if (firstNpcIds.isNotEmpty()) {
-                npcClick(preset = PolicyPreset.GATHERING, option = 1, *firstNpcIds) { client, npc ->
+                npcClick(preset = PolicyPreset.GATHERING, option = 1, *firstNpcIds) { (client, npc) ->
                     Fishing.attempt(client, npc.id, 1)
                     true
                 }
             }
             if (secondNpcIds.isNotEmpty()) {
-                npcClick(preset = PolicyPreset.GATHERING, option = 2, *secondNpcIds) { client, npc ->
+                npcClick(preset = PolicyPreset.GATHERING, option = 2, *secondNpcIds) { (client, npc) ->
                     Fishing.attempt(client, npc.id, 2)
                     true
                 }
