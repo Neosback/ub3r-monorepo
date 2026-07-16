@@ -30,7 +30,7 @@ private val dataSource: HikariDataSource
     get() = dataSourceLazy.value
 
 private fun createDataSource(): HikariDataSource {
-    logger.info("Initializing MySQL connection pool...")
+    logger.debug("Initializing MySQL connection pool...")
     validateDatabaseConfig(databaseHost, databaseName, databaseUsername)
     val config = HikariConfig().apply {
         jdbcUrl = databaseJdbcUrl
@@ -58,17 +58,18 @@ private fun createDataSource(): HikariDataSource {
         connectionInitSql = "SELECT 1"
     }
 
-    logger.info("Database target: {}", sanitizedJdbcTarget(databaseHost, databasePort, databaseName))
+    logger.debug("Database target: {}", sanitizedJdbcTarget(databaseHost, databasePort, databaseName))
 
     return HikariDataSource(config).also { hikariDataSource ->
-        logger.info("Connection pool initialized:")
-        logger.info("  - Pool name: ${config.poolName}")
-        logger.info("  - Min connections: ${config.minimumIdle}")
-        logger.info("  - Max connections: ${config.maximumPoolSize}")
-        logger.info("  - Connection timeout: ${config.connectionTimeout}ms")
-        logger.info("  - Leak detection: ${config.leakDetectionThreshold}ms (This will show where leaking connections are acquired)")
-        logger.info("  - Connection proxy: disabled")
-        logger.info("  - Database: ${config.jdbcUrl}")
+        logger.info(
+            "database_pool_ready target={} pool={} size={}..{} timeout_ms={} leak_detection_ms={}",
+            sanitizedJdbcTarget(databaseHost, databasePort, databaseName),
+            config.poolName,
+            config.minimumIdle,
+            config.maximumPoolSize,
+            config.connectionTimeout,
+            config.leakDetectionThreshold,
+        )
 
         startPoolMonitoring(hikariDataSource)
     }
@@ -113,7 +114,7 @@ private fun startPoolMonitoring(hikariDataSource: HikariDataSource) {
         }
     }, 30, 30, TimeUnit.SECONDS)
 
-    logger.info("Pool monitoring started - warnings will be emitted only on high utilization or waiting threads")
+    logger.debug("Pool monitoring started; warnings are emitted on high utilization or waiting threads")
 }
 
 fun closeConnectionPool() {

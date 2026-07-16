@@ -230,7 +230,7 @@ class EntityProcessor : Runnable {
                 val spawnDx = Math.abs(npc.position.x - npc.originalPosition.x)
                 val spawnDy = Math.abs(npc.position.y - npc.originalPosition.y)
                 if (spawnDx > npc.leashDistance || spawnDy > npc.leashDistance) {
-                    if (gameWorldId == 2) logger.info("[W2-COMBAT] npcId={} LEASH_CLEAR: ({} tiles from spawn) returning to spawn", npc.id, Math.max(spawnDx, spawnDy))
+                    if (gameWorldId == 2) logger.debug("[W2-COMBAT] npcId={} LEASH_CLEAR: ({} tiles from spawn) returning to spawn", npc.id, Math.max(spawnDx, spawnDy))
                     npc.coordinateState = Npc.CoordinateState.RETREATING
                     npc.isFighting = false
                     npc.retreatTimer = 0
@@ -414,12 +414,12 @@ class EntityProcessor : Runnable {
         val gap = npc.gapDistanceTo(target)
 
         if (gap > npc.leashDistance) {
-            if (gameWorldId == 2) logger.info("[W2-COMBAT] npcId={} DISTANCE_CAP: gap={} > leashDistance={}, clearing combat", npc.id, gap, npc.leashDistance)
+            if (gameWorldId == 2) logger.debug("[W2-COMBAT] npcId={} DISTANCE_CAP: gap={} > leashDistance={}, clearing combat", npc.id, gap, npc.leashDistance)
             npc.isFighting = false
             return
         }
 
-        if (gameWorldId == 2) logger.info("[W2-COMBAT] npcId={} CHASE from {} {} toward target gap={}", npc.id, fromX, fromY, gap)
+        if (gameWorldId == 2) logger.debug("[W2-COMBAT] npcId={} CHASE from {} {} toward target gap={}", npc.id, fromX, fromY, gap)
 
         val dx = Integer.signum(target.position.x - fromX)
         val dy = Integer.signum(target.position.y - fromY)
@@ -442,7 +442,7 @@ class EntityProcessor : Runnable {
             return
         }
 
-        if (gameWorldId == 2) logger.info("[W2-COMBAT] npcId={} BLOCKED at {} {} all 3 directions blocked", npc.id, fromX, fromY)
+        if (gameWorldId == 2) logger.debug("[W2-COMBAT] npcId={} BLOCKED at {} {} all 3 directions blocked", npc.id, fromX, fromY)
     }
 
     private fun collectActiveNpcs(activeChunks: LongHashSet, output: ArrayList<Npc>): List<Npc> {

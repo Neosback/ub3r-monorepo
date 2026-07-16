@@ -23,11 +23,12 @@ object ObjectInteractionService {
         val active = reentrancyGuard.get()
         if (!active.add(key)) {
             if (net.dodian.uber.game.engine.config.gameWorldId == 2)
-                logger.info("[W2-DISPATCH] tryHandleTimed reentrancy objId={} option={}", context.objectId, context.option)
+                logger.debug("[W2-DISPATCH] tryHandleTimed reentrancy objId={} option={}", context.objectId, context.option)
             return DispatchTiming(false, 0L, 0L, null)
         }
 
         try {
+            val dispatchStartNs = System.nanoTime()
             if (context.type == ObjectInteractionType.CLICK &&
                 GameEventBus.postWithResult(
                     ObjectClickEvent(
@@ -44,6 +45,7 @@ object ObjectInteractionService {
                     resolution = null,
                     handled = true,
                     handlerSource = "GameEventBus",
+                    elapsedNanos = System.nanoTime() - dispatchStartNs,
                 )
                 return DispatchTiming(true, 0L, 0L, "GameEventBus")
             }
@@ -65,6 +67,7 @@ object ObjectInteractionService {
                     resolution = null,
                     handled = true,
                     handlerSource = "GameEventBus",
+                    elapsedNanos = System.nanoTime() - dispatchStartNs,
                 )
                 return DispatchTiming(true, 0L, 0L, "GameEventBus")
             }
@@ -84,6 +87,7 @@ object ObjectInteractionService {
                     resolution = null,
                     handled = true,
                     handlerSource = "GameEventBus",
+                    elapsedNanos = System.nanoTime() - dispatchStartNs,
                 )
                 return DispatchTiming(true, 0L, 0L, "GameEventBus")
             }
@@ -102,6 +106,7 @@ object ObjectInteractionService {
                     resolution = null,
                     handled = true,
                     handlerSource = SkillInteractionDispatcher::class.java.simpleName,
+                    elapsedNanos = System.nanoTime() - dispatchStartNs,
                 )
                 return DispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
             }
@@ -121,6 +126,7 @@ object ObjectInteractionService {
                     resolution = null,
                     handled = true,
                     handlerSource = SkillInteractionDispatcher::class.java.simpleName,
+                    elapsedNanos = System.nanoTime() - dispatchStartNs,
                 )
                 return DispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
             }
@@ -138,6 +144,7 @@ object ObjectInteractionService {
                     resolution = null,
                     handled = true,
                     handlerSource = SkillInteractionDispatcher::class.java.simpleName,
+                    elapsedNanos = System.nanoTime() - dispatchStartNs,
                 )
                 return DispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
             }
@@ -147,10 +154,18 @@ object ObjectInteractionService {
             val resolveNs = System.nanoTime() - resolveStart
             if (candidates.isEmpty()) {
                 if (isReachedNoHandlerNoop(context)) {
-                    ObjectClickLoggingService.logReachedNoHandler(context)
+                    ObjectClickLoggingService.logReachedNoHandler(
+                        context,
+                        elapsedNanos = System.nanoTime() - dispatchStartNs,
+                    )
                     return DispatchTiming(true, resolveNs, 0L, CACHE_ACTION_NOOP)
                 }
-                ObjectClickLoggingService.log(context, resolution = null, handled = false)
+                ObjectClickLoggingService.log(
+                    context,
+                    resolution = null,
+                    handled = false,
+                    elapsedNanos = System.nanoTime() - dispatchStartNs,
+                )
                 return DispatchTiming(false, resolveNs, 0L, null)
             }
 
@@ -225,7 +240,12 @@ object ObjectInteractionService {
                     handlerNs += System.nanoTime() - handlerStart
                     if (handled) {
                         handlerName = content::class.java.name
-                        ObjectClickLoggingService.log(context, resolution = resolution, handled = true)
+                        ObjectClickLoggingService.log(
+                            context,
+                            resolution = resolution,
+                            handled = true,
+                            elapsedNanos = System.nanoTime() - dispatchStartNs,
+                        )
                         return DispatchTiming(true, resolveNs, handlerNs, handlerName)
                     }
                 } catch (e: Throwable) {
@@ -240,10 +260,18 @@ object ObjectInteractionService {
                 }
             }
             if (isReachedNoHandlerNoop(context)) {
-                ObjectClickLoggingService.logReachedNoHandler(context)
+                ObjectClickLoggingService.logReachedNoHandler(
+                    context,
+                    elapsedNanos = System.nanoTime() - dispatchStartNs,
+                )
                 return DispatchTiming(true, resolveNs, handlerNs, CACHE_ACTION_NOOP)
             }
-            ObjectClickLoggingService.log(context, resolution = candidates.firstOrNull(), handled = false)
+            ObjectClickLoggingService.log(
+                context,
+                resolution = candidates.firstOrNull(),
+                handled = false,
+                elapsedNanos = System.nanoTime() - dispatchStartNs,
+            )
             return DispatchTiming(false, resolveNs, handlerNs, handlerName)
         } finally {
             active.remove(key)

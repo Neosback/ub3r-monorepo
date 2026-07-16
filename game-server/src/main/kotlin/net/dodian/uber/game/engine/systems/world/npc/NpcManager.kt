@@ -31,13 +31,13 @@ class NpcManager {
     fun getNpcData(): Collection<NpcData> = data.values
 
     fun loadSpawns() {
-        logger.info("Loading NPC spawns from Kotlin modules")
+        logger.debug("Loading NPC spawns from Kotlin modules")
         val kotlinSpawns = ContentModuleIndex.npcModules
             .filterIsInstance<NpcSpawnSource>()
             .flatMap { it.spawns }
         ensureDefinitionsForSpawnNpcIds(kotlinSpawns)
         val loaded = loadContentSpawns(kotlinSpawns)
-        logger.info("Loaded {} Kotlin NPC spawns.", loaded)
+        logger.debug("Loaded {} Kotlin NPC spawns.", loaded)
     }
 
     private fun ensureDefinitionsForSpawnNpcIds(spawns: List<NpcSpawnDef>) {
@@ -133,7 +133,7 @@ class NpcManager {
             )
         }
 
-        logger.info(
+        logger.debug(
             "Loaded {}/{} content NPC spawns (skipped {}, inactive {}, duplicate {}, missing-data {}, failed {}).",
             loaded,
             total,
@@ -270,7 +270,7 @@ class NpcManager {
             data.putAll(definitions)
             serverDefinitions.clear()
             serverDefinitions.putAll(cacheDefs.mapValues { (_, definition) -> definition.server })
-            logger.info("Loaded {} NPC definitions from cache plus Kotlin server definitions", definitions.size)
+            logger.debug("Loaded {} NPC definitions from cache plus Kotlin server definitions", definitions.size)
         } catch (e: RuntimeException) {
             logger.error("Error loading NPC definitions", e)
             throw e
@@ -290,7 +290,7 @@ class NpcManager {
                     definition.addDrop(drop.itemId, drop.amountMin, drop.amountMax, drop.percent, drop.rareShout)
                 }
             }
-            logger.info("Loaded {} Npc Drops", amount)
+            logger.debug("Loaded {} Npc Drops", amount)
         } catch (e: RuntimeException) {
             logger.error("Error loading NPC drops", e)
         }

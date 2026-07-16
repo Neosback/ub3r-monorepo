@@ -25,7 +25,7 @@ internal object ObjectApproachRoutingService {
 
         val worldObject = worldObject(objectId, targetPosition, objectDef)
         val reached = InteractionReachService.reachedObject(player.position, worldObject)
-        logger.info(
+        logger.debug(
             "[ObjApproach] objectId={} pos=({},{},{}) player=({},{}) reached={} walkSteps={} wQueue={}/{}",
             objectId, targetPosition.x, targetPosition.y, targetPosition.z,
             player.position.x, player.position.y, reached,

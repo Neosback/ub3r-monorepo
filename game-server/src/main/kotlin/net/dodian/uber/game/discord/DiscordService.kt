@@ -46,9 +46,9 @@ object DiscordService : ListenerAdapter() {
         if (guilds.isEmpty()) {
             logger.warn("The Discord bot is not in any servers (guilds). Please invite the bot to your server using the OAuth2 generator in the Discord Developer Portal!")
         } else {
-            logger.info("Discord bot is currently connected to ${guilds.size} server(s):")
+            logger.info("discord_ready guilds={}", guilds.size)
             for (guild in guilds) {
-                logger.info("  - ${guild.name} (ID: ${guild.id})")
+                logger.debug("Discord guild name={} id={}", guild.name, guild.id)
             }
         }
         sendToGeneral("Dodian Server is now online!")
@@ -76,7 +76,7 @@ object DiscordService : ListenerAdapter() {
                 val specificChannel = if (targetChannelId.isNotBlank()) activeJda.getTextChannelById(targetChannelId) else null
                 if (specificChannel != null) {
                     specificChannel.sendMessage(message).queue()
-                    logger.info("Sent announcement to configured channel ID $targetChannelId")
+                    logger.debug("Sent announcement to configured channel ID {}", targetChannelId)
                     return@execute
                 }
 

@@ -147,7 +147,7 @@ object NpcContentRegistry : ContentBootstrap {
             return
         }
         logger.info("NPC capability report entries={}", rows.size)
-        rows.sorted().forEach { logger.info("NPC capability {}", it) }
+        rows.sorted().forEach { logger.debug("NPC capability {}", it) }
     }
 
     private fun buildOptions(def: NpcContentDefinition): String {

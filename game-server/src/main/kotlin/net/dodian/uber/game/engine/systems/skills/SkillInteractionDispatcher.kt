@@ -23,12 +23,12 @@ object SkillInteractionDispatcher {
         obj: GameObjectData?,
     ): Boolean {
         val binding = PluginRegistry.currentSkills().objectBinding(option, objectId) ?: run {
-            if (gameWorldId == 2) logger.info("[W2-DISPATCH] SkillDispatch no binding option={} objectId={}", option, objectId)
+            if (gameWorldId == 2) logger.debug("[W2-DISPATCH] SkillDispatch no binding option={} objectId={}", option, objectId)
             return false
         }
         return ContentErrorPolicy.runBoolean(client, "skill.object.click") {
             val handled = binding.handler(client, objectId, position, obj)
-            if (gameWorldId == 2) logger.info("[W2-DISPATCH] SkillDispatch handled={} option={} objectId={}", handled, option, objectId)
+            if (gameWorldId == 2) logger.debug("[W2-DISPATCH] SkillDispatch handled={} option={} objectId={}", handled, option, objectId)
             SkillPolicyMetrics.record(
                 binding.preset,
                 SkillPolicyRoute.OBJECT,

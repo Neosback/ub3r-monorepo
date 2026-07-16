@@ -19,7 +19,7 @@ class CacheBootstrapService(
             val objectDefinitions = ObjectDefinitionDecoder.decode(store)
             GameObjectData.replaceDefinitions(objectDefinitions.definitions)
             if (objectDefinitions.definitionCount > 0) {
-                logger.info(
+                logger.debug(
                     "Loaded cache object definitions: count={}, blocking={}, interactive={}",
                     objectDefinitions.definitionCount,
                     objectDefinitions.blockingCount,
@@ -30,13 +30,13 @@ class CacheBootstrapService(
             val spotAnimDefinitions = SpotAnimDefinitionDecoder.decode(store)
             CacheSpotAnimDefinitions.replace(spotAnimDefinitions)
             if (spotAnimDefinitions.isNotEmpty()) {
-                logger.info("Loaded cache spot animation definitions: count={}", spotAnimDefinitions.size)
+                logger.debug("Loaded cache spot animation definitions: count={}", spotAnimDefinitions.size)
             }
 
             val interfaceDefinitions = InterfaceDefinitionDecoder.decode(store)
             CacheInterfaceDefinitions.replace(interfaceDefinitions)
             if (interfaceDefinitions.isNotEmpty()) {
-                logger.info("Loaded cache interface components: count={}", interfaceDefinitions.size)
+                logger.debug("Loaded cache interface components: count={}", interfaceDefinitions.size)
             }
 
             val decoder = MapDecoder(store)
@@ -52,13 +52,17 @@ class CacheBootstrapService(
             if (regions.isEmpty()) {
                 logger.warn("Cache bootstrap: no map regions decoded from {}", store.describe())
             } else {
-                logger.info("Cache bootstrap: loaded {} map regions from {}", regions.size, store.describe())
+                logger.debug("Cache bootstrap: loaded {} map regions from {}", regions.size, store.describe())
             }
             logger.info(
-                "World collision ready from decoded cache: regions={}, tiles={}, objects={}",
+                "cache_ready regions={} tiles={} objects={} object_defs={} spotanims={} interfaces={} source={}",
                 summary.regionCount,
                 summary.tileCount,
                 summary.objectCount,
+                objectDefinitions.definitionCount,
+                spotAnimDefinitions.size,
+                interfaceDefinitions.size,
+                store.describe(),
             )
             MapIndexTable(regions = regions, summary = summary)
         } catch (exception: java.io.IOException) {
@@ -127,13 +131,13 @@ class CacheBootstrapService(
             regionObjects = regionObjects,
         )
 
-            logger.info(
+            logger.debug(
                 "Cache collision audit packed: objects={}, bytes={}",
                 CacheCollisionAuditStore.packedObjectCount(),
                 CacheCollisionAuditStore.packedBytes(),
             )
             val matrix = CollisionManager.global().matrixMetrics()
-            logger.info(
+            logger.debug(
                 "Collision matrix sparse zones: active={} payloadBytes={} estimatedDirectoryBytes={}",
                 matrix.activeZones,
                 matrix.payloadBytes,

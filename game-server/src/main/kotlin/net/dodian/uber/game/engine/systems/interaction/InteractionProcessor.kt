@@ -136,15 +136,15 @@ object InteractionProcessor {
                 if (player.position.withinDistance(npc.position, 2)
                     && ProjectileLineService.hasLineOfSight(player.position, npc.position)
                 ) {
-                    if (gameWorldId == 2) logger.info("[W2-BANKER] Ap-range+LOS hit npcId={} player=({},{}) npc=({},{})", npc.id, player.position.x, player.position.y, npc.position.x, npc.position.y)
+                    if (gameWorldId == 2) logger.debug("[W2-BANKER] Ap-range+LOS hit npcId={} player=({},{}) npc=({},{})", npc.id, player.position.x, player.position.y, npc.position.x, npc.position.y)
                 } else {
-                    if (gameWorldId == 2) logger.info("[W2-BANKER] routing npcId={} player=({},{}) npc=({},{})", npc.id, player.position.x, player.position.y, npc.position.x, npc.position.y)
+                    if (gameWorldId == 2) logger.debug("[W2-BANKER] routing npcId={} player=({},{}) npc=({},{})", npc.id, player.position.x, player.position.y, npc.position.x, npc.position.y)
                     val routed = BankerApproachFallbackService.tryRouteCustomerSide(player, npc)
                     if (!routed) {
                         val fails = (bankerRouteFailCount[intent] ?: 0) + 1
                         bankerRouteFailCount[intent] = fails
                         if (fails >= 3) {
-                            if (gameWorldId == 2) logger.info("[W2-BANKER] routing failed {} times — cancelling", fails)
+                            if (gameWorldId == 2) logger.debug("[W2-BANKER] routing failed {} times — cancelling", fails)
                             bankerRouteFailCount.remove(intent)
                             player.sendMessage("I can't reach that!")
                             clear(player)
@@ -350,7 +350,7 @@ object InteractionProcessor {
                 fallbackData = routeSnapshot.objectData,
                 fallbackDef = routeSnapshot.objectDef,
             )
-        if (gameWorldId == 2) logger.info("[W2-DISPATCH] pre-stillPresent objId={} option={} pos=({},{}) binding={} objectDefNull={}",
+        if (gameWorldId == 2) logger.debug("[W2-DISPATCH] pre-stillPresent objId={} option={} pos=({},{}) binding={} objectDefNull={}",
             intent.objectId, intent.option, targetPosition.x, targetPosition.y, skillObjectBinding != null, intent.objectDef == null)
         if (intent.objectDef != null &&
             !isObjectStillPresent(
@@ -374,7 +374,7 @@ object InteractionProcessor {
                     packetOpcode = intent.opcode,
                 ),
             )
-        if (gameWorldId == 2) logger.info("[W2-DISPATCH] result objId={} handled={} handlerName={} handlerNs={}",
+        if (gameWorldId == 2) logger.debug("[W2-DISPATCH] result objId={} handled={} handlerName={} handlerNs={}",
             intent.objectId, timing.handled, timing.handlerName, timing.handlerNs)
         if (skillObjectBinding == null &&
             timing.handled &&
@@ -1071,13 +1071,14 @@ object InteractionProcessor {
             ApproachStatus.PARKED_CLOSEST -> {
                 lastRoutePosition.remove(intent)
                 if (allowClosestCompletion) {
-                    completeCacheActionNoop(player, context)
+                    completeCacheActionNoop(player, context, routeNs)
                     ObjectApproachCheck(result = InteractionExecutionResult.COMPLETE, routeNs = routeNs)
                 } else {
                     if (objectDistanceRejectLogged.putIfAbsent(intent, true) == null) {
                         ObjectClickLoggingService.logRouteReject(
                             context = context,
                             status = approach.status.name,
+                            elapsedNanos = routeNs,
                         )
                     }
                     recordReject()
@@ -1092,6 +1093,7 @@ object InteractionProcessor {
                     ObjectClickLoggingService.logRouteReject(
                         context = context,
                         status = approach.status.name,
+                        elapsedNanos = routeNs,
                     )
                 }
                 recordReject()
@@ -1124,8 +1126,12 @@ object InteractionProcessor {
     private fun isCacheActionNoop(objectData: GameObjectData?): Boolean =
         objectData != null && ObjectClickLoggingService.isCacheActionObject(objectData)
 
-    private fun completeCacheActionNoop(player: Client, context: ObjectInteractionContext) {
-        ObjectClickLoggingService.logReachedNoHandler(context)
+    private fun completeCacheActionNoop(player: Client, context: ObjectInteractionContext, routeNs: Long) {
+        ObjectClickLoggingService.logReachedNoHandler(
+            context,
+            routeOutcome = ApproachStatus.PARKED_CLOSEST.name,
+            elapsedNanos = routeNs,
+        )
         if (player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr) {
             player.resetWalkingQueue()
         }

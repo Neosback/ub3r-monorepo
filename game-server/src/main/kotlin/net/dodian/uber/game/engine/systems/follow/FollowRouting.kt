@@ -126,7 +126,7 @@ object FollowRouting {
         val worldObject = WorldObject(objectId, objX, objY, z, type, rotation)
 
         val alreadyReached = InteractionReachService.reachedObject(Position(follower.position.x, follower.position.y, z), worldObject)
-        logger.info(
+        logger.debug(
             "[ObjRoute] objectId={} obj=({},{},{}) size={}x{} type={} rot={} | player=({},{}) alreadyReached={}",
             objectId, objX, objY, z, sizeX, sizeY, type, rotation,
             follower.position.x, follower.position.y, alreadyReached,
@@ -141,7 +141,7 @@ object FollowRouting {
             durationNanos = System.nanoTime() - searchStart,
             foundPath = route.status != ObjectRouteStatus.UNREACHABLE,
         )
-        logger.info(
+        logger.debug(
             "[ObjRoute] BFS result={} targetTile=({},{}) pathSize={}",
             route.status, route.targetX, route.targetY, route.path.size,
         )
@@ -152,14 +152,14 @@ object FollowRouting {
         // Only reject the path if NO steps at all could be validated (first step is blocked).
         // Tarnish trusts the pathfinder output and does not re-validate step-by-step — applying
         // a partial path is better than reporting UNREACHABLE when the player is almost there.
-        logger.info(
+        logger.debug(
             "[ObjRoute] validated={}/{} firstStep={} lastStep={}",
             validated.size, route.path.size,
             validated.firstOrNull()?.let { "(${it.x},${it.y})" } ?: "none",
             validated.lastOrNull()?.let { "(${it.x},${it.y})" } ?: "none",
         )
         if (validated.isEmpty()) {
-            logger.info("[ObjRoute] validated path empty — first step blocked; walk queue reset")
+            logger.debug("[ObjRoute] validated path empty — first step blocked; walk queue reset")
             follower.resetWalkingQueue()
             return route.copy(path = validated)
         }
@@ -448,7 +448,7 @@ object FollowRouting {
             foundStatus = if (foundIndex == -1) ObjectRouteStatus.UNREACHABLE else ObjectRouteStatus.PARKED_CLOSEST
         }
         if (foundIndex == -1) {
-            logger.info("[ObjRoute BFS] UNREACHABLE for obj=({},{}) from player=({},{})",
+            logger.debug("[ObjRoute BFS] UNREACHABLE for obj=({},{}) from player=({},{})",
                 worldObject.x, worldObject.y, follower.position.x, follower.position.y)
             return ObjectRouteResult(ObjectRouteStatus.UNREACHABLE)
         }
@@ -463,7 +463,7 @@ object FollowRouting {
         if (reachedFromParked && foundStatus == ObjectRouteStatus.PARKED_CLOSEST) {
             foundStatus = ObjectRouteStatus.STRICT_REACHED
         }
-        logger.info(
+        logger.debug(
             "[ObjRoute BFS] status={} target=({},{}) parked=({},{}) reachedFromParked={} obj=({},{}) player=({},{})",
             foundStatus, targetLocalX + baseX, targetLocalY + baseY,
             parkedAbsX, parkedAbsY, reachedFromParked,

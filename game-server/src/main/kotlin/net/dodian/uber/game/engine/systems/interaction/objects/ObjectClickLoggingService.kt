@@ -18,12 +18,14 @@ object ObjectClickLoggingService {
         resolution: ObjectContentRegistry.ObjectResolution?,
         handled: Boolean,
         handlerSource: String? = null,
+        routeOutcome: String = "REACHED",
+        elapsedNanos: Long = 0L,
     ) {
         if (!handled) {
             logUnhandledDetails(context)
         }
         if (handled || context.objectId !in ignoredUnhandled) {
-            ConsoleAuditLog.objectInteraction(context, resolution, handled, handlerSource)
+            ConsoleAuditLog.objectInteraction(context, resolution, handled, handlerSource, routeOutcome, elapsedNanos)
         }
     }
 
@@ -31,24 +33,45 @@ object ObjectClickLoggingService {
     fun logRouteReject(
         context: ObjectInteractionContext,
         status: String,
+        elapsedNanos: Long = 0L,
     ) {
         logUnhandledDetails(context, label = "OBJECT ROUTE_REJECT DETAIL", extra = "routeStatus=$status reached=false")
-        ConsoleAuditLog.objectInteraction(context, resolution = null, handled = false, handlerSource = "route_reject:$status")
+        ConsoleAuditLog.objectInteraction(
+            context,
+            resolution = null,
+            handled = false,
+            handlerSource = "route_reject:$status",
+            routeOutcome = status,
+            elapsedNanos = elapsedNanos,
+        )
     }
 
     @JvmStatic
-    fun logReachedNoHandler(context: ObjectInteractionContext) {
-        if (!logger.isDebugEnabled) return
-        val definition = context.obj ?: GameObjectData.forId(context.objectId)
-        logger.debug(
-            "OBJECT REACHED_NO_HANDLER | type={} option={} objectId={} pos={},{},{} hasActions={} reached=true",
-            context.type,
-            context.option ?: -1,
-            context.objectId,
-            context.position.x,
-            context.position.y,
-            context.position.z,
-            isCacheActionObject(definition),
+    fun logReachedNoHandler(
+        context: ObjectInteractionContext,
+        routeOutcome: String = "REACHED",
+        elapsedNanos: Long = 0L,
+    ) {
+        if (logger.isDebugEnabled) {
+            val definition = context.obj ?: GameObjectData.forId(context.objectId)
+            logger.debug(
+                "OBJECT REACHED_NO_HANDLER | type={} option={} objectId={} pos={},{},{} hasActions={} reached=true",
+                context.type,
+                context.option ?: -1,
+                context.objectId,
+                context.position.x,
+                context.position.y,
+                context.position.z,
+                isCacheActionObject(definition),
+            )
+        }
+        ConsoleAuditLog.objectInteraction(
+            context,
+            resolution = null,
+            handled = true,
+            handlerSource = "cache-action-noop",
+            routeOutcome = routeOutcome,
+            elapsedNanos = elapsedNanos,
         )
     }
 
@@ -57,7 +80,7 @@ object ObjectClickLoggingService {
         label: String = "OBJECT UNHANDLED DETAIL",
         extra: String = "reached=true",
     ) {
-        if (!logger.isWarnEnabled) return
+        if (!logger.isDebugEnabled) return
         val definition = context.obj ?: GameObjectData.forId(context.objectId)
         val candidates = ObjectContentRegistry.resolveCandidates(context.objectId, context.position)
         val probe = ClipProbeService.probeTile(context.position.x, context.position.y, context.position.z)
@@ -77,7 +100,7 @@ object ObjectClickLoggingService {
                 .joinToString(";") { "d=${it.first}@${it.second},${it.third}" }
                 .ifBlank { "none" }
         val overlapSummary = ClipProbeService.formatOverlapSummary(probe, 3)
-        logger.warn(
+        logger.debug(
             "{} | type={} option={} objectId={} pos={},{},{} " +
                 "| defName={} size={}x{} blockWalk={} blockRange={} solid={} walkable={} actions={} " +
                 "| contentCandidates={} matchingOverlaps={} nearbySameIdAnchors={} fullBlocked={} flags=0x{} [{}] {} overlaps={}",

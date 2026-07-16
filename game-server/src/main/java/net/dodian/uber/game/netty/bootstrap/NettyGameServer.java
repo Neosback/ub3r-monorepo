@@ -45,6 +45,7 @@ public class NettyGameServer {
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private Channel serverChannel;
+    private String transportName = "uninitialized";
 
     public NettyGameServer(int port) {
         this(port, DEFAULT_CHECKER);
@@ -69,11 +70,13 @@ public class NettyGameServer {
         boolean useEpoll = epollChecker.isAvailable();
         Class<? extends ServerChannel> channelClass;
         if (useEpoll) {
+            transportName = "epoll";
             logger.info("[Netty] Using Epoll transport.");
             bossGroup = new EpollEventLoopGroup(1);
             workerGroup = new EpollEventLoopGroup();
             channelClass = EpollServerSocketChannel.class;
         } else {
+            transportName = "nio";
             Throwable cause = epollChecker.unavailabilityCause();
             logger.info("[Netty] Epoll transport is unavailable, falling back to NIO. Reason: {}",
                 cause != null ? cause.toString() : "Unsupported platform/OS");
@@ -96,6 +99,10 @@ public class NettyGameServer {
         serverChannel = bindFuture.channel();
         logger.info("[Netty] Game server listening on {}", port);
 
+    }
+
+    public String getTransportName() {
+        return transportName;
     }
 
     public void shutdown() {

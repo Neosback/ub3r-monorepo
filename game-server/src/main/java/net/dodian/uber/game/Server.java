@@ -73,23 +73,31 @@ public class Server {
     private static org.jire.swiftfup.server.net.FileServer fileServer;
     private static final GameLoopService gameLoopService = new GameLoopService();
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean(false);
+    private static final String STARTUP_BANNER = String.join("\n",
+            "    ____",
+            "   / __ \\____ ____/ (_)___ _____",
+            "  / / / / __ \\/ __ / / __ `/ __ \\",
+            " / /_/ / /_/ / /_/ / / /_/ / / / /",
+            "/_____/\\____/\\____/_/\\____/_/ /_/",
+            "",
+            "Dodian 3000",
+            "Maintained by Dodian.net");
+
+    static String startupBanner() {
+        return STARTUP_BANNER;
+    }
 
     public static void main(String[] args) throws Exception {
+        serverStartup = System.currentTimeMillis();
         net.dodian.uber.game.engine.config.SettingsLoader.INSTANCE.load();
         net.dodian.uber.game.engine.config.FeatureStateService.INSTANCE.initialize(
                 net.dodian.uber.game.engine.config.SettingsLoader.INSTANCE.getSettings()
         );
         StartupValidationService.validateOrThrow();
+        net.dodian.uber.game.netty.listener.PacketListenerManager.initialize();
         net.dodian.uber.game.rscm.RSCM.load(new java.io.File("data/mappings"));
 
-        serverStartup = System.currentTimeMillis();
-        System.out.println();
-        System.out.println("    ____ ");
-        System.out.println("   / __ \\____ ____/ (_)___ _____ ");
-        System.out.println("  / / / / __ \\/ __ / / __ `/ __ \\ ");
-        System.out.println(" / /_/ / /_/ / /_/ / / /_/ / / / / ");
-        System.out.println("/_____/\\____/\\____/_/\\____/_/ /_/ ");
-        System.out.println();
+        logger.info("\n{}", STARTUP_BANNER);
 
         if (getDatabaseInitialize() && !isDatabaseInitialized()) {
             initializeDatabase();
@@ -98,7 +106,7 @@ public class Server {
         npcManager = new NpcManager();
         npcManager.loadSpawns();
         NpcTimerScheduler.initialize(npcManager.getNpcs());
-        logger.info("DONE LOADING NPC CONFIGURATION");
+        logger.info("npc_runtime_ready definitions={} spawns={}", npcManager.getNpcData().size(), npcManager.getNpcs().size());
         itemManager = new ItemManager();
         chunkManager = new ChunkManager();
         // NPC spawns are loaded before ChunkManager exists. Now that chunk repos are available,
@@ -128,7 +136,7 @@ public class Server {
 
         logger.info("Starting SwiftFUP server...");
         org.jire.swiftfup.server.net.FileResponses fileResponses = new org.jire.swiftfup.server.net.FileResponses();
-        fileResponses.load("data/cache", true);
+        fileResponses.load("data/cache", false);
         fileServer = new org.jire.swiftfup.server.net.FileServer(3, fileResponses);
         fileServer.start(DotEnvKt.getSwiftFupPort());
 
@@ -149,7 +157,26 @@ public class Server {
         } catch (Exception e) {
             logger.warn("Unable to write readiness marker", e);
         }
-        logger.info("Server is now running on world " + getGameWorldId() + "!");
+        long startupMillis = System.currentTimeMillis() - serverStartup;
+        int itemDefinitionCount = 0;
+        for (net.dodian.uber.game.model.item.Item item : itemManager.items) {
+            if (item != null) itemDefinitionCount++;
+        }
+        logger.info(
+                "server_ready world={} game_port={} swiftfup_port={} transport={} startup_ms={} " +
+                        "packet_listeners={} npcs={} items={} objects={} web={} discord={}",
+                getGameWorldId(),
+                DotEnvKt.getServerPort(),
+                DotEnvKt.getSwiftFupPort(),
+                nettyServer.getTransportName(),
+                startupMillis,
+                net.dodian.uber.game.netty.listener.PacketListenerManager.getRepository().getRegisteredCount(),
+                npcManager.getNpcs().size(),
+                itemDefinitionCount,
+                objects.size(),
+                DotEnvKt.getWebApiEnabled() ? "enabled" : "disabled",
+                DotEnvKt.getDiscordToken().isBlank() ? "disabled" : "starting"
+        );
     }
 
 

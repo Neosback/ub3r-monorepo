@@ -9,11 +9,14 @@ import org.jire.swiftfup.common.GzipCompression
 import org.jire.swiftfup.server.FilePair
 import org.jire.swiftfup.server.FilePair.Companion.writeFilePair
 import java.util.zip.CRC32
+import org.slf4j.LoggerFactory
 
 /**
  * @author Jire
  */
 class FileResponses {
+
+    private val logger = LoggerFactory.getLogger(FileResponses::class.java)
 
     private val bitpack2Response: Int2ObjectMap<ByteBuf> = Int2ObjectOpenHashMap()
 
@@ -93,6 +96,7 @@ class FileResponses {
             asReadOnly()
         }
         bitpack2Response[FilePair.checksumsFilePair.bitpack] = checksumsResponse
+        logger.info("swiftfup_cache_ready indices={} responses={}", indices.size, bitpack2Response.size)
     }
 
 }

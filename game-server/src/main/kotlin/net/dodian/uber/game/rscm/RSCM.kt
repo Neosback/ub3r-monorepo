@@ -17,6 +17,11 @@ object RSCM {
         mappings.clear()
         loadRscmFiles(directory)
         mappingsLoaded = true
+        logger.info(
+            "rscm_ready tables={} mappings={}",
+            mappings.size,
+            mappings.values.sumOf { it.size },
+        )
     }
 
     private fun loadRscmFiles(directory: File) {
@@ -37,7 +42,7 @@ object RSCM {
                     }
                 }
             }
-            logger.info("Loaded {} RSCM mappings for table '{}'", count, type)
+            logger.debug("Loaded {} RSCM mappings for table '{}'", count, type)
         }
     }
 
@@ -84,7 +89,6 @@ fun String.asRscmSeq(): Int = RSCM.get("seq", this)
 fun String.asRscmProjAnim(): Int = RSCM.get("projanim", this)
 fun String.asRscmInterface(): Int = RSCM.get("interface", this)
 fun String.asRscmComponent(): Int = RSCM.get("component", this)
-
 
 
 

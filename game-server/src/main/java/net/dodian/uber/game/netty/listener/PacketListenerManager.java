@@ -17,64 +17,72 @@ public final class PacketListenerManager {
     
     private static final PacketRepository repository = PacketRepository.getInstance();
     
-    static {
+    private static volatile PacketRegistrationReport registrationReport;
+
+    private static final String[] LISTENER_CLASSES = {
+            "net.dodian.uber.game.netty.listener.in.KeepAliveListener",
+            "net.dodian.uber.game.netty.listener.in.WalkingListener",
+            "net.dodian.uber.game.netty.listener.in.ChangeRegionListener",
+            "net.dodian.uber.game.netty.listener.in.ChangeAppearanceListener",
+            "net.dodian.uber.game.netty.listener.in.ChatListener",
+            "net.dodian.uber.game.netty.listener.in.UseItemOnPlayerListener",
+            "net.dodian.uber.game.netty.listener.in.FollowPlayerListener",
+            "net.dodian.uber.game.netty.listener.in.ItemOnGroundItemListener",
+            "net.dodian.uber.game.netty.listener.in.UseItemOnNpcListener",
+            "net.dodian.uber.game.netty.listener.in.ItemOnItemListener",
+            "net.dodian.uber.game.netty.listener.in.ClickItem2Listener",
+            "net.dodian.uber.game.netty.listener.in.ClickItemListener",
+            "net.dodian.uber.game.netty.listener.in.ObjectInteractionListener",
+            "net.dodian.uber.game.netty.listener.in.NpcInteractionListener",
+            "net.dodian.uber.game.netty.listener.in.MagicOnPlayerListener",
+            "net.dodian.uber.game.netty.listener.in.TradeListener",
+            "net.dodian.uber.game.netty.listener.in.TradeRequestListener",
+            "net.dodian.uber.game.netty.listener.in.SendPrivateMessageListener",
+            "net.dodian.uber.game.netty.listener.in.MagicOnItemsListener",
+            "net.dodian.uber.game.netty.listener.in.RemoveItemListener",
+            "net.dodian.uber.game.netty.listener.in.AttackPlayerListener",
+            "net.dodian.uber.game.netty.listener.in.WearItemListener",
+            "net.dodian.uber.game.netty.listener.in.FocusChangeListener",
+            "net.dodian.uber.game.netty.listener.in.CommandsListener",
+            "net.dodian.uber.game.netty.listener.in.ExamineListener",
+            "net.dodian.uber.game.netty.listener.in.NpcDropTableListener",
+            "net.dodian.uber.game.netty.listener.in.ClickingButtonsListener",
+            "net.dodian.uber.game.netty.listener.in.AddFriendListener",
+            "net.dodian.uber.game.netty.listener.in.AddIgnoreListener",
+            "net.dodian.uber.game.netty.listener.in.DuelRequestListener",
+            "net.dodian.uber.game.netty.listener.in.RemoveFriendListener",
+            "net.dodian.uber.game.netty.listener.in.RemoveIgnoreListener",
+            "net.dodian.uber.game.netty.listener.in.ClickItem3Listener",
+            "net.dodian.uber.game.netty.listener.in.DialogueListener",
+            "net.dodian.uber.game.netty.listener.in.ClickingStuffListener",
+            "net.dodian.uber.game.netty.listener.in.DropItemListener",
+            "net.dodian.uber.game.netty.listener.in.PickUpGroundItemListener",
+            "net.dodian.uber.game.netty.listener.in.BankAllListener",
+            "net.dodian.uber.game.netty.listener.in.Bank5Listener",
+            "net.dodian.uber.game.netty.listener.in.BankX1Listener",
+            "net.dodian.uber.game.netty.listener.in.BankX2Listener",
+            "net.dodian.uber.game.netty.listener.in.BankAllButOneListener",
+            "net.dodian.uber.game.netty.listener.in.BankWithdrawRememberedXListener",
+            "net.dodian.uber.game.netty.listener.in.MagicOnNpcListener",
+            "net.dodian.uber.game.netty.listener.in.Bank10Listener",
+            "net.dodian.uber.game.netty.listener.in.MouseClicksListener",
+            "net.dodian.uber.game.netty.listener.in.MoveItemsListener",
+            "net.dodian.uber.game.netty.listener.in.UpdateChatListener",
+            "net.dodian.uber.game.netty.listener.in.SyntaxInputListener",
+            "net.dodian.uber.game.netty.listener.in.InputFieldListener",
+            "net.dodian.uber.game.netty.listener.in.BankTabCreationListener",
+            "net.dodian.uber.game.netty.listener.in.DropdownMenuListener"
+    };
+
+    public static synchronized PacketRegistrationReport initialize() {
+        if (registrationReport != null) {
+            return registrationReport;
+        }
         try {
             logger.debug("Starting to register packet listeners...");
-            Class.forName("net.dodian.uber.game.netty.listener.in.KeepAliveListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.WalkingListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ChangeRegionListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ChangeAppearanceListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ChatListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.UseItemOnPlayerListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.FollowPlayerListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ItemOnGroundItemListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.UseItemOnNpcListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ItemOnItemListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ClickItem2Listener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ClickItemListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ObjectInteractionListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.NpcInteractionListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.MagicOnPlayerListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.TradeListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.TradeRequestListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.SendPrivateMessageListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.MagicOnItemsListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.RemoveItemListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.AttackPlayerListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.WearItemListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.FocusChangeListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.CommandsListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ExamineListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.NpcDropTableListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ClickingButtonsListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.AddFriendListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.AddIgnoreListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.DuelRequestListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.RemoveFriendListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.RemoveIgnoreListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ClickItem3Listener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.DialogueListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ClickingStuffListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.DropItemListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.PickUpGroundItemListener");
-            
-            Class.forName("net.dodian.uber.game.netty.listener.in.BankAllListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.Bank5Listener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.BankX1Listener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.BankX2Listener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.BankAllButOneListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.BankWithdrawRememberedXListener");
-            
-            Class.forName("net.dodian.uber.game.netty.listener.in.MagicOnNpcListener");
-            
-            Class.forName("net.dodian.uber.game.netty.listener.in.Bank10Listener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.MouseClicksListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.MoveItemsListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.UpdateChatListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.SyntaxInputListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.InputFieldListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.BankTabCreationListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.DropdownMenuListener");
+            for (String listenerClass : LISTENER_CLASSES) {
+                Class.forName(listenerClass);
+            }
             
             repository.registerNoOp(77);
             repository.registerNoOp(202);
@@ -84,18 +92,14 @@ public final class PacketListenerManager {
 
             PacketRegistrationReport report = buildRegistrationReport();
             validateCriticalOpcodesOrThrow(report);
-            logger.info(
-                "Packet listener registration summary registered={} duplicate_overwrite_count={} missing_critical={}",
-                report.getRegisteredCount(),
-                report.getDuplicateOverwriteCount(),
-                report.getMissingCriticalOpcodes()
-            );
-
             repository.lock();
-            logger.info("All packet listeners registered successfully");
-        } catch (Exception e) {
+            registrationReport = report;
+            logger.info("packet_listeners_ready registered={} duplicates={}",
+                    report.getRegisteredCount(), report.getDuplicateOverwriteCount());
+            return report;
+        } catch (Throwable e) {
             logger.error("Failed to register packet listeners", e);
-            throw new ExceptionInInitializerError(e);
+            throw new IllegalStateException("Packet listener initialization failed", e);
         }
     }
 
@@ -106,7 +110,14 @@ public final class PacketListenerManager {
     }
 
     public static PacketListener get(int opcode) {
+        if (registrationReport == null || !repository.isLocked()) {
+            throw new IllegalStateException("Packet listeners were not initialized during server startup");
+        }
         return repository.get(opcode);
+    }
+
+    public static boolean isInitialized() {
+        return registrationReport != null && repository.isLocked();
     }
 
     /**

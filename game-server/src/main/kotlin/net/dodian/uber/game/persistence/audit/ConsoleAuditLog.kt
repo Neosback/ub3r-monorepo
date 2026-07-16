@@ -257,27 +257,34 @@ object ConsoleAuditLog {
         resolution: ObjectContentRegistry.ObjectResolution?,
         handled: Boolean,
         handlerSource: String? = null,
+        routeOutcome: String = "REACHED",
+        elapsedNanos: Long = 0L,
     ) {
+        val elapsedMs = elapsedNanos.coerceAtLeast(0L) / 1_000_000.0
         if (handled) {
             if (!objectLogger.isInfoEnabled) return
             objectLogger.info(
-                "OBJECT OK | type={} | option={} | objectId={} | pos={} | source={} | player={}",
+                "OBJECT OK | type={} | option={} | objectId={} | pos={} | route={} | source={} | elapsedMs={} | player={}",
                 context.type,
                 context.option ?: -1,
                 context.objectId,
                 positionRef(context.position),
+                routeOutcome,
                 handlerSource ?: resolution?.content?.javaClass?.simpleName ?: "-",
+                String.format(java.util.Locale.ROOT, "%.3f", elapsedMs),
                 playerRef(context.client),
             )
         } else {
             if (!objectLogger.isWarnEnabled) return
             objectLogger.warn(
-                "OBJECT UNHANDLED | type={} | option={} | objectId={} | pos={} | packetOpcode={} | player={}",
+                "OBJECT UNHANDLED | type={} | option={} | objectId={} | pos={} | route={} | packetOpcode={} | elapsedMs={} | player={}",
                 context.type,
                 context.option ?: -1,
                 context.objectId,
                 positionRef(context.position),
+                routeOutcome,
                 context.packetOpcode ?: -1,
+                String.format(java.util.Locale.ROOT, "%.3f", elapsedMs),
                 playerRef(context.client),
             )
         }
@@ -285,9 +292,14 @@ object ConsoleAuditLog {
 
     @JvmStatic
     fun interfaceOpen(player: Player, interfaceId: Int, via: String) {
-        if (net.dodian.uber.game.engine.config.gameWorldId == 2) {
-            val details = interfaceDetails(player, interfaceId)
-            println("[W2-INTERFACE] Player '${player.playerName}' opened interface $interfaceId via $via. Details:\n$details")
+        if (interfaceLogger.isDebugEnabled) {
+            interfaceLogger.debug(
+                "INTERFACE DETAIL | {} | interface={} | via={} | details={}",
+                playerRef(player),
+                interfaceId,
+                via,
+                interfaceDetails(player, interfaceId).replace('\n', ' '),
+            )
         }
         if (!interfaceLogger.isInfoEnabled) return
         interfaceLogger.info(

@@ -90,7 +90,7 @@ open class ItemManager @JvmOverloads constructor(
             newItems[id] = item
         }
         items = newItems
-        logger.info("Loaded {} item definitions.", loaded.size)
+        logger.info("item_definitions_ready count={}", loaded.size)
     }
 
     private fun loadItemsFromJson(): Map<Int, Item> {
@@ -102,10 +102,10 @@ open class ItemManager @JvmOverloads constructor(
         for (base in baseDefs) {
             baseMap[base.id] = base
         }
-        logger.info("Loaded {} base item definitions", baseMap.size)
+        logger.debug("Loaded {} base item definitions", baseMap.size)
 
         val jsonDefs = parseItemsJsonDir("data/def/items-json")
-        logger.info("Loaded {} items-json definitions", jsonDefs.size)
+        logger.debug("Loaded {} items-json definitions", jsonDefs.size)
 
         val processedIds = LinkedHashSet<Int>()
         for (json in jsonDefs) {
@@ -155,7 +155,7 @@ open class ItemManager @JvmOverloads constructor(
         }
 
         val elapsed = System.currentTimeMillis() - startTime
-        logger.info("Built {} item definitions in {}ms", loaded.size, elapsed)
+        logger.debug("Built {} item definitions in {}ms", loaded.size, elapsed)
         return loaded
     }
 
