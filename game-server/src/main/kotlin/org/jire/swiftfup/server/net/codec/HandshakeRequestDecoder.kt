@@ -9,6 +9,9 @@ import org.jire.swiftfup.server.net.HandshakeRequest
  * @author Jire
  */
 class HandshakeRequestDecoder : ByteToMessageDecoder() {
+    init {
+        isSingleDecode = true
+    }
 
     override fun decode(ctx: ChannelHandlerContext, buf: ByteBuf, out: MutableList<Any>) {
         if (!buf.isReadable(3)) {

@@ -3,7 +3,7 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.engine.systems.interaction.ClipProbeService;
 import net.dodian.uber.game.engine.systems.interaction.PersonalPassageService;
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager;
+import net.dodian.uber.game.engine.routing.WorldRouteService;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,7 +161,7 @@ final class PlayerMovementState {
             }
         }
 
-        if (!CollisionManager.global().traversable(absX + deltaX, absY + deltaY, z, deltaX, deltaY) &&
+        if (!WorldRouteService.INSTANCE.traversable(absX + deltaX, absY + deltaY, z, deltaX, deltaY, owner.getSize()) &&
             !PersonalPassageService.canTraverse(owner, absX, absY, absX + deltaX, absY + deltaY, z)) {
             logBlockedStep(absX + deltaX, absY + deltaY, z);
             resetWalkingQueue();

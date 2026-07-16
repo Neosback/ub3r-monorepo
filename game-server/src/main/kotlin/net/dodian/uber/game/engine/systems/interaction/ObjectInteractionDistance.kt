@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.objects.GlobalObject
 import net.dodian.uber.game.model.objects.WorldObject
 import kotlin.math.abs
+import net.dodian.uber.game.engine.routing.WorldRouteService
 
 /**
  * Shared distance resolution for object interactions.
@@ -35,8 +36,9 @@ object ObjectInteractionDistance {
         mode: DistanceMode,
     ): Position? {
         if (mode == DistanceMode.REACHABLE) {
-            val reached = net.dodian.uber.game.engine.systems.pathing.collision.InteractionReachService.reachedObject(
+            val reached = WorldRouteService.reachedObject(
                 client.position,
+                client.size,
                 WorldObject(
                     objectId,
                     walkTo.x,

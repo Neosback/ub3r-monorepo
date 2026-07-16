@@ -1,7 +1,7 @@
 import org.gradle.api.tasks.compile.JavaCompile
 
 plugins {
-    kotlin("jvm") version "1.9.10"
+    kotlin("jvm")
     id("application")
     `java-library`
 }
@@ -43,6 +43,7 @@ tasks.jar {
 }
 
 dependencies {
+    implementation(project(":routefinder"))
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
@@ -130,9 +131,16 @@ tasks.register<JavaExec>("runSyncBenchmark") {
 
 tasks.register<JavaExec>("runCollisionMatrixBenchmark") {
     group = "verification"
-    description = "Measures sparse collision-zone lookup throughput and retained payload size"
+    description = "Compares dense and paged collision lookup throughput and retained payload size"
     classpath = syncTestSourceSet.runtimeClasspath
     mainClass.set("net.dodian.uber.game.runtime.sync.CollisionMatrixBenchmark")
+}
+
+tasks.register<JavaExec>("runCollisionCacheMemoryProbe") {
+    group = "verification"
+    description = "Loads real cache collision data, enforces the memory budget, and optionally dumps heap"
+    classpath = syncTestSourceSet.runtimeClasspath
+    mainClass.set("net.dodian.uber.game.runtime.sync.CollisionCacheMemoryProbe")
 }
 
 tasks.register<JavaExec>("dumpObjectDefs") {

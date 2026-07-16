@@ -93,50 +93,37 @@ object PacketWalkingService {
             return
         }
 
-        val eventDestination: Position
-        if (WalkingRouteService.isPlainWalkOpcode(request.opcode)) {
-            eventDestination = WalkingRouteService.destination(request, player.position.z)
-            if (!WalkingRouteService.routePlainWalk(player, request)) {
-                return
+        val routeDecision =
+            if (WalkingRouteService.isPlainWalkOpcode(request.opcode)) {
+                WalkingRouteService.preparePlainRoute(player, request)
+            } else {
+                WalkingRouteService.RouteDecision(true, WalkingRouteService.destination(request, player.position.z))
             }
-            logger.debug(
-                "Routed walk steps {} destination {} {} running {}",
-                player.newWalkCmdSteps,
-                eventDestination.x,
-                eventDestination.y,
-                player.newWalkCmdIsRunning,
-            )
-        } else {
-            val firstStepX = request.firstStepXAbs - player.mapRegionX * 8
-            val firstStepY = request.firstStepYAbs - player.mapRegionY * 8
-            eventDestination = Position(request.firstStepXAbs, request.firstStepYAbs, player.position.z)
-
+        if (routeDecision == null) {
+            return
+        }
+        val eventDestination = routeDecision.destination
+        val firstStepX = request.firstStepXAbs - player.mapRegionX * 8
+        val firstStepY = request.firstStepYAbs - player.mapRegionY * 8
+        if (routeDecision.useClientRoute) {
             player.newWalkCmdSteps = stepCount
             player.newWalkCmdIsRunning = request.running
-            player.newWalkCmdX[0] = 0
-            player.newWalkCmdY[0] = 0
-            player.tmpNWCX[0] = 0
-            player.tmpNWCY[0] = 0
-
-            for (i in 1 until stepCount) {
-                player.newWalkCmdX[i] = request.deltasX[i]
-                player.newWalkCmdY[i] = request.deltasY[i]
-                player.tmpNWCX[i] = request.deltasX[i]
-                player.tmpNWCY[i] = request.deltasY[i]
-            }
-
-            logger.debug(
-                "Walk steps {} firstX {} firstY {} running {}",
-                player.newWalkCmdSteps,
-                firstStepX,
-                firstStepY,
-                player.newWalkCmdIsRunning,
-            )
-            for (i in 0 until player.newWalkCmdSteps) {
-                player.newWalkCmdX[i] += firstStepX
-                player.newWalkCmdY[i] += firstStepY
+            for (i in 0 until stepCount) {
+                player.newWalkCmdX[i] = firstStepX + request.deltasX[i]
+                player.newWalkCmdY[i] = firstStepY + request.deltasY[i]
+                player.tmpNWCX[i] = player.newWalkCmdX[i]
+                player.tmpNWCY[i] = player.newWalkCmdY[i]
             }
         }
+        logger.debug(
+            "Walk steps {} firstX {} firstY {} destinationX {} destinationY {} running {}",
+            player.newWalkCmdSteps,
+            firstStepX,
+            firstStepY,
+            eventDestination.x,
+            eventDestination.y,
+            player.newWalkCmdIsRunning,
+        )
 
         if (player.newWalkCmdSteps > 0) {
             DialogueService.closeBlockingDialogue(player, false)

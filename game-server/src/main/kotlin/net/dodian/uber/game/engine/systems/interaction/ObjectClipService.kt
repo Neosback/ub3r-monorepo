@@ -8,12 +8,12 @@ import net.dodian.uber.game.model.objects.DoorRegistry
 import net.dodian.uber.game.model.objects.TomlRemovedObjectLoader
 import net.dodian.uber.game.model.objects.WorldObject
 import net.dodian.uber.game.engine.systems.cache.CollisionBuildService
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
+import net.dodian.uber.game.engine.routing.WorldRouteService
 import java.util.concurrent.ConcurrentHashMap
 import org.slf4j.LoggerFactory
 
 object ObjectClipService {
-    private val collisionBuildService = CollisionBuildService(CollisionManager.global())
+    private val collisionBuildService = CollisionBuildService(WorldRouteService)
     private val logger = LoggerFactory.getLogger(ObjectClipService::class.java)
 
     data class AppliedClip(
@@ -22,6 +22,11 @@ object ObjectClipService {
         val type: Int,
         val direction: Int,
         val solid: Boolean,
+        val blockWalk: Int,
+        val blockRange: Boolean,
+        val breakRouteFinding: Boolean,
+        val impenetrable: Boolean,
+        val decoration: Boolean,
     )
 
     private val appliedClips = ConcurrentHashMap<String, AppliedClip>()
@@ -108,7 +113,11 @@ object ObjectClipService {
         val effectiveSolid = solidOverride ?: (forceSolid || obj.isSolid())
         val effectiveBlockWalk = blockWalkOverride ?: if (forceSolid) 2 else obj.blockWalk()
         val effectiveBlockRange = blockRangeOverride ?: if (forceSolid) true else obj.blockRange()
-        appliedClips[key(position)] = AppliedClip(position.copy(), objectId, type, direction, effectiveSolid)
+        val effectiveImpenetrable = if (objectId in CollisionBuildService.BLOCK_RANGE_FALSE_IDS) false else obj.isImpenetrable()
+        appliedClips[key(position)] = AppliedClip(
+            position.copy(), objectId, type, direction, effectiveSolid, effectiveBlockWalk, effectiveBlockRange,
+            obj.breakRouteFinding(), effectiveImpenetrable, obj.isDecoration(),
+        )
         collisionBuildService.applyObject(
             id = objectId,
             x = position.x,
@@ -125,7 +134,7 @@ object ObjectClipService {
             blockWalk = effectiveBlockWalk,
             blockRange = effectiveBlockRange,
             breakRouteFinding = obj.breakRouteFinding(),
-            impenetrable = if (objectId in CollisionBuildService.BLOCK_RANGE_FALSE_IDS) false else obj.isImpenetrable(),
+            impenetrable = effectiveImpenetrable,
             decoration = obj.isDecoration(),
         )
     }
@@ -154,10 +163,7 @@ object ObjectClipService {
         removeTrackedClip(position)
     }
 
-    @Suppress("UNUSED_PARAMETER")
     fun remove(position: Position, type: Int, direction: Int, solid: Boolean) {
-        // Removal only updates the applied-clip bookkeeper; collision flags remain managed by the
-        // decoded-object path through CollisionBuildService and the global collision manager.
         removeTrackedClip(position)
     }
 
@@ -254,11 +260,11 @@ object ObjectClipService {
             walkable = !existing.solid,
             hasActions = definition.hasActions(),
             objectName = definition.name,
-            blockWalk = if (existing.solid) 2 else 0,
-            blockRange = existing.solid,
-            breakRouteFinding = definition.breakRouteFinding(),
-            impenetrable = if (existing.solid) definition.isImpenetrable() else false,
-            decoration = definition.isDecoration(),
+            blockWalk = existing.blockWalk,
+            blockRange = existing.blockRange,
+            breakRouteFinding = existing.breakRouteFinding,
+            impenetrable = existing.impenetrable,
+            decoration = existing.decoration,
         )
     }
 

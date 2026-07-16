@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.combat
 
-import net.dodian.uber.game.engine.systems.pathing.collision.ProjectileLineService
+import net.dodian.uber.game.engine.routing.WorldRouteService
 import net.dodian.uber.game.model.entity.Entity
 
 enum class CombatReachResult {
@@ -17,7 +17,7 @@ object CombatReachService {
         if (attacker.position.z != target.position.z) return CombatReachResult.WRONG_PLANE
         if (overlaps(attacker, target)) return CombatReachResult.OVERLAPPING
         if (gapDistance(attacker, target) > range) return CombatReachResult.OUT_OF_RANGE
-        if (projectile && !ProjectileLineService.hasLineOfSight(attacker, target)) {
+        if (projectile && !WorldRouteService.hasLineOfSight(attacker.position, target.position, attacker.size, target.size)) {
             return CombatReachResult.NO_LINE_OF_SIGHT
         }
         return CombatReachResult.READY
@@ -25,7 +25,7 @@ object CombatReachService {
 
     @JvmStatic
     fun hasProjectileLineOfSight(attacker: Entity, target: Entity): Boolean =
-        attacker.position.z == target.position.z && ProjectileLineService.hasLineOfSight(attacker, target)
+        attacker.position.z == target.position.z && WorldRouteService.hasLineOfSight(attacker.position, target.position, attacker.size, target.size)
 
     private fun overlaps(first: Entity, second: Entity): Boolean {
         val firstSize = first.getSize().coerceAtLeast(1)

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.engine.systems.interaction
 
 import net.dodian.cache.objects.GameObjectDef
-import net.dodian.uber.game.engine.systems.pathing.collision.InteractionReachService
+import net.dodian.uber.game.engine.routing.WorldRouteService
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.objects.WorldObject
@@ -16,7 +16,7 @@ internal object ObjectInteractionMovementSettleService {
         val objectType = objectDef?.type ?: 10
         val objectFace = objectDef?.face ?: 0
         val worldObject = WorldObject(objectId, targetPosition.x, targetPosition.y, targetPosition.z, objectType, objectFace)
-        if (InteractionReachService.reachedObject(player.position, worldObject) &&
+        if (WorldRouteService.reachedObject(player.position, player.size, worldObject) &&
             (player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr)
         ) {
             player.resetWalkingQueue()

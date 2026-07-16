@@ -11,7 +11,7 @@ object BankChestObjectContent : ObjectContent {
     override val objectIds: IntArray = BankingObjectIds.chestObjects
 
     // No clickInteractionPolicy override: falls through to ObjectInteractionPolicy.DEFAULT (REACHABLE),
-    // the generic footprint+type+rotation reach in InteractionReachService — same as every other
+    // the generic footprint+type+rotation reach in WorldRouteService — same as every other
     // walk-up-and-use object. The object's real type/rotation now comes from the cache (Geometry.getObject).
 
     override fun onFirstClick(context: ObjectInteractionContext): Boolean {

@@ -5,12 +5,9 @@ import io.netty.channel.socket.SocketChannel
 import org.jire.swiftfup.server.net.codec.HandshakeRequestDecoder
 import org.jire.swiftfup.server.net.codec.HandshakeRequestHandler
 
-/**
- * @author Jire
- */
 class FileServerChannelInitializer(
     private val version: Int,
-    private val fileResponses: FileResponses
+    private val fileResponses: FileResponses,
 ) : ChannelInitializer<SocketChannel>() {
 
     override fun initChannel(ch: SocketChannel) {

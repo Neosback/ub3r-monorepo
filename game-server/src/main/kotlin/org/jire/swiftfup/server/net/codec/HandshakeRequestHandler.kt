@@ -8,6 +8,7 @@ import org.jire.swiftfup.server.net.FileServerChannelInitializer.Companion.DECOD
 import org.jire.swiftfup.server.net.FileServerChannelInitializer.Companion.TAIL_HANDLER
 import org.jire.swiftfup.server.net.HandshakeRequest
 import org.jire.swiftfup.server.net.HandshakeResponse
+import org.slf4j.LoggerFactory
 import java.io.IOException
 
 /**
@@ -15,7 +16,7 @@ import java.io.IOException
  */
 class HandshakeRequestHandler(
     private val version: Int,
-    private val fileResponses: FileResponses
+    private val fileResponses: FileResponses,
 ) : SimpleChannelInboundHandler<HandshakeRequest>() {
 
     override fun channelRead0(ctx: ChannelHandlerContext, msg: HandshakeRequest) {
@@ -34,10 +35,14 @@ class HandshakeRequestHandler(
     @Deprecated("Deprecated in Java")
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         if (cause !is IOException) {
-            cause.printStackTrace()
+            logger.debug("SwiftFUP handshake failure remote={}", ctx.channel().remoteAddress(), cause)
         }
 
         ctx.close()
+    }
+
+    private companion object {
+        private val logger = LoggerFactory.getLogger(HandshakeRequestHandler::class.java)
     }
 
 }

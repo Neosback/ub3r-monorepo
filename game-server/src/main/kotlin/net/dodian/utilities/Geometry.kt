@@ -106,7 +106,7 @@ object Geometry {
         }
         // Source type + rotation from the decoded cache (matches the client world), not the stale
         // MySQL game_object_definitions table. The cache carries the real type and rotation/face,
-        // which the interaction reach (InteractionReachService) needs to compute valid faces.
+        // which WorldRouteService reach checks need to compute valid faces.
         for (obj in CacheCollisionAuditStore.objectsForTile(x, y)) {
             if (obj.skipped) {
                 continue

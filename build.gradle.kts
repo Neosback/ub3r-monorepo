@@ -1,3 +1,7 @@
+plugins {
+    kotlin("jvm") version "1.9.10" apply false
+}
+
 subprojects {
     apply(plugin = "application")
     apply(plugin = "java")

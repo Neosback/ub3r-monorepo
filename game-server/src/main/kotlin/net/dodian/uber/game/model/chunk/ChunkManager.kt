@@ -108,6 +108,33 @@ class ChunkManager {
         )
     }
 
+    /**
+     * Allocation-light spatial query used by routing and occupancy checks. The bounds are the
+     * exact chunks touched by the requested tile square; an empty loaded view remains empty.
+     */
+    fun <E : Entity> forEachNearby(
+        center: Position,
+        type: EntityType,
+        distance: Int,
+        predicate: Predicate<E>,
+        consumer: Consumer<E>,
+    ) {
+        val minChunkX = ((center.x - distance) shr 3) - 6
+        val maxChunkX = ((center.x + distance) shr 3) - 6
+        val minChunkY = ((center.y - distance) shr 3) - 6
+        val maxChunkY = ((center.y + distance) shr 3) - 6
+        for (chunkX in minChunkX..maxChunkX) {
+            for (chunkY in minChunkY..maxChunkY) {
+                val repo = getLoaded(chunkX, chunkY) ?: continue
+                for (entity in repo.getAll<E>(type)) {
+                    if (center.withinDistance(entity.position, distance) && predicate.test(entity)) {
+                        consumer.accept(entity)
+                    }
+                }
+            }
+        }
+    }
+
     private fun <E : Entity> forEach(
         center: Position,
         type: EntityType,

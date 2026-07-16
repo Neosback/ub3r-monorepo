@@ -4,8 +4,8 @@ import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditStore
 import net.dodian.uber.game.engine.systems.cache.CollisionBuildService
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionFlag
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
+import net.dodian.uber.game.engine.routing.WorldRouteService
+import org.rsmod.routefinder.flag.CollisionFlag
 
 object ClipProbeService {
     data class ObjectProbe(
@@ -49,10 +49,9 @@ object ClipProbeService {
 
     @JvmStatic
     fun probeTile(x: Int, y: Int, z: Int): TileProbe {
-        val collision = CollisionManager.global()
-        val rawFlags = collision.getFlags(x, y, z)
-        val fullMobBlocked = collision.isTileBlocked(x, y, z)
-        val terrainBlocked = false
+        val rawFlags = WorldRouteService.getFlags(x, y, z)
+        val fullMobBlocked = WorldRouteService.isTileBlocked(x, y, z)
+        val terrainBlocked = rawFlags and CollisionFlag.BLOCK_WALK != 0
         val staticOverridePresent = StaticObjectOverrides.all().any { it.position.x == x && it.position.y == y && it.position.z == z }
         val runtimeOverlayPresent = ObjectClipService.getAppliedClip(Position(x, y, z)) != null
 
@@ -152,9 +151,10 @@ object ClipProbeService {
     @JvmStatic
     fun formatFlags(rawFlags: Int): String {
         val tags = ArrayList<String>(12)
-        if (rawFlags and CollisionFlag.BLOCKED != 0) tags += "BLOCKED"
-        if (rawFlags and CollisionFlag.IMPENETRABLE_BLOCKED != 0) tags += "IMP_BLOCKED"
-        if (rawFlags and CollisionFlag.BRIDGE != 0) tags += "BRIDGE"
+        if (rawFlags and CollisionFlag.BLOCK_WALK != 0) tags += "BLOCK_WALK"
+        if (rawFlags and CollisionFlag.LOC != 0) tags += "LOC"
+        if (rawFlags and CollisionFlag.LOC_PROJ_BLOCKER != 0) tags += "LOC_PROJ"
+        if (rawFlags and CollisionFlag.ROOF != 0) tags += "ROOF"
         if (rawFlags and CollisionFlag.WALL_NORTH != 0) tags += "N"
         if (rawFlags and CollisionFlag.WALL_SOUTH != 0) tags += "S"
         if (rawFlags and CollisionFlag.WALL_EAST != 0) tags += "E"

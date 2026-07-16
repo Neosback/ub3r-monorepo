@@ -29,7 +29,11 @@ data class NetworkSettings(
     @JsonProperty("connections_per_ip") val connectionsPerIp: Int,
     @JsonProperty("connection_timeout") val connectionTimeout: Int,
     @JsonProperty("packet_limit") val packetLimit: Int,
-    @JsonProperty("leak_detection") val leakDetection: String
+    @JsonProperty("leak_detection") val leakDetection: String,
+    @JsonProperty("swiftfup_connections_per_ip") val swiftfupConnectionsPerIp: Int = 8,
+    @JsonProperty("swiftfup_requests_per_second") val swiftfupRequestsPerSecond: Int = 512,
+    @JsonProperty("swiftfup_read_timeout_seconds") val swiftfupReadTimeoutSeconds: Int = 30,
+    @JsonProperty("swiftfup_max_tracked_ips") val swiftfupMaxTrackedIps: Int = 10_000
 )
 
 data class WorldSettings(
@@ -96,6 +100,18 @@ object SettingsLoader {
         }
         if (settings.network.connectionsPerIp < 1) {
             throw IllegalStateException("connections_per_ip must be at least 1")
+        }
+        if (settings.network.swiftfupConnectionsPerIp !in 1..64) {
+            throw IllegalStateException("swiftfup_connections_per_ip must be in range 1-64")
+        }
+        if (settings.network.swiftfupRequestsPerSecond !in 1..100_000) {
+            throw IllegalStateException("swiftfup_requests_per_second must be in range 1-100000")
+        }
+        if (settings.network.swiftfupReadTimeoutSeconds !in 5..300) {
+            throw IllegalStateException("swiftfup_read_timeout_seconds must be in range 5-300")
+        }
+        if (settings.network.swiftfupMaxTrackedIps !in 100..100_000) {
+            throw IllegalStateException("swiftfup_max_tracked_ips must be in range 100-100000")
         }
         if (settings.world.maxPlayers < 1) {
             throw IllegalStateException("max_players must be at least 1")

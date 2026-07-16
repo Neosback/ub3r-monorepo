@@ -11,7 +11,7 @@ import net.dodian.uber.game.engine.systems.interaction.objects.ObjectClickLoggin
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectInteractionService
 import net.dodian.uber.game.engine.systems.interaction.npcs.BankerApproachFallbackService
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentDispatcher
-import net.dodian.uber.game.engine.systems.pathing.collision.ProjectileLineService
+import net.dodian.uber.game.engine.routing.WorldRouteService
 import net.dodian.uber.game.engine.systems.interaction.items.ItemOnNpcContentService
 import net.dodian.uber.game.objects.travel.LegendsGuildGateService
 import net.dodian.uber.game.engine.systems.follow.FollowRouting
@@ -134,7 +134,7 @@ object InteractionProcessor {
         if (overlaps || (!legendsGuardFrontLane && !player.goodDistanceEntity(npc, range))) {
             if (!overlaps && BankerApproachFallbackService.shouldAttemptFallback(player, npc, intent.option)) {
                 if (player.position.withinDistance(npc.position, 2)
-                    && ProjectileLineService.hasLineOfSight(player.position, npc.position)
+                    && WorldRouteService.hasLineOfSight(player.position, npc.position, player.size, npc.size)
                 ) {
                     if (gameWorldId == 2) logger.debug("[W2-BANKER] Ap-range+LOS hit npcId={} player=({},{}) npc=({},{})", npc.id, player.position.x, player.position.y, npc.position.x, npc.position.y)
                 } else {

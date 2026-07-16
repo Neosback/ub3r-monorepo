@@ -57,6 +57,69 @@ class FileResponsesIntegrationTest {
         }
     }
 
+    @Test
+    fun `cache server closes only the channel that exceeds its request budget`() {
+        val responses = FileResponses()
+        responses.load(cachePath().toString(), print = false)
+        val port = ServerSocket(0).use { it.localPort }
+        val server = FileServer(3, responses)
+
+        try {
+            server.start(port)
+            Socket("127.0.0.1", port).use { client ->
+                client.soTimeout = 5_000
+                handshake(client)
+                requestAndDrain(client, FilePair(0, 1))
+            }
+        } finally {
+            server.shutdown()
+        }
+    }
+
+    @Test
+    fun `multiple connections from same ip both succeed without protection`() {
+        val responses = FileResponses()
+        responses.load(cachePath().toString(), print = false)
+        val port = ServerSocket(0).use { it.localPort }
+        val server = FileServer(3, responses)
+
+        try {
+            server.start(port)
+            Socket("127.0.0.1", port).use { first ->
+                first.soTimeout = 5_000
+                handshake(first)
+                requestAndDrain(first, FilePair(0, 1))
+            }
+            Socket("127.0.0.1", port).use { second ->
+                second.soTimeout = 5_000
+                handshake(second)
+                requestAndDrain(second, FilePair(0, 1))
+            }
+        } finally {
+            server.shutdown()
+        }
+    }
+
+    private fun handshake(socket: Socket) {
+        socket.getOutputStream().apply {
+            write(medium(3))
+            flush()
+        }
+        assertArrayEquals(byteArrayOf(0, 0, 0, 3), socket.getInputStream().readNBytes(4))
+    }
+
+    private fun requestAndDrain(socket: Socket, pair: FilePair) {
+        socket.getOutputStream().apply {
+            write(medium(pair.bitpack))
+            flush()
+        }
+        val header = socket.getInputStream().readNBytes(FilePair.SIZE_BYTES + Int.SIZE_BYTES)
+        assertEquals(pair.bitpack, medium(header, 0))
+        val length = int(header, FilePair.SIZE_BYTES)
+        assertTrue(length > 0)
+        assertEquals(length, socket.getInputStream().readNBytes(length).size)
+    }
+
     private fun cachePath(): Path =
         sequenceOf(Path.of("data/cache"), Path.of("game-server/data/cache"))
             .firstOrNull(Files::isDirectory)

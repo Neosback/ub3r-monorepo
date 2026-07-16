@@ -4,7 +4,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.CombatStyle;
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager;
+import net.dodian.uber.game.engine.routing.WorldRouteService;
 import net.dodian.uber.game.model.entity.npc.Npc;
 
 import java.awt.*;
@@ -240,8 +240,8 @@ public abstract class Entity {
     }
 
     public boolean canMove(int x, int y) {
-        return CollisionManager.global().canMove(getPosition().getX(), getPosition().getY(),
-                getPosition().getX() + x, getPosition().getY() + y, getPosition().getZ(), getSize(), getSize());
+        return WorldRouteService.INSTANCE.canMove(getPosition().getX(), getPosition().getY(),
+                getPosition().getX() + x, getPosition().getY() + y, getPosition().getZ(), getSize());
     }
 
     public CombatStyle getCombatStyle() {

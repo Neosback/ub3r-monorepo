@@ -3,12 +3,11 @@
 package net.dodian.uber.game.engine.systems.cache
 
 import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionFlag
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionDirection
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
+import net.dodian.uber.game.engine.routing.CollisionDirection
+import net.dodian.uber.game.engine.routing.WorldRouteService
 
 class CollisionBuildService(
-    private val collision: CollisionManager,
+    private val collision: WorldRouteService = WorldRouteService,
     private val skippedObjectKeys: Set<Long> = emptySet(),
 ) {
     fun clear() {
@@ -32,14 +31,17 @@ class CollisionBuildService(
     }
 
     fun applyTerrain(grid: DecodedMapTileGrid, planeResolver: CollisionPlaneResolver) {
+        val regionBaseX = (grid.regionId shr 8) * 64
+        val regionBaseY = (grid.regionId and 0xFF) * 64
         for (plane in 0 until 4) {
+            collision.allocateRegionPlane(regionBaseX, regionBaseY, plane)
             for (x in 0 until 64) {
                 for (y in 0 until 64) {
+                    val globalX = regionBaseX + x
+                    val globalY = regionBaseY + y
                     val tile = grid.getTile(x, y, plane)
                     if (tile.isBridge()) {
-                        val globalX = (grid.regionId shr 8) * 64 + x
-                        val globalY = (grid.regionId and 0xFF) * 64 + y
-                        collision.markBridge(plane, globalX, globalY)
+                        collision.markBridge(globalX, globalY, plane)
                     }
                     if (!tile.isBlocked()) {
                         continue
@@ -50,9 +52,7 @@ class CollisionBuildService(
                         continue
                     }
 
-                    val globalX = (grid.regionId shr 8) * 64 + x
-                    val globalY = (grid.regionId and 0xFF) * 64 + y
-                    collision.setFlag(globalX, globalY, effectivePlane, CollisionFlag.BLOCKED)
+                    collision.markTerrainBlocked(globalX, globalY, effectivePlane)
                 }
             }
         }
@@ -95,7 +95,9 @@ class CollisionBuildService(
             sizeX = definition.sizeX,
             sizeY = definition.sizeY,
             solid = definition.isSolid(),
+            blockWalk = definition.blockWalk(),
             impenetrable = impenetrable,
+            breakRouteFinding = definition.breakRouteFinding(),
             hasActions = definition.hasActions(),
             decoration = definition.isDecoration(),
         )
@@ -140,7 +142,9 @@ class CollisionBuildService(
         sizeX = sizeX,
         sizeY = sizeY,
         solid = solid,
+        blockWalk = blockWalk,
         impenetrable = impenetrable,
+        breakRouteFinding = breakRouteFinding,
         hasActions = hasActions,
         decoration = decoration,
     )
@@ -174,7 +178,9 @@ class CollisionBuildService(
         sizeX = sizeX,
         sizeY = sizeY,
         solid = solid,
+        blockWalk = blockWalk,
         impenetrable = impenetrable,
+        breakRouteFinding = breakRouteFinding,
         hasActions = hasActions,
         decoration = decoration,
     )
@@ -189,11 +195,13 @@ class CollisionBuildService(
         sizeX: Int,
         sizeY: Int,
         solid: Boolean,
+        blockWalk: Int,
         impenetrable: Boolean,
+        breakRouteFinding: Boolean,
         hasActions: Boolean,
         decoration: Boolean,
     ) {
-        if (z < 0 || !solid) {
+        if (z < 0 || blockWalk == 0) {
             return
         }
 
@@ -203,21 +211,17 @@ class CollisionBuildService(
 
         when {
             type == 22 -> {
-                if (hasActions || decoration) {
-                    if (hasActions) {
-                        collision.markOccupant(z, x, y, width, length, impenetrable = false, add = add)
-                    }
-                }
+                if (blockWalk == 1) collision.markGroundDecoration(z, x, y, add)
             }
             type == 10 || type == 11 || type == 9 || type >= 12 -> {
-                collision.markOccupant(z, x, y, width, length, impenetrable, add)
+                collision.markOccupant(z, x, y, width, length, impenetrable, breakRouteFinding, add)
             }
             type in 0..3 -> {
                 val orientation = CollisionDirection.WNES[normalizedRotation]
                 if (add) {
-                    collision.markWall(orientation, z, x, y, type, impenetrable)
+                    collision.markWall(orientation, z, x, y, type, impenetrable, add = true)
                 } else {
-                    collision.unmarkWall(orientation, z, x, y, type, impenetrable)
+                    collision.markWall(orientation, z, x, y, type, impenetrable, add = false)
                 }
             }
         }

@@ -3,7 +3,7 @@ package net.dodian.uber.game.engine.systems.cache
 import java.nio.file.Path
 import java.util.HashMap
 import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
+import net.dodian.uber.game.engine.routing.WorldRouteService
 import org.slf4j.LoggerFactory
 
 class CacheBootstrapService(
@@ -11,7 +11,7 @@ class CacheBootstrapService(
 ) {
     private val logger = LoggerFactory.getLogger(CacheBootstrapService::class.java)
     private val skippedObjectKeys = SkippedObjectRepository.load()
-    private val collisionBuildService = CollisionBuildService(CollisionManager.global(), skippedObjectKeys)
+    private val collisionBuildService = CollisionBuildService(WorldRouteService, skippedObjectKeys)
 
     fun bootstrap(): MapIndexTable {
         val store = CacheStore(cachePath).open()
@@ -136,12 +136,15 @@ class CacheBootstrapService(
                 CacheCollisionAuditStore.packedObjectCount(),
                 CacheCollisionAuditStore.packedBytes(),
             )
-            val matrix = CollisionManager.global().matrixMetrics()
+            val matrix = WorldRouteService.metrics()
             logger.debug(
-                "Collision matrix sparse zones: active={} payloadBytes={} estimatedDirectoryBytes={}",
+                "RSMOD collision map zones: active={} materialized={} pages={} payloadBytes={} estimatedDirectoryBytes={} estimatedRetainedBytes={}",
                 matrix.activeZones,
+                matrix.materializedZones,
+                matrix.activePages,
                 matrix.payloadBytes,
                 matrix.estimatedDirectoryBytes,
+                matrix.estimatedRetainedBytes,
             )
 
         return MapDecodeSummary(

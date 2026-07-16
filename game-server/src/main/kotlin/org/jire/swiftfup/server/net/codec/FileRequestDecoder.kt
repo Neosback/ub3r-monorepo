@@ -10,6 +10,9 @@ import org.jire.swiftfup.server.FilePair.Companion.readFilePair
  * @author Jire
  */
 class FileRequestDecoder : ByteToMessageDecoder() {
+    init {
+        isSingleDecode = true
+    }
 
     override fun decode(ctx: ChannelHandlerContext, buf: ByteBuf, out: MutableList<Any>) {
         if (!buf.isReadable(FilePair.SIZE_BYTES)) {

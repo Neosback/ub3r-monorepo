@@ -4,7 +4,7 @@ import net.dodian.cache.objects.GameObjectData
 import net.dodian.cache.objects.GameObjectDef
 import net.dodian.uber.game.engine.systems.follow.FollowRouting
 import net.dodian.uber.game.engine.systems.follow.ObjectRouteStatus
-import net.dodian.uber.game.engine.systems.pathing.collision.InteractionReachService
+import net.dodian.uber.game.engine.routing.WorldRouteService
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.objects.WorldObject
@@ -24,7 +24,7 @@ internal object ObjectApproachRoutingService {
         }
 
         val worldObject = worldObject(objectId, targetPosition, objectDef)
-        val reached = InteractionReachService.reachedObject(player.position, worldObject)
+        val reached = WorldRouteService.reachedObject(player.position, player.size, worldObject)
         logger.debug(
             "[ObjApproach] objectId={} pos=({},{},{}) player=({},{}) reached={} walkSteps={} wQueue={}/{}",
             objectId, targetPosition.x, targetPosition.y, targetPosition.z,

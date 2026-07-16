@@ -5,8 +5,7 @@ import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditStore
 import net.dodian.uber.game.engine.systems.interaction.commands.CommandContent
 import net.dodian.uber.game.engine.systems.interaction.commands.CommandContext
 import net.dodian.uber.game.engine.systems.interaction.commands.commands
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
-import net.dodian.uber.game.engine.systems.pathing.collision.ProjectileLineService
+import net.dodian.uber.game.engine.routing.WorldRouteService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.objects.DoorRegistry
 
@@ -30,19 +29,9 @@ private fun handleLineOfSight(context: CommandContext): Boolean {
         context.reply("No combat target selected.")
         return true
     }
-    val trace = ProjectileLineService.trace(
-        ProjectileLineService.Footprint(client.position.x, client.position.y, client.size.coerceAtLeast(1), client.position.z),
-        ProjectileLineService.Footprint(target.position.x, target.position.y, target.size.coerceAtLeast(1), target.position.z),
-    )
+    val trace = WorldRouteService.rayCast(client.position, target.position, lineOfSight = true)
     val targetLabel = if (target is Npc) "npc:${target.id}/${target.slot}" else "player:${target.slot}"
-    val message = if (trace.clear) {
-        "LOS clear to $targetLabel ray=(${trace.source.x},${trace.source.y})->(${trace.target.x},${trace.target.y})"
-    } else {
-        val blocked = trace.blockedAt
-        "LOS blocked to $targetLabel ray=(${trace.source.x},${trace.source.y})->(${trace.target.x},${trace.target.y}) " +
-            "edge=(${trace.stepX},${trace.stepY}) at=(${blocked?.x},${blocked?.y},${blocked?.z}) " +
-            "fromFlags=0x${trace.previousFlags.toString(16)} toFlags=0x${trace.flags.toString(16)}"
-    }
+    val message = if (trace.success) "LOS clear to $targetLabel tiles=${trace.coordinates.size}" else "LOS blocked to $targetLabel tiles=${trace.coordinates.size}"
     context.reply(message)
     return true
 }
@@ -84,7 +73,7 @@ private fun handleNear(context: CommandContext): Boolean {
                 val dist = Math.max(Math.abs(dx), Math.abs(dy))
                 if (dist == 0) continue
 
-                val flags = CollisionManager.global().getFlags(x, y, pos.z)
+                val flags = WorldRouteService.getFlags(x, y, pos.z)
                 val hasBlocked = flags and 0x200000 != 0
 
                 val objects = CacheCollisionAuditStore.objectsForTile(x, y)

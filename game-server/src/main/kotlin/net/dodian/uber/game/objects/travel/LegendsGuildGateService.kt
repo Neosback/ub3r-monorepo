@@ -13,10 +13,7 @@ import net.dodian.uber.game.api.content.ContentTiming
 import net.dodian.uber.game.engine.systems.follow.FollowService
 import net.dodian.uber.game.engine.systems.interaction.ObjectClipService
 import net.dodian.uber.game.engine.systems.interaction.PersonalPassageService
-import net.dodian.uber.game.engine.systems.pathing.AStarPathfindingAlgorithm
-import net.dodian.uber.game.engine.systems.pathing.Heuristic
-import net.dodian.uber.game.engine.systems.pathing.Node
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
+import net.dodian.uber.game.engine.routing.WorldRouteService
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.npc.LegendsGuard
 import org.slf4j.LoggerFactory
@@ -39,11 +36,6 @@ object LegendsGuildGateService {
     private const val VISUAL_OPEN_MS = 12_000L
     private const val TRAVERSAL_TICK_MS = 600
     private const val TRAVERSAL_TIMEOUT_MS = 8_000L
-    private val pathfinder =
-        AStarPathfindingAlgorithm(
-            collision = { x, y, z, dx, dy -> CollisionManager.global().traversable(x, y, z, dx, dy) },
-            heuristic = Heuristic.EUCLIDEAN,
-        )
 
     private enum class Stage {
         TO_ENTRY,
@@ -402,9 +394,9 @@ object LegendsGuildGateService {
             return false
         }
 
-        val path = ArrayDeque<Node>(2)
-        path.add(Node(lane.gate.x, lane.gate.y, lane.gate.z))
-        path.add(Node(lane.exit.x, lane.exit.y, lane.exit.z))
+        val path = ArrayDeque<GateStep>(2)
+        path.add(GateStep(lane.gate.x, lane.gate.y, lane.gate.z))
+        path.add(GateStep(lane.exit.x, lane.exit.y, lane.exit.z))
 
         val validated = validatePath(client, path)
         if (validated.isEmpty()) {
@@ -428,10 +420,11 @@ object LegendsGuildGateService {
             return true
         }
 
-        val path = pathfinder.find(client.position.x, client.position.y, destination.x, destination.y, destination.z)
-        if (path.isEmpty()) {
+        val route = WorldRouteService.findRoute(destination.z, client.position.x, client.position.y, destination.x, destination.y, client.size, moveNear = false)
+        if (!route.success) {
             return false
         }
+        val path = ArrayDeque(route.waypoints.map { GateStep(it.x, it.z, it.level) })
 
         val validated = validatePath(client, path)
         if (validated.isEmpty()) {
@@ -447,8 +440,8 @@ object LegendsGuildGateService {
         return true
     }
 
-    private fun validatePath(client: Client, path: ArrayDeque<Node>): ArrayDeque<Node> {
-        val validated = ArrayDeque<Node>(path.size)
+    private fun validatePath(client: Client, path: ArrayDeque<GateStep>): ArrayDeque<GateStep> {
+        val validated = ArrayDeque<GateStep>(path.size)
         var currentX = client.position.x
         var currentY = client.position.y
         val z = client.position.z
@@ -460,7 +453,7 @@ object LegendsGuildGateService {
                 continue
             }
             val traversable =
-                CollisionManager.global().traversable(step.x, step.y, z, dx, dy) ||
+                WorldRouteService.hasLineOfWalk(Position(currentX, currentY, z), Position(step.x, step.y, z), client.size) ||
                     PersonalPassageService.canTraverse(client, currentX, currentY, step.x, step.y, z)
             if (!traversable) {
                 break
@@ -473,7 +466,7 @@ object LegendsGuildGateService {
         return validated
     }
 
-    private fun applyRoute(client: Client, path: ArrayDeque<Node>) {
+    private fun applyRoute(client: Client, path: ArrayDeque<GateStep>) {
         client.resetWalkingQueue()
         client.newWalkCmdSteps = 0
         client.newWalkCmdIsRunning = false
@@ -495,6 +488,8 @@ object LegendsGuildGateService {
             index++
         }
     }
+
+    private data class GateStep(val x: Int, val y: Int, val z: Int)
 
     private fun finishTraversal(client: Client, lane: Lane, reason: String, clearPassage: Boolean) {
         cleanup(client, clearPassage)

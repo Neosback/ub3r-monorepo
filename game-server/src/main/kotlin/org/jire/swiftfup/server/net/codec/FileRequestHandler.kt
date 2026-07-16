@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
  * @author Jire
  */
 class FileRequestHandler(
-    private val responses: FileResponses
+    private val responses: FileResponses,
 ) : SimpleChannelInboundHandler<FilePair>() {
 
     override fun channelRead0(ctx: ChannelHandlerContext, msg: FilePair) {
@@ -29,6 +29,9 @@ class FileRequestHandler(
             ctx.write(byteBuf, ctx.voidPromise())
         } else {
             ctx.write(response.retainedDuplicate(), ctx.voidPromise())
+        }
+        if (!ctx.channel().isWritable) {
+            ctx.channel().config().isAutoRead = false
         }
     }
 

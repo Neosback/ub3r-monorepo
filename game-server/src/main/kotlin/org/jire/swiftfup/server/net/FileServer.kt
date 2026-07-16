@@ -10,15 +10,11 @@ import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.channel.epoll.Epoll
 import io.netty.channel.epoll.EpollEventLoopGroup
 import io.netty.channel.epoll.EpollServerSocketChannel
-import io.netty.util.ResourceLeakDetector
 import org.slf4j.LoggerFactory
 
-/**
- * @author Jire
- */
 class FileServer(
     private val version: Int,
-    private val fileResponses: FileResponses
+    private val fileResponses: FileResponses,
 ) {
     private val logger = LoggerFactory.getLogger(FileServer::class.java)
     private var bossGroup: EventLoopGroup? = null
@@ -35,6 +31,7 @@ class FileServer(
         val bootstrap = ServerBootstrap()
             .group(bossGroup, workerGroup)
             .channel(channelClass)
+            .option(ChannelOption.SO_BACKLOG, 256)
             .childOption(ChannelOption.AUTO_READ, true)
             .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 120_000)
             .childOption(ChannelOption.TCP_NODELAY, true)
@@ -42,13 +39,13 @@ class FileServer(
             .childOption(ChannelOption.SO_SNDBUF, 65536)
             .childOption(
                 ChannelOption.WRITE_BUFFER_WATER_MARK,
-                WriteBufferWaterMark(2 shl 20, 2 shl 24)
+                WriteBufferWaterMark(512 * 1024, 2 * 1024 * 1024)
             )
             .childHandler(FileServerChannelInitializer(version, fileResponses))
             
         logger.info("[SwiftFUP] Binding SwiftFUP server on port {}", port)
         channelFuture = bootstrap.bind(port).sync()
-        logger.info("[SwiftFUP] SwiftFUP server listening on {}", port)
+        logger.info("swiftfup_ready port={} transport={}", port, if (useEpoll) "epoll" else "nio")
     }
 
     fun shutdown() {
