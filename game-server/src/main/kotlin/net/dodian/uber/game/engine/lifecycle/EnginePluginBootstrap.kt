@@ -66,6 +66,9 @@ object EnginePluginBootstrap {
     fun currentPhase(): LifecyclePhase = phase
 
     @JvmStatic
+    fun isFrozen(): Boolean = bootstrapped.get() && phase == LifecyclePhase.FREEZE
+
+    @JvmStatic
     fun orderedContentBootstrapIds(): List<String> = orderedContentBootstraps().map(ContentBootstrap::id)
 
     private fun orderedContentBootstraps(): List<ContentBootstrap> {

@@ -164,6 +164,9 @@ open class ItemManager @JvmOverloads constructor(
         return items[id]
     }
 
+    /** True only for an item that exists in the server's loaded definition set. */
+    fun hasDefinition(id: Int): Boolean = getItem(id) != null
+
     fun isNote(id: Int): Boolean {
         val item = getItem(id)
         return item != null && id >= 0 && item.isNoted()

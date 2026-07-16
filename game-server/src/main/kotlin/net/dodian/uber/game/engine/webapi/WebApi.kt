@@ -255,6 +255,31 @@ object WebApi {
                         call.respondText(mapper.writeValueAsString(health), ContentType.Application.Json)
                     }
 
+                    get("/ready") {
+                        val dbOk = try {
+                            dbConnection.use { conn -> conn.isValid(2) }
+                        } catch (_: Exception) {
+                            false
+                        }
+                        val loopFresh = net.dodian.uber.game.engine.metrics.OperationalTelemetry.isGameLoopFresh()
+                        val pluginsFrozen = net.dodian.uber.game.engine.lifecycle.EnginePluginBootstrap.isFrozen()
+                        val ready = dbOk && loopFresh && pluginsFrozen
+                        val readiness = linkedMapOf<String, Any>(
+                            "status" to if (ready) "READY" else "DEGRADED",
+                            "database" to if (dbOk) "UP" else "DOWN",
+                            "gameLoop" to if (loopFresh) "FRESH" else "STALE",
+                            "pluginBootstrap" to net.dodian.uber.game.engine.lifecycle.EnginePluginBootstrap.currentPhase().name,
+                            "players" to PlayerRegistry.getPlayerCount(),
+                            "telemetry" to net.dodian.uber.game.engine.metrics.OperationalTelemetry.snapshot(),
+                            "contentFaults" to net.dodian.uber.game.api.content.ContentFaultCircuitBreaker.snapshot(),
+                        )
+                        call.respondText(
+                            mapper.writeValueAsString(readiness),
+                            ContentType.Application.Json,
+                            if (ready) HttpStatusCode.OK else HttpStatusCode.ServiceUnavailable,
+                        )
+                    }
+
                     rateLimit {
                         get("/api/hiscores") {
                             val playerName = call.request.queryParameters["player"]

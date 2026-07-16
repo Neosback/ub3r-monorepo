@@ -110,14 +110,14 @@ class SkillPluginBuilder internal constructor(
 
     fun startSession(sessionKey: String) {
         composeLifecycle(
-            onStart = { SkillStateCoordinator.beginSession(it.protocolClient(), sessionKey) },
+            onStart = { it.actions.beginSession(sessionKey) },
         )
     }
 
     fun requireSession(sessionKey: String) {
         composeLifecycle(
             onAttempt = { client ->
-                val existing = client.protocolClient().activeSkillSessionKey
+                val existing = client.actions.activeSessionKey()
                 if (existing != null && existing != sessionKey) {
                     client.ui.message("You are already doing another skill action.")
                 }
@@ -127,7 +127,7 @@ class SkillPluginBuilder internal constructor(
 
     fun endSession(sessionKey: String) {
         composeLifecycle(
-            onStop = { SkillStateCoordinator.endSession(it.protocolClient(), sessionKey) },
+            onStop = { it.actions.endSession(sessionKey) },
         )
     }
 

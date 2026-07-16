@@ -13,6 +13,7 @@ import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.model.entity.player.PlayerInitializer;
+import net.dodian.uber.game.engine.metrics.OperationalTelemetry;
 import net.dodian.uber.game.netty.codec.ByteMessageEncoder;
 import net.dodian.uber.game.netty.game.GamePacketDecoder;
 import net.dodian.uber.game.netty.game.GamePacketHandler;
@@ -271,6 +272,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         if (loadResult.getCode() != 0) {
             LOGIN_ATTEMPTS.recordFailure(remoteIp(ctx), System.currentTimeMillis());
             long failures = LOGIN_LOAD_FAILURES.incrementAndGet();
+            OperationalTelemetry.incrementCounter("login.load.failure", 1L);
             logger.warn(
                     "Login load failed for {} code={} load={}ms pendingRetries={} failures={}",
                     client.getPlayerName(),
@@ -325,6 +327,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             long queueWaitMs = (finalizerStartedAtNanos - finalizerQueuedAtNanos) / 1_000_000L;
             if (!channel.isActive() || client.disconnected) {
                 long failures = LOGIN_CHANNEL_CLOSES_BEFORE_FINALIZE.incrementAndGet();
+                OperationalTelemetry.incrementCounter("login.finalize.channel_closed", 1L);
                 // Channel died before the game thread could register the player; release the reserved slot.
                 synchronized (PlayerRegistry.slotLock) {
                     PlayerRegistry.usedSlots.clear(slotCopy);
@@ -385,6 +388,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 });
             } catch (Exception ex) {
                 long failures = LOGIN_INITIALIZER_FAILURES.incrementAndGet();
+                OperationalTelemetry.incrementCounter("login.finalize.failure", 1L);
                 logger.warn(
                         "[GameThread] PlayerInitializer error for {} failures={}",
                         client.getPlayerName(),
@@ -398,6 +402,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         });
 
         if (!finalizerAccepted) {
+            OperationalTelemetry.incrementCounter("login.finalize.rejected", 1L);
             logger.warn("Login finalization queue full for {}; closing session", client.getPlayerName());
             releaseSlot(slotCopy);
             releaseToken();

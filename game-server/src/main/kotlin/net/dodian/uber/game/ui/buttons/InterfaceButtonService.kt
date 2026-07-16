@@ -7,7 +7,7 @@ import net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher
 object InterfaceButtonService {
     @JvmStatic
     fun tryHandle(client: Client, rawButtonId: Int, opIndex: Int): Boolean {
-        return ContentErrorPolicy.runBoolean(client, "button.dispatch") {
+        return ContentErrorPolicy.runBoolean(client, "button.dispatch", bindingKey = "button:$rawButtonId:$opIndex:${client.activeInterfaceId}") {
             if (SkillInteractionDispatcher.tryHandleButton(client, rawButtonId, opIndex)) {
                 return@runBoolean true
             }

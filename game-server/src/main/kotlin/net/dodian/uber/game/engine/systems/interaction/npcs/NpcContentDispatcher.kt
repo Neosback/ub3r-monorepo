@@ -36,7 +36,7 @@ object NpcContentDispatcher {
             return ContentDispatchTiming(false, resolveNs, 0L, null)
         }
         val handlerStart = System.nanoTime()
-        val handled = ContentErrorPolicy.runBoolean(client, "npc.dispatch.click.$option") {
+        val handled = ContentErrorPolicy.runBoolean(client, "npc.dispatch.click.$option", bindingKey = "npc.click:${npc.id}:$option") {
             val opt = when (option) {
                 1 -> net.dodian.uber.game.api.interaction.InteractionOption.FIRST
                 2 -> net.dodian.uber.game.api.interaction.InteractionOption.SECOND
@@ -67,7 +67,7 @@ object NpcContentDispatcher {
             return ContentDispatchTiming(false, resolveNs, 0L, null)
         }
         val handlerStart = System.nanoTime()
-        val handled = ContentErrorPolicy.runBoolean(client, "npc.dispatch.attack") {
+        val handled = ContentErrorPolicy.runBoolean(client, "npc.dispatch.attack", bindingKey = "npc.attack:${npc.id}") {
             val ctx = net.dodian.uber.game.api.interaction.NpcInteractionContext(
                 client,
                 net.dodian.uber.game.api.interaction.InteractionOption.ATTACK,

@@ -3,6 +3,7 @@ package net.dodian.uber.game.engine.loop
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.system.measureNanoTime
+import net.dodian.uber.game.engine.metrics.OperationalTelemetry
 import org.slf4j.LoggerFactory
 
 object GameThreadIngress {
@@ -13,6 +14,7 @@ object GameThreadIngress {
     @JvmStatic
     fun submitCritical(label: String, task: Runnable): Boolean {
         if (criticalQueue.size >= MAX_CRITICAL_QUEUE) {
+            OperationalTelemetry.incrementCounter("ingress.critical.rejected")
             if (rejectedCriticalCount.incrementAndGet() <= 10) {
                 logger.warn(
                     "GameThreadIngress critical queue full ({}), rejecting task: {}",
@@ -34,6 +36,7 @@ object GameThreadIngress {
     @JvmStatic
     fun submitDeferred(label: String, task: Runnable): Boolean {
         if (deferredQueue.size >= MAX_DEFERRED_QUEUE) {
+            OperationalTelemetry.incrementCounter("ingress.deferred.rejected")
             if (rejectedDeferredCount.incrementAndGet() <= 10) {
                 logger.warn(
                     "GameThreadIngress deferred queue full ({}), rejecting task: {}",
@@ -115,6 +118,7 @@ object GameThreadIngress {
                     slowestTaskLabel = task.label
                 }
             } catch (exception: Throwable) {
+                OperationalTelemetry.incrementCounter("ingress.task.failure")
                 logger.warn("{} task failed label={}", queueName, task.label, exception)
             }
             if (includeLabels) {

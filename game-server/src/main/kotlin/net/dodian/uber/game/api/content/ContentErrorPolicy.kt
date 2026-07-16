@@ -11,12 +11,18 @@ object ContentErrorPolicy {
     fun runBoolean(
         player: Client,
         scope: String,
+        bindingKey: String = scope,
         defaultValue: Boolean = false,
         action: () -> Boolean,
     ): Boolean {
+        if (!ContentFaultCircuitBreaker.allows(bindingKey)) {
+            logger.warn("Content handler skipped because binding is quarantined scope={} binding={} slot={} name={}", scope, bindingKey, player.slot, player.playerName)
+            return defaultValue
+        }
         return try {
             action()
         } catch (throwable: Throwable) {
+            ContentFaultCircuitBreaker.recordFailure(bindingKey)
             logger.error(
                 "Content handler failure scope={} slot={} name={} pos={}",
                 scope,
@@ -33,11 +39,16 @@ object ContentErrorPolicy {
     fun <T> runNullable(
         player: Client,
         scope: String,
+        bindingKey: String = scope,
         action: () -> T?,
     ): T? {
+        if (!ContentFaultCircuitBreaker.allows(bindingKey)) {
+            return null
+        }
         return try {
             action()
         } catch (throwable: Throwable) {
+            ContentFaultCircuitBreaker.recordFailure(bindingKey)
             logger.error(
                 "Content handler failure scope={} slot={} name={} pos={}",
                 scope,

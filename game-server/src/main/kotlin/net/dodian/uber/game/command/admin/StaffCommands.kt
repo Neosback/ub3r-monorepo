@@ -12,6 +12,7 @@ import net.dodian.uber.game.netty.listener.out.CameraReset
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendCamera
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.api.content.ContentFaultCircuitBreaker
 
 object StaffCommands : CommandContent {
     private val moderationAliases = setOf(
@@ -22,6 +23,21 @@ object StaffCommands : CommandContent {
 
     override fun definitions() =
         commands {
+            command("contentfaults", "reenablecontent") {
+                if (client.playerRights < 2) return@command false
+                if (alias == "contentfaults") {
+                    val disabled = ContentFaultCircuitBreaker.snapshot()["disabledBindings"] as List<*>
+                    client.sendMessage(if (disabled.isEmpty()) "No content bindings are quarantined." else "Quarantined content: ${disabled.joinToString()}")
+                    return@command true
+                }
+                val binding = parts.drop(1).joinToString(" ").trim()
+                if (binding.isBlank()) return@command usage("::reenablecontent <binding-key>")
+                client.sendMessage(
+                    if (ContentFaultCircuitBreaker.reEnable(binding)) "Re-enabled content binding: $binding"
+                    else "Content binding was not quarantined: $binding",
+                )
+                true
+            }
             command(
                 "pnpc", "invis", "teleto", "kick", "teletome", "staffzone", "test_area", "busy",
                 "camera", "creset", "slots", "checkbank", "checkinv", "banmac", "tradelock",

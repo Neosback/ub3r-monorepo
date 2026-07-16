@@ -18,6 +18,7 @@ package net.dodian.uber.game.skill.example
 
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
+import net.dodian.uber.game.api.content.ContentPlayer
 import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
@@ -105,13 +106,18 @@ Do not import, accept, or expose `Client` from a skill module. Use the typed
 interaction object and its `SkillPlayer` capabilities instead. The dispatcher
 is the only layer allowed to adapt a protocol player into skill content.
 
+`SkillPlayer` is also a `ContentPlayer`. Use its typed capabilities for common
+content work: `inventory`, `equipment`, `economy`, `actions`, `ui`, `world`,
+`social`, and `features`. Do not add direct packet or entity-field access to
+avoid a missing capability; extend the façade instead.
+
 ### 2. Put behavior in the domain object, not the plugin body
 
 Good:
 
 ```kotlin
-objectClick(preset = PolicyPreset.GATHERING, option = 1, 1234) { client, objectId, position, obj ->
-    ExampleSkill.start(client, ExampleRequest(objectId, position))
+objectClick(preset = PolicyPreset.GATHERING, option = 1, 1234) { interaction ->
+    ExampleSkill.start(interaction.player, ExampleRequest(interaction.objectId, interaction.position))
 }
 ```
 

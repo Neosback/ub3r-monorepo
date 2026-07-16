@@ -15,6 +15,7 @@ object OperationalTelemetry {
     private val counters = ConcurrentHashMap<String, LongAdder>()
     private val tickOverruns = LongAdder()
     private val tickCount = LongAdder()
+    @Volatile private var lastTickAtMs: Long = 0L
 
     @JvmStatic
     fun recordPhaseMillis(phase: String, elapsedMs: Long) {
@@ -24,6 +25,7 @@ object OperationalTelemetry {
 
     @JvmStatic
     fun recordTick(elapsedMs: Long, budgetMs: Long = TICK_BUDGET_MS) {
+        lastTickAtMs = System.currentTimeMillis()
         tickCount.increment()
         if (elapsedMs > budgetMs) {
             tickOverruns.increment()
@@ -31,6 +33,14 @@ object OperationalTelemetry {
         }
         recordPhaseMillis("tick.total", elapsedMs)
     }
+
+    @JvmStatic
+    fun isGameLoopFresh(maxAgeMs: Long = 3_000L): Boolean =
+        lastTickAtMs > 0L && System.currentTimeMillis() - lastTickAtMs <= maxAgeMs
+
+    @JvmStatic
+    fun gameLoopAgeMs(): Long =
+        if (lastTickAtMs <= 0L) Long.MAX_VALUE else (System.currentTimeMillis() - lastTickAtMs).coerceAtLeast(0L)
 
     @JvmStatic
     fun incrementCounter(name: String, delta: Long = 1L) {
@@ -60,6 +70,8 @@ object OperationalTelemetry {
             "tickCount" to totalTicks,
             "tickOverruns" to overrunCount,
             "tickOverrunRate" to overrunRate,
+            "lastTickAtMs" to lastTickAtMs,
+            "gameLoopAgeMs" to gameLoopAgeMs(),
             "alerts" to mapOf(
                 "tickOverrunRateHigh" to (overrunRate >= 0.05),
                 "syncSlowEventsHigh" to ((countersSnapshot["sync.slow"] ?: 0L) >= 10L),

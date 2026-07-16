@@ -12,8 +12,10 @@ import net.dodian.uber.game.skill.prayer.PrayerManager
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.persistence.account.Login
+import org.slf4j.LoggerFactory
 
 internal object AccountLoginMapper {
+    private val logger = LoggerFactory.getLogger(AccountLoginMapper::class.java)
     private const val DEFAULT_HITPOINTS_XP = 1155
     private const val DEFAULT_HITPOINTS_LEVEL = 10
     private const val DEFAULT_SKILL_XP = 0
@@ -22,8 +24,10 @@ internal object AccountLoginMapper {
     fun applyExistingCharacter(player: Client, row: AccountLoginRepository.JoinedCharacterRow) {
         applyLook(player, row.look)
         player.latestNews = row.latestNews
-        player.loginPosition(row.x, row.y, row.z)
-        if (row.x < 1 || row.y < 1) {
+        if (isSafePosition(row.x, row.y, row.z)) {
+            player.loginPosition(row.x, row.y, row.z)
+        } else {
+            reject(player, "position", "x=${row.x} y=${row.y} z=${row.z}")
             player.resetPos()
         }
 
@@ -33,7 +37,7 @@ internal object AccountLoginMapper {
 
         val prayerParts = splitOrEmpty(row.prayer, ":")
         val boostedParts = splitOrEmpty(row.boosted, ":")
-        val prayerLevel = if (row.prayer.isEmpty()) 0 else prayerParts[0].toInt()
+        val prayerLevel = prayerParts.firstOrNull()?.toIntOrNull() ?: 0
 
         if (row.statsPresent) {
             applyJoinedStats(player, row.skillExperience, row.health, prayerLevel)
@@ -99,7 +103,13 @@ internal object AccountLoginMapper {
 
         val parts = IntArray(13)
         for (index in look.indices) {
-            parts[index] = look[index].toInt()
+            val value = look[index].toIntOrNull()
+            if (value == null || value !in -1..255) {
+                reject(player, "look", "invalid part index=$index value=${look[index]}")
+                player.lookNeeded = true
+                return
+            }
+            parts[index] = value
         }
         player.setLook(parts)
     }
@@ -122,14 +132,24 @@ internal object AccountLoginMapper {
     private fun applyPrayerBoosts(player: Client, prayerParse: Array<String>, boostedParse: Array<String>, prayer: String, boosted: String) {
         if (prayer.isNotEmpty()) {
             for (index in 1 until prayerParse.size) {
-                val prayerButton = PrayerManager.Prayer.forButton(prayerParse[index].toInt()) ?: continue
+                val button = prayerParse[index].toIntOrNull()
+                if (button == null) {
+                    reject(player, "prayer", "invalid button index=$index")
+                    continue
+                }
+                val prayerButton = PrayerManager.Prayer.forButton(button) ?: continue
                 player.prayerManager.togglePrayer(prayerButton)
             }
         }
         if (boosted.isNotEmpty()) {
-            player.lastRecover = boostedParse[0].toInt()
-            for (index in 0 until boostedParse.size - 1) {
-                player.boost(boostedParse[index + 1].toInt(), Skill.getSkill(index))
+            player.lastRecover = boostedParse.firstOrNull()?.toIntOrNull() ?: 0
+            for (index in 0 until minOf(boostedParse.size - 1, Skill.VALUES.size)) {
+                val boost = boostedParse[index + 1].toIntOrNull()
+                if (boost == null) {
+                    reject(player, "boosted", "invalid boost index=${index + 1}")
+                    continue
+                }
+                player.boost(boost, Skill.getSkill(index))
             }
         }
     }
@@ -146,9 +166,11 @@ internal object AccountLoginMapper {
             val slot = parse[0].toIntOrNull() ?: continue
             val id = parse[1].toIntOrNull() ?: continue
             val amount = parse[2].toIntOrNull() ?: continue
-            if (slot in player.playerItems.indices && id in 0 until 66000 && amount > 0) {
+            if (slot in player.playerItems.indices && amount > 0 && Server.itemManager.hasDefinition(id)) {
                 player.playerItems[slot] = id + 1
                 player.playerItemsN[slot] = amount
+            } else {
+                reject(player, "inventory", "slot=$slot id=$id amount=$amount")
             }
         }
     }
@@ -165,7 +187,8 @@ internal object AccountLoginMapper {
             val slot = parse[0].toIntOrNull() ?: continue
             val id = parse[1].toIntOrNull() ?: continue
             val amount = parse[2].toIntOrNull() ?: continue
-            if (slot !in player.equipment.indices || id !in 0..24000 || amount <= 0) {
+            if (slot !in player.equipment.indices || amount <= 0 || !Server.itemManager.hasDefinition(id)) {
+                reject(player, "equipment", "slot=$slot id=$id amount=$amount")
                 continue
             }
             if (player.checkEquip(id, slot, -1)) {
@@ -207,7 +230,7 @@ internal object AccountLoginMapper {
             val rawId = parse[1].toIntOrNull() ?: continue
             val amount = parse[2].toIntOrNull() ?: continue
             val tab = if (parse.size >= 4) parse[3].toIntOrNull()?.coerceIn(0, 9) ?: 0 else 0
-            if (rawId in 0 until 66600 && amount > 0 && slot in 0 until size) {
+            if (amount > 0 && slot in 0 until size && Server.itemManager.hasDefinition(rawId)) {
                 // Tarnish banks never retain notes. Only explicit notes are normalized;
                 // placeholders and other linked variants keep their original identity.
                 val itemId = Server.itemManager.normalizeForBank(rawId)
@@ -224,6 +247,8 @@ internal object AccountLoginMapper {
                 if (existing == null) {
                     player.bankSlotTabs[destination] = tab
                 }
+            } else {
+                reject(player, "bank", "slot=$slot id=$rawId amount=$amount")
             }
         }
     }
@@ -237,7 +262,12 @@ internal object AccountLoginMapper {
             if (index >= player.runePouchesAmount.size) {
                 break
             }
-            player.runePouchesAmount[index] = pouches[index].toInt()
+            val amount = pouches[index].toIntOrNull()
+            if (amount == null || amount < 0) {
+                reject(player, "rune-pouches", "invalid amount index=$index")
+                continue
+            }
+            player.runePouchesAmount[index] = amount
         }
     }
 
@@ -248,7 +278,12 @@ internal object AccountLoginMapper {
         val songs = songData.split(" ")
         for (index in songs.indices) {
             if (songs[index].isNotEmpty()) {
-                player.setSongUnlocked(index, songs[index].toInt() == 1)
+                val unlocked = songs[index].toIntOrNull()
+                if (unlocked == null) {
+                    reject(player, "songs", "invalid value index=$index")
+                    continue
+                }
+                player.setSongUnlocked(index, unlocked == 1)
             }
         }
     }
@@ -259,7 +294,12 @@ internal object AccountLoginMapper {
         }
         for (friend in friendData.split(" ")) {
             if (friend.isNotEmpty()) {
-                player.friends.add(Friend(friend.toLong(), true))
+                val friendId = friend.toLongOrNull()
+                if (friendId == null) {
+                    reject(player, "friends", "invalid friend id")
+                    continue
+                }
+                player.friends.add(Friend(friendId, true))
             }
         }
     }
@@ -274,7 +314,12 @@ internal object AccountLoginMapper {
         for (line in bossLog.split(" ")) {
             val parts = line.split(":")
             if (parts.size >= 2) {
-                player.bossCount(parts[0], parts[1].toInt())
+                val count = parts[1].toIntOrNull()
+                if (count == null || count < 0) {
+                    reject(player, "boss-log", "invalid count name=${parts[0]}")
+                    continue
+                }
+                player.bossCount(parts[0], count)
             }
         }
     }
@@ -287,7 +332,12 @@ internal object AccountLoginMapper {
             val parts = line.split(",")
             if (parts.size == 2) {
                 player.monsterName.add(parts[0])
-                player.monsterCount.add(parts[1].toInt())
+                val count = parts[1].toIntOrNull()
+                if (count == null || count < 0) {
+                    reject(player, "monster-log", "invalid count name=${parts[0]}")
+                    continue
+                }
+                player.monsterCount.add(count)
             }
         }
     }
@@ -297,9 +347,15 @@ internal object AccountLoginMapper {
             return
         }
         val lines = effects.split(":")
-        for (index in lines.indices) {
-            player.effects.add(index, lines[index].toInt())
+        for (index in lines.indices.take(MAX_EFFECTS)) {
+            val effect = lines[index].toIntOrNull()
+            if (effect == null) {
+                reject(player, "effects", "invalid value at index=$index")
+                continue
+            }
+            player.effects.add(index, effect)
         }
+        if (lines.size > MAX_EFFECTS) reject(player, "effects", "too many entries=${lines.size}")
     }
 
     private fun applyDailyReward(player: Client, dailyReward: String?) {
@@ -332,9 +388,14 @@ internal object AccountLoginMapper {
     }
 
     private fun applyFarming(player: Client, farmingData: String?) {
-        if (farmingData != null && farmingData != "[]") {
-            player.farmingJson.farmingLoad(farmingData)
-        } else {
+        try {
+            if (farmingData != null && farmingData != "[]") {
+                player.farmingJson.farmingLoad(farmingData)
+            } else {
+                player.farmingJson.farmingLoad("")
+            }
+        } catch (exception: RuntimeException) {
+            reject(player, "farming", exception::class.java.simpleName)
             player.farmingJson.farmingLoad("")
         }
     }
@@ -352,4 +413,12 @@ internal object AccountLoginMapper {
 
     private fun splitOrEmpty(value: String, delimiter: String): Array<String> =
         if (value.isEmpty()) emptyArray() else value.split(delimiter).toTypedArray()
+
+    private fun isSafePosition(x: Int, y: Int, z: Int): Boolean = x in 1 until 16_384 && y in 1 until 16_384 && z in 0..3
+
+    private fun reject(player: Client, field: String, detail: String) {
+        logger.warn("Persisted player state rejected dbId={} player={} field={} detail={}", player.dbId, player.playerName, field, detail)
+    }
+
+    private const val MAX_EFFECTS = 64
 }

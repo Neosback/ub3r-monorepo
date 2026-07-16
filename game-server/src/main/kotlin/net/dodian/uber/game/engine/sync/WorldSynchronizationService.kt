@@ -204,6 +204,8 @@ class WorldSynchronizationService {
             player.position,
             throwable,
         )
+        player.noteDisconnectReason("sync-failure:$stage")
+        OperationalTelemetry.incrementCounter("player.disconnect.sync_failure")
         player.disconnected = true
     }
 

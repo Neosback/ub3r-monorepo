@@ -181,6 +181,7 @@ class GameLoopService(
     }
 
     private fun logLoopFailure(scope: String, exception: Throwable) {
+        OperationalTelemetry.incrementCounter("game_loop.failure.$scope")
         val signature = "$scope:${exception::class.java.name}:${exception.message ?: ""}"
         if (signature == lastLoopFailureSignature) {
             lastLoopFailureCount++

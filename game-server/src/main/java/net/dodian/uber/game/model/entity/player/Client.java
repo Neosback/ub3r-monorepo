@@ -769,6 +769,8 @@ public class Client extends Player implements Runnable {
                         describeRecentInboundPackets(),
                         ex
                 );
+                noteDisconnectReason("inbound-listener-exception opcode=" + packet.opcode());
+                net.dodian.uber.game.engine.metrics.OperationalTelemetry.incrementCounter("player.disconnect.listener_exception", 1L);
                 disconnected = true;
                 println_debug("Error processing opcode " + packet.opcode() + " for " + getPlayerName() + ": " + ex.getMessage());
                 break;
