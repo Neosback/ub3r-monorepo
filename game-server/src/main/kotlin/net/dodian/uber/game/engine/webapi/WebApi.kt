@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import org.slf4j.LoggerFactory
 
 data class ServerStatus(
     var playersOnline: Set<OnlinePlayer> = emptySet(),
@@ -72,6 +73,7 @@ data class PlayerStatRow(
 )
 
 object WebApi {
+    private val logger = LoggerFactory.getLogger(WebApi::class.java)
     private val started = AtomicBoolean(false)
     private val serverStatus = ServerStatus()
     private var serverEngine: NettyApplicationEngine? = null
@@ -200,7 +202,7 @@ object WebApi {
             hiscoresCache.clear()
             hiscoresCache.putAll(newCache)
         } catch (ex: Exception) {
-            ex.printStackTrace()
+            logger.error("Hiscores cache refresh failed; retaining the previous cache", ex)
         }
     }
 
@@ -263,6 +265,7 @@ object WebApi {
                         }
                         val loopFresh = net.dodian.uber.game.engine.metrics.OperationalTelemetry.isGameLoopFresh()
                         val pluginsFrozen = net.dodian.uber.game.engine.lifecycle.EnginePluginBootstrap.isFrozen()
+                        val contentPlatform = net.dodian.uber.game.api.plugin.ContentPlatformCatalog.snapshot()
                         val ready = dbOk && loopFresh && pluginsFrozen
                         val readiness = linkedMapOf<String, Any>(
                             "status" to if (ready) "READY" else "DEGRADED",
@@ -272,11 +275,33 @@ object WebApi {
                             "players" to PlayerRegistry.getPlayerCount(),
                             "telemetry" to net.dodian.uber.game.engine.metrics.OperationalTelemetry.snapshot(),
                             "contentFaults" to net.dodian.uber.game.api.content.ContentFaultCircuitBreaker.snapshot(),
+                            "contentPlatform" to linkedMapOf(
+                                "fingerprint" to contentPlatform.fingerprint,
+                                "modules" to contentPlatform.modules.size,
+                                "enabledModules" to contentPlatform.enabledCount,
+                                "disabledModules" to contentPlatform.disabledCount,
+                                "disabledModuleIds" to net.dodian.uber.game.api.plugin.ContentModuleFeatureState.disabledModuleIds(),
+                            ),
                         )
                         call.respondText(
                             mapper.writeValueAsString(readiness),
                             ContentType.Application.Json,
                             if (ready) HttpStatusCode.OK else HttpStatusCode.ServiceUnavailable,
+                        )
+                    }
+
+                    get("/content/manifest") {
+                        val content = net.dodian.uber.game.api.plugin.ContentPlatformCatalog.snapshot()
+                        call.respondText(
+                            mapper.writeValueAsString(
+                                linkedMapOf(
+                                    "fingerprint" to content.fingerprint,
+                                    "enabledModuleIds" to content.enabledModuleIds.sorted(),
+                                    "modules" to content.modules,
+                                    "routes" to net.dodian.uber.game.api.plugin.ContentRouteCatalog.snapshot(),
+                                ),
+                            ),
+                            ContentType.Application.Json,
                         )
                     }
 

@@ -3,7 +3,6 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.UpdateFlag;
-import net.dodian.uber.game.model.chunk.ChunkPlayerComparator;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.item.Equipment;
@@ -57,8 +56,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         ByteMessage updateBlock = withScratchUpdateBlock();
         try {
             sendServerUpdateIfNeeded(player);
-
-            player.syncChunkMembership();
+            prepareViewerSynchronization(player);
 
             boolean localPlayerUpdateRequired = hasUpdatesForPhase(player, UpdatePhase.UPDATE_SELF);
             updateLocalPlayerMovement(player, stream, localPlayerUpdateRequired);
@@ -82,8 +80,13 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 boolean localsChanged = false;
                 for (int i = 0; i < size; i++) {
                     Player local = player.playerList[i];
-                    if (local != null && player.loaded && !local.didTeleport() && !player.didTeleport()
-                            && player.withinDistance(local)) {
+                    int localSlot = local == null ? -1 : local.getSlot();
+                    Player registered = localSlot >= 0 && localSlot < PlayerRegistry.players.length
+                            ? PlayerRegistry.players[localSlot]
+                            : null;
+                    if (local != null && registered == local && local.isSynchronizationReady()
+                            && player.loaded && !local.didTeleport() && !player.didTeleport()
+                            && PlayerVisibilityRules.isVisibleTo(player, local)) {
                         local.updatePlayerMovement(stream);
                         appendBlockUpdate(local, updateBlock, UpdatePhase.UPDATE_LOCAL);
                         player.playerList[keep++] = local;
@@ -129,6 +132,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         ByteMessage updateBlock = withScratchUpdateBlock();
         try {
             sendServerUpdateIfNeeded(viewer);
+            prepareViewerSynchronization(viewer);
             boolean localPlayerUpdateRequired = hasUpdatesForPhase(viewer, UpdatePhase.UPDATE_SELF);
             updateLocalPlayerMovement(viewer, stream, localPlayerUpdateRequired);
             appendBlockUpdate(viewer, updateBlock, UpdatePhase.UPDATE_SELF);
@@ -160,7 +164,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         ByteMessage updateBlock = withScratchUpdateBlock();
         try {
             sendServerUpdateIfNeeded(viewer);
-            viewer.syncChunkMembership();
+            prepareViewerSynchronization(viewer);
             boolean localPlayerUpdateRequired = hasUpdatesForPhase(viewer, UpdatePhase.UPDATE_SELF);
             updateLocalPlayerMovement(viewer, stream, localPlayerUpdateRequired);
             appendBlockUpdate(viewer, updateBlock, UpdatePhase.UPDATE_SELF);
@@ -222,11 +226,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             if (candidates.isEmpty()) {
                 return;
             }
-            if (player.playerListSize > 50) {
-                addPrioritizedLocalPlayersFromCollection(player, stream, updateBlock, candidates, remainingAdds);
-                return;
-            }
-            addLocalPlayersFromCollection(player, stream, updateBlock, candidates, remainingAdds);
+            // Always prioritize deterministically. Chunk repository iteration order is
+            // an implementation detail and previously made admission appear random.
+            addPrioritizedLocalPlayersFromCollection(player, stream, updateBlock, candidates, remainingAdds);
             return;
         }
 
@@ -235,10 +237,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             if (candidates.isEmpty()) {
                 return;
             }
-            if (player.playerListSize > 50) {
-                candidates.sort(new ChunkPlayerComparator(player));
-            }
-            addLocalPlayersFromCollection(player, stream, updateBlock, candidates, remainingAdds);
+            addPrioritizedLocalPlayersFromCollection(player, stream, updateBlock, candidates, remainingAdds);
             return;
         }
 
@@ -432,13 +431,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
 
     public void updateLocalPlayerMovement(Player player, ByteMessage stream, boolean localPlayerUpdateRequired) {
-        /* Noob! */
-        if(player.didMapRegionChange()) {
-            ((Client) player).send(new net.dodian.uber.game.netty.listener.out.MapRegionUpdate(player.mapRegionX, player.mapRegionY));
-            ((Client) player).updateGroundItems();
-            StaticObjectOverrides.replayTo((Client) player);
-        }
-        // But we're doing this in the packet wrapper instead
         stream.startBitAccess();
         if (player.didTeleport()) {
             stream.putBits(1, 1);
@@ -555,6 +547,41 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     public void writeLocalAdd(Player viewer, Player other, ByteMessage stream, ByteMessage updateBlock) {
         viewer.addNewPlayer(other, stream, updateBlock);
+    }
+
+    /** Writes the active client's add-local wire shape without mutating viewer state. */
+    public void writeStagedLocalAdd(Player viewer, Player other, ByteMessage stream, ByteMessage updateBlock) {
+        writeStagedLocalAdd(viewer, other, stream, updateBlock, null);
+    }
+
+    /** Writes add-local bits and reuses the cycle's immutable appearance block when available. */
+    public void writeStagedLocalAdd(Player viewer, Player other, ByteMessage stream, ByteMessage updateBlock,
+                                    byte[] sharedBlock) {
+        int id = other.getSlot();
+        stream.putBits(11, id);
+        stream.putBits(1, 1);
+        if (sharedBlock != null) {
+            updateBlock.putBytes(sharedBlock);
+            SynchronizationContext.recordPlayerBlockCacheHit(true);
+        } else {
+            appendAddLocalBlockUpdate(other, updateBlock);
+            SynchronizationContext.recordPlayerBlockCacheHit(false);
+        }
+        stream.putBits(1, 1);
+        int delta = other.getPosition().getY() - viewer.getPosition().getY();
+        if (delta < 0) delta += 32;
+        stream.putBits(5, delta);
+        delta = other.getPosition().getX() - viewer.getPosition().getX();
+        if (delta < 0) delta += 32;
+        stream.putBits(5, delta);
+    }
+
+    public void appendSelfBlockUpdate(Player player, ByteMessage buf) {
+        appendBlockUpdate(player, buf, UpdatePhase.UPDATE_SELF);
+    }
+
+    public boolean hasSelfUpdate(Player player) {
+        return hasUpdatesForPhase(player, UpdatePhase.UPDATE_SELF);
     }
 
 
@@ -936,6 +963,17 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         if (Server.updateRunning) {
             int seconds = Server.updateSeconds + ((int) (Server.updateStartTime - System.currentTimeMillis()) / 1000);
             ((Client) player).send(new net.dodian.uber.game.netty.listener.out.SystemUpdateTimer(seconds * 50 / 30));
+        }
+    }
+
+    /** Runs ordered viewer-side effects before pure packet planning/encoding. */
+    public void prepareViewerSynchronization(Player player) {
+        player.syncChunkMembership();
+        if (player.didMapRegionChange()) {
+            Client client = (Client) player;
+            client.send(new net.dodian.uber.game.netty.listener.out.MapRegionUpdate(player.mapRegionX, player.mapRegionY));
+            client.updateGroundItems();
+            StaticObjectOverrides.replayTo(client);
         }
     }
 

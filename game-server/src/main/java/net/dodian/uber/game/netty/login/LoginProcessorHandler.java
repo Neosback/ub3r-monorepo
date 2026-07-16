@@ -378,6 +378,9 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                     client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                 }
                 client.transport(new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()));
+                // Publish to player synchronization only after hydration, appearance and
+                // initial placement are all complete.
+                client.setSynchronizationReady(true);
                 GameEventBus.post(new PlayerLoginEvent(client));
 
                 final PlayerInitializer postInitializer = initializer;

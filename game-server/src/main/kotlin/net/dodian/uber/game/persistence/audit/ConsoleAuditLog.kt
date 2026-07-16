@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
  * understand what a player was doing immediately before/after an incident.
  */
 object ConsoleAuditLog {
+    private val logger = LoggerFactory.getLogger(ConsoleAuditLog::class.java)
     private val chatLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.chat")
     private val commandLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.command")
     private val tradeLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.trade")
@@ -506,6 +507,7 @@ object ConsoleAuditLog {
 }
 
 object CustomInterfaceRegistry {
+    private val logger = LoggerFactory.getLogger(CustomInterfaceRegistry::class.java)
     data class CustomInterface(
         val id: Int,
         val type: Int = 0,
@@ -591,7 +593,7 @@ object CustomInterfaceRegistry {
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.warn("Failed to parse custom interface source; audit interface details may be incomplete", e)
         }
     }
 }

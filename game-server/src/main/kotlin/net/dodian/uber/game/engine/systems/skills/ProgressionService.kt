@@ -4,7 +4,6 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.api.plugin.skills.SkillPlayer
-import net.dodian.uber.game.api.plugin.skills.protocolClient
 
 object ProgressionService {
     /** Public content API.  Client overloads are retained for engine/Java call sites only. */

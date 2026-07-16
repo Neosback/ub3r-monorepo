@@ -1,6 +1,7 @@
 package net.dodian.uber.game.api.plugin.skills
 
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
+import net.dodian.uber.game.api.plugin.ContentMaturity
 import net.dodian.uber.game.model.player.skills.Skill
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -46,6 +47,25 @@ class SkillPluginRegistryTest {
                 objectClick(PolicyPreset.GATHERING, option = 6, 7485) { _: SkillObjectInteraction -> true }
             }
         }
+    }
+
+    @Test
+    fun `manifest derives exactly the typed route inventory`() {
+        val definition = skillPlugin("Manifested", Skill.MINING) {
+            objectClick(PolicyPreset.GATHERING, 1, 7485, 7486) { _: SkillObjectInteraction -> true }
+            itemOnItem(PolicyPreset.PRODUCTION, 100, 200) { _: SkillItemOnItemInteraction -> true }
+        }
+
+        val manifest = definition.manifest(
+            id = "skill.manifested",
+            owner = "test",
+            maturity = ContentMaturity.STABLE,
+        )
+
+        org.junit.jupiter.api.Assertions.assertEquals(
+            setOf("object:1:7485", "object:1:7486", "item-on-item:100:200"),
+            manifest.declaredRouteKeys,
+        )
     }
 
     private fun plugin(name: String, definition: () -> SkillPluginDefinition): SkillPlugin =

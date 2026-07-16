@@ -18,13 +18,22 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assumptions.assumeTrue
 
 class NpcFamilySpawnImportTest {
-    private val exportRoot = Path.of("/Users/tylercovalt/Desktop/RSPS/tarnish-main/game-server/data")
+    private val exportRoot = System.getenv("NPC_EXPORT_ROOT")
+        ?.takeIf { it.isNotBlank() }
+        ?.let(Path::of)
+        ?: Path.of("src/test/resources/npc-export")
     private val gson = Gson()
 
     @Test
     fun `all live exported spawns exist in Kotlin family modules after id conversion`() {
+        assumeTrue(
+            Files.isRegularFile(exportRoot.resolve("Ubers mysql as json export/npc_Spawn.json")) &&
+                Files.isRegularFile(exportRoot.resolve("def/npc/oldtonew.txt")),
+            "Set NPC_EXPORT_ROOT to the versioned NPC export fixture to run spawn-import parity validation.",
+        )
         val expected = exportedLiveSpawnKeys()
         val actual = kotlinSpawnKeys()
 

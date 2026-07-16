@@ -64,8 +64,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class Player extends Entity {
+    private static final AtomicLong NEXT_SESSION_GENERATION = new AtomicLong(1L);
     private static final Logger logger = LoggerFactory.getLogger(Player.class);
     public boolean yellOn = true, genie = false, antique = false, instaLoot = false, autoRetaliate = false;
     public long toleranceTimer = 0L;
@@ -79,7 +81,7 @@ public abstract class Player extends Entity {
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false, discord = false, lockExperience = false;
     private final PlayerAccountState accountState = new PlayerAccountState(this);
-    private final PlayerInteractionState interactionState = new PlayerInteractionState();
+    private final PlayerContentRuntimeState interactionState = new PlayerContentRuntimeState();
     private final PlayerMovementState movementState = new PlayerMovementState(this);
     private final PlayerUpdateState updateState = new PlayerUpdateState(this);
     int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
@@ -112,6 +114,8 @@ public abstract class Player extends Entity {
     public boolean isNpc, morph = false;
     public volatile boolean initialized = false, disconnected = false, isKicked = false;
     public boolean isActive = false, debug = false;
+    private final long synchronizationSessionGeneration = NEXT_SESSION_GENERATION.getAndIncrement();
+    private volatile boolean synchronizationReady = false;
     public String connectedFrom = "";
     public int ip = 0;
     public String UUID = "";
@@ -571,6 +575,25 @@ public abstract class Player extends Entity {
 
     public void setActivePlayer(boolean active) {
         accountState.setActivePlayer(active);
+    }
+
+    public long getSynchronizationSessionGeneration() {
+        return synchronizationSessionGeneration;
+    }
+
+    public boolean isSynchronizationReady() {
+        return synchronizationReady
+                && initialized
+                && loaded
+                && isActive
+                && !disconnected
+                && getSlot() > 0
+                && getSlot() <= Constants.maxPlayers
+                && getPosition() != null;
+    }
+
+    public void setSynchronizationReady(boolean ready) {
+        synchronizationReady = ready;
     }
 
     public boolean isKicked() {
@@ -2236,7 +2259,7 @@ public abstract class Player extends Entity {
 
     public void resetTabs() {
         Client c = ((Client) this);
-        c.setEquipment(c.getEquipment()[Equipment.Slot.WEAPON.getId()], c.getEquipmentN()[Equipment.Slot.WEAPON.getId()], Equipment.Slot.WEAPON.getId());
+        c.equipmentChanged(Equipment.Slot.WEAPON.getId());
         c.setSidebarInterface(1, 3917); // skills tab
         c.setSidebarInterface(2, 638); // quest tab (original)
         c.setSidebarInterface(3, 3213); // backpack tab

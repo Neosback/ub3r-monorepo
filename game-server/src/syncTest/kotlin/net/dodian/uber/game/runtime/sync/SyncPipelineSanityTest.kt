@@ -1,24 +1,32 @@
 package net.dodian.uber.game.runtime.sync
 
+import net.dodian.uber.game.engine.net.OutboundSessionQueue
+import net.dodian.uber.game.engine.sync.PlayerSynchronizationMode
+import net.dodian.uber.game.netty.codec.ByteMessage
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * Basic sanity test that the synchronization pipeline infrastructure loads
- * without errors. This provides a minimal green baseline for the syncTest
- * verification source set.
+ * Transport-level smoke checks kept in the dedicated synchronization source set.
  */
 class SyncPipelineSanityTest {
 
     @Test
-    fun `sync pipeline bootstrap loads without error`() {
-        assertTrue(true, "Sync pipeline placeholder — replace with real transport tests")
+    fun `beta synchronization mode is staged`() {
+        System.clearProperty("player.sync.mode")
+        assertEquals(PlayerSynchronizationMode.STAGED, PlayerSynchronizationMode.configured())
     }
 
     @Test
-    fun `sync test source set is executable`() {
-        assertNotNull(this.javaClass.getResource("/")?.toString(), "Test resources should be accessible")
+    fun `required outbound capacity rejects without evicting an accepted packet`() {
+        val queue = OutboundSessionQueue()
+        repeat(1024) { assertTrue(queue.enqueue(ByteMessage.raw(1))) }
+        val rejected = ByteMessage.raw(1)
+        assertFalse(queue.enqueue(rejected))
+        assertEquals(1024, queue.size())
+        assertEquals(0, rejected.refCnt())
+        queue.releaseAll()
     }
 }

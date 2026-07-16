@@ -1,5 +1,7 @@
 package net.dodian.uber.game.engine.systems.cache
 
+import org.slf4j.LoggerFactory
+
 data class CacheNpcDefinition(
     val id: Int,
     var name: String = "",
@@ -19,6 +21,7 @@ data class CacheNpcDefinition(
 )
 
 object NpcCacheDefinitionDecoder {
+    private val logger = LoggerFactory.getLogger(NpcCacheDefinitionDecoder::class.java)
     @JvmStatic
     fun decode(store: CacheStore): Map<Int, CacheNpcDefinition> {
         val dat = store.readArchiveFile(0, 2, "npc.dat") ?: error("Tarnish cache is missing npc.dat")
@@ -94,7 +97,7 @@ object NpcCacheDefinitionDecoder {
                     if (stringValue) data.readStringNullTerminated() else data.readInt()
                 }
                 else -> {
-                    System.err.println("Unsupported npc.dat opcode $opcode for NPC $id (last=$lastOpcode)")
+                    logger.warn("Unsupported npc.dat opcode={} npcId={} lastOpcode={}; retaining decoded fields", opcode, id, lastOpcode)
                     return definition
                 }
             }

@@ -1,0 +1,291 @@
+package net.dodian.uber.game.engine.sync.player
+
+import io.netty.buffer.ByteBuf
+import java.util.Arrays
+import net.dodian.uber.game.Constants
+import net.dodian.uber.game.engine.metrics.OperationalTelemetry
+import net.dodian.uber.game.engine.sync.SynchronizationContext
+import net.dodian.uber.game.engine.sync.playerinfo.PlayerVisibilityRules
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.model.entity.player.PlayerUpdating
+import net.dodian.uber.game.netty.codec.ByteMessage
+import net.dodian.uber.game.netty.codec.MessageType
+
+/**
+ * Protocol-317 player synchronization with Kronos-style staged ownership:
+ * plan, encode, enqueue, then commit the viewer's next local state.
+ */
+class StagedPlayerSynchronizationService {
+    private val updating = PlayerUpdating.getInstance()
+    private val scratch = ThreadLocal.withInitial(::Scratch)
+
+    fun synchronize(viewer: Client): Result {
+        updating.sendServerUpdateIfNeeded(viewer)
+        updating.prepareViewerSynchronization(viewer)
+        val plan = buildPlan(viewer, scratch.get())
+        val result = scratch.get().result
+        val capacity = maxOf(1024, viewer.playerUpdateCapacity)
+        val pooledBuffer: ByteBuf = viewer.channel?.alloc()?.buffer(capacity) ?: ByteMessage.pooledBuffer(capacity)
+        var message: ByteMessage? = null
+        try {
+            message = ByteMessage.message(81, MessageType.VAR_SHORT, pooledBuffer)
+            encode(viewer, plan, message)
+            val packetBytes = message.content().writerIndex()
+            require(packetBytes <= MAX_VAR_SHORT_PAYLOAD) {
+                "Player synchronization payload exceeds protocol limit: $packetBytes"
+            }
+            viewer.updatePlayerUpdateCapacity(packetBytes)
+            OperationalTelemetry.incrementCounter("sync.player.packet_bytes", packetBytes.toLong())
+            OperationalTelemetry.incrementCounter("sync.player.planned_additions", plan.additionCount.toLong())
+            val accepted = viewer.sendRequiredSynchronization(message)
+            message = null // required send consumes ownership on success and rejection
+            if (!accepted) {
+                OperationalTelemetry.incrementCounter("sync.player.required_enqueue_rejected")
+                return result.set(false, packetBytes, plan.previousCount, plan.nextCount, plan.additionCount)
+            }
+            commit(viewer, plan)
+            OperationalTelemetry.incrementCounter("sync.player.staged_committed")
+            OperationalTelemetry.incrementCounter("sync.player.committed_locals", plan.nextCount.toLong())
+            return result.set(true, packetBytes, plan.previousCount, plan.nextCount, plan.additionCount)
+        } finally {
+            message?.releaseAll()
+        }
+    }
+
+    internal fun buildPlan(viewer: Client, reusable: Scratch = scratch.get()): Plan {
+        reusable.reset()
+        val plan = reusable.plan
+        if (viewer.loaded && !viewer.didTeleport()) {
+            plan.previousCount = viewer.playerListSize.coerceIn(0, minOf(MAX_LOCALS, viewer.playerList.size))
+            for (index in 0 until plan.previousCount) {
+                val local = viewer.playerList[index]
+                plan.previous[index] = local
+                val retained = isRetained(viewer, local)
+                plan.retainPrevious[index] = retained
+                if (retained && local != null) {
+                    plan.addNext(local)
+                    reusable.markMember(local.slot)
+                }
+            }
+        }
+
+        val candidates = SynchronizationContext.getViewportSnapshot(viewer)?.players
+        if (candidates != null) {
+            candidates.forEach { candidate -> reusable.offerCandidate(viewer, candidate, plan) }
+        } else {
+            PlayerRegistry.players.forEach { candidate -> reusable.offerCandidate(viewer, candidate, plan) }
+        }
+
+        var estimatedBytes = BASE_PACKET_BUDGET
+        for (index in 0 until reusable.candidateCount) {
+            if (plan.nextCount >= minOf(MAX_LOCALS, viewer.playerList.size)) break
+            val candidate = reusable.candidates[index] ?: continue
+            val sharedBlock = SynchronizationContext.getSharedPlayerBlock(candidate, "ADD_LOCAL")
+            val additionBytes = ADD_LOCAL_BIT_BYTES + (sharedBlock?.size ?: MAX_APPEARANCE_BLOCK_ESTIMATE)
+            if (estimatedBytes + additionBytes > MAX_STAGED_PAYLOAD_BUDGET) break
+            estimatedBytes += additionBytes
+            plan.addAddition(candidate)
+            reusable.markMember(candidate.slot)
+        }
+        plan.freeze()
+        return plan
+    }
+
+    internal fun encode(viewer: Client, plan: Plan, stream: ByteMessage) {
+        plan.requireFrozen()
+        val updateBlock = ByteMessage.raw(8192)
+        try {
+            updating.updateLocalPlayerMovement(viewer, stream, updating.hasSelfUpdate(viewer))
+            updating.appendSelfBlockUpdate(viewer, updateBlock)
+            stream.putBits(8, plan.previousCount)
+            for (index in 0 until plan.previousCount) {
+                val local = plan.previous[index]
+                if (!plan.retainPrevious[index] || local == null) {
+                    updating.writeLocalRemoval(stream)
+                } else {
+                    local.updatePlayerMovement(stream)
+                    val sharedBlock = SynchronizationContext.getSharedPlayerBlock(local, "UPDATE_LOCAL")
+                    if (sharedBlock != null) {
+                        updateBlock.putBytes(sharedBlock)
+                        SynchronizationContext.recordPlayerBlockCacheHit(true)
+                    } else {
+                        updating.appendBlockUpdate(local, updateBlock)
+                    }
+                }
+            }
+            for (index in 0 until plan.additionCount) {
+                val addition = plan.additions[index]!!
+                val sharedBlock = SynchronizationContext.getSharedPlayerBlock(addition, "ADD_LOCAL")
+                updating.writeStagedLocalAdd(viewer, addition, stream, updateBlock, sharedBlock)
+                SynchronizationContext.recordPlayerAdd()
+            }
+            stream.putBits(11, 2047)
+            stream.endBitAccess()
+            if (updateBlock.buffer.writerIndex() > 0) stream.putBytes(updateBlock)
+        } finally {
+            updateBlock.releaseAll()
+        }
+    }
+
+    internal fun commit(viewer: Client, plan: Plan) {
+        plan.requireFrozen()
+        var changed = viewer.playerListSize != plan.nextCount
+        if (!changed) {
+            for (index in 0 until plan.nextCount) {
+                if (viewer.playerList[index] !== plan.next[index]) {
+                    changed = true
+                    break
+                }
+            }
+        }
+        Arrays.fill(viewer.playerList, null)
+        viewer.playersUpdating.clear()
+        for (index in 0 until plan.nextCount) {
+            val local = plan.next[index] ?: continue
+            viewer.playerList[index] = local
+            viewer.playersUpdating.add(local)
+        }
+        viewer.playerListSize = plan.nextCount
+        if (changed) viewer.bumpLocalPlayerMembershipRevision()
+    }
+
+    private fun isRetained(viewer: Client, local: Player?): Boolean {
+        local ?: return false
+        if (local.slot !in PlayerRegistry.players.indices || PlayerRegistry.players[local.slot] !== local) return false
+        return !local.didTeleport() && PlayerVisibilityRules.isVisibleTo(viewer, local)
+    }
+
+    class Result internal constructor() {
+        var accepted: Boolean = false
+            private set
+        var packetBytes: Int = 0
+            private set
+        var previousCount: Int = 0
+            private set
+        var committedCount: Int = 0
+            private set
+        var additions: Int = 0
+            private set
+
+        internal fun set(accepted: Boolean, packetBytes: Int, previousCount: Int, committedCount: Int, additions: Int): Result {
+            this.accepted = accepted
+            this.packetBytes = packetBytes
+            this.previousCount = previousCount
+            this.committedCount = committedCount
+            this.additions = additions
+            return this
+        }
+    }
+
+    internal class Plan(capacity: Int) {
+        val previous = arrayOfNulls<Player>(capacity)
+        val retainPrevious = BooleanArray(capacity)
+        val additions = arrayOfNulls<Player>(capacity)
+        val next = arrayOfNulls<Player>(capacity)
+        val nextSlots = IntArray(capacity)
+        val nextGenerations = LongArray(capacity)
+        var previousCount = 0
+        var additionCount = 0
+        var nextCount = 0
+        private var frozen = false
+
+        fun reset() {
+            Arrays.fill(previous, null)
+            Arrays.fill(retainPrevious, false)
+            Arrays.fill(additions, null)
+            Arrays.fill(next, null)
+            previousCount = 0
+            additionCount = 0
+            nextCount = 0
+            frozen = false
+        }
+
+        fun addNext(player: Player) {
+            check(!frozen)
+            next[nextCount] = player
+            nextSlots[nextCount] = player.slot
+            nextGenerations[nextCount] = player.synchronizationSessionGeneration
+            nextCount++
+        }
+
+        fun addAddition(player: Player) {
+            check(!frozen)
+            additions[additionCount++] = player
+            addNext(player)
+        }
+
+        fun containsSlot(slot: Int): Boolean {
+            for (index in 0 until nextCount) if (nextSlots[index] == slot) return true
+            return false
+        }
+
+        fun freeze() { frozen = true }
+        fun requireFrozen() = check(frozen) { "Player synchronization plan is not frozen" }
+    }
+
+    internal class Scratch {
+        val plan = Plan(MAX_PLAN_CAPACITY)
+        val result = Result()
+        val candidates = arrayOfNulls<Player>(MAX_PLAN_CAPACITY)
+        private val candidateDistances = IntArray(MAX_PLAN_CAPACITY)
+        private val membership = BooleanArray(Constants.maxPlayers + 1)
+        private val touchedMembership = IntArray(Constants.maxPlayers + 1)
+        private var touchedCount = 0
+        var candidateCount = 0
+            private set
+
+        fun reset() {
+            plan.reset()
+            Arrays.fill(candidates, null)
+            candidateCount = 0
+            for (index in 0 until touchedCount) membership[touchedMembership[index]] = false
+            touchedCount = 0
+        }
+
+        fun offerCandidate(viewer: Client, candidate: Player?, plan: Plan) {
+            candidate ?: return
+            if (!PlayerVisibilityRules.isVisibleTo(viewer, candidate)) return
+            if (candidate.slot !in membership.indices || membership[candidate.slot]) return
+            if (plan.containsSlot(candidate.slot)) return
+            markMember(candidate.slot)
+            val distance = maxOf(
+                kotlin.math.abs(viewer.position.x - candidate.position.x),
+                kotlin.math.abs(viewer.position.y - candidate.position.y),
+            )
+            var insert = candidateCount.coerceAtMost(candidates.lastIndex)
+            if (candidateCount < candidates.size) candidateCount++
+            while (insert > 0) {
+                val prior = candidates[insert - 1] ?: break
+                val priorDistance = candidateDistances[insert - 1]
+                if (priorDistance < distance || (priorDistance == distance && prior.slot <= candidate.slot)) break
+                if (insert < candidates.size) {
+                    candidates[insert] = prior
+                    candidateDistances[insert] = priorDistance
+                }
+                insert--
+            }
+            if (insert < candidates.size) {
+                candidates[insert] = candidate
+                candidateDistances[insert] = distance
+            }
+        }
+
+        fun markMember(slot: Int) {
+            if (slot !in membership.indices || membership[slot]) return
+            membership[slot] = true
+            touchedMembership[touchedCount++] = slot
+        }
+    }
+
+    companion object {
+        private const val MAX_LOCALS = 255
+        private const val MAX_PLAN_CAPACITY = 255
+        private const val MAX_VAR_SHORT_PAYLOAD = 65535
+        private const val MAX_STAGED_PAYLOAD_BUDGET = 60 * 1024
+        private const val BASE_PACKET_BUDGET = 64
+        private const val ADD_LOCAL_BIT_BYTES = 4
+        private const val MAX_APPEARANCE_BLOCK_ESTIMATE = 256
+    }
+}

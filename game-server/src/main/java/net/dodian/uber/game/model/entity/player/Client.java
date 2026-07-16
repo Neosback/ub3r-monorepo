@@ -682,6 +682,7 @@ public class Client extends Player implements Runnable {
 
     @Override
     public void destruct() {
+        setSynchronizationReady(false);
         if (priceCheckerOpen) {
             closePriceChecker();
         }
@@ -719,6 +720,11 @@ public class Client extends Player implements Runnable {
 
     public io.netty.channel.Channel getChannel() {
         return this.channel;
+    }
+
+    @Override
+    public boolean isSynchronizationReady() {
+        return super.isSynchronizationReady() && channel != null && channel.isActive();
     }
 
     public boolean queueInboundPacket(net.dodian.uber.game.netty.game.GamePacket packet) {
@@ -966,6 +972,24 @@ public class Client extends Player implements Runnable {
             return;
         }
         channel.writeAndFlush(message);
+    }
+
+    /**
+     * Queues a stateful synchronization packet and reports whether the client
+     * can advance its local-view state. Unlike ordinary best-effort packets,
+     * callers must disconnect when this returns false because later deltas
+     * cannot repair a missing player/NPC synchronization packet.
+     */
+    public boolean sendRequiredSynchronization(net.dodian.uber.game.netty.codec.ByteMessage message) {
+        if (disconnected || channel == null || !channel.isActive()) {
+            message.releaseAll();
+            return false;
+        }
+        if (shouldQueueOutbound()) {
+            return outboundSessionQueue.enqueue(message);
+        }
+        channel.writeAndFlush(message);
+        return true;
     }
 
     public OutboundFlushStats flushOutbound() {
@@ -1833,6 +1857,67 @@ public class Client extends Player implements Runnable {
         send(new SetEquipment(wearID, amount, targetSlot));
     }
 
+    /**
+     * The only live-state notification path for equipment.  The old code
+     * updated the interface packet in a number of places but left the cached
+     * player appearance untouched, so observers could keep seeing an older
+     * weapon or armour model.  Call this after the equipment arrays have been
+     * changed successfully.
+     */
+    public void equipmentChanged(int... changedSlots) {
+        boolean weaponChanged = false;
+        boolean[] sent = new boolean[getEquipment().length];
+        if (changedSlots != null) {
+            for (int slot : changedSlots) {
+                if (slot < 0 || slot >= getEquipment().length || sent[slot]) {
+                    continue;
+                }
+                sent[slot] = true;
+                setEquipment(getEquipment()[slot], getEquipmentN()[slot], slot);
+                weaponChanged |= slot == Equipment.Slot.WEAPON.getId();
+            }
+        }
+        if (weaponChanged) {
+            CheckGear();
+            net.dodian.uber.game.ui.combat.CombatStyleService.refreshWeaponStyleUi(this);
+            net.dodian.uber.game.engine.systems.combat.CombatSpecialService.onWeaponEquip(this);
+            requestWeaponAnims();
+        }
+        GetBonus(true);
+        markAppearanceDirty();
+        invalidateCachedUpdateBlock();
+        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+    }
+
+    /** Refreshes the full equipment container after account hydration/UI setup. */
+    public void refreshEquipmentState() {
+        int[] slots = new int[getEquipment().length];
+        for (int slot = 0; slot < slots.length; slot++) {
+            slots[slot] = slot;
+        }
+        equipmentChanged(slots);
+    }
+
+    /** Commits a staged equipment snapshot and publishes one visual update. */
+    public void replaceEquipmentState(int[] ids, int[] amounts) {
+        if (ids == null || amounts == null || ids.length != getEquipment().length || amounts.length != getEquipmentN().length) {
+            throw new IllegalArgumentException("Invalid equipment snapshot");
+        }
+        java.util.ArrayList<Integer> changed = new java.util.ArrayList<>();
+        for (int slot = 0; slot < ids.length; slot++) {
+            if (getEquipment()[slot] != ids[slot] || getEquipmentN()[slot] != amounts[slot]) {
+                changed.add(slot);
+            }
+        }
+        if (changed.isEmpty()) {
+            return;
+        }
+        System.arraycopy(ids, 0, getEquipment(), 0, ids.length);
+        System.arraycopy(amounts, 0, getEquipmentN(), 0, amounts.length);
+        markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
+        equipmentChanged(changed.stream().mapToInt(Integer::intValue).toArray());
+    }
+
     public void wear(int wearID, int slot, int interFace) {
         if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
             logger.debug("[W2-WEAR] wearID={} slot={} interface={}", wearID, slot, interFace);
@@ -1924,10 +2009,9 @@ public class Client extends Player implements Runnable {
             }
             getEquipment()[targetSlot] = wearID;
             getEquipmentN()[targetSlot] = wearAmount;
-            setEquipment(getEquipment()[targetSlot], getEquipmentN()[targetSlot], targetSlot);
             markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
             wearing = false;
-            getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+            equipmentChanged(targetSlot);
         }
     }
 
@@ -2060,8 +2144,8 @@ public class Client extends Player implements Runnable {
         }
         getEquipment()[slot] = -1;
         getEquipmentN()[slot] = 0;
-        setEquipment(getEquipment()[slot], getEquipmentN()[slot], slot);
-        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+        markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
+        equipmentChanged(slot);
         return true;
     }
 
@@ -2069,7 +2153,8 @@ public class Client extends Player implements Runnable {
         if (getEquipment()[slot] == wearID) {
             getEquipment()[slot] = -1;
             getEquipmentN()[slot] = 0;
-            setEquipment(getEquipment()[slot], getEquipmentN()[slot], slot);
+            markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
+            equipmentChanged(slot);
         }
     }
 
@@ -2519,12 +2604,14 @@ public class Client extends Player implements Runnable {
                             }
                         }
                     } catch (java.sql.SQLException e) {
-                        e.printStackTrace();
+                        logger.error("Failed to load moderation details target={} requester={} slot={} pos={} interface={} recent={}",
+                                targetName, getPlayerName(), getSlot(), getPosition(), activeInterfaceId, describeRecentInboundPackets(), e);
                     }
                     return null;
                 });
             } catch (Exception e) {
-                // ignore
+                logger.error("Moderation details request failed target={} requester={} slot={} pos={} interface={} recent={}",
+                        targetName, getPlayerName(), getSlot(), getPosition(), activeInterfaceId, describeRecentInboundPackets(), e);
             }
 
             net.dodian.uber.game.engine.loop.GameThreadIngress.submitCritical("modcp-details", () -> {
@@ -2678,7 +2765,8 @@ public class Client extends Player implements Runnable {
                                     ps.setString(2, targetName);
                                     ps.executeUpdate();
                                 } catch (java.sql.SQLException e) {
-                                    e.printStackTrace();
+                                    logger.error("Failed to persist offline mute target={} requester={} slot={} pos={} interface={} recent={}",
+                                            targetName, getPlayerName(), getSlot(), getPosition(), activeInterfaceId, describeRecentInboundPackets(), e);
                                 }
                                 return null;
                             });
@@ -2703,7 +2791,8 @@ public class Client extends Player implements Runnable {
                                     ps.setString(1, targetName);
                                     ps.executeUpdate();
                                 } catch (java.sql.SQLException e) {
-                                    e.printStackTrace();
+                                    logger.error("Failed to persist offline unmute target={} requester={} slot={} pos={} interface={} recent={}",
+                                            targetName, getPlayerName(), getSlot(), getPosition(), activeInterfaceId, describeRecentInboundPackets(), e);
                                 }
                                 return null;
                             });
@@ -5246,9 +5335,12 @@ public class Client extends Player implements Runnable {
                     other.getEquipmentN()[i] -= canRemove;
                     amount -= canRemove;
                     totalItemRemoved += canRemove;
-                    if (other.getEquipmentN()[i] <= 0)
-                        other.getEquipment()[i] = -1;
-                    other.deleteequiment(0, i);
+                    if (other.getEquipmentN()[i] <= 0) {
+                        other.deleteequiment(id, i);
+                    } else {
+                        other.markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
+                        other.equipmentChanged(i);
+                    }
                 }
             }
             if (totalItemRemoved > 0) { //Update items only if there is any deleted!

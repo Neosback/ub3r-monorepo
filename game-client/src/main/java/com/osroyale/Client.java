@@ -16853,24 +16853,55 @@ public class Client extends GameEngine
 
         for (int count = 0; count < removedMobCount; count++) {
             int index = removedMobs[count];
-
-            if (playerArray[index].time != tick) {
+            Player removed = index >= 0 && index < playerArray.length ? playerArray[index] : null;
+            if (removed == null) {
+                reportPlayerSynchronizationFailure("removed player was already null", packetSize, buffer, index);
+                continue;
+            }
+            if (removed.time != tick) {
                 playerArray[index] = null;
             }
         }
 
         if (buffer.position != packetSize) {
-            Utility.reporterror("Error packet size mismatch in getplayer pos:" + buffer.position + " psize:" + packetSize);
-            throw new RuntimeException("eek");
+            reportPlayerSynchronizationFailure("packet size mismatch", packetSize, buffer, -1);
+            throw new RuntimeException("Player synchronization packet size mismatch");
         }
 
         for (int playerIndex = 0; playerIndex < playerCount; playerIndex++) {
             if (playerArray[playerIndices[playerIndex]] == null) {
-                Utility.reporterror(myUsername + " null entry in pl list - pos:" + playerIndex + " size:" + playerCount);
-                throw new RuntimeException("eek");
+                reportPlayerSynchronizationFailure("null local entry at list position " + playerIndex,
+                        packetSize, buffer, playerIndices[playerIndex]);
+                throw new RuntimeException("Player synchronization contains a null local player");
             }
         }
 
+    }
+
+    private void reportPlayerSynchronizationFailure(String reason, int packetSize, Buffer buffer, int subjectIndex) {
+        StringBuilder locals = new StringBuilder();
+        int limit = Math.min(playerCount, 32);
+        for (int i = 0; i < limit; i++) {
+            if (i > 0) {
+                locals.append(',');
+            }
+            int index = playerIndices[i];
+            locals.append(index).append(playerArray[index] == null ? "(null)" : "");
+        }
+        if (playerCount > limit) {
+            locals.append(",...");
+        }
+        Utility.reporterror(
+                "Player sync failure reason=" + reason
+                        + " user=" + myUsername
+                        + " tick=" + tick
+                        + " packetSize=" + packetSize
+                        + " position=" + buffer.position
+                        + " subject=" + subjectIndex
+                        + " locals=" + playerCount + '[' + locals.toString() + ']'
+                        + " updates=" + mobsAwaitingUpdateCount
+                        + " removals=" + removedMobCount
+                        + " opcodes=" + opcode + ',' + lastOpcode1 + ',' + lastOpcode2 + ',' + lastOpcode3);
     }
 
     private void updateLocalPlayerMovement(Buffer buffer) {
@@ -16936,8 +16967,9 @@ public class Client extends GameEngine
         }
 
         if (count > playerCount) {
-            Utility.reporterror(myUsername + " Too many players");
-            throw new RuntimeException("eek");
+            reportPlayerSynchronizationFailure("server local count " + count + " exceeds client count " + playerCount,
+                    pktSize, stream, -1);
+            throw new RuntimeException("Player synchronization local count exceeds client state");
         }
 
         playerCount = 0;

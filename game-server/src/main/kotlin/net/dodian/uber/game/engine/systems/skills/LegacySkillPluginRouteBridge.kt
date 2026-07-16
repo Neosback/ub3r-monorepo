@@ -1,4 +1,4 @@
-package net.dodian.uber.game.api.plugin.skills
+package net.dodian.uber.game.engine.systems.skills
 
 import net.dodian.uber.game.item.ItemContent
 import net.dodian.uber.game.objects.ObjectContent
@@ -7,6 +7,8 @@ import net.dodian.uber.game.api.interaction.ObjectInteractionContext
 import net.dodian.uber.game.api.interaction.InteractionOption
 import net.dodian.uber.game.api.interaction.ItemPayload
 import net.dodian.uber.game.api.interaction.SpellPayload
+import net.dodian.uber.game.api.plugin.skills.ItemClickOption
+import net.dodian.uber.game.api.plugin.skills.SkillPluginBuilder
 
 fun SkillPluginBuilder.bindObjectContentClick(
     preset: PolicyPreset,

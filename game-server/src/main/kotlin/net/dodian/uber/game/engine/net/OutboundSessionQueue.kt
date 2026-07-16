@@ -44,7 +44,7 @@ class OutboundSessionQueue {
     private val queueSize = AtomicInteger(0)
     private val queuedByteCount = AtomicLong(0L)
 
-    fun enqueue(message: ByteMessage) {
+    fun enqueue(message: ByteMessage): Boolean {
         val size = maxOf(0, message.content().writerIndex())
         // MpscArrayQueue permits exactly one consumer. Producers must never poll to
         // evict old messages: doing so races the game-thread drain. Drop and release
@@ -58,13 +58,16 @@ class OutboundSessionQueue {
                     queuedByteCount.get(),
                 )
             }
-            return
+            return false
         }
         queueSize.incrementAndGet()
         queuedByteCount.addAndGet(size.toLong())
+        return true
     }
 
     fun isEmpty(): Boolean = queuedMessages.isEmpty()
+
+    fun size(): Int = queueSize.get()
 
     fun drainTo(channel: Channel): DrainResult {
         if (queuedMessages.isEmpty() || !channel.isWritable) {

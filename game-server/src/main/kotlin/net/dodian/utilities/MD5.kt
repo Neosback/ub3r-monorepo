@@ -1,6 +1,7 @@
 package net.dodian.utilities
 
 import java.security.MessageDigest
+import org.slf4j.LoggerFactory
 
 class MD5(
     private val inStr: String,
@@ -9,8 +10,7 @@ class MD5(
         try {
             MessageDigest.getInstance("MD5")
         } catch (exception: Exception) {
-            println(exception)
-            exception.printStackTrace()
+            logger.error("Legacy MD5 provider is unavailable; login compatibility hashing cannot proceed", exception)
             null
         }
 
@@ -33,6 +33,7 @@ class MD5(
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(MD5::class.java)
         @JvmStatic
         fun main(args: Array<String>) {
             println(MD5(args[0]).compute())

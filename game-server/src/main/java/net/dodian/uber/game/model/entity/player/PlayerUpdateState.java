@@ -5,12 +5,15 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 
+import java.util.Arrays;
+
 final class PlayerUpdateState {
     private final Player owner;
     private ByteMessage cachedUpdateBlock = null;
     private boolean cachedUpdateBlockValid = false;
     private volatile long appearanceRevision = 0L;
     private volatile long cachedAppearanceRevision = -1L;
+    private volatile int cachedAppearanceSignature = Integer.MIN_VALUE;
     private volatile byte[] cachedAppearanceBytes = null;
     private final byte[] chatText = new byte[4096];
     private int chatTextSize = 0;
@@ -52,6 +55,7 @@ final class PlayerUpdateState {
     void markAppearanceDirty() {
         appearanceRevision++;
         cachedAppearanceRevision = -1L;
+        cachedAppearanceSignature = Integer.MIN_VALUE;
         cachedAppearanceBytes = null;
     }
 
@@ -60,7 +64,9 @@ final class PlayerUpdateState {
     }
 
     boolean isCachedAppearanceValid() {
-        return cachedAppearanceBytes != null && cachedAppearanceRevision == appearanceRevision;
+        return cachedAppearanceBytes != null
+                && cachedAppearanceRevision == appearanceRevision
+                && cachedAppearanceSignature == appearanceSignature();
     }
 
     byte[] getCachedAppearanceBytes() {
@@ -70,6 +76,38 @@ final class PlayerUpdateState {
     void cacheAppearanceBytes(byte[] bytes) {
         cachedAppearanceBytes = bytes;
         cachedAppearanceRevision = appearanceRevision;
+        cachedAppearanceSignature = appearanceSignature();
+    }
+
+    /**
+     * Most appearance state is changed through PlayerAppearanceState, which
+     * increments the revision above. Equipment is legacy array-backed state,
+     * however, so this signature is a defensive backstop for any missed
+     * writer. It prevents an old model from being reused even if a caller
+     * changed an equipment array directly.
+     */
+    private int appearanceSignature() {
+        int result = Arrays.hashCode(owner.getEquipment());
+        result = 31 * result + Arrays.hashCode(owner.playerLooks);
+        result = 31 * result + owner.getGender();
+        result = 31 * result + owner.headIcon;
+        result = 31 * result + owner.skullIcon;
+        result = 31 * result + (owner.isNpc ? 1 : 0);
+        result = 31 * result + owner.getPlayerNpc();
+        result = 31 * result + (owner.UsingAgility ? 1 : 0);
+        result = 31 * result + owner.getTorso();
+        result = 31 * result + owner.getArms();
+        result = 31 * result + owner.getLegs();
+        result = 31 * result + owner.getHands();
+        result = 31 * result + owner.getFeet();
+        result = 31 * result + owner.getBeard();
+        result = 31 * result + owner.getHead();
+        result = 31 * result + owner.getStandAnim();
+        result = 31 * result + owner.getWalkAnim();
+        result = 31 * result + owner.getRunAnim();
+        result = 31 * result + owner.determineCombatLevel();
+        result = 31 * result + (owner.getPlayerName() == null ? 0 : owner.getPlayerName().hashCode());
+        return result;
     }
 
     void releaseCachedUpdateBlock() {

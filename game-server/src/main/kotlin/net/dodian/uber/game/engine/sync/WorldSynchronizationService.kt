@@ -12,12 +12,14 @@ import net.dodian.uber.game.netty.codec.MessageType
 import net.dodian.uber.game.engine.sync.cache.RootSynchronizationCache
 import net.dodian.uber.game.engine.sync.npc.NpcChunkActivityIndex
 import net.dodian.uber.game.engine.sync.npc.NpcSyncDecision
+import net.dodian.uber.game.engine.sync.npc.StagedNpcSynchronizationService
 import net.dodian.uber.game.engine.sync.npc.RootNpcDeltaIndex
 import net.dodian.uber.game.engine.sync.npc.ViewerNpcSyncState
 import net.dodian.uber.game.engine.sync.player.PlayerChunkActivityIndex
 import net.dodian.uber.game.engine.sync.player.PlayerSyncDecision
 import net.dodian.uber.game.engine.sync.player.PlayerSyncRevisionIndex
 import net.dodian.uber.game.engine.sync.player.ViewerPlayerSyncState
+import net.dodian.uber.game.engine.sync.player.StagedPlayerSynchronizationService
 import net.dodian.uber.game.engine.sync.playerinfo.RootPlayerInfoService
 import net.dodian.uber.game.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.engine.sync.viewport.ViewportIndex
@@ -36,7 +38,14 @@ class WorldSynchronizationService {
     private val sharedPlayerActivityIndex = PlayerChunkActivityIndex()
     private val sharedNpcActivityIndex = NpcChunkActivityIndex()
     private val activePlayerBuffer = ArrayList<Client>(2048)
+    private val playerSynchronizationMode = PlayerSynchronizationMode.configured()
+    private val stagedPlayerSynchronization = StagedPlayerSynchronizationService()
+    private val stagedNpcSynchronization = StagedNpcSynchronizationService()
     private var tick = 0L
+
+    init {
+        logger.info("Player synchronization mode: {}", playerSynchronizationMode)
+    }
 
     fun run() {
         val startedNs = System.nanoTime()
@@ -60,15 +69,14 @@ class WorldSynchronizationService {
                 npcActivityIndex = npcActivityIndex,
             )
 
-        measure(cycle, SynchronizationStage.SYNC_PLAYER_PREP) {
-            buildPlayerRootCache(activePlayers, rootCache)
-        }
-        measure(cycle, SynchronizationStage.SYNC_NPC_PREP) {
-            buildNpcRootCache(relevantNpcs, rootCache)
-        }
-
         SynchronizationContext.setCurrent(cycle)
         try {
+            measure(cycle, SynchronizationStage.SYNC_PLAYER_PREP) {
+                buildPlayerRootCache(activePlayers, rootCache)
+            }
+            measure(cycle, SynchronizationStage.SYNC_NPC_PREP) {
+                buildNpcRootCache(relevantNpcs, rootCache)
+            }
             measure(cycle, SynchronizationStage.SYNC_PLAYER_ENCODE) {
                 encodePlayers(activePlayers)
             }
@@ -91,21 +99,28 @@ class WorldSynchronizationService {
     private fun currentActivePlayers(): List<Client> {
         activePlayerBuffer.clear()
         for (player in PlayerRegistry.playersOnline.values) {
-            if (player.isActive && !player.disconnected) {
+            if (player.isSynchronizationReady) {
                 val channel = player.channel
                 if (channel != null && channel.isActive) {
                     activePlayerBuffer += player
                 }
             }
         }
-        return activePlayerBuffer
+        activePlayerBuffer.sortBy(Client::getSlot)
+        return activePlayerBuffer.toList()
     }
 
     private fun buildPlayerRootCache(activePlayers: List<Client>, rootCache: RootSynchronizationCache) {
         activePlayers.forEach { player ->
-            rootCache.playerBlocks.put(player, PHASE_ADD_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_ADD_LOCAL))
-            if (player.updateFlags.isUpdateRequired) {
-                rootCache.playerBlocks.put(player, PHASE_UPDATE_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_UPDATE_LOCAL))
+            if (!player.isSynchronizationReady) return@forEach
+            try {
+                rootCache.playerBlocks.put(player, PHASE_ADD_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_ADD_LOCAL))
+                if (player.updateFlags.isUpdateRequired) {
+                    rootCache.playerBlocks.put(player, PHASE_UPDATE_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_UPDATE_LOCAL))
+                }
+            } catch (throwable: Throwable) {
+                OperationalTelemetry.incrementCounter("sync.player.subject_prep_failure")
+                handleViewerSyncFailure("player-block-prep", player, throwable)
             }
         }
     }
@@ -119,12 +134,61 @@ class WorldSynchronizationService {
     }
 
     private fun encodePlayers(activePlayers: List<Client>) {
-        rootPlayerInfoService.sync(activePlayers)
+        val readyPlayers = activePlayers.filter(Client::isSynchronizationReady)
+        when (playerSynchronizationMode) {
+            PlayerSynchronizationMode.STAGED -> {
+                readyPlayers.forEach { player ->
+                    try {
+                        val result = stagedPlayerSynchronization.synchronize(player)
+                        if (!result.accepted) {
+                            OperationalTelemetry.incrementCounter("player.disconnect.sync_outbound_rejected")
+                            player.noteDisconnectReason("sync-outbound-rejected")
+                            player.setSynchronizationReady(false)
+                            player.disconnected = true
+                            return@forEach
+                        }
+                        SynchronizationContext.recordPlayerPacketBuilt(result.committedCount)
+                        SynchronizationContext.recordViewer(result.committedCount, player.localNpcSize)
+                    } catch (throwable: Throwable) {
+                        OperationalTelemetry.incrementCounter("sync.player.viewer_encode_failure")
+                        handleViewerSyncFailure("player-sync-staged", player, throwable)
+                    }
+                }
+            }
+
+            PlayerSynchronizationMode.CANONICAL -> {
+                readyPlayers.forEach { player ->
+                    try {
+                        player.sendPlayerSynchronization()
+                        SynchronizationContext.recordViewer(player.playerListSize, player.localNpcSize)
+                    } catch (throwable: Throwable) {
+                        OperationalTelemetry.incrementCounter("sync.player.viewer_encode_failure")
+                        handleViewerSyncFailure("player-sync-canonical", player, throwable)
+                    }
+                }
+            }
+
+            PlayerSynchronizationMode.OPTIMIZED -> rootPlayerInfoService.sync(readyPlayers)
+        }
     }
 
     private fun encodeNpcs(activePlayers: List<Client>) {
         activePlayers.forEach { player ->
+            if (!player.isSynchronizationReady) return@forEach
             try {
+                if (playerSynchronizationMode == PlayerSynchronizationMode.STAGED) {
+                    val result = stagedNpcSynchronization.synchronize(player)
+                    if (!result.accepted) {
+                        OperationalTelemetry.incrementCounter("player.disconnect.sync_outbound_rejected")
+                        player.noteDisconnectReason("sync-outbound-rejected")
+                        player.setSynchronizationReady(false)
+                        player.disconnected = true
+                        return@forEach
+                    }
+                    SynchronizationContext.recordNpcPacketBuilt(result.committedCount)
+                    SynchronizationContext.recordViewer(player.playerListSize, result.committedCount)
+                    return@forEach
+                }
                 val state = SynchronizationContext.getViewerNpcSyncState(player)
                 val chunkStamp = SynchronizationContext.getNpcChunkActivityStamp(player)
                 val localActivityStamp = SynchronizationContext.getNpcLocalActivityStamp(player)
@@ -147,18 +211,19 @@ class WorldSynchronizationService {
     }
 
     private fun flushActivePlayers(activePlayers: List<Client>) {
-        val uiNanos = measureNanoTime { PlayerUiDeltaProcessor.process(activePlayers) }
+        val readyPlayers = activePlayers.filter(Client::isSynchronizationReady)
+        val uiNanos = measureNanoTime { PlayerUiDeltaProcessor.process(readyPlayers) }
         val zoneStatsRef = arrayOfNulls<net.dodian.uber.game.engine.systems.zone.ZoneFlushStats>(1)
         val zoneNanos =
             measureNanoTime {
-                zoneStatsRef[0] = ZoneUpdateBus.flush(activePlayers)
+                zoneStatsRef[0] = ZoneUpdateBus.flush(readyPlayers)
             }
         var flushedPlayers = 0
         var flushedMessages = 0
         var flushedBytes = 0
         val netNanos =
             measureNanoTime {
-                activePlayers.forEach { player ->
+                readyPlayers.forEach { player ->
                     try {
                         val flushStats = player.flushOutbound()
                         if (flushStats.flushedMessages() > 0) {
@@ -197,15 +262,25 @@ class WorldSynchronizationService {
 
     private fun handleViewerSyncFailure(stage: String, player: Client, throwable: Throwable) {
         logger.error(
-            "World sync viewer failure stage={} player={} slot={} pos={}",
+            "World sync viewer failure stage={} mode={} tick={} player={} dbId={} slot={} session={} ready={} pos={} locals={} movement=[{},{}] flags={}",
             stage,
+            playerSynchronizationMode,
+            tick,
             player.playerName,
+            player.dbId,
             player.slot,
+            player.synchronizationSessionGeneration,
+            player.isSynchronizationReady,
             player.position,
+            player.playerListSize,
+            player.primaryDirection,
+            player.secondaryDirection,
+            player.updateFlags,
             throwable,
         )
         player.noteDisconnectReason("sync-failure:$stage")
         OperationalTelemetry.incrementCounter("player.disconnect.sync_failure")
+        player.setSynchronizationReady(false)
         player.disconnected = true
     }
 

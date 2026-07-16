@@ -142,6 +142,8 @@ object PlayerRegistry {
             return
         }
 
+        // Stop new viewers admitting this session before any teardown mutates it.
+        client.setSynchronizationReady(false)
         client.destruct()
         logger.info(
             "Finished removing player: '{}' slot={} active={} disconnected={}",
@@ -176,8 +178,7 @@ object PlayerRegistry {
 
     private fun isActiveClient(client: Client?): Boolean {
         return client != null &&
-            client.isActive &&
-            !client.disconnected &&
+            client.isSynchronizationReady &&
             client.channel != null &&
             client.channel.isActive
     }

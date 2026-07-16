@@ -3,6 +3,7 @@ package net.dodian.uber.game.api.plugin
 import com.google.common.reflect.ClassPath
 import net.dodian.uber.game.api.plugin.dsl.PluginMetadata as DslPluginMetadata
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
+import net.dodian.uber.game.api.plugin.skills.routeKeys
 import net.dodian.uber.game.item.ItemContent
 import net.dodian.uber.game.npc.NpcContentDefinition
 import net.dodian.uber.game.npc.NpcModule
@@ -18,6 +19,7 @@ data class PluginCatalogEntry(
     val moduleClass: String,
     val kind: String,
     val metadata: PluginModuleMetadata,
+    val manifest: ContentModuleManifest,
 )
 
 /**
@@ -88,6 +90,7 @@ object ContentModuleIndex {
         val discoveredEvents = mutableListOf<Pair<String, () -> Unit>>()
         val discoveredBootstraps = mutableListOf<Pair<String, ContentBootstrap>>()
         val discoveredCatalog = mutableListOf<PluginCatalogEntry>()
+        val discoveredManifests = mutableListOf<ContentModuleManifest>()
 
         for (clazz in scannedClasses) {
             val instance = try {
@@ -98,42 +101,54 @@ object ContentModuleIndex {
 
             val className = clazz.name
             val simpleName = clazz.simpleName
+            val manifest = resolveManifest(instance, clazz)
+            if (instance is SkillPlugin && instance is ContentModuleManifestProvider) {
+                val actualRoutes = instance.definition.routeKeys()
+                require(manifest.declaredRouteKeys == actualRoutes) {
+                    "Content module ${manifest.id} declared routes ${manifest.declaredRouteKeys.sorted()} " +
+                        "but registry routes are ${actualRoutes.sorted()}"
+                }
+            }
+            val enabled = ContentModuleFeatureState.isEnabled(manifest)
+            discoveredManifests += manifest
 
             var pluginKind: String? = null
             when (instance) {
                 is InterfaceButtonContent -> {
-                    discoveredButtons += className to instance
+                    if (enabled) discoveredButtons += className to instance
                     pluginKind = "interface-button"
                 }
                 is ObjectContent -> {
-                    discoveredObjects += (simpleName to instance)
+                    if (enabled) discoveredObjects += (simpleName to instance)
                     pluginKind = "object-content"
                 }
                 is ItemContent -> {
-                    discoveredItems += className to instance
+                    if (enabled) discoveredItems += className to instance
                     pluginKind = "item-content"
                 }
                 is CommandContent -> {
-                    discoveredCommands += className to instance
+                    if (enabled) discoveredCommands += className to instance
                     pluginKind = "command-content"
                 }
                 is SkillPlugin -> {
-                    discoveredSkills += className to instance
+                    if (enabled) discoveredSkills += className to instance
                     pluginKind = "skill-plugin"
                 }
                 is ShopPlugin -> {
-                    discoveredShops += className to instance
+                    if (enabled) discoveredShops += className to instance
                     pluginKind = "shop-plugin"
                 }
                 is ContentBootstrap -> {
-                    discoveredBootstraps += className to instance
+                    if (enabled) discoveredBootstraps += className to instance
                     pluginKind = "bootstrap"
                 }
             }
 
             if (instance is NpcModule) {
-                discoveredNpcs += className to instance.definition
-                discoveredNpcModules += className to instance
+                if (enabled) {
+                    discoveredNpcs += className to instance.definition
+                    discoveredNpcModules += className to instance
+                }
                 pluginKind = pluginKind ?: "npc-module"
             }
 
@@ -146,7 +161,7 @@ object ContentModuleIndex {
                 } catch (_: NoSuchMethodException) {
                     null
                 }
-                if (method != null) {
+                if (method != null && enabled) {
                     discoveredEvents += className to { method.invoke(instance) }
                     pluginKind = pluginKind ?: "event-bootstrap"
                 }
@@ -157,6 +172,7 @@ object ContentModuleIndex {
                     moduleClass = className,
                     kind = pluginKind,
                     metadata = resolveMetadata(instance, clazz),
+                    manifest = manifest,
                 )
             }
         }
@@ -177,10 +193,18 @@ object ContentModuleIndex {
         eventBootstraps = discoveredEvents.sortedBy { it.first }.map { it.second }
         contentBootstraps = discoveredBootstraps.sortedBy { it.first }.map { it.second }
         pluginCatalog = discoveredCatalog.sortedBy { it.moduleClass }
+        ContentPlatformCatalog.publish(discoveredManifests)
+        val platformSnapshot = ContentPlatformCatalog.snapshot()
+        logger.info(
+            "Content manifest frozen fingerprint={} enabled=[{}] disabled=[{}]",
+            platformSnapshot.fingerprint.take(12),
+            platformSnapshot.modules.filter { it.id in platformSnapshot.enabledModuleIds }.joinToString { it.id },
+            platformSnapshot.modules.filter { it.id !in platformSnapshot.enabledModuleIds }.joinToString { it.id },
+        )
         lifecycle = IndexLifecycle.FROZEN
 
         logger.info(
-            "Plugin index {}: buttons={}, objects={}, items={}, commands={}, npcs={}, skills={}, shops={}, events={}, bootstraps={}, catalog={}, canonicalRoots={}, legacyRoots={}",
+            "Plugin index {}: buttons={}, objects={}, items={}, commands={}, npcs={}, skills={}, shops={}, events={}, bootstraps={}, catalog={}, enabledModules={}, disabledModules={}, fingerprint={}",
             lifecycle.name.lowercase(),
             interfaceButtons.size,
             objectContents.size,
@@ -194,6 +218,9 @@ object ContentModuleIndex {
             pluginCatalog.size,
             CANONICAL_SCAN_PACKAGES.size,
             0,
+            platformSnapshot.enabledCount,
+            platformSnapshot.disabledCount,
+            platformSnapshot.fingerprint.take(12),
         )
     }
 
@@ -250,6 +277,18 @@ object ContentModuleIndex {
             description = "Undocumented plugin module.",
             version = "1.0.0",
             owner = "unspecified",
+        )
+    }
+
+    private fun resolveManifest(instance: Any, clazz: Class<*>): ContentModuleManifest {
+        if (instance is ContentModuleManifestProvider) return instance.contentManifest
+        val metadata = resolveMetadata(instance, clazz)
+        // Existing modules remain bootable during the staged platform rollout.
+        return ContentModuleManifest(
+            id = clazz.name.lowercase(),
+            owner = metadata.owner,
+            version = metadata.version,
+            maturity = ContentMaturity.LEGACY,
         )
     }
 

@@ -13,6 +13,9 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendCamera
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.api.content.ContentFaultCircuitBreaker
+import net.dodian.uber.game.api.plugin.ContentPlatformCatalog
+import net.dodian.uber.game.api.plugin.ContentRouteCatalog
+import net.dodian.uber.game.skill.runtime.parity.SkillDoctor
 
 object StaffCommands : CommandContent {
     private val moderationAliases = setOf(
@@ -36,6 +39,55 @@ object StaffCommands : CommandContent {
                     if (ContentFaultCircuitBreaker.reEnable(binding)) "Re-enabled content binding: $binding"
                     else "Content binding was not quarantined: $binding",
                 )
+                true
+            }
+            command("content") {
+                if (client.playerRights < 2) return@command false
+                when (parts.getOrNull(1)?.lowercase()) {
+                    "modules" -> {
+                        val snapshot = ContentPlatformCatalog.snapshot()
+                        client.sendMessage("Content ${snapshot.enabledCount}/${snapshot.modules.size} enabled; fingerprint=${snapshot.fingerprint.take(12)}")
+                    }
+                    "module" -> {
+                        val id = parts.getOrNull(2) ?: return@command usage("::content module <module-id>")
+                        val module = ContentPlatformCatalog.snapshot().module(id)
+                            ?: run { client.sendMessage("Unknown content module: $id"); return@command true }
+                        val routes = ContentRouteCatalog.byModule(id)
+                        val faults = ContentFaultCircuitBreaker.failuresForModule(id)
+                        client.sendMessage("${module.id} ${module.maturity} owner=${module.owner} v=${module.version} routes=${routes.size} faults=${faults.size}")
+                    }
+                    "routes" -> {
+                        val id = parts.getOrNull(2)?.toIntOrNull() ?: return@command usage("::content routes <id>")
+                        val routes = ContentRouteCatalog.find(id)
+                        client.sendMessage(if (routes.isEmpty()) "No active content routes for id=$id" else routes.take(8).joinToString(" | ") { "${it.moduleId}:${it.routeType}:${it.key}" })
+                    }
+                    "validate" -> {
+                        val report = SkillDoctor.snapshot()
+                        client.sendMessage(if (report.isClean) "Content validation passed." else "Content validation found ${report.findings.size} issue(s); see server log.")
+                    }
+                    else -> client.sendMessage("::content modules | module <id> | routes <id> | validate")
+                }
+                true
+            }
+            command("sync") {
+                if (client.playerRights < 2) return@command false
+                val name = parts.drop(1).joinToString(" ").trim()
+                val target = if (name.isBlank()) client else PlayerRegistry.getPlayer(name) as? Client
+                if (target == null) {
+                    client.sendMessage("Player is not online. Usage: ::sync <player>")
+                    return@command true
+                }
+                val locals =
+                    (0 until target.playerListSize)
+                        .mapNotNull { target.playerList.getOrNull(it) }
+                        .take(12)
+                        .joinToString(",") { "${it.slot}@${it.synchronizationSessionGeneration}" }
+                client.sendMessage(
+                    "Sync ${target.playerName}: slot=${target.slot} session=${target.synchronizationSessionGeneration} " +
+                        "ready=${target.isSynchronizationReady} active=${target.isActive} loaded=${target.loaded} " +
+                        "locals=${target.playerListSize} appearanceRev=${target.appearanceRevision}",
+                )
+                client.sendMessage("Sync locals: ${locals.ifBlank { "none" }}; ${target.connectionHealthSummary()}")
                 true
             }
             command(

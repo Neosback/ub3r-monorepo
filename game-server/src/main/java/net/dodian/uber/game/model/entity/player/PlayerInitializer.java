@@ -53,9 +53,7 @@ public class PlayerInitializer {
         
 
         client.checkItemUpdate();
-        for (int i = 0; i < Equipment.SIZE; i++) { // Equipment
-            client.setEquipment(client.getEquipment()[i], client.getEquipmentN()[i], i);
-        }
+        client.refreshEquipmentState();
 
         client.loaded = true;
         //TODO everyone is premium for now

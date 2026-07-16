@@ -1,0 +1,95 @@
+package net.dodian.uber.game.engine.systems.skills
+
+import net.dodian.uber.game.api.content.ContentEconomy
+import net.dodian.uber.game.api.content.ContentEquipment
+import net.dodian.uber.game.api.content.ContentFeatures
+import net.dodian.uber.game.api.content.ContentSocial
+import net.dodian.uber.game.api.plugin.skills.SkillActions
+import net.dodian.uber.game.api.plugin.skills.SkillInventory
+import net.dodian.uber.game.api.plugin.skills.SkillInventoryTransaction
+import net.dodian.uber.game.api.plugin.skills.SkillLevels
+import net.dodian.uber.game.api.plugin.skills.SkillPlayer
+import net.dodian.uber.game.api.plugin.skills.SkillUi
+import net.dodian.uber.game.api.plugin.skills.SkillWorld
+import net.dodian.uber.game.engine.config.FeatureStateService
+import net.dodian.uber.game.engine.systems.inventory.inventoryTransaction
+import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.skill.runtime.action.SkillStateCoordinator
+
+/** Engine-only protocol adapter. Public content receives [SkillPlayer], never [Client]. */
+internal class ClientSkillPlayerAdapter(private val client: Client) : SkillPlayer {
+    override val skills = object : SkillLevels {
+        override fun current(skill: Skill) = client.getLevel(skill)
+        override fun base(skill: Skill) = client.getSkillLevel(skill)
+        override fun experience(skill: Skill) = client.getExperience(skill)
+        override fun gainXp(amount: Int, skill: Skill) = ProgressionService.addXp(client, amount, skill)
+    }
+    override val inventory = object : SkillInventory {
+        override fun contains(itemId: Int, amount: Int) = client.getInvAmt(itemId) >= amount
+        override fun amount(itemId: Int) = client.getInvAmt(itemId)
+        override fun freeSlots() = client.freeSlots()
+        override fun add(itemId: Int, amount: Int) = client.addItem(itemId, amount)
+        override fun remove(itemId: Int, amount: Int): Boolean {
+            if (client.getInvAmt(itemId) < amount) return false
+            client.deleteItem(itemId, amount)
+            return true
+        }
+        override fun transaction(block: SkillInventoryTransaction.() -> Unit) = client.inventoryTransaction {
+            val staged = this
+            block(object : SkillInventoryTransaction {
+                override fun require(itemId: Int, amount: Int) = staged.require(itemId, amount)
+                override fun remove(itemId: Int, amount: Int) = staged.remove(itemId, amount)
+                override fun removeAt(slot: Int, itemId: Int, amount: Int) = staged.removeAt(slot, itemId, amount)
+                override fun add(itemId: Int, amount: Int) = staged.add(itemId, amount)
+            })
+        }
+        override fun refresh() = client.checkItemUpdate()
+    }
+    override val actions = object : SkillActions {
+        override fun animate(id: Int, delay: Int) = client.performAnimation(id, delay)
+        override fun stop() = client.resetAction()
+        override fun lockMovement(locked: Boolean) = client.setMovementLocked(locked)
+        override fun beginSession(key: String) = SkillStateCoordinator.beginSession(client, key)
+        override fun endSession(key: String) = SkillStateCoordinator.endSession(client, key)
+        override fun activeSessionKey(): String? = client.activeSkillSessionKey
+    }
+    override val ui = object : SkillUi {
+        override fun message(text: String) = client.sendMessage(text)
+        override fun string(text: String, componentId: Int) = client.sendString(text, componentId)
+        override fun open(interfaceId: Int) = client.openInterface(interfaceId)
+        override fun close() = client.send(RemoveInterfaces())
+        override fun npcDialogue(dialogueId: Int, npcId: Int) = client.startNpcDialogue(dialogueId, npcId)
+    }
+    override val world = object : SkillWorld {
+        override val position: Position get() = client.position
+        override fun distanceTo(x: Int, y: Int) = client.distanceToPoint(x, y)
+        override fun teleport(destination: Position) = client.transport(destination)
+    }
+    override val equipment = object : ContentEquipment {
+        override fun item(slot: Int) = client.equipment.getOrElse(slot) { -1 }
+        override fun amount(slot: Int) = client.equipmentN.getOrElse(slot) { 0 }
+        override fun refresh() = client.refreshEquipmentState()
+    }
+    override val economy = object : ContentEconomy {
+        override fun bankAmount(itemId: Int) = client.getBankAmt(itemId)
+        override fun openBank() = client.openUpBankRouted()
+        override fun openShop(shopId: Int) = client.openUpShopRouted(shopId)
+    }
+    override val social = ContentSocial { encodedName -> client.hasFriend(encodedName) }
+    override val features = object : ContentFeatures {
+        override val bankingEnabled get() = FeatureStateService.banking.get()
+        override val shoppingEnabled get() = FeatureStateService.shopping.get()
+        override val tradingEnabled get() = FeatureStateService.trading.get()
+        override val duelingEnabled get() = FeatureStateService.dueling.get()
+    }
+    fun protocolClient(): Client = client
+}
+
+internal fun Client.asSkillPlayer(): SkillPlayer = ClientSkillPlayerAdapter(this)
+
+/** Internal migration bridge for legacy engine adapters only. */
+internal fun SkillPlayer.protocolClient(): Client = (this as? ClientSkillPlayerAdapter)?.protocolClient()
+    ?: error("SkillPlayer must be backed by the engine Client adapter")

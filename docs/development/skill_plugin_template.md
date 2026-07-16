@@ -2,6 +2,17 @@
 
 Use this as the default pattern when adding a new skill or extending an existing one.
 
+## Module boundary
+
+New skill code belongs in its owning Gradle project under `skills/<skill>`.
+Use only `:skills:api`, `:skills:runtime`, and `:skills:testkit` from
+there; the host bridge remains inside `game-server`. A module can never
+import `Client`, send protocol packets, or mutate raw item arrays.
+
+Run `./gradlew skillsCheck` before submitting skill work. The legacy sources
+under `game-server/.../skill` are migration-only; do not add new behavior
+there.
+
 ## Goals
 
 - one clear entry point per skill: `object <Skill>NameSkillPlugin : SkillPlugin`
@@ -18,9 +29,11 @@ package net.dodian.uber.game.skill.example
 
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
+import net.dodian.uber.game.api.plugin.ContentModuleManifestProvider
 import net.dodian.uber.game.api.content.ContentPlayer
 import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
+import net.dodian.uber.game.api.plugin.skills.manifest
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 
 object ExampleSkill {
@@ -31,7 +44,7 @@ object ExampleSkill {
     }
 }
 
-object ExampleSkillPlugin : SkillPlugin {
+object ExampleSkillPlugin : SkillPlugin, ContentModuleManifestProvider {
     override val definition =
         skillPlugin(name = "Example", skill = Skill.EXAMPLE) {
             objectClick(preset = PolicyPreset.GATHERING, option = 1, 1234) { interaction ->
@@ -45,6 +58,13 @@ object ExampleSkillPlugin : SkillPlugin {
                 }
             }
         }
+
+    // Route keys are derived from the typed definition; no duplicate id list.
+    override val contentManifest = definition.manifest(
+        id = "skill.example",
+        owner = "gameplay",
+        featureFlag = "example-skill",
+    )
 }
 ```
 
@@ -88,6 +108,11 @@ Each plugin-owned skill module should expose:
 - `<Skill>Data.kt` with route ids/constants and policy defaults (for example `object <Skill>RouteIds`)
 - `<Skill>Actions.kt` with stable action identifiers (for example `object <Skill>ActionIds`)
 - `<Skill>.kt` with `object <Skill>SkillPlugin : SkillPlugin` as the route ownership entrypoint
+
+New modules must also implement `ContentModuleManifestProvider`. Use
+`definition.manifest(...)`; it derives the declared route keys so validation
+cannot drift from the routes that actually register. Existing modules are
+reported as `LEGACY` until they add one.
 
 Do not scatter route id arrays and action id strings across multiple files.
 

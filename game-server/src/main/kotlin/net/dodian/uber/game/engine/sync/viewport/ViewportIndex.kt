@@ -83,7 +83,7 @@ class ViewportIndex private constructor(
             val npcs = ViewportSnapshotPool.rentNpcList()
             chunkManager.forEachViewableChunk(center, distance) { repo: ChunkEntityIndex ->
                 for (other in repo.getAll<Player>(EntityType.PLAYER)) {
-                    if (other.isActive && other.position?.z == level) {
+                    if (other.isSynchronizationReady && other.position?.z == level) {
                         players += other
                     }
                 }

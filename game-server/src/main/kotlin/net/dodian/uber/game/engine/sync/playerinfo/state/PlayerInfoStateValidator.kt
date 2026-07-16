@@ -3,6 +3,7 @@ package net.dodian.uber.game.engine.sync.playerinfo.state
 import net.dodian.uber.game.engine.sync.playerinfo.dispatch.PlayerSyncRecoveryReason
 
 import net.dodian.uber.game.Constants
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.player.Client
 
 class PlayerInfoStateValidator {
@@ -17,7 +18,7 @@ class PlayerInfoStateValidator {
         }
         for (i in 0 until viewer.playerListSize) {
             val local = viewer.playerList[i] ?: return PlayerSyncRecoveryReason.STALE_LOCAL
-            if (!local.isActive) {
+            if (!local.isSynchronizationReady || PlayerRegistry.players.getOrNull(local.slot) !== local) {
                 return PlayerSyncRecoveryReason.STALE_LOCAL
             }
             if (markSeen(local.slot)) {

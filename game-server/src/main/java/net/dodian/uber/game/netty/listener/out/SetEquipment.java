@@ -5,8 +5,6 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.ui.combat.CombatStyleService;
-import net.dodian.uber.game.engine.systems.combat.CombatSpecialService;
 
 
 public class SetEquipment implements OutgoingPacket {
@@ -37,16 +35,5 @@ public class SetEquipment implements OutgoingPacket {
         message.putShort(itemId, ByteOrder.BIG);
         
         client.send(message);
-        
-        // Additional equipment-related updates
-        if (targetSlot == 3) { // 3 is the weapon slot
-            client.CheckGear();
-            CombatStyleService.refreshWeaponStyleUi(client);
-            CombatSpecialService.onWeaponEquip(client);
-            client.requestWeaponAnims();
-        }
-        
-        client.GetBonus(true);
-        client.getUpdateFlags().setRequired(net.dodian.uber.game.model.entity.UpdateFlag.APPEARANCE, true);
     }
 }

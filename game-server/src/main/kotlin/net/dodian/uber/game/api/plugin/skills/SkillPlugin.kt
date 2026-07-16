@@ -2,6 +2,8 @@ package net.dodian.uber.game.api.plugin.skills
 
 import net.dodian.uber.game.api.plugin.PluginModuleMetadata
 import net.dodian.uber.game.api.plugin.PluginModuleMetadataProvider
+import net.dodian.uber.game.api.plugin.ContentMaturity
+import net.dodian.uber.game.api.plugin.ContentModuleManifest
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.engine.systems.action.UnifiedPolicyDsl
@@ -29,6 +31,33 @@ data class SkillPluginDefinition(
     val magicOnObjectBindings: List<SkillMagicOnObjectBinding> = emptyList(),
     val buttonBindings: List<SkillButtonBinding> = emptyList(),
     val lifecycle: SkillPluginLifecycleHooks = SkillPluginLifecycleHooks(),
+)
+
+/** Canonical route inventory used by manifests, startup validation, and diagnostics. */
+fun SkillPluginDefinition.routeKeys(): Set<String> = buildSet {
+    objectBindings.forEach { binding -> binding.objectIds.forEach { add("object:${binding.option}:$it") } }
+    npcBindings.forEach { binding -> binding.npcIds.forEach { add("npc:${binding.option}:$it") } }
+    itemBindings.forEach { binding -> binding.itemIds.forEach { add("item:${binding.option}:$it") } }
+    itemOnItemBindings.forEach { add("item-on-item:${it.leftItemId}:${it.rightItemId}") }
+    itemOnObjectBindings.forEach { binding -> binding.objectIds.forEach { objectId -> binding.itemIds.forEach { itemId -> add("item-on-object:$objectId:$itemId") } } }
+    magicOnObjectBindings.forEach { binding -> binding.objectIds.forEach { objectId -> binding.spellIds.forEach { spellId -> add("magic-on-object:$objectId:$spellId") } } }
+    buttonBindings.forEach { binding -> binding.rawButtonIds.forEach { add("button:$it:${binding.opIndex ?: -1}:${binding.requiredInterfaceId}") } }
+}
+
+/** Creates a manifest from the typed definition so declarations cannot drift. */
+fun SkillPluginDefinition.manifest(
+    id: String,
+    owner: String,
+    version: String = "1.0.0",
+    featureFlag: String = ContentModuleManifest.ALWAYS_ENABLED,
+    maturity: ContentMaturity = ContentMaturity.BETA,
+): ContentModuleManifest = ContentModuleManifest(
+    id = id,
+    owner = owner,
+    version = version,
+    featureFlag = featureFlag,
+    maturity = maturity,
+    declaredRouteKeys = routeKeys(),
 )
 
 data class SkillPluginLifecycleHooks(

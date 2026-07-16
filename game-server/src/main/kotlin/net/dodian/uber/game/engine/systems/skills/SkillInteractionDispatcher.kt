@@ -15,7 +15,6 @@ import net.dodian.uber.game.api.plugin.skills.SkillItemOnObjectInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillMagicOnObjectInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillNpcInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillObjectInteraction
-import net.dodian.uber.game.api.plugin.skills.asSkillPlayer
 import net.dodian.uber.game.engine.config.gameWorldId
 import org.slf4j.LoggerFactory
 

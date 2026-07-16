@@ -27,6 +27,7 @@ val syncTestSourceSet = sourceSets.create("syncTest") {
 }
 
 tasks.jar {
+    dependsOn(":routefinder:jar")
 
     manifest {
         attributes["Main-Class"] = "net.dodian.uber.game.Server"

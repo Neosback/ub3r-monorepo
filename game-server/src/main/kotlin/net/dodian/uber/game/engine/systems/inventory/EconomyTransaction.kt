@@ -142,15 +142,19 @@ class EconomyTransaction private constructor() {
 
         fun commit() {
             if (!changed) return
+            if (kind == Container.EQUIPMENT) {
+                client.replaceEquipmentState(ids, amounts)
+                return
+            }
             val targetIds = when (kind) {
                 Container.INVENTORY -> client.playerItems
                 Container.BANK -> client.bankItems
-                Container.EQUIPMENT -> client.equipment
+                Container.EQUIPMENT -> error("Equipment is committed through Client.replaceEquipmentState")
             }
             val targetAmounts = when (kind) {
                 Container.INVENTORY -> client.playerItemsN
                 Container.BANK -> client.bankItemsN
-                Container.EQUIPMENT -> client.equipmentN
+                Container.EQUIPMENT -> error("Equipment is committed through Client.replaceEquipmentState")
             }
             System.arraycopy(ids, 0, targetIds, 0, ids.size)
             System.arraycopy(amounts, 0, targetAmounts, 0, amounts.size)
@@ -160,7 +164,7 @@ class EconomyTransaction private constructor() {
                     client.checkItemUpdate()
                 }
                 Container.BANK -> client.markSaveDirty(PlayerSaveSegment.BANK.mask)
-                Container.EQUIPMENT -> client.markSaveDirty(PlayerSaveSegment.EQUIPMENT.mask)
+                Container.EQUIPMENT -> error("Equipment is committed through Client.replaceEquipmentState")
             }
         }
 

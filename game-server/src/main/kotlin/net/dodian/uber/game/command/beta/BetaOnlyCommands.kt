@@ -168,7 +168,7 @@ private fun handleBeta(context: CommandContext): Boolean {
             client.equipmentN[9] = 1
             client.equipment[10] = 4129
             client.equipmentN[10] = 1
-            for (i in 0 until 14) client.setEquipment(client.equipment[i], client.equipmentN[i], i)
+            client.refreshEquipmentState()
             client.addItem(5733, 1)
             repeat(27) { client.addItem(385, 1) }
             client.checkItemUpdate()
