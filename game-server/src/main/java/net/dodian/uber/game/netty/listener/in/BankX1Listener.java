@@ -8,7 +8,6 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketBankingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +16,8 @@ import org.slf4j.LoggerFactory;
  * Handles the first part of an "X" withdraw/deposit (opcode 135).
  * Decodes context then delegates to PacketBankingService.handleXPromptDecoded.
  */
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {135})
 public class BankX1Listener implements PacketListener {
-
-    static { PacketListenerManager.register(135, new BankX1Listener()); }
-
     private static final Logger logger = LoggerFactory.getLogger(BankX1Listener.class);
     private static final int MIN_PAYLOAD_BYTES = 6;
 

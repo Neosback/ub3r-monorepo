@@ -23,6 +23,7 @@ import net.dodian.uber.game.engine.sync.player.StagedPlayerSynchronizationServic
 import net.dodian.uber.game.engine.sync.playerinfo.RootPlayerInfoService
 import net.dodian.uber.game.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.engine.sync.viewport.ViewportIndex
+import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.engine.systems.zone.ZoneUpdateBus
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import net.dodian.uber.game.engine.metrics.OperationalTelemetry
@@ -48,6 +49,7 @@ class WorldSynchronizationService {
     }
 
     fun run() {
+        GameThreadContext.validateGameThread("world.synchronization")
         val startedNs = System.nanoTime()
         tick++
         val activePlayers = currentActivePlayers()

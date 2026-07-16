@@ -7,7 +7,6 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,11 +15,9 @@ import org.slf4j.LoggerFactory;
  * and printed debug; there is no gameplay logic attached. We preserve the same
  * behaviour here (TRACE-level log for debugging) so the bridge can be removed.
  */
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {25})
 public class ItemOnGroundItemListener implements PacketListener {
-
-    static { PacketListenerManager.register(25, new ItemOnGroundItemListener()); }
-
-    private static final Logger logger = LoggerFactory.getLogger(ItemOnGroundItemListener.class);
+  private static final Logger logger = LoggerFactory.getLogger(ItemOnGroundItemListener.class);
     private static final int MIN_PAYLOAD_BYTES = 9;
 
     @Override

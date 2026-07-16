@@ -5,7 +5,6 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.ui.bank.PlayerBankService;
 
 /**
@@ -13,14 +12,10 @@ import net.dodian.uber.game.ui.bank.PlayerBankService;
  * Packet format: int componentId, null-terminated string text.
  * Sent every keystroke for input fields with updatesEveryInput=true (e.g. bank search 60019).
  */
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {142})
 public class InputFieldListener implements PacketListener {
 
     private static final int BANK_SEARCH_COMPONENT = 60019;
-
-    static {
-        PacketListenerManager.register(142, new InputFieldListener());
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();

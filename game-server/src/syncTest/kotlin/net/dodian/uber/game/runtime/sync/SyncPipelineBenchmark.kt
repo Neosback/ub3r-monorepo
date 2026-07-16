@@ -5,6 +5,7 @@ import io.netty.util.ReferenceCountUtil
 import java.lang.management.ManagementFactory
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.sync.player.StagedPlayerSynchronizationService
+import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.model.entity.player.Client
@@ -14,6 +15,7 @@ object SyncPipelineBenchmark {
     fun main(args: Array<String>) {
         val iterations = args.firstOrNull()?.toIntOrNull()?.coerceAtLeast(100) ?: 2_000
         val previousItemManager = Server.itemManager
+        GameThreadContext.bindCurrentThread()
         Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
         try {
             val canonical = measure("CANONICAL", iterations, staged = false)

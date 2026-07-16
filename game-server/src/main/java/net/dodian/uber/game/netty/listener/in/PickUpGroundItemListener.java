@@ -5,17 +5,14 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService;
 import net.dodian.uber.game.engine.systems.net.PacketPickupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {236})
 public class PickUpGroundItemListener implements PacketListener {
-
-    static { PacketListenerManager.register(236, new PickUpGroundItemListener()); }
-
     private static final Logger logger = LoggerFactory.getLogger(PickUpGroundItemListener.class);
 
     @Override

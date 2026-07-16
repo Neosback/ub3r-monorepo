@@ -14,7 +14,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface PacketHandler {
-    int opcode();
+    /** Every client opcode owned by this listener. */
+    int[] opcodes();
 
     /**
      * Base class for new Netty packet listeners. Each concrete implementation handles

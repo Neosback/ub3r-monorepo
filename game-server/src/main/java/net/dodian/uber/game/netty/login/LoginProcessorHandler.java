@@ -323,6 +323,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         final int slotCopy = slot;
         final long finalizerQueuedAtNanos = System.nanoTime();
         boolean finalizerAccepted = GameThreadIngress.submitCritical("login-finalize", () -> {
+            net.dodian.uber.game.engine.loop.GameThreadContext.validateGameThread("player-registry.login-register");
             long finalizerStartedAtNanos = System.nanoTime();
             long queueWaitMs = (finalizerStartedAtNanos - finalizerQueuedAtNanos) / 1_000_000L;
             if (!channel.isActive() || client.disconnected) {

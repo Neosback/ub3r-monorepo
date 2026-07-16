@@ -9,9 +9,7 @@ import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
-import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketInteractionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,22 +19,11 @@ import org.slf4j.LoggerFactory;
  * 155 (slot 0/click1), 17 (slot 2/click3), 21 (slot 3/click4), 18 (legacy slot 4/click4),
  * 72 (attack/slot 1), 230 (legacy click2 compat).
  */
-@PacketHandler(opcode = 155)
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {155, 17, 21, 18, 230, 72})
 public class NpcInteractionListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(NpcInteractionListener.class);
     private static final boolean COMPAT_OPCODE_230_ENABLED = readFlag("npc.click.compat230.enabled", true);
-
-    static {
-        NpcInteractionListener listener = new NpcInteractionListener();
-        PacketListenerManager.register(155, listener);
-        PacketListenerManager.register(17, listener);
-        PacketListenerManager.register(21, listener);
-        PacketListenerManager.register(18, listener);
-        PacketListenerManager.register(230, listener);
-        PacketListenerManager.register(72, listener);
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
         switch (packet.opcode()) {

@@ -3,21 +3,13 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
-import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketSocialService;
 import java.nio.charset.StandardCharsets;
 
 
-@PacketHandler(opcode = 103)
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {103})
 public class CommandsListener implements PacketListener {
-
-    static {
-        // Ensure this listener is registered for opcode 103.
-        PacketListenerManager.register(103, new CommandsListener());
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
         String command = decodeCommand(packet);

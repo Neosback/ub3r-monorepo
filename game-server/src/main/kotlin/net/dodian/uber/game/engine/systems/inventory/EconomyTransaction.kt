@@ -1,6 +1,7 @@
 package net.dodian.uber.game.engine.systems.inventory
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
@@ -24,6 +25,7 @@ class EconomyTransaction private constructor() {
     fun failed(): Boolean = failed
 
     fun commit(): Boolean {
+        GameThreadContext.validateGameThread("economy.transaction.commit")
         if (failed || arrays.values.any { it.failed } || offers.values.any { it.failed }) return false
         arrays.values.forEach { it.commit() }
         offers.values.forEach { it.commit() }

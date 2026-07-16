@@ -4,14 +4,9 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {255})
 public class DropdownMenuListener implements PacketListener {
-
-    static {
-        PacketListenerManager.register(255, new DropdownMenuListener());
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();

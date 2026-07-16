@@ -1,6 +1,7 @@
 package net.dodian.uber.game.engine.systems.inventory
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GameItem
@@ -17,12 +18,14 @@ class ClientInventoryTransactionTest {
 
     @BeforeEach
     fun setUpItemManager() {
+        GameThreadContext.bindCurrentThread()
         previousItemManager = Server.itemManager
         Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
     }
 
     @AfterEach
     fun restoreItemManager() {
+        GameThreadContext.clearBindingForTests()
         Server.itemManager = previousItemManager
     }
 

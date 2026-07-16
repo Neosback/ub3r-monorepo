@@ -11,9 +11,7 @@ import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
-import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.interaction.ItemOnObjectIntent;
 import net.dodian.uber.game.engine.systems.interaction.ObjectClickIntent;
 import net.dodian.uber.game.engine.systems.interaction.scheduler.InteractionTaskScheduler;
@@ -23,23 +21,11 @@ import net.dodian.uber.game.engine.systems.net.PacketObjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@PacketHandler(opcode = 132)
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {132, 252, 70, 234, 228, 192, 35})
 public class ObjectInteractionListener implements PacketListener {
     private static final Logger logger = LoggerFactory.getLogger(ObjectInteractionListener.class);
     private static final int MIN_COORD = -1;
     private static final int MAX_COORD = 16382;
-
-    static {
-        ObjectInteractionListener listener = new ObjectInteractionListener();
-        safeRegister(132, listener); // click1
-        safeRegister(252, listener); // click2
-        safeRegister(70, listener);  // click3
-        safeRegister(234, listener); // click4
-        safeRegister(228, listener); // click5
-        safeRegister(192, listener); // item on object
-        safeRegister(35, listener);  // magic on object
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
         switch (packet.opcode()) {
@@ -293,15 +279,6 @@ public class ObjectInteractionListener implements PacketListener {
             objectX >= MIN_COORD && objectX <= MAX_COORD &&
             objectY >= MIN_COORD && objectY <= MAX_COORD;
     }
-
-    private static void safeRegister(int opcode, PacketListener listener) {
-        try {
-            PacketListenerManager.register(opcode, listener);
-        } catch (RuntimeException ex) {
-            logger.debug("Skipping object interaction listener registration for opcode {}: {}", opcode, ex.getMessage());
-        }
-    }
-
     private static final class DecodedObjectClick {
         private final int objectId;
         private final int objectX;

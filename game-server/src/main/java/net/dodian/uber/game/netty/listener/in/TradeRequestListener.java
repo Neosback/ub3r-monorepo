@@ -4,16 +4,13 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketInteractionRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {128})
 public class TradeRequestListener implements PacketListener {
-
-    static { PacketListenerManager.register(128, new TradeRequestListener()); }
-
     private static final Logger logger = LoggerFactory.getLogger(TradeRequestListener.class);
 
     @Override

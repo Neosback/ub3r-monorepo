@@ -7,16 +7,13 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketMagicService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {131})
 public class MagicOnNpcListener implements PacketListener {
-
-    static { PacketListenerManager.register(131, new MagicOnNpcListener()); }
-
     private static final Logger logger = LoggerFactory.getLogger(MagicOnNpcListener.class);
 
     @Override

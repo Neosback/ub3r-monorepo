@@ -6,20 +6,13 @@ import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
-import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketBankingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@PacketHandler(opcode = 214)
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {214})
 public class MoveItemsListener implements PacketListener {
-
-    static {
-        PacketListenerManager.register(214, new MoveItemsListener());
-    }
-
     private static final Logger logger = LoggerFactory.getLogger(MoveItemsListener.class);
     private static final int MIN_PAYLOAD_BYTES = 9;
 

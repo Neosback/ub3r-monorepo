@@ -10,24 +10,17 @@ import net.dodian.uber.game.events.objects.ObjectExamineEvent;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
-import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId;
 
-@PacketHandler(opcode = 150)
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {150})
 public final class ExamineListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ExamineListener.class);
     private static final int EXPECTED_PAYLOAD_SIZE = 7;
-
-    static {
-        PacketListenerManager.register(150, new ExamineListener());
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
         try {

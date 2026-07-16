@@ -7,9 +7,7 @@ import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.events.item.ItemClickEvent;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
-import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService;
 import net.dodian.uber.game.skill.runecrafting.Runecrafting;
 import net.dodian.uber.game.engine.systems.net.PacketItemActionService;
@@ -21,15 +19,10 @@ import org.slf4j.LoggerFactory;
  * This class is a complete and faithful replacement for the legacy ClickItem.java file,
  * with corrected packet decoding logic and preserving the original code layout.
  */
-@PacketHandler(opcode = 122)
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {122})
 public class ClickItemListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ClickItemListener.class);
-
-    static {
-        PacketListenerManager.register(122, new ClickItemListener());
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();

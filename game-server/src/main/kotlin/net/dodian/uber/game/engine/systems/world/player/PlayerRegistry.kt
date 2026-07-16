@@ -3,6 +3,7 @@ package net.dodian.uber.game.engine.systems.world.player
 import net.dodian.uber.game.Constants
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
+import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.engine.util.Utils
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -136,6 +137,7 @@ object PlayerRegistry {
 
     @JvmStatic
     fun removePlayer(player: Player?) {
+        GameThreadContext.validateGameThread("player-registry.remove")
         val client = player as? Client
         if (client == null) {
             logger.warn("Tried to remove a null player!")

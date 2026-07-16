@@ -7,7 +7,6 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketItemActionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,11 +15,9 @@ import org.slf4j.LoggerFactory;
  * Opcode 14 – Use item on player (e.g., party-cracker).
  * Decodes fields then delegates to PacketItemActionService.
  */
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {14})
 public class UseItemOnPlayerListener implements PacketListener {
-
-    static { PacketListenerManager.register(14, new UseItemOnPlayerListener()); }
-
-    private static final Logger logger = LoggerFactory.getLogger(UseItemOnPlayerListener.class);
+  private static final Logger logger = LoggerFactory.getLogger(UseItemOnPlayerListener.class);
     private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override

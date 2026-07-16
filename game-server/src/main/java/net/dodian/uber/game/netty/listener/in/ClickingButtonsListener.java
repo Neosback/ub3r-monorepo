@@ -5,9 +5,7 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
-import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.events.widget.ButtonClickEvent;
 import net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService;
@@ -21,16 +19,10 @@ import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@PacketHandler(opcode = 185)
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {185, 186})
 public class ClickingButtonsListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ClickingButtonsListener.class);
-
-    static {
-        PacketListenerManager.register(185, new ClickingButtonsListener());
-        PacketListenerManager.register(186, new ClickingButtonsListener());
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
         int packetSize = packet.size();

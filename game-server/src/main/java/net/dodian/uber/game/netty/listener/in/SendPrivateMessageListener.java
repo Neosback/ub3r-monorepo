@@ -6,22 +6,15 @@ import net.dodian.uber.game.events.widget.PrivateMessageEvent;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.game.GamePacket;
-import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.utilities.Utils;
 
 
-@PacketHandler(opcode = 126)
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {126})
 public class SendPrivateMessageListener implements PacketListener {
 
     private static final int MIN_PAYLOAD_BYTES = 8;
     private static final int MAX_MESSAGE_BYTES = 256;
-
-    static {
-        PacketListenerManager.register(126, new SendPrivateMessageListener());
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();

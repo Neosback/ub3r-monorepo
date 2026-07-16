@@ -1,6 +1,7 @@
 package net.dodian.uber.game.model.entity.player
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.engine.systems.inventory.EconomyTransaction
 import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.model.entity.UpdateFlag
@@ -18,12 +19,14 @@ class EquipmentAppearanceSynchronizationTest {
 
     @BeforeEach
     fun setUp() {
+        GameThreadContext.bindCurrentThread()
         previousItemManager = Server.itemManager
         Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
     }
 
     @AfterEach
     fun tearDown() {
+        GameThreadContext.clearBindingForTests()
         Server.itemManager = previousItemManager
     }
 

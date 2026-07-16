@@ -6,21 +6,14 @@ import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
-import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketMagicService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@PacketHandler(opcode = 237)
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {237})
 public class MagicOnItemsListener implements PacketListener {
-
-    static {
-        PacketListenerManager.register(237, new MagicOnItemsListener());
-    }
-
     private static final Logger logger = LoggerFactory.getLogger(MagicOnItemsListener.class);
     private static final int MIN_PAYLOAD_BYTES = 8;
 

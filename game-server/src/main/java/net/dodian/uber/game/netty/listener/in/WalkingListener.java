@@ -10,12 +10,11 @@ import net.dodian.uber.game.engine.systems.net.PacketGameplayFacade;
 import net.dodian.uber.game.engine.systems.net.WalkRequest;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@net.dodian.uber.game.netty.listener.PacketHandler(opcode = 248)
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {248, 164, 98})
 public final class WalkingListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(WalkingListener.class);
@@ -24,14 +23,6 @@ public final class WalkingListener implements PacketListener {
     private static final int MINIMAP_TRAILING_BYTES = 14;
     private static final int MIN_WORLD_COORD = 0;
     private static final int MAX_WORLD_COORD = 16382;
-
-    static {
-        WalkingListener handler = new WalkingListener();
-        safeRegister(248, handler);
-        safeRegister(164, handler);
-        safeRegister(98, handler);
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
         int opcode = packet.opcode();
@@ -82,15 +73,6 @@ public final class WalkingListener implements PacketListener {
         WalkRequest request = new WalkRequest(opcode, firstStepXAbs, firstStepYAbs, running, deltasX, deltasY);
         PacketGameplayFacade.handleWalk(client, request);
     }
-
-    private static void safeRegister(int opcode, WalkingListener handler) {
-        try {
-            PacketListenerManager.register(opcode, handler);
-        } catch (RuntimeException ex) {
-            logger.debug("Skipping walking listener registration for opcode {}: {}", opcode, ex.getMessage());
-        }
-    }
-
     static int resolveEffectiveSize(int opcode, int packetSize) {
         return resolveEffectiveSize(opcode, packetSize, false);
     }

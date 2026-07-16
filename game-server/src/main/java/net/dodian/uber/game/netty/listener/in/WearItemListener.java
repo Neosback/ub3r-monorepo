@@ -7,16 +7,13 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketItemActionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {41})
 public class WearItemListener implements PacketListener {
-
-    static { PacketListenerManager.register(41, new WearItemListener()); }
-
     private static final Logger logger = LoggerFactory.getLogger(WearItemListener.class);
     private static final int MIN_PAYLOAD_BYTES = 6;
 

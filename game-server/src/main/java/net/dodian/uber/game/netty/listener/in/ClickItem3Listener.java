@@ -8,7 +8,6 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketItemActionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +15,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Netty handler for opcode 75 (third click on inventory item).
  */
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {75})
 public class ClickItem3Listener implements PacketListener {
-
-    static { PacketListenerManager.register(75, new ClickItem3Listener()); }
-
     private static final Logger logger = LoggerFactory.getLogger(ClickItem3Listener.class);
     private static final int MIN_PAYLOAD_BYTES = 6;
 

@@ -740,6 +740,7 @@ public class Client extends Player implements Runnable {
     }
 
     public InboundProcessResult processQueuedPackets(int maxPacketsPerTick) {
+        net.dodian.uber.game.engine.loop.GameThreadContext.validateGameThread("inbound.packet-dispatch");
         if (maxPacketsPerTick <= 0 || disconnected) {
             InboundPacketMailbox.MailboxCounters counters = inboundPacketMailbox.snapshotAndResetCounters();
             return new InboundProcessResult(0, 0, 0, counters.walkReplaced(), counters.mouseReplaced(), counters.fifoDropped());

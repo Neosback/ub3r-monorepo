@@ -7,7 +7,6 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketItemActionService;
 import net.dodian.uber.game.engine.systems.net.PacketInteractionService;
 import org.slf4j.Logger;
@@ -16,11 +15,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Opcode 57 – Use item on NPC. Mirrors legacy {@code UseItemOnNpc} logic.
  */
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {57})
 public class UseItemOnNpcListener implements PacketListener {
-
-    static { PacketListenerManager.register(57, new UseItemOnNpcListener()); }
-
-    private static final Logger logger = LoggerFactory.getLogger(UseItemOnNpcListener.class);
+  private static final Logger logger = LoggerFactory.getLogger(UseItemOnNpcListener.class);
     private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override
