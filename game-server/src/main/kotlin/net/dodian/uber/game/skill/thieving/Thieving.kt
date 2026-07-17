@@ -117,7 +117,11 @@ object ThievingSkillPlugin : SkillPlugin {
             val firstClickObjects = (chestObjects + plunderObjects).distinct().toIntArray()
             val secondClickObjects = (stallObjects + chestObjects + plunderObjects).distinct().toIntArray()
 
-            objectClick(preset = PolicyPreset.GATHERING, option = 1, *firstClickObjects) { (client, objectId, position, obj) ->
+            objectClick(preset = PolicyPreset.GATHERING, option = 1, *firstClickObjects) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = Position(interaction.position.x, interaction.position.y, interaction.position.z)
+                val obj = interaction.definition
                 if (objectId in chestObjects) {
                     if (objectId == 6847 || objectId == 20873) {
                         Thieving.attempt(client, objectId, position)
@@ -283,7 +287,11 @@ object ThievingSkillPlugin : SkillPlugin {
                 }
             }
 
-            objectClick(preset = PolicyPreset.GATHERING, option = 2, *secondClickObjects) { (client, objectId, position, obj) ->
+            objectClick(preset = PolicyPreset.GATHERING, option = 2, *secondClickObjects) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = Position(interaction.position.x, interaction.position.y, interaction.position.z)
+                val obj = interaction.definition
                 when {
                     objectId in stallObjects -> {
                         Thieving.attempt(client, objectId, position)

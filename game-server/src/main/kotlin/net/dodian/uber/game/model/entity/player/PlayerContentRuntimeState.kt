@@ -26,6 +26,7 @@ import net.dodian.uber.game.skill.smithing.ActiveSmithingSelection
 import net.dodian.uber.game.skill.smithing.SmeltingSelection
 import net.dodian.uber.game.skill.thieving.PyramidPlunderPlayerState
 import net.dodian.uber.game.skill.woodcutting.WoodcuttingState
+import net.dodian.uber.game.api.plugin.skills.PendingSkillMulti
 
 /**
  * Content-owned, per-player runtime state. This intentionally has no protocol
@@ -76,6 +77,7 @@ class PlayerContentRuntimeState {
     @Volatile private var playerPotatoState: PlayerPotatoState? = null
     @Volatile private var activeSkillSessionKey: String? = null
     @Volatile private var activeSkillSessionStartedCycle = 0L
+    @Volatile private var pendingSkillMulti: PendingSkillMulti? = null
     private val throttleUntilCycles = ConcurrentHashMap<String, Long>()
 
     fun getPendingInteraction() = pendingInteraction
@@ -144,6 +146,9 @@ class PlayerContentRuntimeState {
     fun setActiveSkillSession(key: String?, startedCycle: Long) { activeSkillSessionKey = key; activeSkillSessionStartedCycle = startedCycle }
     fun getActiveSkillSessionStartedCycle() = activeSkillSessionStartedCycle
     fun clearActiveSkillSession() { activeSkillSessionKey = null; activeSkillSessionStartedCycle = 0L }
+    fun getPendingSkillMulti() = pendingSkillMulti
+    fun setPendingSkillMulti(value: PendingSkillMulti?) { pendingSkillMulti = value }
+    fun clearPendingSkillMulti() { pendingSkillMulti = null }
     fun getActiveActionHandle() = activeActionHandle
     fun setActiveActionHandle(value: QueueTaskHandle?) { activeActionHandle = value }
     fun getActiveActionType() = activeActionType
@@ -200,7 +205,7 @@ class PlayerContentRuntimeState {
     fun getPlayerTaskSet() = playerTaskSet
     fun setPlayerTaskSet(value: GameTaskSet<*>?) { playerTaskSet = value }
     fun terminatePlayerTasks() {
-        cancelActiveAction(); clearActiveActionState(); clearActiveSkillSession()
+        cancelActiveAction(); clearActiveActionState(); clearActiveSkillSession(); clearPendingSkillMulti()
         playerTaskSet?.terminateTasks(); playerTaskSet = null
     }
     fun getThrottleUntilCycle(key: String) = throttleUntilCycles.getOrDefault(key, 0L)

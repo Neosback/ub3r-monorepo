@@ -28,6 +28,7 @@ val syncTestSourceSet = sourceSets.create("syncTest") {
 
 tasks.jar {
     dependsOn(":routefinder:jar")
+    dependsOn(":skills:api:jar", ":skills:runtime:jar")
 
     manifest {
         attributes["Main-Class"] = "net.dodian.uber.game.Server"
@@ -45,6 +46,7 @@ tasks.jar {
 
 dependencies {
     implementation(project(":routefinder"))
+    implementation(project(":skills:runtime"))
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 

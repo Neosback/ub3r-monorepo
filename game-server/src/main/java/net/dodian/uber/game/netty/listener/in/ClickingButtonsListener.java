@@ -117,6 +117,10 @@ public class ClickingButtonsListener implements PacketListener {
 
         PacketButtonService.prepareAction(client, actionButton);
 
+        if (PacketButtonService.tryHandleSkillMulti(client, actionButton)) {
+            return;
+        }
+
         if (actionButton >= 36731 && actionButton <= 36769) {
             int index = (actionButton - 36731) / 2;
             if (client.viewingAccountServices) {

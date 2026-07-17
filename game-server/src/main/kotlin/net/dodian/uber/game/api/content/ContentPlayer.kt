@@ -30,6 +30,7 @@ interface ContentInventory {
 interface ContentEquipment {
     fun item(slot: Int): Int
     fun amount(slot: Int): Int
+    fun remove(slot: Int, itemId: Int, amount: Int = 1): Boolean
     fun refresh()
 }
 

@@ -72,11 +72,21 @@ object FiremakingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Firemaking", skill = Skill.FIREMAKING) {
             for (logId in logIds) {
-                itemOnItem(preset = PolicyPreset.PRODUCTION, leftItemId = TINDERBOX, rightItemId = logId) { (client, itemUsed, otherItem) ->
+                itemOnItem(preset = PolicyPreset.PRODUCTION, leftItemId = TINDERBOX, rightItemId = logId) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val itemUsed = interaction.itemUsed
+                val otherItem = interaction.otherItem
                     Firemaking.handleItemCombination(client, itemUsed, otherItem)
                 }
             }
-            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = intArrayOf(FIRE_OBJECT_ID), itemIds = logIds) { (client, objectId, position, obj, itemId, itemSlot, interfaceId) ->
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = intArrayOf(FIRE_OBJECT_ID), itemIds = logIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
+                val itemId = interaction.itemId
+                val itemSlot = interaction.itemSlot
+                val interfaceId = interaction.interfaceId
                 Firemaking.handleLogOnFire(client, itemId)
             }
         }

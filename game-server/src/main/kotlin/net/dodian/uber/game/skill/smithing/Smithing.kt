@@ -12,6 +12,7 @@ import net.dodian.uber.game.api.content.ContentProductionMode
 import net.dodian.uber.game.api.content.ContentProductionRequest
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.engine.systems.inventory.inventoryTransaction
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.skill.runtime.action.ActionStopReason
@@ -55,8 +56,8 @@ object Smithing {
         productionAction("smelting") {
             delay(SMELT_DELAY_TICKS)
             onCycleSignal {
-                val current = smeltingSelection ?: return@onCycleSignal CycleSignal.stop(ActionStopReason.INVALID_TARGET)
-                if (!performCycle(this, current.recipe)) {
+                val current = client.smeltingSelection ?: return@onCycleSignal CycleSignal.stop(ActionStopReason.INVALID_TARGET)
+                if (!performCycle(client, current.recipe)) {
                     SkillPolicyMetrics.record(PolicyPreset.PRODUCTION, SkillPolicyRoute.ACTION_CYCLE, SkillPolicyResult.POLICY_REJECT)
                     return@onCycleSignal CycleSignal.stop(ActionStopReason.REQUIREMENT_FAILED)
                 }
@@ -72,9 +73,9 @@ object Smithing {
                 if (it != ActionStopReason.COMPLETED) {
                     SkillPolicyMetrics.record(PolicyPreset.PRODUCTION, SkillPolicyRoute.ACTION_CYCLE, SkillPolicyResult.CANCELLED)
                 }
-                clearSmeltingSelection()
+                client.clearSmeltingSelection()
             }
-        }.start(client)
+        }.start(client.asSkillPlayer())
     }
 
     private fun performCycle(player: Client, recipe: SmeltingRecipe): Boolean {
@@ -159,7 +160,11 @@ object SmithingSkillPlugin : SkillPlugin {
             val smeltingInterfaceFurnaces = SmithingObjectComponents.smeltingInterfaceFurnaces
 
             // Option 1 Anvils
-            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *anvilObjects) { (client, objectId, position, obj) ->
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *anvilObjects) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
                 if (objectId == 2097) {
                     val barId = SmithingInterface.firstBarInInventory(client)
                     if (barId != -1) {
@@ -173,38 +178,54 @@ object SmithingSkillPlugin : SkillPlugin {
             }
 
             // Option 1 Furnaces
-            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *smeltingInterfaceFurnaces) { (client, objectId, position, obj) ->
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *smeltingInterfaceFurnaces) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
                 Smithing.openSmelting(client)
                 true
             }
 
             // Option 2 Furnaces
-            objectClick(preset = PolicyPreset.PRODUCTION, option = 2, *smeltingInterfaceFurnaces) { (client, objectId, position, obj) ->
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 2, *smeltingInterfaceFurnaces) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
                 Smithing.openSmelting(client)
                 true
             }
 
             // Use Item on Anvils
-            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = anvilObjects) { (client, objectId, position, obj, itemId, itemSlot, interfaceId) ->
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = anvilObjects) { interaction ->
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val itemId = interaction.itemId
+                val itemSlot = interaction.itemSlot
                 if (objectId == 2097 && (itemId == 1540 || itemId == 11286)) {
-                    if (!client.playerHasItem(2347)) {
-                        client.sendMessage("You need a hammer!")
-                    } else if (itemId == 1540 && !client.playerHasItem(11286)) {
-                        client.sendMessage("You need a draconic visage!")
-                    } else if (itemId == 11286 && !client.playerHasItem(1540)) {
-                        client.sendMessage("You need a anti-dragon shield!")
-                    } else if (client.getLevel(Skill.SMITHING) < 90) {
-                        client.sendMessage("You need level 90 smithing to do this!")
+                    val player = interaction.player
+                    val otherItem = if (itemId == 1540) 11286 else 1540
+                    if (!player.inventory.contains(2347)) {
+                        player.ui.message("You need a hammer!")
+                    } else if (!player.inventory.contains(otherItem)) {
+                        player.ui.message(if (itemId == 1540) "You need a draconic visage!" else "You need a anti-dragon shield!")
+                    } else if (player.skills.current(Skill.SMITHING) < 90) {
+                        player.ui.message("You need level 90 smithing to do this!")
                     } else {
-                        client.deleteItem(itemId, itemSlot, 1)
-                        client.deleteItem(if (itemId == 1540) 11286 else 1540, 1)
-                        client.addItemSlot(11284, 1, itemSlot)
-                        client.checkItemUpdate()
-                        ProgressionService.addXp(client, 15000, Skill.SMITHING)
-                        client.sendMessage("Your smithing craft made a Dragonfire shield out of the visage.")
+                        val committed = player.inventory.transaction {
+                            removeAt(itemSlot, itemId)
+                            remove(otherItem)
+                            add(11284)
+                        }
+                        if (committed) {
+                            player.skills.gainXp(15000, Skill.SMITHING)
+                            player.ui.message("Your smithing craft made a Dragonfire shield out of the visage.")
+                        }
                     }
                     true
                 } else if (SmithingInterface.resolveTierId(itemId) != -1) {
+                    val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
                     client.setInteractionAnchor(position.x, position.y, position.z)
                     Smithing.openSmithing(client, itemId, position.x, position.y)
                     true
@@ -212,7 +233,14 @@ object SmithingSkillPlugin : SkillPlugin {
             }
 
             // Use Item on Furnaces
-            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = smeltingInterfaceFurnaces) { (client, objectId, position, obj, itemId, itemSlot, interfaceId) ->
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = smeltingInterfaceFurnaces) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
+                val itemId = interaction.itemId
+                val itemSlot = interaction.itemSlot
+                val interfaceId = interaction.interfaceId
                 if (itemId == 1783 || itemId == 1781) {
                     client.send(RemoveInterfaces())
                     if (!client.playerHasItem(1783) || !client.playerHasItem(1781)) {
@@ -247,7 +275,12 @@ object SmithingSkillPlugin : SkillPlugin {
 
             // Magic on Furnaces/Obelisks
             val magicObeliskIds = intArrayOf(2150, 2151, 2152, 2153)
-            magicOnObject(preset = PolicyPreset.PRODUCTION, objectIds = magicObeliskIds, spellIds = intArrayOf(1179, 1182, 1184, 1186)) { (client, objectId, position, obj, spellId) ->
+            magicOnObject(preset = PolicyPreset.PRODUCTION, objectIds = magicObeliskIds, spellIds = intArrayOf(1179, 1182, 1184, 1186)) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
+                val spellId = interaction.spellId
                 when {
                     objectId == 2151 && spellId == 1179 -> chargeOrb(client, 55, 571, 725, "You charge the orb with the power of water.")
                     objectId == 2150 && spellId == 1182 -> chargeOrb(client, 60, 575, 800, "You charge the orb with the power of earth.")
@@ -266,7 +299,8 @@ object SmithingSkillPlugin : SkillPlugin {
                         preset = PolicyPreset.PRODUCTION,
                         requiredInterfaceId = Smithing.smeltingInterfaceId(),
                         rawButtonIds = mappings.map { it.buttonId }.distinct().toIntArray(),
-                    ) { (client, _, _) ->
+                    ) { interaction ->
+                        val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
                         SmithingInterface.startFromMapping(client, primary)
                     }
                 }
@@ -276,7 +310,8 @@ object SmithingSkillPlugin : SkillPlugin {
                     preset = PolicyPreset.PRODUCTION,
                     requiredInterfaceId = Smithing.smeltingInterfaceId(),
                     rawButtonIds = intArrayOf(SmithingData.frameIds()[index]),
-                ) { (client, _, _) ->
+                ) { interaction ->
+                        val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
                     SmithingInterface.selectPendingRecipe(client, recipe.barId)
                 }
             }

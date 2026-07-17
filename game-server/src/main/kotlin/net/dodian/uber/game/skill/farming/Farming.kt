@@ -780,7 +780,11 @@ object FarmingSkillPlugin : SkillPlugin {
             val firstClickObjects = (compostBinIds + patchObjects).distinct().toIntArray()
             val secondClickObjects = (guideObjects + patchObjects).distinct().toIntArray()
 
-            objectClick(preset = PolicyPreset.GATHERING, option = 1, *firstClickObjects) { (client, objectId, position, obj) ->
+            objectClick(preset = PolicyPreset.GATHERING, option = 1, *firstClickObjects) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
                 if (objectId in compostBinIds) {
                     with(client.farming) { client.interactBin(objectId, 1) }
                     true
@@ -789,7 +793,11 @@ object FarmingSkillPlugin : SkillPlugin {
                 }
             }
 
-            objectClick(preset = PolicyPreset.GATHERING, option = 2, *secondClickObjects) { (client, objectId, position, obj) ->
+            objectClick(preset = PolicyPreset.GATHERING, option = 2, *secondClickObjects) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
                 if (objectId in guideObjects) {
                     if (objectId == 7962) {
                         client.sendMessage("You inspect the monolith, but can't make sense of the inscription.")
@@ -805,7 +813,11 @@ object FarmingSkillPlugin : SkillPlugin {
                 }
             }
 
-            objectClick(preset = PolicyPreset.GATHERING, option = 4, *guideObjects) { (client, objectId, position, obj) ->
+            objectClick(preset = PolicyPreset.GATHERING, option = 4, *guideObjects) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
                 when {
                     (objectId in 8550..8557) || objectId == 27114 || objectId == 27113 -> {
                         SkillGuide.open(client, Skill.FARMING.id, 0)
@@ -835,12 +847,23 @@ object FarmingSkillPlugin : SkillPlugin {
                 }
             }
 
-            objectClick(preset = PolicyPreset.GATHERING, option = 5, *compostBinIds) { (client, objectId, position, obj) ->
+            objectClick(preset = PolicyPreset.GATHERING, option = 5, *compostBinIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
                 with(client.farming) { client.interactBin(objectId, 5) }
                 true
             }
 
-            itemOnObject(preset = PolicyPreset.GATHERING, objectIds = compostBinIds) { (client, objectId, position, obj, itemId, itemSlot, interfaceId) ->
+            itemOnObject(preset = PolicyPreset.GATHERING, objectIds = compostBinIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
+                val itemId = interaction.itemId
+                val itemSlot = interaction.itemSlot
+                val interfaceId = interaction.interfaceId
                 with(client.farming) { client.interactItemBin(objectId, itemId) }
             }
         }

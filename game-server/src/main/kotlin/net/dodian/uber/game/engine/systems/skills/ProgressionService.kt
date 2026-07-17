@@ -8,12 +8,8 @@ import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 object ProgressionService {
     /** Public content API.  Client overloads are retained for engine/Java call sites only. */
     @JvmStatic
-    fun apply(player: SkillPlayer, request: SkillProgressionRequest): SkillProgressionResult =
-        SkillProgressionService.apply(player.protocolClient(), request)
-
-    @JvmStatic
     fun addXp(player: SkillPlayer, amount: Int, skill: Skill): Boolean =
-        apply(player, SkillProgressionRequest.gainXp(skill, amount)).success
+        player.skills.gainXp(amount, skill)
 
     @JvmStatic
     fun addXp(player: Client, amount: Int, skill: Skill): Boolean = SkillProgressionService.gainXp(player, amount, skill)

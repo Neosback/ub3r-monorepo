@@ -3,6 +3,10 @@ package net.dodian.uber.game.model.entity.player
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import net.dodian.uber.game.api.plugin.skills.PendingSkillMulti
+import net.dodian.uber.skills.api.SkillMultiConfig
+import net.dodian.uber.skills.api.SkillMultiEntry
+import net.dodian.uber.skills.api.skillRecipe
 
 class PlayerContentRuntimeStateTest {
     @Test
@@ -31,5 +35,16 @@ class PlayerContentRuntimeStateTest {
         state.setThrottleUntilCycle("content:bank", 0L)
 
         assertEquals(0L, state.getThrottleUntilCycle("content:bank"))
+    }
+
+    @Test
+    fun `termination clears pending production menu`() {
+        val state = PlayerContentRuntimeState()
+        val recipe = skillRecipe("test.recipe", 2) { material(1) }
+        state.setPendingSkillMulti(PendingSkillMulti(SkillMultiConfig("test.menu", entries = listOf(SkillMultiEntry(recipe)))) {})
+
+        state.terminatePlayerTasks()
+
+        assertNull(state.getPendingSkillMulti())
     }
 }

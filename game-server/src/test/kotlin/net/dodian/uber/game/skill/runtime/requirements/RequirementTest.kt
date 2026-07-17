@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.item.ItemManager
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 
 class RequirementTest {
 
@@ -55,8 +56,9 @@ class RequirementTest {
         val reqs = builder.build()
         assertEquals(2, reqs.size)
 
-        assertTrue(reqs[0].validate(client) is ValidationResult.Ok)
-        assertTrue(reqs[1].validate(client) is ValidationResult.Ok)
+        val player = client.asSkillPlayer()
+        assertTrue(reqs[0].validate(player) is net.dodian.uber.game.api.plugin.skills.SkillValidationResult.Ok)
+        assertTrue(reqs[1].validate(player) is net.dodian.uber.game.api.plugin.skills.SkillValidationResult.Ok)
     }
 
     @Test
@@ -74,9 +76,10 @@ class RequirementTest {
         val reqs = builder.build()
         assertEquals(4, reqs.size)
 
-        assertTrue(reqs[0].validate(client) is ValidationResult.Ok)
-        assertTrue(reqs[1].validate(client) is ValidationResult.Ok)
-        assertTrue(reqs[2].validate(client) is ValidationResult.Ok)
-        assertTrue(reqs[3].validate(client) is ValidationResult.Ok)
+        val player = client.asSkillPlayer()
+        assertTrue(reqs[0].validate(player) is net.dodian.uber.game.api.plugin.skills.SkillValidationResult.Ok)
+        assertTrue(reqs[1].validate(player) is net.dodian.uber.game.api.plugin.skills.SkillValidationResult.Ok)
+        assertTrue(reqs[2].validate(player) is net.dodian.uber.game.api.plugin.skills.SkillValidationResult.Ok)
+        assertTrue(reqs[3].validate(player) is net.dodian.uber.game.api.plugin.skills.SkillValidationResult.Ok)
     }
 }

@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.api.content.ContentTiming
 import net.dodian.uber.game.skill.runtime.action.ActionStopReason
 import net.dodian.uber.game.skill.runtime.action.CycleSignal
@@ -90,36 +91,36 @@ object Fishing {
             gatheringAction("fishing") {
                 delay(1)
                 onCycleSignal {
-                    if (fishingState == null) {
+                    if (client.fishingState == null) {
                         return@onCycleSignal CycleSignal.stop()
                     }
                     val cycle = ContentTiming.currentCycle()
                     if (cycle >= nextAnimationCycle) {
-                        val fishIndex = fishingState?.spotIndex ?: return@onCycleSignal CycleSignal.stop()
+                        val fishIndex = client.fishingState?.spotIndex ?: return@onCycleSignal CycleSignal.stop()
                         val spot = FishingData.byIndex(fishIndex)
                         if (spot != null) {
-                            performAnimation(spot.animationId, 0)
+                            client.performAnimation(spot.animationId, 0)
                         }
                         nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
                     }
                     if (cycle < nextCatchCycle) {
                         return@onCycleSignal CycleSignal.continueWithoutSuccess()
                     }
-                    performCycle(this)
-                    if (fishingState == null) {
+                    performCycle(client)
+                    if (client.fishingState == null) {
                         return@onCycleSignal CycleSignal.stop()
                     }
-                    nextCatchCycle = cycle + GameCycleClock.ticksForDurationMs(cycleDelayMs(this))
+                    nextCatchCycle = cycle + GameCycleClock.ticksForDurationMs(cycleDelayMs(client))
                     nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
                     CycleSignal.success()
                 }
                 onStop {
-                    fishingTasks.remove(this)
-                    clearFishingState()
-                    lastFishAction = 0
+                    fishingTasks.remove(client)
+                    client.clearFishingState()
+                    client.lastFishAction = 0
                 }
             }
-        val running = action.start(client) ?: run {
+        val running = action.start(client.asSkillPlayer()) ?: run {
             client.clearFishingState()
             client.lastFishAction = 0
             return
@@ -212,13 +213,17 @@ object FishingSkillPlugin : SkillPlugin {
             val secondNpcIds = byOption[2].orEmpty().map { it.objectId }.distinct().toIntArray()
 
             if (firstNpcIds.isNotEmpty()) {
-                npcClick(preset = PolicyPreset.GATHERING, option = 1, *firstNpcIds) { (client, npc) ->
+                npcClick(preset = PolicyPreset.GATHERING, option = 1, *firstNpcIds) { interaction ->
+                    val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                    val npc = interaction.npc
                     Fishing.attempt(client, npc.id, 1)
                     true
                 }
             }
             if (secondNpcIds.isNotEmpty()) {
-                npcClick(preset = PolicyPreset.GATHERING, option = 2, *secondNpcIds) { (client, npc) ->
+                npcClick(preset = PolicyPreset.GATHERING, option = 2, *secondNpcIds) { interaction ->
+                    val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                    val npc = interaction.npc
                     Fishing.attempt(client, npc.id, 2)
                     true
                 }

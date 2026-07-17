@@ -66,6 +66,7 @@ object PlayerActionCancellationService {
         }
         player.clearPendingProductionSelection()
         player.clearActiveProductionSelection()
+        player.contentRuntimeState.clearPendingSkillMulti()
         player.NpcWanneTalk = 0
         if (fullResetAnimation) {
             player.rerequestAnim()

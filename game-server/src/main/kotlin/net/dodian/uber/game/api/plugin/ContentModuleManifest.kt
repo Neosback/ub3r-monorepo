@@ -3,34 +3,6 @@ package net.dodian.uber.game.api.plugin
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 
-enum class ContentMaturity { LEGACY, BETA, STABLE }
-
-/** Stable operational identity for a content module. */
-data class ContentModuleManifest(
-    val id: String,
-    val owner: String,
-    val version: String,
-    val featureFlag: String = ALWAYS_ENABLED,
-    val maturity: ContentMaturity = ContentMaturity.BETA,
-    val declaredRouteKeys: Set<String> = emptySet(),
-) {
-    init {
-        require(ID.matches(id)) { "Invalid content module id '$id'" }
-        require(owner.isNotBlank()) { "Content module '$id' must declare an owner" }
-        require(version.isNotBlank()) { "Content module '$id' must declare a version" }
-        require(featureFlag.isNotBlank()) { "Content module '$id' must declare a feature flag" }
-    }
-
-    companion object {
-        const val ALWAYS_ENABLED = "always"
-        private val ID = Regex("[a-z][a-z0-9_.-]{2,127}")
-    }
-}
-
-interface ContentModuleManifestProvider {
-    val contentManifest: ContentModuleManifest
-}
-
 /**
  * Restart-time module feature controls. Set `-Dcontent.disabled=id[,id...]`
  * to keep a module out of every active registry for this server process.

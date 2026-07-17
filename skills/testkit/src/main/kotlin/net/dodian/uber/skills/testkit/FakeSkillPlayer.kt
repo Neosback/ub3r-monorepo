@@ -1,18 +1,29 @@
 package net.dodian.uber.skills.testkit
 
-import net.dodian.uber.game.api.content.ContentEconomy
-import net.dodian.uber.game.api.content.ContentEquipment
-import net.dodian.uber.game.api.content.ContentFeatures
-import net.dodian.uber.game.api.content.ContentSocial
 import net.dodian.uber.game.api.plugin.skills.SkillActions
+import net.dodian.uber.game.api.plugin.skills.SkillActionHandle
 import net.dodian.uber.game.api.plugin.skills.SkillInventory
 import net.dodian.uber.game.api.plugin.skills.SkillInventoryTransaction
 import net.dodian.uber.game.api.plugin.skills.SkillLevels
 import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 import net.dodian.uber.game.api.plugin.skills.SkillUi
 import net.dodian.uber.game.api.plugin.skills.SkillWorld
-import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.api.plugin.skills.SkillProduction
+import net.dodian.uber.game.api.plugin.skills.SkillEquipment
+import net.dodian.uber.game.api.plugin.skills.SkillPosition
+import net.dodian.uber.game.api.plugin.skills.SkillObjectRef
+import net.dodian.uber.game.api.plugin.skills.SkillProfile
+import net.dodian.uber.game.api.plugin.skills.SkillRandom
+import net.dodian.uber.game.api.plugin.skills.SkillVitals
+import net.dodian.uber.game.api.plugin.skills.SkillValidationResult
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skill.runtime.action.ActionSpec
+import net.dodian.uber.game.skill.runtime.action.ActionStopReason
+import net.dodian.uber.game.skill.runtime.action.CycleSignal
+import net.dodian.uber.game.skill.runtime.requirements.ValidationResult
+import net.dodian.uber.skills.api.SkillMultiConfig
+import net.dodian.uber.skills.api.SkillMultiSelection
+import net.dodian.uber.skills.runtime.SkillRecipePlanner
 
 /** Protocol-free deterministic player double for modular skill tests. */
 class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
@@ -21,12 +32,36 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     val strings = mutableMapOf<Int, String>()
     var refreshCount = 0
         private set
-    var positionValue = Position(3200, 3200, 0)
+    var randomEventChecks = 0
+        private set
+    var positionValue = SkillPosition(3200, 3200, 0)
+    val openedInterfaces = mutableListOf<Int>()
+    val chatboxInterfaces = mutableListOf<Int>()
+    val itemModels = mutableListOf<Triple<Int, Int, Int>>()
+    val varbits = mutableMapOf<Int, Int>()
+    val replacedObjects = mutableListOf<Pair<SkillObjectRef, Int>>()
+    var anchor: SkillPosition? = null
+    var prayerRestored = 0
+    var damageTaken = 0
+    var stunTicks = 0
     private val itemAmounts = initialItems.filterValues { it > 0 }.toMutableMap()
     private val xp = mutableMapOf<Skill, Int>()
     private val levels = mutableMapOf<Skill, Int>()
     private val equipmentItems = mutableMapOf<Int, Pair<Int, Int>>()
     private var sessionKey: String? = null
+    private var activeAction: FakeAction? = null
+    private var pendingProduction: Pair<SkillMultiConfig, (SkillMultiSelection) -> Unit>? = null
+
+    private inner class FakeAction(val spec: ActionSpec) : SkillActionHandle {
+        var ticksUntilCycle = 0
+        var stopped = false
+        override fun cancel(reason: ActionStopReason) {
+            if (stopped) return
+            stopped = true
+            spec.onStop?.invoke(this@FakeSkillPlayer, reason)
+            if (activeAction === this) activeAction = null
+        }
+    }
 
     override val skills = object : SkillLevels {
         override fun current(skill: Skill) = levels[skill] ?: 1
@@ -42,6 +77,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun contains(itemId: Int, amount: Int) = this@FakeSkillPlayer.amount(itemId) >= amount
         override fun amount(itemId: Int) = this@FakeSkillPlayer.amount(itemId)
         override fun freeSlots() = (28 - itemAmounts.size).coerceAtLeast(0)
+        override fun slotAmount(slot: Int, itemId: Int) = if (slot >= 0) amount(itemId) else 0
         override fun add(itemId: Int, amount: Int): Boolean {
             if (itemId < 0 || amount <= 0) return false
             itemAmounts[itemId] = (itemAmounts[itemId] ?: 0) + amount
@@ -79,6 +115,8 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
             itemAmounts.clear(); itemAmounts.putAll(staged); refresh()
             return true
         }
+        override fun itemName(itemId: Int) = "item $itemId"
+        override fun notedItemId(itemId: Int) = itemId
         override fun refresh() { refreshCount++ }
     }
     override val actions = object : SkillActions {
@@ -88,39 +126,114 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun beginSession(key: String): Boolean = if (sessionKey == null || sessionKey == key) { sessionKey = key; true } else false
         override fun endSession(key: String) { if (sessionKey == key) sessionKey = null }
         override fun activeSessionKey(): String? = sessionKey
+        override fun triggerRandomEvent(experience: Int) { if (experience > 0) randomEventChecks++ }
+        override fun queue(spec: ActionSpec, beforeStart: () -> Unit): SkillActionHandle? {
+            val failure = spec.requirements.asSequence()
+                .map { it.validate(this@FakeSkillPlayer) }
+                .filterIsInstance<SkillValidationResult.Failed>()
+                .firstOrNull()
+            if (failure != null) {
+                messages += failure.message
+                return null
+            }
+            activeAction?.cancel(ActionStopReason.USER_INTERRUPT)
+            beforeStart()
+            val action = FakeAction(spec)
+            activeAction = action
+            spec.onStart?.invoke(this@FakeSkillPlayer)
+            return action
+        }
     }
     override val ui = object : SkillUi {
         override fun message(text: String) { messages += text }
         override fun string(text: String, componentId: Int) { strings[componentId] = text }
-        override fun open(interfaceId: Int) = Unit
+        override fun open(interfaceId: Int) { openedInterfaces += interfaceId }
         override fun close() = Unit
+        override fun chatbox(interfaceId: Int) { chatboxInterfaces += interfaceId }
+        override fun itemModel(componentId: Int, zoom: Int, itemId: Int) { itemModels += Triple(componentId, zoom, itemId) }
         override fun npcDialogue(dialogueId: Int, npcId: Int) = Unit
+        override fun varbit(id: Int, value: Int) { varbits[id] = value }
     }
     override val world = object : SkillWorld {
-        override val position: Position get() = positionValue
+        override val position: SkillPosition get() = positionValue
         override fun distanceTo(x: Int, y: Int) = maxOf(kotlin.math.abs(position.x - x), kotlin.math.abs(position.y - y))
-        override fun teleport(destination: Position) { positionValue = destination }
+        override fun teleport(destination: SkillPosition) { positionValue = destination }
+        override fun anchor(position: SkillPosition) { anchor = position }
+        override fun face(position: SkillPosition) = Unit
+        override fun graphic(id: Int, height: Int) = Unit
+        override fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int) { replacedObjects += target to replacementId }
     }
-    override val equipment = object : ContentEquipment {
+    override val production = object : SkillProduction {
+        override fun open(config: SkillMultiConfig, onSelected: (SkillMultiSelection) -> Unit): Boolean {
+            if (SkillRecipePlanner.available(config) { amount(it) }.isEmpty()) return false
+            pendingProduction = config to onSelected
+            return true
+        }
+        override fun select(selection: SkillMultiSelection): Boolean {
+            val pending = pendingProduction ?: return false
+            val resolved = SkillRecipePlanner.resolve(pending.first, selection) { amount(it) } ?: run {
+                clear(); return false
+            }
+            clear()
+            pending.second(selection.copy(amount = resolved.second))
+            return true
+        }
+        override fun pending(): SkillMultiConfig? = pendingProduction?.first
+        override fun clear() { pendingProduction = null }
+    }
+    override val equipment = object : SkillEquipment {
         override fun item(slot: Int) = equipmentItems[slot]?.first ?: -1
         override fun amount(slot: Int) = equipmentItems[slot]?.second ?: 0
+        override fun remove(slot: Int, itemId: Int, amount: Int): Boolean {
+            val current = equipmentItems[slot] ?: return false
+            if (current.first != itemId || amount <= 0 || current.second < amount) return false
+            val remaining = current.second - amount
+            if (remaining == 0) equipmentItems.remove(slot) else equipmentItems[slot] = itemId to remaining
+            return true
+        }
         override fun refresh() = Unit
     }
-    override val economy = object : ContentEconomy {
-        override fun bankAmount(itemId: Int) = 0
-        override fun openBank() = Unit
-        override fun openShop(shopId: Int) = Unit
+    override val profile = object : SkillProfile { override val name = "fixture"; override val premium = false }
+    override val random = object : SkillRandom {
+        override fun between(minInclusive: Int, maxInclusive: Int) = minInclusive
+        override fun chance(numerator: Int, denominator: Int) = numerator > 0
     }
-    override val social = ContentSocial { false }
-    override val features = object : ContentFeatures {
-        override val bankingEnabled = true
-        override val shoppingEnabled = true
-        override val tradingEnabled = true
-        override val duelingEnabled = true
+    override val vitals = object : SkillVitals {
+        override fun damage(amount: Int) { damageTaken += amount.coerceAtLeast(0) }
+        override fun restorePrayer(amount: Int) { prayerRestored += amount.coerceAtLeast(0) }
+        override fun stun(ticks: Int) { stunTicks = ticks.coerceAtLeast(0) }
     }
 
     fun amount(itemId: Int): Int = itemAmounts[itemId].orZero()
     fun setLevel(skill: Skill, level: Int) { levels[skill] = level.coerceAtLeast(1) }
+    fun equip(slot: Int, itemId: Int, amount: Int = 1) { equipmentItems[slot] = itemId to amount }
+    fun activeActionName(): String? = activeAction?.spec?.name
+    fun advanceTicks(ticks: Int = 1) {
+        repeat(ticks.coerceAtLeast(0)) {
+            val action = activeAction ?: return@repeat
+            if (action.stopped) return@repeat
+            if (action.ticksUntilCycle > 0) {
+                action.ticksUntilCycle--
+                return@repeat
+            }
+            val failure = action.spec.requirements.asSequence()
+                .map { it.validate(this) }
+                .filterIsInstance<SkillValidationResult.Failed>()
+                .firstOrNull()
+            if (failure != null) {
+                messages += failure.message
+                action.cancel(ActionStopReason.REQUIREMENT_FAILED)
+                return@repeat
+            }
+            val signal = action.spec.onCycle?.invoke(this) ?: CycleSignal.success()
+            if (signal.succeeded) action.spec.onSuccess?.invoke(this)
+            if (!signal.keepRunning) {
+                action.cancel(signal.stopReason ?: ActionStopReason.COMPLETED)
+                return@repeat
+            }
+            action.ticksUntilCycle = (action.spec.delayCalculator(this) - 1).coerceAtLeast(0)
+        }
+    }
     private fun setAmount(itemId: Int, amount: Int) { if (amount <= 0) itemAmounts.remove(itemId) else itemAmounts[itemId] = amount }
     private fun Int?.orZero(): Int = this ?: 0
 }

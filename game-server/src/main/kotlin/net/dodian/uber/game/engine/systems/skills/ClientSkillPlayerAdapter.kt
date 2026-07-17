@@ -1,16 +1,24 @@
 package net.dodian.uber.game.engine.systems.skills
 
 import net.dodian.uber.game.api.content.ContentEconomy
-import net.dodian.uber.game.api.content.ContentEquipment
 import net.dodian.uber.game.api.content.ContentFeatures
 import net.dodian.uber.game.api.content.ContentSocial
 import net.dodian.uber.game.api.plugin.skills.SkillActions
+import net.dodian.uber.game.api.plugin.skills.SkillActionHandle
 import net.dodian.uber.game.api.plugin.skills.SkillInventory
 import net.dodian.uber.game.api.plugin.skills.SkillInventoryTransaction
 import net.dodian.uber.game.api.plugin.skills.SkillLevels
 import net.dodian.uber.game.api.plugin.skills.SkillPlayer
+import net.dodian.uber.game.api.plugin.skills.SkillProduction
+import net.dodian.uber.game.api.plugin.skills.PendingSkillMulti
 import net.dodian.uber.game.api.plugin.skills.SkillUi
 import net.dodian.uber.game.api.plugin.skills.SkillWorld
+import net.dodian.uber.game.api.plugin.skills.SkillEquipment
+import net.dodian.uber.game.api.plugin.skills.SkillPosition
+import net.dodian.uber.game.api.plugin.skills.SkillObjectRef
+import net.dodian.uber.game.api.plugin.skills.SkillProfile
+import net.dodian.uber.game.api.plugin.skills.SkillRandom
+import net.dodian.uber.game.api.plugin.skills.SkillVitals
 import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.engine.systems.inventory.inventoryTransaction
 import net.dodian.uber.game.model.Position
@@ -18,9 +26,20 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.skill.runtime.action.SkillStateCoordinator
+import net.dodian.uber.game.skill.runtime.action.ActionSpec
+import net.dodian.uber.game.skill.runtime.action.ActionStopReason
+import net.dodian.uber.game.skill.runtime.action.CycleSignal
+import net.dodian.uber.game.skill.runtime.action.GatheringTask
+import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
+import net.dodian.uber.skills.api.SkillMultiConfig
+import net.dodian.uber.skills.api.SkillMultiLayout
+import net.dodian.uber.skills.api.SkillMultiSelection
+import net.dodian.uber.skills.runtime.SkillRecipePlanner
+import net.dodian.uber.game.engine.util.Misc
+import net.dodian.uber.game.model.entity.Entity
 
 /** Engine-only protocol adapter. Public content receives [SkillPlayer], never [Client]. */
-internal class ClientSkillPlayerAdapter(private val client: Client) : SkillPlayer {
+internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlayer {
     override val skills = object : SkillLevels {
         override fun current(skill: Skill) = client.getLevel(skill)
         override fun base(skill: Skill) = client.getSkillLevel(skill)
@@ -31,6 +50,8 @@ internal class ClientSkillPlayerAdapter(private val client: Client) : SkillPlaye
         override fun contains(itemId: Int, amount: Int) = client.getInvAmt(itemId) >= amount
         override fun amount(itemId: Int) = client.getInvAmt(itemId)
         override fun freeSlots() = client.freeSlots()
+        override fun slotAmount(slot: Int, itemId: Int): Int =
+            if (slot in client.playerItems.indices && client.playerItems[slot] == itemId + 1) client.playerItemsN[slot] else 0
         override fun add(itemId: Int, amount: Int) = client.addItem(itemId, amount)
         override fun remove(itemId: Int, amount: Int): Boolean {
             if (client.getInvAmt(itemId) < amount) return false
@@ -46,6 +67,8 @@ internal class ClientSkillPlayerAdapter(private val client: Client) : SkillPlaye
                 override fun add(itemId: Int, amount: Int) = staged.add(itemId, amount)
             })
         }
+        override fun itemName(itemId: Int): String = client.getItemName(itemId) ?: "item"
+        override fun notedItemId(itemId: Int): Int = client.getNotedItem(itemId)
         override fun refresh() = client.checkItemUpdate()
     }
     override val actions = object : SkillActions {
@@ -55,41 +78,189 @@ internal class ClientSkillPlayerAdapter(private val client: Client) : SkillPlaye
         override fun beginSession(key: String) = SkillStateCoordinator.beginSession(client, key)
         override fun endSession(key: String) = SkillStateCoordinator.endSession(client, key)
         override fun activeSessionKey(): String? = client.activeSkillSessionKey
+        override fun triggerRandomEvent(experience: Int) = SkillingRandomEventService.trigger(client, experience)
+        override fun queue(spec: ActionSpec, beforeStart: () -> Unit): SkillActionHandle? {
+            val player = this@ClientSkillPlayerAdapter
+            val task = object : GatheringTask(
+                actionName = spec.name,
+                client = client,
+                player = player,
+                delayCalculator = spec.delayCalculator,
+                requirements = spec.requirements,
+                priority = spec.priority,
+            ) {
+                override fun onStart() { spec.onStart?.invoke(player) }
+                override fun onTick(): Boolean {
+                    val signal = spec.onCycle?.invoke(player) ?: CycleSignal.success()
+                    if (signal.succeeded) {
+                        spec.onSuccess?.invoke(player)
+                        succeedCycle()
+                    }
+                    if (!signal.keepRunning) {
+                        signal.stopReason?.let { cancel(it) }
+                        return false
+                    }
+                    return true
+                }
+                override fun onStop(reason: ActionStopReason) { spec.onStop?.invoke(player, reason) }
+            }
+            if (!task.start(beforeStart)) return null
+            return object : SkillActionHandle {
+                override fun cancel(reason: ActionStopReason) = task.cancel(reason)
+            }
+        }
     }
     override val ui = object : SkillUi {
         override fun message(text: String) = client.sendMessage(text)
         override fun string(text: String, componentId: Int) = client.sendString(text, componentId)
         override fun open(interfaceId: Int) = client.openInterface(interfaceId)
         override fun close() = client.send(RemoveInterfaces())
+        override fun chatbox(interfaceId: Int) = client.sendChatboxInterface(interfaceId)
+        override fun itemModel(componentId: Int, zoom: Int, itemId: Int) = client.sendInterfaceModel(componentId, zoom, itemId)
         override fun npcDialogue(dialogueId: Int, npcId: Int) = client.startNpcDialogue(dialogueId, npcId)
+        override fun varbit(id: Int, value: Int) = client.varbit(id, value)
     }
     override val world = object : SkillWorld {
-        override val position: Position get() = client.position
+        override val position: SkillPosition get() = client.position.toSkillPosition()
         override fun distanceTo(x: Int, y: Int) = client.distanceToPoint(x, y)
-        override fun teleport(destination: Position) = client.transport(destination)
+        override fun teleport(destination: SkillPosition) = client.transport(destination.toPosition())
+        override fun anchor(position: SkillPosition) = client.setInteractionAnchor(position.x, position.y, position.z)
+        override fun face(position: SkillPosition) = client.setFocus(position.x, position.y)
+        override fun graphic(id: Int, height: Int) = client.stillgfx(id, client.position, height)
+        override fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int) {
+            client.ReplaceObject(target.position.x, target.position.y, replacementId, target.face, target.type)
+        }
     }
-    override val equipment = object : ContentEquipment {
+    override val production = object : SkillProduction {
+        override fun open(config: SkillMultiConfig, onSelected: (SkillMultiSelection) -> Unit): Boolean {
+            val available = SkillRecipePlanner.available(config) { inventory.amount(it) }
+            if (available.isEmpty()) {
+                val message = config.entries.firstNotNullOfOrNull { it.recipe.missingMaterialsMessage }
+                message?.let(ui::message)
+                clear()
+                return false
+            }
+            val layout = when (config.layout) {
+                SkillMultiLayout.AUTO -> when (config.entries.size) {
+                    1 -> SkillMultiLayout.SINGLE
+                    2 -> SkillMultiLayout.TWO
+                    else -> SkillMultiLayout.THREE
+                }
+                else -> config.layout
+            }
+            require(layout == SkillMultiLayout.SPECIALIZED || config.entries.size in 1..3)
+            client.resetAction()
+            client.contentRuntimeState.setPendingSkillMulti(PendingSkillMulti(config, onSelected))
+            renderSkillMulti(client, config, layout)
+            return true
+        }
+
+        override fun select(selection: SkillMultiSelection): Boolean {
+            val pending = client.contentRuntimeState.getPendingSkillMulti() ?: return false
+            val resolved = SkillRecipePlanner.resolve(pending.config, selection) { inventory.amount(it) } ?: run {
+                clear()
+                return false
+            }
+            clear()
+            ui.close()
+            pending.onSelected(selection.copy(amount = resolved.second))
+            return true
+        }
+
+        override fun pending(): SkillMultiConfig? = client.contentRuntimeState.getPendingSkillMulti()?.config
+        override fun clear() { client.contentRuntimeState.clearPendingSkillMulti() }
+    }
+    override val equipment = object : SkillEquipment {
         override fun item(slot: Int) = client.equipment.getOrElse(slot) { -1 }
         override fun amount(slot: Int) = client.equipmentN.getOrElse(slot) { 0 }
+        override fun remove(slot: Int, itemId: Int, amount: Int): Boolean {
+            if (amount != 1 || client.equipment.getOrElse(slot) { -1 } != itemId) return false
+            client.deleteequiment(itemId, slot)
+            return true
+        }
         override fun refresh() = client.refreshEquipmentState()
     }
-    override val economy = object : ContentEconomy {
+    val economy = object : ContentEconomy {
         override fun bankAmount(itemId: Int) = client.getBankAmt(itemId)
         override fun openBank() = client.openUpBankRouted()
         override fun openShop(shopId: Int) = client.openUpShopRouted(shopId)
     }
-    override val social = ContentSocial { encodedName -> client.hasFriend(encodedName) }
-    override val features = object : ContentFeatures {
+    val social = ContentSocial { encodedName -> client.hasFriend(encodedName) }
+    val features = object : ContentFeatures {
         override val bankingEnabled get() = FeatureStateService.banking.get()
         override val shoppingEnabled get() = FeatureStateService.shopping.get()
         override val tradingEnabled get() = FeatureStateService.trading.get()
         override val duelingEnabled get() = FeatureStateService.dueling.get()
     }
-    fun protocolClient(): Client = client
+    override val profile = object : SkillProfile {
+        override val name: String get() = client.playerName
+        override val premium: Boolean get() = client.isPremium
+    }
+    override val random = object : SkillRandom {
+        override fun between(minInclusive: Int, maxInclusive: Int): Int {
+            require(maxInclusive >= minInclusive)
+            return minInclusive + Misc.random(maxInclusive - minInclusive)
+        }
+        override fun chance(numerator: Int, denominator: Int): Boolean {
+            require(denominator > 0 && numerator in 0..denominator)
+            return numerator > 0 && Misc.random(denominator - 1) < numerator
+        }
+    }
+    override val vitals = object : SkillVitals {
+        override fun damage(amount: Int) { if (amount > 0) client.dealDamage(null, amount, Entity.hitType.STANDARD) }
+        override fun restorePrayer(amount: Int) { client.currentPrayer = (client.currentPrayer + amount).coerceAtMost(client.maxPrayer) }
+        override fun stun(ticks: Int) { client.stunTimer = ticks.coerceAtLeast(0) }
+    }
 }
 
 internal fun Client.asSkillPlayer(): SkillPlayer = ClientSkillPlayerAdapter(this)
 
-/** Internal migration bridge for legacy engine adapters only. */
-internal fun SkillPlayer.protocolClient(): Client = (this as? ClientSkillPlayerAdapter)?.protocolClient()
-    ?: error("SkillPlayer must be backed by the engine Client adapter")
+internal fun Position.toSkillPosition() = SkillPosition(x, y, z)
+internal fun SkillPosition.toPosition() = Position(x, y, z)
+
+private fun renderSkillMulti(client: Client, config: SkillMultiConfig, layout: SkillMultiLayout) {
+    val entries = config.entries
+    when (layout) {
+        SkillMultiLayout.SINGLE -> {
+            val entry = entries.single()
+            client.sendInterfaceModel(1746, 190, entry.recipe.outputItemId)
+            client.sendString("\n\n\n\n\n${entry.label ?: client.getItemName(entry.recipe.outputItemId)}", 2799)
+            client.sendChatboxInterface(4429)
+        }
+        SkillMultiLayout.TWO -> {
+            client.sendString(config.title, 8879)
+            val first = entries[0]
+            val second = entries[1]
+            client.sendInterfaceModel(8869, 250, first.recipe.outputItemId)
+            client.sendInterfaceModel(8870, 250, second.recipe.outputItemId)
+            client.sendString(first.label ?: client.getItemName(first.recipe.outputItemId), 8871)
+            client.sendString(first.label ?: client.getItemName(first.recipe.outputItemId), 8874)
+            client.sendString(second.label ?: client.getItemName(second.recipe.outputItemId), 8878)
+            client.sendString(second.label ?: client.getItemName(second.recipe.outputItemId), 8875)
+            client.sendChatboxInterface(8866)
+        }
+        SkillMultiLayout.THREE -> {
+            client.sendString(config.title, 8898)
+            val labelComponents = intArrayOf(8889, 8893, 8897)
+            val modelComponents = intArrayOf(8883, 8884, 8885)
+            entries.forEachIndexed { index, entry ->
+                client.sendString(entry.label ?: client.getItemName(entry.recipe.outputItemId), labelComponents[index])
+                client.sendInterfaceModel(modelComponents[index], 250, entry.recipe.outputItemId)
+            }
+            client.sendChatboxInterface(8880)
+        }
+        SkillMultiLayout.SPECIALIZED -> Unit
+        SkillMultiLayout.AUTO -> error("AUTO layout must be resolved before rendering")
+    }
+}
+
+/**
+ * Temporary engine-side bridge for legacy skill implementations that have not
+ * yet moved into their Gradle module. Public interaction contexts do not expose
+ * this operation and new module code is forbidden from using it.
+ */
+internal object SkillEngineAccess {
+    fun client(player: SkillPlayer): Client =
+        (player as? ClientSkillPlayerAdapter)?.client
+            ?: error("This legacy skill route requires a live engine-backed player")
+}

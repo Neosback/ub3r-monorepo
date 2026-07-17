@@ -92,7 +92,11 @@ object SlayerSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Slayer", skill = Skill.SLAYER) {
             val slayerGemIds = intArrayOf(4155)
-            itemClick(preset = PolicyPreset.DIALOGUE, option = 1, *slayerGemIds) { (client, itemId, itemSlot, interfaceId) ->
+            itemClick(preset = PolicyPreset.DIALOGUE, option = 1, *slayerGemIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val itemId = interaction.itemId
+                val itemSlot = interaction.itemSlot
+                val interfaceId = interaction.interfaceId
                 if (client.inTrade || client.inDuel) {
                     true
                 } else {
@@ -101,18 +105,30 @@ object SlayerSkillPlugin : SkillPlugin {
                 }
             }
 
-            itemClick(preset = PolicyPreset.DIALOGUE, option = 2, *slayerGemIds) { (client, itemId, itemSlot, interfaceId) ->
+            itemClick(preset = PolicyPreset.DIALOGUE, option = 2, *slayerGemIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val itemId = interaction.itemId
+                val itemSlot = interaction.itemSlot
+                val interfaceId = interaction.interfaceId
                 SlayerMasterDialogue.showResetCountPrompt(client)
                 true
             }
 
-            itemClick(preset = PolicyPreset.DIALOGUE, option = 3, *slayerGemIds) { (client, itemId, itemSlot, interfaceId) ->
+            itemClick(preset = PolicyPreset.DIALOGUE, option = 3, *slayerGemIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val itemId = interaction.itemId
+                val itemSlot = interaction.itemSlot
+                val interfaceId = interaction.interfaceId
                 QuestTabEntry.showMonsterLog(client)
                 true
             }
 
             val slayerMaskIds = intArrayOf(11784, 11864, 11865)
-            itemClick(preset = PolicyPreset.DIALOGUE, option = 3, *slayerMaskIds) { (client, itemId, itemSlot, interfaceId) ->
+            itemClick(preset = PolicyPreset.DIALOGUE, option = 3, *slayerMaskIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val itemId = interaction.itemId
+                val itemSlot = interaction.itemSlot
+                val interfaceId = interaction.interfaceId
                 when (itemId) {
                     11864, 11865 -> {
                         val needed = 8 - client.freeSlots()

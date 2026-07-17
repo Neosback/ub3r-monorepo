@@ -129,13 +129,21 @@ object Runecrafting {
 object RunecraftingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Runecrafting", skill = Skill.RUNECRAFTING) {
-            objectClick(preset = PolicyPreset.GATHERING, option = 1, *RunecraftingData.altarObjectIds) { (client, objectId, position, obj) ->
+            objectClick(preset = PolicyPreset.GATHERING, option = 1, *RunecraftingData.altarObjectIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
                 val altar = RunecraftingData.byObjectId(objectId)
                 if (altar != null) Runecrafting.start(client, altar.request) else false
             }
 
             val pouchIds = intArrayOf(5508, 5509, 5510, 5511, 5512, 5513, 5514, 5515)
-            itemClick(preset = PolicyPreset.GATHERING, option = 2, *pouchIds) { (client, itemId, itemSlot, interfaceId) ->
+            itemClick(preset = PolicyPreset.GATHERING, option = 2, *pouchIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val itemId = interaction.itemId
+                val itemSlot = interaction.itemSlot
+                val interfaceId = interaction.interfaceId
                 Runecrafting.checkPouch(client, itemId)
             }
         }

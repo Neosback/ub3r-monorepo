@@ -39,13 +39,6 @@ data class UnifiedPolicySpec(
     val distanceRule: ObjectInteractionPolicy.DistanceRule,
 )
 
-enum class PolicyPreset {
-    GATHERING,
-    PRODUCTION,
-    DIALOGUE,
-    MOVEMENT_LOCKED,
-}
-
 object UnifiedPolicyDsl {
     private val specs: Map<PolicyPreset, UnifiedPolicySpec> = mapOf(
         PolicyPreset.GATHERING to UnifiedPolicySpec(

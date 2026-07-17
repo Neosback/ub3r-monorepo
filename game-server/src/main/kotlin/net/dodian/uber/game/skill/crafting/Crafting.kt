@@ -468,7 +468,11 @@ object CraftingSkillPlugin : SkillPlugin {
                 873, 874, 878, 879, 884, 6232, 6249, 8689, 12279, 14868, 14890, 20358, 25929
             )
 
-            objectClick(preset = PolicyPreset.PRODUCTION, option = 2, *spinningWheelIds) { (client, objectId, position, obj) ->
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 2, *spinningWheelIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
                 when (objectId) {
                     14889, 25824 -> {
                         client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
@@ -484,7 +488,14 @@ object CraftingSkillPlugin : SkillPlugin {
                 }
             }
 
-            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = resourceFillingIds) { (client, objectId, position, obj, itemId, itemSlot, interfaceId) ->
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = resourceFillingIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
+                val itemId = interaction.itemId
+                val itemSlot = interaction.itemSlot
+                val interfaceId = interaction.interfaceId
                 if (objectId == 879 || objectId == 873 || objectId == 874 || objectId == 6232 ||
                     objectId == 12279 || objectId == 14868 || objectId == 20358 || objectId == 25929 ||
                     objectId == 884 || objectId == 878 || objectId == 6249 || objectId == 14890

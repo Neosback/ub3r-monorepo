@@ -24,4 +24,20 @@ class SkillModuleTest {
             SkillModuleDescriptor("Woodcutting", "Woodcutting")
         }
     }
+
+    @Test
+    fun `skill multi validates unique entries and active client capacity`() {
+        val first = skillRecipe("cooking.shrimp", 315) { material(317) }
+        val second = skillRecipe("cooking.meat", 2142) { material(2132) }
+        val config = SkillMultiConfig(
+            key = "cooking.range",
+            verb = "cook",
+            action = SkillMultiAction.COOK,
+            entries = listOf(SkillMultiEntry(first), SkillMultiEntry(second)),
+        )
+        assertEquals("What would you like to cook?", config.title)
+        assertThrows(IllegalArgumentException::class.java) {
+            SkillMultiConfig("duplicate", entries = listOf(SkillMultiEntry(first), SkillMultiEntry(first)))
+        }
+    }
 }

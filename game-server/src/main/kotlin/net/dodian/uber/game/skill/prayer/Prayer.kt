@@ -81,7 +81,11 @@ object Prayer {
 object PrayerSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Prayer", skill = Skill.PRAYER) {
-            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *PrayerRouteIds.ALTAR_OBJECT_IDS) { (client, objectId, position, obj) ->
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *PrayerRouteIds.ALTAR_OBJECT_IDS) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
                 if (client.currentPrayer < client.maxPrayer) {
                     client.pray(client.maxPrayer)
                     client.sendMessage("You restore your prayer points!")
@@ -91,7 +95,14 @@ object PrayerSkillPlugin : SkillPlugin {
                 true
             }
 
-            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = intArrayOf(PrayerRouteIds.MAIN_ALTAR_OBJECT_ID), itemIds = PrayerRouteIds.BONE_ITEM_IDS) { (client, objectId, position, obj, itemId, itemSlot, interfaceId) ->
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = intArrayOf(PrayerRouteIds.MAIN_ALTAR_OBJECT_ID), itemIds = PrayerRouteIds.BONE_ITEM_IDS) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val obj = interaction.definition
+                val itemId = interaction.itemId
+                val itemSlot = interaction.itemSlot
+                val interfaceId = interaction.interfaceId
                 if (Bones.getBone(itemId) == null || !client.playerHasItem(itemId) || client.skillingEventState.isRandomEventOpen) {
                     client.resetAction()
                     false
@@ -102,7 +113,11 @@ object PrayerSkillPlugin : SkillPlugin {
                 }
             }
 
-            itemClick(preset = PolicyPreset.PRODUCTION, option = 1, *PrayerRouteIds.BONE_ITEM_IDS) { (client, itemId, itemSlot, interfaceId) ->
+            itemClick(preset = PolicyPreset.PRODUCTION, option = 1, *PrayerRouteIds.BONE_ITEM_IDS) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val itemId = interaction.itemId
+                val itemSlot = interaction.itemSlot
+                val interfaceId = interaction.interfaceId
                 Prayer.attempt(client, itemId, itemSlot)
             }
         }

@@ -1,7 +1,6 @@
 package net.dodian.uber.game.model
 
 import net.dodian.uber.game.model.chunk.Chunk
-import net.dodian.uber.game.engine.util.Misc
 import kotlin.jvm.JvmName
 
 class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 0) {
@@ -57,7 +56,7 @@ class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 
     fun copy(): Position = Position(getX(), getY(), getZ())
 
     fun isPerpendicularTo(other: Position): Boolean {
-        val delta = Misc.delta(this, other)
+        val delta = delta(this, other)
         return (delta.getX() != delta.getY() && delta.getX() == 0) || delta.getY() == 0
     }
 

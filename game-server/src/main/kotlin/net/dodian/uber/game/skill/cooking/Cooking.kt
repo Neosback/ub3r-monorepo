@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.skill.runtime.action.ActionStopReason
 import net.dodian.uber.game.skill.runtime.action.RunningProductionAction
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
@@ -47,18 +48,18 @@ object Cooking {
             productionAction("cooking") {
                 delay { GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS) }
                 onCycleWhile {
-                    if ((cookingState?.remaining ?: 0) <= 0) {
+                    if ((client.cookingState?.remaining ?: 0) <= 0) {
                         return@onCycleWhile false
                     }
-                    performCycle(this)
-                    (cookingState?.remaining ?: 0) > 0
+                    performCycle(client)
+                    (client.cookingState?.remaining ?: 0) > 0
                 }
                 onStop {
-                    cookingTasks.remove(this)
-                    clearCookingState()
+                    cookingTasks.remove(client)
+                    client.clearCookingState()
                 }
             }
-        val running = action.start(client) ?: run {
+        val running = action.start(client.asSkillPlayer()) ?: run {
             client.clearCookingState()
             return
         }
@@ -144,17 +145,20 @@ object CookingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Cooking", skill = Skill.COOKING) {
             val rangeObjectIds = intArrayOf(26181, 114, 4172)
-            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = rangeObjectIds) { (client, objectId, position, obj, itemId, itemSlot, interfaceId) ->
+            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = rangeObjectIds) { interaction ->
+                val objectId = interaction.objectId
+                val position = interaction.position
+                val itemId = interaction.itemId
                 if (objectId == 26181 && itemId == 401) {
-                    val amount = client.getInvAmt(401)
-                    repeat(amount) {
-                        client.deleteItem(401, 1)
-                        client.addItem(1781, 1)
+                    val amount = interaction.player.inventory.amount(401)
+                    val committed = amount > 0 && interaction.player.inventory.transaction {
+                        remove(401, amount)
+                        add(1781, amount)
                     }
-                    client.checkItemUpdate()
-                    client.sendMessage("You burn all your seaweed into ashes.")
+                    if (committed) interaction.player.ui.message("You burn all your seaweed into ashes.")
                     true
                 } else {
+                    val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
                     client.setInteractionAnchor(position.x, position.y, position.z)
                     Cooking.attempt(client, itemId)
                     true

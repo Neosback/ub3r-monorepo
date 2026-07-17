@@ -52,3 +52,19 @@ tasks.register("skillsCheck") {
         ":skills:woodcutting:check",
     )
 }
+
+tasks.register("verifySkillModuleDependencies") {
+    group = "verification"
+    description = "Rejects server dependencies from independently compiled skill modules and shared test fixtures."
+    doLast {
+        val offenders = file("skills").walkTopDown()
+            .filter { it.name == "build.gradle.kts" }
+            .filter { it.readText().contains("project(\":game-server\")") }
+            .toList()
+        check(offenders.isEmpty()) {
+            "Skill modules must not depend on :game-server: ${offenders.joinToString { it.relativeTo(projectDir).path }}"
+        }
+    }
+}
+
+tasks.named("skillsCheck") { dependsOn("verifySkillModuleDependencies") }

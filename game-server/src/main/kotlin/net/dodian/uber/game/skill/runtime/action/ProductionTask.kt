@@ -3,6 +3,7 @@ package net.dodian.uber.game.skill.runtime.action
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.skills.sendFilterMessage
 import net.dodian.uber.game.skill.runtime.requirements.ValidationResult
+import net.dodian.uber.game.api.plugin.skills.SkillValidationResult
 
 data class ProductionSpec(
     val actionName: String,
@@ -26,7 +27,7 @@ abstract class ProductionTask(
 
     fun runCycle(): Boolean {
         val validation = validateCycle()
-        if (validation is ValidationResult.Failed) {
+        if (validation is SkillValidationResult.Failed) {
             client.sendFilterMessage(validation.message)
             return false
         }

@@ -957,7 +957,10 @@ object AgilitySkillPlugin : SkillPlugin {
 
     override val definition =
         skillPlugin(name = "Agility", skill = Skill.AGILITY) {
-            objectClick(preset = PolicyPreset.MOVEMENT_LOCKED, option = 1, *agilityObjectIds) { (client, objectId, position, _) ->
+            objectClick(preset = PolicyPreset.MOVEMENT_LOCKED, option = 1, *agilityObjectIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = Position(interaction.position.x, interaction.position.y, interaction.position.z)
                 when {
                     objectId == GnomeCourseObjectComponents.LOG_BALANCE ->
                         Agility(client).GnomeLog(

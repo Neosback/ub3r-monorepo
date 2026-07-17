@@ -2,6 +2,7 @@ package net.dodian.uber.game.engine.systems.net
 
 import net.dodian.uber.game.skill.smithing.SmithingData
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.engine.systems.skills.SkillMultiButtonService
 
 object PacketButtonService {
 
@@ -19,6 +20,10 @@ object PacketButtonService {
     fun isSmeltingInterfaceActive(client: Client): Boolean = client.activeInterfaceId == 2400
 
     @JvmStatic
+    fun tryHandleSkillMulti(client: Client, actionButton: Int): Boolean =
+        SkillMultiButtonService.tryHandle(client, actionButton)
+
+    @JvmStatic
     fun prepareAction(client: Client, actionButton: Int) {
         if (!(actionButton >= 9157 && actionButton <= 9194)) {
             client.actionButtonId = actionButton
@@ -27,7 +32,8 @@ object PacketButtonService {
             SmithingData.isSmeltingInterfaceButton(actionButton)
         val preserveSmithingSelection = client.activeInterfaceId in 1119..1123
         val preserveCombatConfig = actionButton in combatConfigButtons
-        if (!preserveSmeltingSelection && !preserveSmithingSelection && !preserveCombatConfig &&
+        val preserveSkillMulti = SkillMultiButtonService.isSelectionButton(actionButton)
+        if (!preserveSmeltingSelection && !preserveSmithingSelection && !preserveCombatConfig && !preserveSkillMulti &&
             actionButton != 10239 && actionButton != 10238 &&
             actionButton != 6212 && actionButton != 6211
         ) {

@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.skill.runtime.requirements.Requirement
 import net.dodian.uber.game.skill.runtime.requirements.RequirementBuilder
 import net.dodian.uber.game.skill.runtime.requirements.ValidationResult
@@ -111,8 +112,8 @@ object Mining {
                     message = "You need a pickaxe in which you got the required mining level for.",
                 )
                 requirement(
-                    Requirement { localClient ->
-                        if (!isNearRock(localClient, position)) {
+                    Requirement {
+                        if (!isNearRock(client, position)) {
                             ValidationResult.failed("You moved too far away.")
                         } else {
                             ValidationResult.ok()
@@ -124,40 +125,40 @@ object Mining {
         val action =
             gatheringAction("Mining") {
                 delay {
-                    val state = miningState ?: return@delay 1
+                    val state = client.miningState ?: return@delay 1
                     val activeRock = MiningData.rockByObjectId[state.rockObjectId] ?: return@delay 1
-                    val activePickaxe = resolveBestPickaxe(this) ?: return@delay 1
-                    computeMiningDelayTicks(this, activeRock, activePickaxe)
+                    val activePickaxe = resolveBestPickaxe(client) ?: return@delay 1
+                    computeMiningDelayTicks(client, activeRock, activePickaxe)
                 }
                 requirements {
                     actionRequirements.forEach { requirement(it) }
                 }
                 onStart {
-                    performAnimation(pickaxe.animationId, 0)
-                    sendMessage("You swing your pick at the rock...")
+                    client.performAnimation(pickaxe.animationId, 0)
+                    client.sendMessage("You swing your pick at the rock...")
                 }
                 onCycleSignal {
-                    if (isBusy) {
+                    if (client.isBusy) {
                         return@onCycleSignal CycleSignal.stop(ActionStopReason.BUSY)
                     }
-                    val state = miningState ?: return@onCycleSignal CycleSignal.stop(ActionStopReason.INVALID_TARGET)
+                    val state = client.miningState ?: return@onCycleSignal CycleSignal.stop(ActionStopReason.INVALID_TARGET)
                     if (MiningData.rockByObjectId[state.rockObjectId] == null) {
                         return@onCycleSignal CycleSignal.stop(ActionStopReason.INVALID_TARGET)
                     }
-                    val activePickaxe = resolveBestPickaxe(this)
+                    val activePickaxe = resolveBestPickaxe(client)
                         ?: return@onCycleSignal CycleSignal.stop(ActionStopReason.MISSING_TOOL)
 
-                    performAnimation(activePickaxe.animationId, 0)
-                    if (!performMiningCycle(this)) {
+                    client.performAnimation(activePickaxe.animationId, 0)
+                    if (!performMiningCycle(client)) {
                         return@onCycleSignal CycleSignal.stop(ActionStopReason.COMPLETED)
                     }
                     CycleSignal.success()
                 }
                 onStop { reason ->
-                    stopMiningInternal(this, mapStopReason(reason))
+                    stopMiningInternal(client, mapStopReason(reason))
                 }
             }
-        if (action.start(client) == null) {
+        if (action.start(client.asSkillPlayer()) == null) {
             stopMiningInternal(client, MiningStopReason.INVALID_ROCK)
         }
         return true
@@ -342,7 +343,10 @@ object MiningSkillPlugin : SkillPlugin {
                 preset = PolicyPreset.GATHERING,
                 option = 1,
                 *MiningData.allRockObjectIds,
-            ) { (client, objectId, position, _) ->
+            ) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val objectId = interaction.objectId
+                val position = Position(interaction.position.x, interaction.position.y, interaction.position.z)
                 Mining.attempt(client, objectId, position)
             }
         }
