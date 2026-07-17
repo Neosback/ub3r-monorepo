@@ -1,6 +1,8 @@
 package net.dodian.uber.skills.testkit
 
+import net.dodian.uber.game.api.content.ContentAttributeKey
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import net.dodian.uber.game.api.plugin.skills.startProduction
@@ -11,6 +13,18 @@ import net.dodian.uber.skills.api.SkillMultiSelection
 import net.dodian.uber.skills.api.skillRecipe
 
 class FakeSkillPlayerTest {
+    @Test
+    fun `plugin attributes are available to isolated module tests`() {
+        val player = FakeSkillPlayer()
+        val selection = ContentAttributeKey<Int>("fletching", "selection")
+
+        player.attributes.put(selection, 2)
+        assertEquals(2, player.attributes.get(selection))
+
+        player.attributes.remove(selection)
+        assertNull(player.attributes.get(selection))
+    }
+
     @Test
     fun `failed transaction leaves inventory unchanged and does not refresh`() {
         val player = FakeSkillPlayer(mapOf(100 to 1))

@@ -190,7 +190,7 @@ class NpcFamilyBuilder internal constructor(
     private val serverDefinitions = ArrayList<NpcServerDefinition>()
     private var options = emptyList<NpcOptionBinding>()
     private var spawns = emptyList<NpcSpawnDef>()
-    private var combatHandler: NpcAttackHandler? = null
+    private var combatProfile: NpcCombatProfile? = null
 
     fun ids(vararg values: Int) {
         values.forEach { ids += it }
@@ -242,7 +242,7 @@ class NpcFamilyBuilder internal constructor(
     }
 
     fun combat(block: NpcCombatBuilder.() -> Unit) {
-        combatHandler = NpcCombatBuilder().apply(block).build()
+        combatProfile = NpcCombatBuilder().apply(block).build()
     }
 
     @Deprecated("Use server { }. Runtime values are server-owned NPC values.", ReplaceWith("server(block)"))
@@ -262,6 +262,7 @@ class NpcFamilyBuilder internal constructor(
 
     internal fun build(): NpcFamily {
         val finalIds = ids.toIntArray()
+        combatProfile?.let { NpcCombatRegistry.registerFamily(name, finalIds, it) }
         val optionLabels = options.associate { it.option to it.label }
         fun handler(option: Int): NpcClickHandler =
             options.firstOrNull { it.option == option }?.handler ?: NO_CLICK_HANDLER
@@ -285,7 +286,7 @@ class NpcFamilyBuilder internal constructor(
                 onAttackCtx = contextHandler(5),
                 cacheOverrides = cacheOverrides.toList(),
                 serverDefinitions = serverDefinitions.map { def ->
-                    if (combatHandler != null) def.copy(bossAttackHandler = combatHandler) else def
+                    if (combatProfile != null) def.copy(bossAttackHandler = combatProfile?.attack) else def
                 },
             )
         return DefaultNpcFamily(name, primaryId, finalIds, content, spawns, cacheOverrides, serverDefinitions)

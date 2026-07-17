@@ -11,10 +11,25 @@ fun SkillPlayer.startProduction(recipe: SkillRecipe, amount: Int, skill: Skill):
     var remaining = amount
     return productionAction("production.${recipe.key}") {
         delay(recipe.delayTicks)
-        requirements { level(skill, recipe.requiredLevel); recipe.materials.forEach { item(it.itemId, it.amount, recipe.missingMaterialsMessage) } }
+        requirements {
+            level(skill, recipe.requiredLevel)
+            recipe.materials.forEach { item(it.itemId, it.amount, recipe.missingMaterialsMessage) }
+            if (recipe.requiredFreeSlots > 0) inventorySpace(recipe.requiredFreeSlots, "You need more inventory space.")
+            if (recipe.toolItemIds.isNotEmpty()) requirement {
+                if (recipe.toolItemIds.any { inventory.contains(it) || equipment.item(SkillEquipmentSlot.WEAPON) == it }) SkillValidationResult.ok()
+                else SkillValidationResult.failed("You need the required tool to continue.")
+            }
+            if (recipe.requiresPremium) requirement {
+                if (profile.premium) SkillValidationResult.ok() else SkillValidationResult.failed("This action requires premium access.")
+            }
+        }
         onCycleSignal {
             if (remaining <= 0) return@onCycleSignal CycleSignal.stop(ActionStopReason.COMPLETED)
-            val committed = inventory.transaction { recipe.materials.forEach { remove(it.itemId, it.amount) }; add(recipe.outputItemId, recipe.outputAmount) }
+            val committed = inventory.transaction {
+                recipe.materials.forEach { remove(it.itemId, it.amount) }
+                add(recipe.outputItemId, recipe.outputAmount)
+                recipe.byproducts.forEach { add(it.itemId, it.amount) }
+            }
             if (!committed) return@onCycleSignal CycleSignal.stop(ActionStopReason.REQUIREMENT_FAILED)
             if (recipe.animationId >= 0) actions.animate(recipe.animationId)
             remaining--; if (remaining <= 0) CycleSignal.completeSuccess() else CycleSignal.success()

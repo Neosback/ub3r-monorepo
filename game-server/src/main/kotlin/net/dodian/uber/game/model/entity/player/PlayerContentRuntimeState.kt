@@ -34,6 +34,7 @@ import net.dodian.uber.game.api.plugin.skills.PendingSkillMulti
  * embedded in Player's Java interaction holder.
  */
 class PlayerContentRuntimeState {
+    private val pluginAttributes = ConcurrentHashMap<String, Any>()
     @Volatile private var pendingInteraction: InteractionIntent? = null
     @Volatile private var activeInteraction: ActiveInteraction? = null
     @Volatile private var interactionEarliestCycle = 0L
@@ -79,6 +80,12 @@ class PlayerContentRuntimeState {
     @Volatile private var activeSkillSessionStartedCycle = 0L
     @Volatile private var pendingSkillMulti: PendingSkillMulti? = null
     private val throttleUntilCycles = ConcurrentHashMap<String, Long>()
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> getPluginAttribute(key: String): T? = pluginAttributes[key] as? T
+    fun putPluginAttribute(key: String, value: Any) { pluginAttributes[key] = value }
+    fun removePluginAttribute(key: String) { pluginAttributes.remove(key) }
+    fun clearPluginAttributes() { pluginAttributes.clear() }
 
     fun getPendingInteraction() = pendingInteraction
     fun setPendingInteraction(value: InteractionIntent?) { pendingInteraction = value }

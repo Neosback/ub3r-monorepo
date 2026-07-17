@@ -47,4 +47,20 @@ class PlayerContentRuntimeStateTest {
 
         assertNull(state.getPendingSkillMulti())
     }
+
+    @Test
+    fun `plugin attributes are isolated by key and clearable at logout`() {
+        val state = PlayerContentRuntimeState()
+
+        state.putPluginAttribute("fletching:selection", 2)
+        state.putPluginAttribute("crafting:selection", 3)
+
+        assertEquals(2, state.getPluginAttribute<Int>("fletching:selection"))
+        assertEquals(3, state.getPluginAttribute<Int>("crafting:selection"))
+
+        state.clearPluginAttributes()
+
+        assertNull(state.getPluginAttribute<Int>("fletching:selection"))
+        assertNull(state.getPluginAttribute<Int>("crafting:selection"))
+    }
 }

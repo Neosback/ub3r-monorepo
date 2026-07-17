@@ -430,13 +430,17 @@ public class Npc extends Entity {
     }
 
     public void dealDamage(Client client, int hitDiff, Entity.hitType type) {
+        net.dodian.uber.game.npc.NpcDefenceResult defenceResult =
+                net.dodian.uber.game.npc.NpcCombatRegistry.applyDefence(this, client, hitDiff, type);
+        hitDiff = defenceResult.getDamage();
         if (!alive || currentHealth < 1)
             hitDiff = 0;
         else if (hitDiff > currentHealth)
             hitDiff = currentHealth;
         appendHit(hitDiff, type);
         currentHealth -= hitDiff;
-        net.dodian.uber.game.engine.systems.combat.CombatDefenderReaction.playBlockAnimation(this, hitDiff, Entity.damageType.MELEE);
+        if (!defenceResult.getSuppressDefaultReaction())
+            net.dodian.uber.game.engine.systems.combat.CombatDefenderReaction.playBlockAnimation(this, hitDiff, Entity.damageType.MELEE);
         /* Daganoth kings mechanic dodian style! */
         Npc otherNpc = NpcSpawnLocator.dagannothTwinFor(this);
         if (otherNpc != null) {
@@ -471,6 +475,8 @@ public class Npc extends Entity {
     }
 
     public void attack() {
+        if (net.dodian.uber.game.npc.NpcCombatRegistry.handleAttack(this))
+            return;
         if (bossAttackHandler != null) {
             bossAttackHandler.handleAttack(this);
             return;

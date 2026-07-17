@@ -1,5 +1,6 @@
 package net.dodian.uber.game.api.plugin.skills
 
+import net.dodian.uber.game.api.content.ContentAttributes
 import net.dodian.uber.game.engine.tasking.TaskPriority
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skill.runtime.action.ActionStopReason
@@ -30,6 +31,8 @@ interface SkillPlayer {
     val profile: SkillProfile
     val random: SkillRandom
     val vitals: SkillVitals
+    /** Plugin-owned temporary state; cleared when the player logs out. */
+    val attributes: ContentAttributes
 }
 
 interface SkillLevels {

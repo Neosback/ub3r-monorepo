@@ -168,6 +168,12 @@ public class Client extends Player implements Runnable {
     public boolean tradeRequested = false, inTrade = false, canOffer = true, tradeConfirmed = false,
             tradeConfirmed2 = false, tradeResetNeeded = false;
     public int trade_reqId = 0;
+    /** Game-thread-owned identity and revisions for the active trade session. */
+    public long tradeSessionId = 0L;
+    public long tradeOfferRevision = 0L;
+    public long tradeConfirmedOwnRevision = -1L;
+    public long tradeConfirmedPartnerRevision = -1L;
+    public long tradeSettledSessionId = -1L;
     public int tradeApproachPendingSlot = -1;
     public int tradeApproachTicks = 0;
     public CopyOnWriteArrayList<GameItem> offeredItems = new CopyOnWriteArrayList<>();
@@ -2916,8 +2922,7 @@ public class Client extends Player implements Runnable {
             if (!EconomyTransaction.moveOfferToInventory(this, itemID, fromSlot, amount)) {
                 return;
             }
-            tradeConfirmed = false;
-            other.tradeConfirmed = false;
+            TradeDuelSessionService.offerChanged(this, other);
             resetItems(3322);
             resetTItems(3415);
             other.resetOTItems(3416);
@@ -2956,6 +2961,7 @@ public class Client extends Player implements Runnable {
         if (!EconomyTransaction.moveInventoryToOffer(this, itemID, fromSlot, amount)) {
             return;
         }
+        TradeDuelSessionService.offerChanged(this, other);
         resetItems(3322);
         resetTItems(3415);
         other.resetOTItems(3416);
@@ -3986,80 +3992,22 @@ public class Client extends Player implements Runnable {
     }
 
     public void declineTrade(boolean tellOther) {
+        if (!inTrade || tradeSessionId <= 0L || tradeSettledSessionId == tradeSessionId)
+            return;
         Client other = getClient(trade_reqId);
-        boolean cancelOther = tellOther && other != null && other.inTrade && other.trade_reqId == getSlot();
-        TradeRefundPlan ownRefund = prepareTradeRefund();
-        TradeRefundPlan otherRefund = cancelOther ? other.prepareTradeRefund() : null;
-        if (ownRefund == null || (cancelOther && otherRefund == null)) {
+        boolean cancelOther = tellOther && other != null && other.inTrade && other.trade_reqId == getSlot()
+                && tradeSessionId > 0L && tradeSessionId == other.tradeSessionId;
+        boolean refunded = TradeDuelSessionService.cancelTrade(this, cancelOther ? other : null);
+        if (!refunded) {
             logger.error("Unable to safely refund cancelled trade for player={} partner={}", getPlayerName(), other == null ? "none" : other.getPlayerName());
             send(new SendMessage("Your trade could not be cancelled safely. Please contact staff."));
             return;
-        }
-
-        ownRefund.commit();
-        if (otherRefund != null) {
-            otherRefund.commit();
         }
         finishDeclineTrade();
         if (cancelOther) {
             other.finishDeclineTrade();
             GameEventBus.post(new TradeCancelEvent(this, other));
         }
-    }
-
-    private TradeRefundPlan prepareTradeRefund() {
-        int[] plannedItems = Arrays.copyOf(playerItems, playerItems.length);
-        int[] plannedAmounts = Arrays.copyOf(playerItemsN, playerItemsN.length);
-        for (GameItem item : offeredItems) {
-            if (item.getId() < 0 || item.getAmount() <= 0) {
-                continue;
-            }
-            if (!planTradeRefundItem(plannedItems, plannedAmounts, item.getId(), item.getAmount())) {
-                return null;
-            }
-        }
-        return new TradeRefundPlan(this, plannedItems, plannedAmounts);
-    }
-
-    private boolean planTradeRefundItem(int[] items, int[] amounts, int itemId, int amount) {
-        if (Server.itemManager.isStackable(itemId)) {
-            int slot = -1;
-            for (int i = 0; i < items.length; i++) {
-                if (items[i] == itemId + 1) {
-                    slot = i;
-                    break;
-                }
-            }
-            if (slot == -1) {
-                for (int i = 0; i < items.length; i++) {
-                    if (items[i] <= 0) {
-                        slot = i;
-                        items[i] = itemId + 1;
-                        break;
-                    }
-                }
-            }
-            if (slot == -1 || (long) amounts[slot] + amount > maxItemAmount) {
-                return false;
-            }
-            amounts[slot] += amount;
-            return true;
-        }
-        for (int count = 0; count < amount; count++) {
-            int slot = -1;
-            for (int i = 0; i < items.length; i++) {
-                if (items[i] <= 0) {
-                    slot = i;
-                    break;
-                }
-            }
-            if (slot == -1) {
-                return false;
-            }
-            items[slot] = itemId + 1;
-            amounts[slot] = 1;
-        }
-        return true;
     }
 
     private void finishDeclineTrade() {
@@ -4072,26 +4020,9 @@ public class Client extends Player implements Runnable {
         trade_reqId = -1;
         tradeApproachPendingSlot = -1;
         tradeApproachTicks = 0;
+        TradeDuelSessionService.resetTradeSession(this);
         faceTarget(trade_reqId);
         checkItemUpdate();
-    }
-
-    private static final class TradeRefundPlan {
-        private final Client client;
-        private final int[] items;
-        private final int[] amounts;
-
-        private TradeRefundPlan(Client client, int[] items, int[] amounts) {
-            this.client = client;
-            this.items = items;
-            this.amounts = amounts;
-        }
-
-        private void commit() {
-            System.arraycopy(items, 0, client.playerItems, 0, items.length);
-            System.arraycopy(amounts, 0, client.playerItemsN, 0, amounts.length);
-            client.markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
-        }
     }
 
     public boolean validClient(int index) {
@@ -4160,6 +4091,7 @@ public class Client extends Player implements Runnable {
          * !connectedFrom.equals("127.0.0.1")){ tradeRequested = false; return; }
          */
         if (validClient(trade_reqId) && !inTrade && other.tradeRequested && other.trade_reqId == getSlot()) {
+            TradeDuelSessionService.beginTradeSession(this, other);
             openTrade();
             other.openTrade();
         } else if (validClient(trade_reqId) && !inTrade && ContentInteraction.tryAcquireMs(this, ContentInteraction.TRADE_REQUEST, 1000L)) {
@@ -4243,35 +4175,19 @@ public class Client extends Player implements Runnable {
             return;
         }
         try {
-            CopyOnWriteArrayList<GameItem> offerCopy = new CopyOnWriteArrayList<>();
-            CopyOnWriteArrayList<GameItem> otherOfferCopy = new CopyOnWriteArrayList<>();
-            for (GameItem item : offeredItems) offerCopy.add(new GameItem(item.getId(), item.getAmount()));
-            for (GameItem item : other.offeredItems) otherOfferCopy.add(new GameItem(item.getId(), item.getAmount()));
-
-            // Both inventories and both offer lists are staged before either player sees a change.
-            if (!EconomyTransaction.settleTrade(this, other)) {
-                send(new SendMessage("Your trade could not be completed because one inventory is full."));
-                other.send(new SendMessage("Your trade could not be completed because one inventory is full."));
-                return;
-            }
-            if (this.dbId > other.dbId) {
-                TradeLog.recordTrade(dbId, other.dbId, offerCopy, otherOfferCopy, true);
-                GameEventBus.post(new TradeCompleteEvent(this, other));
-            }
-            completeTradeSettlement(this);
-            completeTradeSettlement(other);
+            TradeDuelSessionService.settleTrade(this, other);
         } catch (Exception e) {
             logger.warn("Giving items failed for {}", getPlayerName(), e);
         }
     }
 
-    private static void completeTradeSettlement(Client client) {
-        client.send(new RemoveInterfaces());
-        client.tradeResetNeeded = true;
-        client.tradeSuccessful = true;
-        PlayerDeferredLifecycleService.signalTradeFinalizeReady(client);
-        client.saveStats(PlayerSaveReason.TRADE, false, false);
-        client.faceTarget(-1);
+    public void completeTradeSettlementState() {
+        send(new RemoveInterfaces());
+        tradeResetNeeded = true;
+        tradeSuccessful = true;
+        PlayerDeferredLifecycleService.signalTradeFinalizeReady(this);
+        saveStats(PlayerSaveReason.TRADE, false, false);
+        faceTarget(-1);
     }
 
     public void resetTrade() {
@@ -4282,6 +4198,7 @@ public class Client extends Player implements Runnable {
         tradeConfirmed = false;
         tradeConfirmed2 = false;
         tradeSuccessful = false;
+        TradeDuelSessionService.resetTradeSession(this);
         send(new RemoveInterfaces());
         tradeResetNeeded = false;
         send(new SendString("Are you sure you want to make this trade?", 3535));

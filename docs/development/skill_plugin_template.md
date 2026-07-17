@@ -2,6 +2,11 @@
 
 Use this as the default pattern when adding a new skill or extending an existing one.
 
+The completed Fletching module at
+`skills/fletching/src/main/kotlin/net/dodian/uber/skills/fletching/FletchingModule.kt`
+is the reference implementation for item-on-item routes, `SkillMultiConfig`
+recipes, multi-production lifecycle handling, manifests, and runtime tests.
+
 ## Module boundary
 
 New skill code belongs in its owning Gradle project under `skills/<skill>`.
@@ -29,7 +34,6 @@ package net.dodian.uber.game.skill.example
 
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.ContentModuleManifestProvider
 import net.dodian.uber.game.api.content.ContentPlayer
 import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
@@ -44,7 +48,7 @@ object ExampleSkill {
     }
 }
 
-object ExampleSkillPlugin : SkillPlugin, ContentModuleManifestProvider {
+object ExampleSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Example", skill = Skill.EXAMPLE) {
             objectClick(preset = PolicyPreset.GATHERING, option = 1, 1234) { interaction ->
@@ -109,10 +113,10 @@ Each plugin-owned skill module should expose:
 - `<Skill>Actions.kt` with stable action identifiers (for example `object <Skill>ActionIds`)
 - `<Skill>.kt` with `object <Skill>SkillPlugin : SkillPlugin` as the route ownership entrypoint
 
-New modules must also implement `ContentModuleManifestProvider`. Use
-`definition.manifest(...)`; it derives the declared route keys so validation
-cannot drift from the routes that actually register. Existing modules are
-reported as `LEGACY` until they add one.
+The `SkillPlugin` contract owns the manifest. Use `definition.manifest(...)`;
+it derives the declared route keys so validation cannot drift from the routes
+that actually register. Existing modules are reported as `LEGACY` until they
+add one.
 
 Do not scatter route id arrays and action id strings across multiple files.
 

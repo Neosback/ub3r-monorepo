@@ -47,6 +47,12 @@ tasks.jar {
 dependencies {
     implementation(project(":routefinder"))
     implementation(project(":skills:runtime"))
+    implementation(project(":skills:fletching"))
+    implementation(project(":skills:agility")); implementation(project(":skills:cooking")); implementation(project(":skills:crafting"))
+    implementation(project(":skills:farming")); implementation(project(":skills:firemaking")); implementation(project(":skills:fishing"))
+    implementation(project(":skills:herblore")); implementation(project(":skills:mining")); implementation(project(":skills:prayer"))
+    implementation(project(":skills:runecrafting")); implementation(project(":skills:slayer")); implementation(project(":skills:smithing"))
+    implementation(project(":skills:thieving")); implementation(project(":skills:woodcutting")); implementation(project(":skills:skillguide"))
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
@@ -56,7 +62,7 @@ dependencies {
     implementation("org.jctools:jctools-core:4.0.5")
 
     implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
-    implementation("net.dv8tion:JDA:5.0.0-beta.24")
+    implementation("dev.kord:kord-core:0.14.0")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")

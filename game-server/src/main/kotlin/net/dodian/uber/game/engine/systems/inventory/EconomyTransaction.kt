@@ -312,5 +312,14 @@ class EconomyTransaction private constructor() {
             offer(first).clear()
             offer(second).clear()
         }
+
+        /** Returns every staged offer to its owner as one all-or-nothing commit. */
+        @JvmStatic
+        fun refundTrade(vararg clients: Client): Boolean = run {
+            clients.distinct().forEach { client ->
+                offer(client).snapshot().forEach { inventory(client).add(it.id, it.amount) }
+                offer(client).clear()
+            }
+        }
     }
 }

@@ -1,6 +1,8 @@
 package net.dodian.uber.game.engine.systems.skills
 
 import net.dodian.uber.game.api.content.ContentEconomy
+import net.dodian.uber.game.api.content.ContentAttributeKey
+import net.dodian.uber.game.api.content.ContentAttributes
 import net.dodian.uber.game.api.content.ContentFeatures
 import net.dodian.uber.game.api.content.ContentSocial
 import net.dodian.uber.game.api.plugin.skills.SkillActions
@@ -151,7 +153,12 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
             require(layout == SkillMultiLayout.SPECIALIZED || config.entries.size in 1..3)
             client.resetAction()
             client.contentRuntimeState.setPendingSkillMulti(PendingSkillMulti(config, onSelected))
-            renderSkillMulti(client, config, layout)
+            if (layout == SkillMultiLayout.SPECIALIZED && !SpecializedSkillMultiRegistry.render(client, config)) {
+                clear()
+                client.sendMessage("This production interface is unavailable.")
+                return false
+            }
+            if (layout != SkillMultiLayout.SPECIALIZED) renderSkillMulti(client, config, layout)
             return true
         }
 
@@ -210,6 +217,18 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun damage(amount: Int) { if (amount > 0) client.dealDamage(null, amount, Entity.hitType.STANDARD) }
         override fun restorePrayer(amount: Int) { client.currentPrayer = (client.currentPrayer + amount).coerceAtMost(client.maxPrayer) }
         override fun stun(ticks: Int) { client.stunTimer = ticks.coerceAtLeast(0) }
+    }
+    override val attributes = object : ContentAttributes {
+        override fun <T : Any> get(key: ContentAttributeKey<T>): T? =
+            client.contentRuntimeState.getPluginAttribute(key.id)
+
+        override fun <T : Any> put(key: ContentAttributeKey<T>, value: T) {
+            client.contentRuntimeState.putPluginAttribute(key.id, value)
+        }
+
+        override fun remove(key: ContentAttributeKey<*>) {
+            client.contentRuntimeState.removePluginAttribute(key.id)
+        }
     }
 }
 

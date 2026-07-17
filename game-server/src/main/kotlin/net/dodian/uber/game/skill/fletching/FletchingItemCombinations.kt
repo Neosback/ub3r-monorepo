@@ -85,12 +85,6 @@ object FletchingItemCombinations {
                 return true
             }
         }
-        FletchingData.bowLogs.forEachIndexed { index, bowLog ->
-            if ((itemUsed == bowLog.logItemId || otherItem == bowLog.logItemId) && knife) {
-                Fletching.open(client, index)
-                return true
-            }
-        }
         for (bowLog in FletchingData.bowLogs) {
             if ((itemUsed == bowLog.unstrungShortbowId || otherItem == bowLog.unstrungShortbowId) && (itemUsed == 1777 || otherItem == 1777)) {
                 client.resetAction()

@@ -33,6 +33,7 @@ data class SkillRecipe(
     val key: String,
     val outputItemId: Int,
     val outputAmount: Int = 1,
+    val byproducts: List<Material> = emptyList(),
     val materials: List<Material> = emptyList(),
     val requiredLevel: Int = 1,
     val experience: Int = 0,
@@ -40,6 +41,9 @@ data class SkillRecipe(
     val delayTicks: Int = 1,
     val successMessage: String? = null,
     val missingMaterialsMessage: String? = null,
+    val toolItemIds: IntArray = IntArray(0),
+    val requiresPremium: Boolean = false,
+    val requiredFreeSlots: Int = 0,
 ) {
     init {
         require(KEY.matches(key)) { "Recipe key must be lowercase dot-separated: $key" }
@@ -52,6 +56,10 @@ data class SkillRecipe(
         require(materials.groupBy { it.itemId }.all { (_, values) -> values.size == 1 }) {
             "A recipe must combine duplicate material ids before declaration"
         }
+        require(byproducts.groupBy { it.itemId }.all { (_, values) -> values.size == 1 }) {
+            "A recipe must combine duplicate byproduct ids before declaration"
+        }
+        require(requiredFreeSlots >= 0) { "Required free slots cannot be negative" }
     }
 
     companion object {
@@ -72,6 +80,8 @@ data class SkillMultiConfig(
     val verb: String = "make",
     val action: SkillMultiAction = SkillMultiAction.MAKE,
     val layout: SkillMultiLayout = SkillMultiLayout.AUTO,
+    /** Required when using a server-registered non-generic 317 interface. */
+    val presentationKey: String? = null,
     val entries: List<SkillMultiEntry>,
 ) {
     init {
@@ -81,6 +91,9 @@ data class SkillMultiConfig(
         require(entries.map { it.recipe.key }.distinct().size == entries.size) { "Production menu recipe keys must be unique" }
         if (layout != SkillMultiLayout.SPECIALIZED) {
             require(entries.size <= 3) { "The active 317 generic production interfaces support at most three entries" }
+        }
+        require(layout != SkillMultiLayout.SPECIALIZED || !presentationKey.isNullOrBlank()) {
+            "Specialized production menus require a presentation key"
         }
     }
 
@@ -99,6 +112,7 @@ data class SkillMultiSelection(
 @SkillDsl
 class SkillRecipeBuilder(private val key: String, private val outputItemId: Int) {
     private var outputAmount: Int = 1
+    private val byproducts = linkedMapOf<Int, Int>()
     private val materials = linkedMapOf<Int, Int>()
     private var requiredLevel = 1
     private var experience = 0
@@ -106,6 +120,9 @@ class SkillRecipeBuilder(private val key: String, private val outputItemId: Int)
     private var delayTicks = 1
     private var successMessage: String? = null
     private var missingMaterialsMessage: String? = null
+    private var toolItemIds = IntArray(0)
+    private var requiresPremium = false
+    private var requiredFreeSlots = 0
 
     fun output(amount: Int) {
         require(amount > 0) { "Output amount must be positive" }
@@ -118,17 +135,27 @@ class SkillRecipeBuilder(private val key: String, private val outputItemId: Int)
         materials[itemId] = (materials[itemId] ?: 0) + amount
     }
 
+    fun byproduct(itemId: Int, amount: Int = 1) {
+        require(itemId >= 0) { "Byproduct item id must be non-negative" }
+        require(amount > 0) { "Byproduct amount must be positive" }
+        byproducts[itemId] = (byproducts[itemId] ?: 0) + amount
+    }
+
     fun requirement(level: Int) { requiredLevel = level }
     fun experience(amount: Int) { experience = amount }
     fun animation(id: Int) { animationId = id }
     fun delay(ticks: Int) { delayTicks = ticks }
     fun success(message: String) { successMessage = message }
     fun missingMaterials(message: String) { missingMaterialsMessage = message }
+    fun tool(vararg itemIds: Int) { require(itemIds.isNotEmpty() && itemIds.all { it >= 0 }); toolItemIds = itemIds.distinct().toIntArray() }
+    fun premiumOnly() { requiresPremium = true }
+    fun freeSlots(amount: Int) { require(amount >= 0); requiredFreeSlots = amount }
 
     internal fun build(): SkillRecipe = SkillRecipe(
         key = key,
         outputItemId = outputItemId,
         outputAmount = outputAmount,
+        byproducts = byproducts.map { (itemId, amount) -> Material(itemId, amount) },
         materials = materials.map { (itemId, amount) -> Material(itemId, amount) },
         requiredLevel = requiredLevel,
         experience = experience,
@@ -136,6 +163,9 @@ class SkillRecipeBuilder(private val key: String, private val outputItemId: Int)
         delayTicks = delayTicks,
         successMessage = successMessage,
         missingMaterialsMessage = missingMaterialsMessage,
+        toolItemIds = toolItemIds,
+        requiresPremium = requiresPremium,
+        requiredFreeSlots = requiredFreeSlots,
     )
 }
 

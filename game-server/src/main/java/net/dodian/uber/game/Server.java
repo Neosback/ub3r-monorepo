@@ -204,6 +204,12 @@ public class Server {
         gameLoopService.stop(Duration.ofSeconds(10));
 
         try {
+            net.dodian.uber.game.api.plugin.ContentPluginLifecycle.INSTANCE.stop();
+        } catch (Exception exception) {
+            logger.warn("Failed to stop content plugins", exception);
+        }
+
+        try {
             for (Client player : PlayerRegistry.playersOnline.values()) {
                 PlayerSaveService.requestSave(player, PlayerSaveReason.SHUTDOWN, true, true);
             }
@@ -269,6 +275,12 @@ public class Server {
             WebApi.stop();
         } catch (Exception exception) {
             logger.warn("Failed to shutdown web API", exception);
+        }
+
+        try {
+            net.dodian.uber.game.discord.DiscordService.stop();
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown Discord bot", exception);
         }
 
         GameThreadTimers.clearAll();

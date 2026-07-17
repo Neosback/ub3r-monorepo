@@ -99,11 +99,5 @@ if (!((castOnPlayer.inWildy() && diff <= client.wildyLevel && diff <= castOnPlay
     return;
 }*/ //TODO: Fix wildy checks if we release wilderness!
     /* Style check to attack! */
-    if(attackStyle == 2)
-        return handleMagicAttack()
-    if(attackStyle == 1)
-        return handleRangedAttack()
-    if(attackStyle == 0)
-        return handleMeleeAttack()
-    return null
+    return PlayerCombatStrategies.resolve(attackStyle)?.execute(this)
 }

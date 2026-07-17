@@ -8,6 +8,18 @@ data class ContentRouteEntry(
     val policy: String? = null,
 )
 
+/** Stable ownership inventory for migration reviews and startup diagnostics. */
+data class ContentOwnershipEntry(
+    val moduleId: String,
+    val routeType: String,
+    val key: String,
+    val sourceClass: String,
+    val owner: String,
+    val maturity: ContentMaturity,
+    val enabled: Boolean,
+    val legacy: Boolean,
+)
+
 object ContentRouteCatalog {
     fun snapshot(): List<ContentRouteEntry> {
         val manifestsByClass = ContentModuleIndex.pluginCatalog.associate { it.moduleClass to it.manifest }
@@ -49,6 +61,23 @@ object ContentRouteCatalog {
 
     fun find(id: Int): List<ContentRouteEntry> = snapshot().filter { entry -> entry.key.split(':').any { it == id.toString() } }
     fun byModule(moduleId: String): List<ContentRouteEntry> = snapshot().filter { it.moduleId == moduleId }
+
+    fun ownershipReport(): List<ContentOwnershipEntry> {
+        val manifests = ContentModuleIndex.pluginCatalog.associateBy { it.manifest.id }
+        return snapshot().map { route ->
+            val catalog = manifests.getValue(route.moduleId)
+            ContentOwnershipEntry(
+                moduleId = route.moduleId,
+                routeType = route.routeType,
+                key = route.key,
+                sourceClass = catalog.moduleClass,
+                owner = catalog.manifest.owner,
+                maturity = catalog.manifest.maturity,
+                enabled = ContentModuleFeatureState.isEnabled(catalog.manifest),
+                legacy = catalog.manifest.maturity == ContentMaturity.LEGACY,
+            )
+        }.sortedWith(compareBy(ContentOwnershipEntry::moduleId, ContentOwnershipEntry::routeType, ContentOwnershipEntry::key))
+    }
 
     /** Maps dispatcher fault keys back to a stable module id when the route is plugin-owned. */
     fun moduleForBinding(bindingKey: String): String? {

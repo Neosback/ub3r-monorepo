@@ -3,6 +3,7 @@ package net.dodian.uber.game.stability
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.combat.TomlProjectileLoader
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GameItem
@@ -121,6 +122,7 @@ class StabilityHardeningTest {
         second.inTrade = true
         first.trade_reqId = 2
         second.trade_reqId = 1
+        TradeDuelSessionService.beginTradeSession(first, second)
         first.playerItems[0] = 996
         first.playerItemsN[0] = 10
         first.offeredItems.add(GameItem(995, 5))

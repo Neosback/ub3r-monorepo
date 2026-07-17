@@ -54,6 +54,11 @@ object ContentModuleIndex {
         "net.dodian.uber.game.engine.systems.interaction.items",
         "net.dodian.uber.game.engine.systems.interaction.npcs",
         "net.dodian.uber.game.engine.systems.interaction.objects",
+        "net.dodian.uber.skills.agility", "net.dodian.uber.skills.cooking", "net.dodian.uber.skills.crafting",
+        "net.dodian.uber.skills.farming", "net.dodian.uber.skills.firemaking", "net.dodian.uber.skills.fishing",
+        "net.dodian.uber.skills.fletching", "net.dodian.uber.skills.herblore", "net.dodian.uber.skills.mining",
+        "net.dodian.uber.skills.prayer", "net.dodian.uber.skills.runecrafting", "net.dodian.uber.skills.slayer",
+        "net.dodian.uber.skills.smithing", "net.dodian.uber.skills.thieving", "net.dodian.uber.skills.woodcutting",
     )
     private val SCAN_PACKAGES = CANONICAL_SCAN_PACKAGES.distinct()
 
@@ -72,6 +77,7 @@ object ContentModuleIndex {
     @JvmField val shopPlugins: List<ShopPlugin>
     @JvmField val eventBootstraps: List<() -> Unit>
     @JvmField val contentBootstraps: List<ContentBootstrap>
+    @JvmField val contentPlugins: List<ContentPlugin>
     @JvmField val pluginCatalog: List<PluginCatalogEntry>
 
     init {
@@ -89,6 +95,7 @@ object ContentModuleIndex {
         val discoveredShops = mutableListOf<Pair<String, ShopPlugin>>()
         val discoveredEvents = mutableListOf<Pair<String, () -> Unit>>()
         val discoveredBootstraps = mutableListOf<Pair<String, ContentBootstrap>>()
+        val discoveredContentPlugins = mutableListOf<Pair<String, ContentPlugin>>()
         val discoveredCatalog = mutableListOf<PluginCatalogEntry>()
         val discoveredManifests = mutableListOf<ContentModuleManifest>()
 
@@ -102,7 +109,7 @@ object ContentModuleIndex {
             val className = clazz.name
             val simpleName = clazz.simpleName
             val manifest = resolveManifest(instance, clazz)
-            if (instance is SkillPlugin && instance is ContentModuleManifestProvider) {
+            if (instance is SkillPlugin) {
                 val actualRoutes = instance.definition.routeKeys()
                 require(manifest.declaredRouteKeys == actualRoutes) {
                     "Content module ${manifest.id} declared routes ${manifest.declaredRouteKeys.sorted()} " +
@@ -152,6 +159,11 @@ object ContentModuleIndex {
                 pluginKind = pluginKind ?: "npc-module"
             }
 
+            if (instance is ContentPlugin) {
+                if (enabled) discoveredContentPlugins += className to instance
+                pluginKind = pluginKind ?: "content-plugin"
+            }
+
             if (clazz.name.startsWith("net.dodian.uber.game.engine.event.bootstrap") &&
                 clazz.simpleName.endsWith("Bootstrap") &&
                 clazz.simpleName != "CoreEventBusBootstrap"
@@ -192,6 +204,7 @@ object ContentModuleIndex {
         shopPlugins = discoveredShops.sortedBy { it.first }.map { it.second }
         eventBootstraps = discoveredEvents.sortedBy { it.first }.map { it.second }
         contentBootstraps = discoveredBootstraps.sortedBy { it.first }.map { it.second }
+        contentPlugins = discoveredContentPlugins.sortedBy { it.first }.map { it.second }
         pluginCatalog = discoveredCatalog.sortedBy { it.moduleClass }
         ContentPlatformCatalog.publish(discoveredManifests)
         val platformSnapshot = ContentPlatformCatalog.snapshot()

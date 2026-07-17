@@ -5,6 +5,7 @@ import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GameItem
+import net.dodian.uber.game.model.item.Item
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -20,7 +21,17 @@ class ClientInventoryTransactionTest {
     fun setUpItemManager() {
         GameThreadContext.bindCurrentThread()
         previousItemManager = Server.itemManager
-        Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
+        Server.itemManager = ItemManager(
+            definitionLoader = {
+                mapOf(
+                    100 to item(100, stackable = false),
+                    200 to item(200, stackable = false),
+                    300 to item(300, stackable = true),
+                    995 to item(995, stackable = true),
+                )
+            },
+            globalSpawnBootstrap = {},
+        )
     }
 
     @AfterEach
@@ -96,6 +107,96 @@ class ClientInventoryTransactionTest {
     }
 
     @Test
+    fun `inventory deposit adds exactly the requested non stackable amount`() {
+        val client = Client(null, 1).apply {
+            repeat(3) { slot ->
+                playerItems[slot] = 101
+                playerItemsN[slot] = 1
+            }
+        }
+
+        assertTrue(EconomyTransaction.transferInventoryToBank(client, 100, 0, 2))
+
+        assertEquals(1, client.playerItems.count { it == 101 })
+        assertEquals(2, client.bankItemsN.single { it > 0 })
+    }
+
+    @Test
+    fun `inventory deposit adds exactly the requested stackable amount`() {
+        val client = Client(null, 1).apply {
+            playerItems[0] = 996
+            playerItemsN[0] = 100
+        }
+
+        assertTrue(EconomyTransaction.transferInventoryToBank(client, 995, 0, 40))
+
+        assertEquals(60, client.playerItemsN[0])
+        assertEquals(40, client.bankItemsN.single { it > 0 })
+    }
+
+    @Test
+    fun `stale inventory deposit leaves inventory and bank untouched`() {
+        val client = Client(null, 1).apply {
+            playerItems[0] = 101
+            playerItemsN[0] = 1
+        }
+
+        assertFalse(EconomyTransaction.transferInventoryToBank(client, 100, 1, 1))
+
+        assertEquals(101, client.playerItems[0])
+        assertTrue(client.bankItems.all { it == 0 })
+    }
+
+    @Test
+    fun `noted inventory deposit stores the declared unnoted bank item`() {
+        val client = Client(null, 1).apply {
+            playerItems[0] = 301
+            playerItemsN[0] = 12
+        }
+
+        assertTrue(EconomyTransaction.transferInventoryToBank(client, 300, 0, 7, bankItemId = 100))
+
+        assertEquals(5, client.playerItemsN[0])
+        val bankSlot = client.bankItems.indexOf(101)
+        assertTrue(bankSlot >= 0)
+        assertEquals(7, client.bankItemsN[bankSlot])
+        assertFalse(client.bankItems.contains(301))
+    }
+
+    @Test
+    fun `full bank rejects a new entry without removing inventory`() {
+        val client = Client(null, 1).apply {
+            playerItems[0] = 101
+            playerItemsN[0] = 1
+            bankItems.indices.forEach { slot ->
+                bankItems[slot] = 10_000 + slot
+                bankItemsN[slot] = 1
+            }
+        }
+
+        assertFalse(EconomyTransaction.transferInventoryToBank(client, 100, 0, 1))
+
+        assertEquals(101, client.playerItems[0])
+        assertEquals(1, client.playerItemsN[0])
+        assertFalse(client.bankItems.contains(101))
+    }
+
+    @Test
+    fun `bank stack overflow rolls deposit back`() {
+        val client = Client(null, 1).apply {
+            playerItems[0] = 996
+            playerItemsN[0] = 1
+            bankItems[0] = 996
+            bankItemsN[0] = maxItemAmount
+        }
+
+        assertFalse(EconomyTransaction.transferInventoryToBank(client, 995, 0, 1))
+
+        assertEquals(1, client.playerItemsN[0])
+        assertEquals(client.maxItemAmount, client.bankItemsN[0])
+    }
+
+    @Test
     fun `failed paired trade settlement leaves both inventories and offers intact`() {
         val first = Client(null, 1).apply {
             offeredItems.add(GameItem(100, 1))
@@ -118,4 +219,26 @@ class ClientInventoryTransactionTest {
         assertEquals(0, first.saveDirtyMask)
         assertEquals(0, second.saveDirtyMask)
     }
+
+    private fun item(id: Int, stackable: Boolean) = Item(
+        id = id,
+        name = "test-$id",
+        slot = -1,
+        standAnim = 0,
+        walkAnim = 0,
+        runAnim = 0,
+        attackAnim = 0,
+        shopSellValue = 0,
+        shopBuyValue = 0,
+        bonuses = IntArray(12),
+        stackable = stackable,
+        noteable = false,
+        tradeable = true,
+        twoHanded = false,
+        full = false,
+        mask = false,
+        premium = false,
+        examine = "test",
+        alchemy = 0,
+    )
 }

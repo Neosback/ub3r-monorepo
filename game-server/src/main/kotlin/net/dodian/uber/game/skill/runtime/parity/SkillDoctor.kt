@@ -26,7 +26,7 @@ data class SkillDoctorReport(
 }
 
 object SkillDoctor {
-    private val gameplaySkills: Set<Skill> = LegacyContentParityCatalog.default.requiredSkillCoverage
+    private val gameplaySkills: Set<Skill> get() = SkillMigrationCatalog.requiredCoverage()
 
     private val legacyRouteBypassChecks: Map<String, List<String>> = mapOf(
         "systems/interaction/InteractionProcessor.kt" to listOf(

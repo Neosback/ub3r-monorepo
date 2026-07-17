@@ -140,6 +140,15 @@ object GameEventBus {
         listeners.computeIfAbsent(clazz) { CopyOnWriteArrayList() }.add(listener)
     }
 
+    /** Lifecycle-friendly notification subscription; it never owns an interaction route. */
+    fun <E : GameEvent> subscribe(clazz: Class<E>, owner: String, action: (E) -> Unit): AutoCloseable {
+        require(owner.isNotBlank()) { "Event subscriber owner cannot be blank" }
+        val listener = EventListener<E>({ true }, { event -> action(event); false })
+        val bucket = listeners.computeIfAbsent(clazz) { CopyOnWriteArrayList() }
+        bucket += listener
+        return AutoCloseable { bucket.remove(listener) }
+    }
+
     @JvmStatic
     fun <E : GameEvent> on(
         clazz: Class<E>,

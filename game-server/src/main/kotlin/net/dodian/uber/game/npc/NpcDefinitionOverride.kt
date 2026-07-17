@@ -233,12 +233,17 @@ typealias NpcRuntimeDefinitionBuilder = NpcServerDefinitionBuilder
 @GameContentDsl
 class NpcCombatBuilder {
     var handler: NpcAttackHandler? = null
+    private var defenceHandler: ((NpcDefenceContext) -> Unit)? = null
 
     fun handler(handler: NpcAttackHandler) {
         this.handler = handler
     }
 
-    internal fun build(): NpcAttackHandler? = handler
+    fun defend(handler: NpcDefenceContext.() -> Unit) {
+        defenceHandler = { context -> handler(context) }
+    }
+
+    internal fun build(): NpcCombatProfile? = handler?.let { NpcCombatProfile(it, defenceHandler) }
 }
 
 private fun cleanText(value: String?): String? =

@@ -8,8 +8,15 @@ object TradeDuelStateMachine {
         if (!client.inTrade || client.tradeConfirmed) {
             return true
         }
-        client.tradeConfirmed = true
+        if (!TradeDuelSessionService.recordStageOneConfirmation(client, other)) {
+            return true
+        }
         if (other.tradeConfirmed) {
+            if (!TradeDuelSessionService.confirmationsCurrent(client, other)) {
+                client.sendMessage("The trade changed; please review it again.")
+                other.sendMessage("The trade changed; please review it again.")
+                return true
+            }
             if (other.hasTradeSpace() || client.hasTradeSpace()) {
                 client.sendMessage(client.failer)
                 other.sendMessage(client.failer)
@@ -34,8 +41,7 @@ object TradeDuelStateMachine {
         }
         client.tradeConfirmed2 = true
         if (other.tradeConfirmed2) {
-            client.giveItems()
-            other.giveItems()
+            TradeDuelSessionService.settleTrade(client, other)
         } else {
             other.sendString("Other player has accepted.", 3535)
             client.sendString("Waiting for other player...", 3535)

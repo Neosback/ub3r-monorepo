@@ -1,6 +1,7 @@
 package net.dodian.uber.game.engine.sync.player
 
 import io.netty.channel.embedded.EmbeddedChannel
+import kotlin.random.Random
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.item.ItemManager
@@ -121,6 +122,51 @@ class StagedPlayerSynchronizationServiceTest {
         assertTrue(!result.accepted)
         assertEquals(0, viewer.playerListSize)
         assertTrue(viewer.playersUpdating.isEmpty)
+    }
+
+    @Test
+    fun `randomized 317 local sets remain byte compatible with canonical encoder`() {
+        repeat(24) { seed ->
+            val canonical = encodeScenario(seed, staged = false)
+            PlayerRegistry.players.fill(null)
+            PlayerRegistry.playersOnline.clear()
+            val staged = encodeScenario(seed, staged = true)
+            assertArrayEquals(canonical, staged, "seed=$seed")
+            PlayerRegistry.players.fill(null)
+            PlayerRegistry.playersOnline.clear()
+        }
+    }
+
+    private fun encodeScenario(seed: Int, staged: Boolean): ByteArray {
+        val random = Random(seed)
+        val viewer = client(1, "viewer-$seed", 3200, 3200)
+        PlayerRegistry.players[1] = viewer
+        val subjects = (2..14).associateWith { slot ->
+            client(slot, "subject-$slot", 3200 + slot - 1, 3200)
+        }
+        val previousCount = random.nextInt(0, 6)
+        repeat(previousCount) { index ->
+            val subject = subjects.getValue(index + 2)
+            viewer.playerList[index] = subject
+            viewer.playersUpdating.add(subject)
+        }
+        viewer.playerListSize = previousCount
+        subjects.forEach { (slot, subject) ->
+            if (slot > previousCount + 1 || random.nextBoolean()) {
+                PlayerRegistry.players[slot] = subject
+            }
+            if (random.nextInt(4) == 0) subject.faceTarget(random.nextInt(0, 2047))
+        }
+
+        val packet = ByteMessage.raw(8192)
+        if (staged) {
+            val service = StagedPlayerSynchronizationService()
+            val plan = service.buildPlan(viewer)
+            service.encode(viewer, plan, packet)
+        } else {
+            PlayerUpdating.getInstance().update(viewer, packet)
+        }
+        return packet.toByteArray().also { packet.releaseAll() }
     }
 
     private fun client(slot: Int, name: String, x: Int, y: Int): Client =

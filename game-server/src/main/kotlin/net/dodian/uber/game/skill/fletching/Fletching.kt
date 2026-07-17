@@ -10,17 +10,10 @@ import net.dodian.uber.game.skill.runtime.action.RunningProductionAction
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.skill.runtime.action.productionAction
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.engine.systems.action.PolicyPreset
-import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.SkillPlayer
-import net.dodian.uber.game.api.plugin.skills.startProduction
-import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import java.util.Collections
 import java.util.WeakHashMap
-import net.dodian.uber.skills.api.SkillMultiAction
-import net.dodian.uber.skills.api.SkillMultiConfig
-import net.dodian.uber.skills.api.SkillMultiEntry
-import net.dodian.uber.skills.api.skillRecipe
+import net.dodian.uber.skills.fletching.FletchingModule
 
 object Fletching {
     private const val STANDARD_ACTION_DELAY_MS = 1800L
@@ -37,33 +30,7 @@ object Fletching {
     @JvmStatic
     fun openBowSelection(player: SkillPlayer, logIndex: Int) {
         val bowLog = FletchingData.bowLog(logIndex) ?: return
-        val short = skillRecipe("fletching.bow.$logIndex.short", bowLog.unstrungShortbowId) {
-            material(bowLog.logItemId)
-            requirement(bowLog.shortLevelRequired)
-            experience(bowLog.shortExperience)
-            animation(1248)
-            delay(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
-            success("You carefully cut the wood into a ${player.inventory.itemName(bowLog.unstrungShortbowId)}.")
-        }
-        val long = skillRecipe("fletching.bow.$logIndex.long", bowLog.unstrungLongbowId) {
-            material(bowLog.logItemId)
-            requirement(bowLog.longLevelRequired)
-            experience(bowLog.longExperience)
-            animation(1248)
-            delay(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
-            success("You carefully cut the wood into a ${player.inventory.itemName(bowLog.unstrungLongbowId)}.")
-        }
-        player.production.open(
-            SkillMultiConfig(
-                key = "fletching.bow.$logIndex",
-                verb = "fletch",
-                action = SkillMultiAction.CUT,
-                entries = listOf(SkillMultiEntry(short), SkillMultiEntry(long)),
-            ),
-        ) { selection ->
-            val selected = if (selection.recipeKey == long.key) long else short
-            player.startProduction(selected, selection.amount, Skill.FLETCHING)
-        }
+        FletchingModule.openBowSelection(player, bowLog.logItemId)
     }
 
     @JvmStatic
@@ -180,29 +147,4 @@ object Fletching {
         SkillingRandomEventService.trigger(client, state.experience)
         client.fletchingState = state.copy(remaining = state.remaining - 1)
     }
-}
-
-object FletchingSkillPlugin : SkillPlugin {
-    private val knifeIds = intArrayOf(946, 5605)
-
-    override val definition =
-        skillPlugin(name = "Fletching", skill = Skill.FLETCHING) {
-            val logIds = FletchingData.bowLogs.map { it.logItemId }.distinct()
-            for (knifeId in knifeIds) {
-                for (logId in logIds) {
-                    itemOnItem(preset = PolicyPreset.PRODUCTION, leftItemId = knifeId, rightItemId = logId) { interaction ->
-                val itemUsed = interaction.itemUsed
-                val otherItem = interaction.otherItem
-                        val usedLogId = if (itemUsed == knifeId) otherItem else itemUsed
-                        val logIndex = FletchingData.bowLogs.indexOfFirst { it.logItemId == usedLogId }
-                        if (logIndex < 0) {
-                            false
-                        } else {
-                            Fletching.open(interaction.player, logIndex)
-                            true
-                        }
-                    }
-                }
-            }
-        }
 }

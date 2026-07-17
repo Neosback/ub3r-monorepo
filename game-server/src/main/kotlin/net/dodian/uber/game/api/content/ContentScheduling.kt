@@ -2,6 +2,8 @@ package net.dodian.uber.game.api.content
 
 import net.dodian.uber.game.engine.tasking.TaskHandle
 import net.dodian.uber.game.engine.tasking.TaskPriority
+import net.dodian.uber.game.api.plugin.ContentTickPhase
+import net.dodian.uber.game.api.plugin.ContentTickPhases
 import net.dodian.uber.game.engine.tasking.npcTaskCoroutine
 import net.dodian.uber.game.engine.tasking.playerTaskCoroutine
 import net.dodian.uber.game.engine.tasking.worldTaskCoroutine
@@ -9,6 +11,11 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
 object ContentScheduling {
+    /** Register deterministic world-content work at a plugin-safe tick boundary. */
+    @JvmStatic
+    fun phase(owner: String, phase: ContentTickPhase, action: Runnable): AutoCloseable =
+        ContentTickPhases.register(owner, phase) { action.run() }
+
     @JvmStatic
     @JvmOverloads
     fun world(

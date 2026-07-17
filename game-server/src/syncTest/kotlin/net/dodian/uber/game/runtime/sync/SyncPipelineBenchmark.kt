@@ -25,6 +25,18 @@ object SyncPipelineBenchmark {
             println(staged.csv())
             val ratio = staged.packetsPerSecond / canonical.packetsPerSecond
             println("staged/canonical throughput ratio=${"%.3f".format(ratio)}")
+            require(ratio >= MIN_STAGED_THROUGHPUT_RATIO) {
+                "Staged synchronization throughput regressed: ratio=$ratio minimum=$MIN_STAGED_THROUGHPUT_RATIO"
+            }
+            require(staged.averagePacketBytes <= canonical.averagePacketBytes * MAX_PACKET_SIZE_RATIO) {
+                "Staged synchronization payload regressed: staged=${staged.averagePacketBytes} canonical=${canonical.averagePacketBytes}"
+            }
+            if (canonical.allocatedBytes > 0L && staged.allocatedBytes > 0L) {
+                val allocationRatio = staged.allocatedBytes.toDouble() / canonical.allocatedBytes
+                require(allocationRatio <= MAX_ALLOCATION_RATIO) {
+                    "Staged synchronization allocations regressed: ratio=$allocationRatio maximum=$MAX_ALLOCATION_RATIO"
+                }
+            }
         } finally {
             PlayerRegistry.players.fill(null)
             PlayerRegistry.playersOnline.clear()
@@ -109,4 +121,8 @@ object SyncPipelineBenchmark {
         fun csv(): String =
             "$label,$iterations,$firstPacketMicros,${"%.1f".format(packetsPerSecond)},${"%.1f".format(averagePacketBytes)},$allocatedBytes"
     }
+
+    private const val MIN_STAGED_THROUGHPUT_RATIO = 0.75
+    private const val MAX_PACKET_SIZE_RATIO = 1.05
+    private const val MAX_ALLOCATION_RATIO = 1.25
 }

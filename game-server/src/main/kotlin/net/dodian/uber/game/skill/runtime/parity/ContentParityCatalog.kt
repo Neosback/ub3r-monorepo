@@ -24,6 +24,16 @@ enum class SkillRouteType {
     BUTTON,
 }
 
+enum class SkillMigrationState { LEGACY, BETA, STABLE }
+
+object SkillMigrationCatalog {
+    private val states = Skill.VALUES.associateWith { SkillMigrationState.LEGACY }.toMutableMap().apply {
+        this[Skill.FLETCHING] = SkillMigrationState.STABLE
+    }
+    fun state(skill: Skill): SkillMigrationState = states.getValue(skill)
+    fun requiredCoverage(): Set<Skill> = states.filterValues { it != SkillMigrationState.LEGACY }.keys
+}
+
 data class ContentParityCatalog(
     val requiredNpcClicks: Set<NpcClickRouteKey>,
     val bannedNpcClicks: Set<NpcClickRouteKey>,

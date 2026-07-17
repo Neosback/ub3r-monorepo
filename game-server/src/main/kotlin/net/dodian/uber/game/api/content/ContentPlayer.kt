@@ -16,6 +16,9 @@ interface ContentPlayer {
     val world: ContentWorld
     val social: ContentSocial
     val features: ContentFeatures
+    val attributes: ContentAttributes
+    val variables: ContentVariables
+    val dialogue: ContentDialogue
 }
 
 interface ContentInventory {
@@ -24,7 +27,15 @@ interface ContentInventory {
     fun freeSlots(): Int
     fun add(itemId: Int, amount: Int = 1): Boolean
     fun remove(itemId: Int, amount: Int = 1): Boolean
+    /** Applies all mutations together, or applies none of them. */
+    fun transaction(block: ContentInventoryTransaction.() -> Unit): Boolean
     fun refresh()
+}
+
+interface ContentInventoryTransaction {
+    fun require(itemId: Int, amount: Int = 1): Boolean
+    fun remove(itemId: Int, amount: Int = 1): Boolean
+    fun add(itemId: Int, amount: Int = 1): Boolean
 }
 
 interface ContentEquipment {
@@ -61,6 +72,8 @@ interface ContentWorld {
     val position: Position
     fun distanceTo(x: Int, y: Int): Int
     fun teleport(destination: Position)
+    fun graphic(id: Int, height: Int = 0)
+    fun replaceObject(position: Position, replacementId: Int, restoreTicks: Int = 0)
 }
 
 fun interface ContentSocial {

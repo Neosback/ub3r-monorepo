@@ -1,5 +1,7 @@
 package net.dodian.uber.skills.testkit
 
+import net.dodian.uber.game.api.content.ContentAttributeKey
+import net.dodian.uber.game.api.content.ContentAttributes
 import net.dodian.uber.game.api.plugin.skills.SkillActions
 import net.dodian.uber.game.api.plugin.skills.SkillActionHandle
 import net.dodian.uber.game.api.plugin.skills.SkillInventory
@@ -51,6 +53,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     private var sessionKey: String? = null
     private var activeAction: FakeAction? = null
     private var pendingProduction: Pair<SkillMultiConfig, (SkillMultiSelection) -> Unit>? = null
+    private val attributesByKey = mutableMapOf<String, Any>()
 
     private inner class FakeAction(val spec: ActionSpec) : SkillActionHandle {
         var ticksUntilCycle = 0
@@ -202,6 +205,12 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun damage(amount: Int) { damageTaken += amount.coerceAtLeast(0) }
         override fun restorePrayer(amount: Int) { prayerRestored += amount.coerceAtLeast(0) }
         override fun stun(ticks: Int) { stunTicks = ticks.coerceAtLeast(0) }
+    }
+    override val attributes = object : ContentAttributes {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : Any> get(key: ContentAttributeKey<T>): T? = attributesByKey[key.id] as? T
+        override fun <T : Any> put(key: ContentAttributeKey<T>, value: T) { attributesByKey[key.id] = value }
+        override fun remove(key: ContentAttributeKey<*>) { attributesByKey.remove(key.id) }
     }
 
     fun amount(itemId: Int): Int = itemAmounts[itemId].orZero()

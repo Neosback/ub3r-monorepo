@@ -24,6 +24,8 @@ val databaseInitialize = dotenv["DATABASE_INITIALIZE"]?.toBoolean() ?: false
 
 val discordToken = dotenv["DISCORD_TOKEN"] ?: ""
 val discordChannelId = dotenv["DISCORD_CHANNEL_ID"] ?: ""
+val discordGuildId = dotenv["DISCORD_GUILD_ID"] ?: ""
+val discordStaffAlertChannelId = dotenv["DISCORD_STAFF_ALERT_CHANNEL_ID"] ?: ""
 
 val clientVersion = dotenv["CLIENT_VERSION"]?.toInt() ?: 12
 val gameClientCustomVersion = dotenv["CLIENT_CUSTOM_VERSION"] ?: "dodian_client"

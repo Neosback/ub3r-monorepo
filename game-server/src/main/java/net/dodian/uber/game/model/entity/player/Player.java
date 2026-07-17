@@ -350,6 +350,7 @@ public abstract class Player extends Entity {
         cancelWoodcuttingTask();
         clearWoodcuttingState();
         interactionState.terminatePlayerTasks();
+        interactionState.clearPluginAttributes();
         removeFromChunk();
         getPosition().moveTo(-1, -1);
         movementState.resetTransientState();

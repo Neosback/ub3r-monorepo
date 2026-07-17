@@ -22,6 +22,8 @@ import net.dodian.uber.game.engine.phases.NpcMainPhase
 import net.dodian.uber.game.engine.phases.OutboundPacketProcessor
 import net.dodian.uber.game.engine.phases.PlayerMainPhase
 import net.dodian.uber.game.engine.phases.WorldMaintenancePhase
+import net.dodian.uber.game.api.plugin.ContentTickPhase
+import net.dodian.uber.game.api.plugin.ContentTickPhases
 import net.dodian.uber.game.engine.metrics.OperationalTelemetry
 import org.slf4j.LoggerFactory
 
@@ -131,6 +133,7 @@ class GameLoopService(
         timedPhase("timers.pre") { GameThreadTimers.drainDue() }
         timedPhase("ingress.tick") { GameThreadIngress.drainTickIngress() }
         timedPhase("inbound") { inboundPhase.run() }
+        timedPhase("content.preSimulation") { ContentTickPhases.run(ContentTickPhase.PRE_SIMULATION) }
         timedPhase("worldDb.input") { worldMaintenancePhase.runWorldDbInputBuild(currentCycle) }
         timedPhase("worldDb.read") { worldMaintenancePhase.runWorldDbResultRead(currentCycle) }
         timedPhase("worldDb.apply") { worldMaintenancePhase.runWorldDbApply(currentCycle) }
@@ -142,7 +145,9 @@ class GameLoopService(
         timedPhase("groundItems") { worldMaintenancePhase.runGroundItems() }
         timedPhase("shops") { worldMaintenancePhase.runShops() }
         timedPhase("movement.finalize") { movementFinalizePhase.run() }
+        timedPhase("content.postSimulation") { ContentTickPhases.run(ContentTickPhase.POST_SIMULATION) }
         timedPhase("outbound") { outboundPacketProcessor.run() }
+        timedPhase("content.postOutbound") { ContentTickPhases.run(ContentTickPhase.POST_OUTBOUND) }
         timedPhase("housekeeping") { entityProcessor.runHousekeepingPhase(now) }
         timedPhase("timers.post") { GameThreadTimers.drainDue() }
     }
