@@ -1,7 +1,6 @@
 package net.dodian.uber.game.runtime.sync
 
 import net.dodian.uber.game.engine.net.OutboundSessionQueue
-import net.dodian.uber.game.engine.sync.PlayerSynchronizationMode
 import net.dodian.uber.game.netty.codec.ByteMessage
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -12,12 +11,6 @@ import org.junit.jupiter.api.Test
  * Transport-level smoke checks kept in the dedicated synchronization source set.
  */
 class SyncPipelineSanityTest {
-
-    @Test
-    fun `beta synchronization mode is staged`() {
-        System.clearProperty("player.sync.mode")
-        assertEquals(PlayerSynchronizationMode.STAGED, PlayerSynchronizationMode.configured())
-    }
 
     @Test
     fun `required outbound capacity rejects without evicting an accepted packet`() {

@@ -10,6 +10,7 @@ enum class TarnishEquipmentAppearanceType(
     HAT,
     MASK(showBeard = false),
     HELM(showHead = false, showBeard = false),
+    FACE(showHead = false),
     TORSO,
     BODY(showArms = false),
 }

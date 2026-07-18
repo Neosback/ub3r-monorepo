@@ -5,11 +5,9 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.systems.world.npc.NpcManager
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
-import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.codec.ByteMessage
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -41,31 +39,22 @@ class StagedNpcSynchronizationServiceTest {
     }
 
     @Test
-    fun `staged npc encoder matches canonical and commits after encoding`() {
-        val canonicalViewer = client(1)
-        val canonicalNpc = Npc(1, 1, Position(3201, 3200, 0), 0)
-        Server.npcManager.npcMap[canonicalNpc.slot] = canonicalNpc
-        val canonical = ByteMessage.raw(4096)
-        NpcUpdating.getInstance().update(canonicalViewer, canonical)
-        val canonicalBytes = canonical.toByteArray()
-        canonical.releaseAll()
-
-        Server.npcManager.npcMap.clear()
-        val stagedViewer = client(2)
-        val stagedNpc = Npc(1, 1, Position(3201, 3200, 0), 0)
-        Server.npcManager.npcMap[stagedNpc.slot] = stagedNpc
+    fun `staged npc encoding does not commit until commit is called`() {
+        // Exact byte layout for this scenario is locked by SyncGoldenBytesTest; this test covers
+        // the plan/encode/commit staging contract instead.
+        val viewer = client(1)
+        val npc = Npc(1, 1, Position(3201, 3200, 0), 0)
+        Server.npcManager.npcMap[npc.slot] = npc
         val service = StagedNpcSynchronizationService()
-        val plan = service.buildPlan(stagedViewer)
+        val plan = service.buildPlan(viewer)
         val staged = ByteMessage.raw(4096)
-        service.encode(stagedViewer, plan, staged)
-        val stagedBytes = staged.toByteArray()
+        service.encode(viewer, plan, staged)
         staged.releaseAll()
 
-        assertArrayEquals(canonicalBytes, stagedBytes)
-        assertEquals(0, stagedViewer.localNpcSize)
-        service.commit(stagedViewer, plan)
-        assertEquals(1, stagedViewer.localNpcSize)
-        assertSame(stagedNpc, stagedViewer.localNpcs[0])
+        assertEquals(0, viewer.localNpcSize)
+        service.commit(viewer, plan)
+        assertEquals(1, viewer.localNpcSize)
+        assertSame(npc, viewer.localNpcs[0])
     }
 
     @Test

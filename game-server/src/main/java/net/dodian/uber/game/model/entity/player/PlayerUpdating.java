@@ -11,16 +11,9 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.engine.sync.SynchronizationContext;
-import net.dodian.uber.game.engine.sync.player.PlayerSyncDecision;
-import net.dodian.uber.game.engine.sync.player.ViewerPlayerSyncState;
-import net.dodian.uber.game.engine.sync.playerinfo.PlayerVisibilityRules;
-import net.dodian.uber.game.engine.sync.playerinfo.dispatch.RootPlayerInfoPlan;
+import net.dodian.uber.game.engine.sync.player.PlayerVisibilityRules;
 import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
-import net.dodian.uber.game.engine.sync.template.PlayerSyncTemplate;
-import net.dodian.uber.game.engine.sync.template.PlayerSyncTemplateKey;
-import net.dodian.uber.game.engine.sync.viewport.ViewportSnapshot;
 import net.dodian.uber.game.engine.systems.interaction.StaticObjectOverrides;
-import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,15 +27,15 @@ import org.slf4j.LoggerFactory;
 public class PlayerUpdating extends EntityUpdating<Player> {
 
     private static final Logger logger = LoggerFactory.getLogger(PlayerUpdating.class);
-    private static final boolean DEBUG_REGION_UPDATES = false;
-    private static final boolean DEBUG_ADDED_LOCAL_PLAYERS = false;
-    private static final int MAX_LOCAL_PLAYER_ADDS_PER_TICK = 15;
-    private static final int MAX_LOCAL_PLAYER_CAP = 255;
     private static final byte NO_TARNISH_BOUNTY_ICON = -1;
 
     private static final PlayerUpdating instance = new PlayerUpdating();
     private static final PlayerUpdateBlockSet BLOCK_SET = new PlayerUpdateBlockSet();
     private static final java.util.Map<Integer, String> lastWarnedAppearanceHash = new java.util.concurrent.ConcurrentHashMap<>();
+    /** Local-list entry type marking a slot as removed from the viewer's local set. */
+    private static final int LOCAL_REMOVE_TYPE = 3;
+    /** Sentinel ending the local-list additions loop (client: {@code bitPosition + 10 < packetSize*8}). */
+    public static final int LOCAL_LIST_TERMINATOR = 2047;
 
     enum UpdatePhase {
         UPDATE_SELF,
@@ -53,385 +46,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     public static PlayerUpdating getInstance() {
         return instance;
     }
-
-    @Override
-    public void update(Player player, ByteMessage stream) {
-        ByteMessage updateBlock = withScratchUpdateBlock();
-        try {
-            sendServerUpdateIfNeeded(player);
-            prepareViewerSynchronization(player);
-
-            boolean localPlayerUpdateRequired = hasUpdatesForPhase(player, UpdatePhase.UPDATE_SELF);
-            updateLocalPlayerMovement(player, stream, localPlayerUpdateRequired);
-
-            if (player.didTeleport()) {
-                if (player.playerListSize > 0 || !player.playersUpdating.isEmpty()) {
-                    player.bumpLocalPlayerMembershipRevision();
-                }
-                java.util.Arrays.fill(player.playerList, 0, player.playerListSize, null);
-                player.playerListSize = 0;
-                player.playersUpdating.clear();
-            }
-
-            appendBlockUpdate(player, updateBlock, UpdatePhase.UPDATE_SELF);
-            if (player.loaded) {
-                pruneLocalsToProtocolCap(player);
-                SynchronizationContext.recordPlayerPacketBuilt(player.playerListSize);
-                stream.putBits(8, player.playerListSize);
-                int size = player.playerListSize;
-                int keep = 0;
-                boolean localsChanged = false;
-                for (int i = 0; i < size; i++) {
-                    Player local = player.playerList[i];
-                    int localSlot = local == null ? -1 : local.getSlot();
-                    Player registered = localSlot >= 0 && localSlot < PlayerRegistry.players.length
-                            ? PlayerRegistry.players[localSlot]
-                            : null;
-                    if (local != null && registered == local && local.isSynchronizationReady()
-                            && player.loaded && !local.didTeleport() && !player.didTeleport()
-                            && PlayerVisibilityRules.isVisibleTo(player, local)) {
-                        local.updatePlayerMovement(stream);
-                        appendBlockUpdate(local, updateBlock, UpdatePhase.UPDATE_LOCAL);
-                        player.playerList[keep++] = local;
-                    } else {
-                        if (local != null) {
-                            player.playersUpdating.remove(local);
-                            localsChanged = true;
-                        }
-                        stream.putBits(1, 1);
-                        stream.putBits(2, 3);
-                    }
-                }
-                java.util.Arrays.fill(player.playerList, keep, size, null);
-                if (keep != size || localsChanged) {
-                    player.bumpLocalPlayerMembershipRevision();
-                }
-                player.playerListSize = keep;
-
-                addLocalPlayers(player, stream, updateBlock);
-            } else {
-                stream.putBits(8, 0);
-            }
-
-            // Always write the magic termination value (2047) - required by protocol
-            stream.putBits(11, 2047);
-            stream.endBitAccess();
-
-            if (updateBlock.getBuffer().writerIndex() > 0) {
-                stream.putBytes(updateBlock);
-            }
-
-            if (DEBUG_REGION_UPDATES && logger.isTraceEnabled()) {
-                int rx = player.getPosition().getX() >> 6;
-                int ry = player.getPosition().getY() >> 6;
-                logger.trace("[RegionUpdate] {} region({},{}) locals={}", player.getPlayerName(), rx, ry, player.playerListSize);
-            }
-        } finally {
-            releaseScratch(updateBlock);
-        }
-    }
-
-    public void writeSelfOnlyUpdate(Player viewer, ByteMessage stream, RootPlayerInfoPlan plan) {
-        ByteMessage updateBlock = withScratchUpdateBlock();
-        try {
-            sendServerUpdateIfNeeded(viewer);
-            prepareViewerSynchronization(viewer);
-            boolean localPlayerUpdateRequired = hasUpdatesForPhase(viewer, UpdatePhase.UPDATE_SELF);
-            updateLocalPlayerMovement(viewer, stream, localPlayerUpdateRequired);
-            appendBlockUpdate(viewer, updateBlock, UpdatePhase.UPDATE_SELF);
-
-            if (viewer.loaded) {
-                stream.putBits(8, viewer.playerListSize);
-                for (int i = 0; i < viewer.playerListSize; i++) {
-                    stream.putBits(1, 0);
-                }
-            } else {
-                stream.putBits(8, 0);
-            }
-
-            finishPlayerSync(stream, updateBlock);
-        } finally {
-            releaseScratch(updateBlock);
-        }
-    }
-
-    public void writeIncrementalSteadyUpdate(Player viewer, ByteMessage stream, RootPlayerInfoPlan plan) {
-        writeIncrementalUpdate(viewer, stream, plan, false);
-    }
-
-    public void writeIncrementalAdmissionUpdate(Player viewer, ByteMessage stream, RootPlayerInfoPlan plan) {
-        writeIncrementalUpdate(viewer, stream, plan, true);
-    }
-
-    private void writeIncrementalUpdate(Player viewer, ByteMessage stream, RootPlayerInfoPlan plan, boolean includeAdditions) {
-        ByteMessage updateBlock = withScratchUpdateBlock();
-        try {
-            sendServerUpdateIfNeeded(viewer);
-            prepareViewerSynchronization(viewer);
-            boolean localPlayerUpdateRequired = hasUpdatesForPhase(viewer, UpdatePhase.UPDATE_SELF);
-            updateLocalPlayerMovement(viewer, stream, localPlayerUpdateRequired);
-            appendBlockUpdate(viewer, updateBlock, UpdatePhase.UPDATE_SELF);
-
-            if (viewer.loaded) {
-                pruneLocalsToProtocolCap(viewer);
-                stream.putBits(8, viewer.playerListSize);
-                java.util.BitSet removals = toBitSet(plan.getDiff().getRemovals(), plan.getDiff().getRemovalsCount());
-                java.util.BitSet changedRetained = toBitSet(plan.getDiff().getChangedRetained(), plan.getDiff().getChangedRetainedCount());
-                int originalSize = viewer.playerListSize;
-                int keep = 0;
-                boolean localsChanged = false;
-                for (int i = 0; i < originalSize; i++) {
-                    Player local = viewer.playerList[i];
-                    if (local == null || removals.get(local.getSlot())) {
-                        if (local != null) {
-                            viewer.playersUpdating.remove(local);
-                            localsChanged = true;
-                        }
-                        stream.putBits(1, 1);
-                        stream.putBits(2, 3);
-                        continue;
-                    }
-
-                    writeRetainedLocalUpdate(local, stream, updateBlock, changedRetained.get(local.getSlot()));
-                    viewer.playerList[keep++] = local;
-                }
-                java.util.Arrays.fill(viewer.playerList, keep, originalSize, null);
-                if (keep != originalSize || localsChanged) {
-                    viewer.bumpLocalPlayerMembershipRevision();
-                }
-                viewer.playerListSize = keep;
-                if (includeAdditions) {
-                    writeLocalAdditions(viewer, stream, updateBlock, plan);
-                }
-            } else {
-                stream.putBits(8, 0);
-            }
-
-            finishPlayerSync(stream, updateBlock);
-        } finally {
-            releaseScratch(updateBlock);
-        }
-    }
-
-    public void writeFullRebuild(Player viewer, ByteMessage stream, RootPlayerInfoPlan plan) {
-        update(viewer, stream);
-    }
-
-    private void addLocalPlayers(Player player, ByteMessage stream, ByteMessage updateBlock) {
-        int remainingAdds = Math.min(MAX_LOCAL_PLAYER_ADDS_PER_TICK, MAX_LOCAL_PLAYER_CAP - player.playerListSize);
-        if (remainingAdds <= 0) {
-            return;
-        }
-
-        ViewportSnapshot snapshot = SynchronizationContext.getViewportSnapshot(player);
-        if (snapshot != null) {
-            java.util.List<Player> candidates = snapshot.getPlayers();
-            if (candidates.isEmpty()) {
-                return;
-            }
-            // Always prioritize deterministically. Chunk repository iteration order is
-            // an implementation detail and previously made admission appear random.
-            addPrioritizedLocalPlayersFromCollection(player, stream, updateBlock, candidates, remainingAdds);
-            return;
-        }
-
-        if (Server.chunkManager == null) {
-            java.util.List<Player> candidates = PlayerRegistry.getLocalPlayers(player);
-            if (candidates.isEmpty()) {
-                return;
-            }
-            addPrioritizedLocalPlayersFromCollection(player, stream, updateBlock, candidates, remainingAdds);
-            return;
-        }
-
-        if (player.playerListSize > 50) {
-            addPrioritizedChunkLocalPlayers(player, stream, updateBlock, remainingAdds);
-            return;
-        }
-
-        final int[] playersAdded = {0};
-        Server.chunkManager.forEachUpdatePlayerCandidate(player, 16, other -> {
-            if (playersAdded[0] >= remainingAdds || !shouldAddLocalPlayerCandidate(player, other)) {
-                return;
-            }
-            player.addNewPlayer(other, stream, updateBlock);
-            if (!player.playersUpdating.contains(other)) {
-                return;
-            }
-            playersAdded[0]++;
-            SynchronizationContext.recordPlayerAdd();
-            if (DEBUG_ADDED_LOCAL_PLAYERS && logger.isDebugEnabled()) {
-                logger.debug("playerAddLocal viewer={} local={}", player.getPlayerName(), other.getPlayerName());
-            }
-        });
-    }
-
-    private void addLocalPlayersFromCollection(Player player,
-                                               ByteMessage stream,
-                                               ByteMessage updateBlock,
-                                               java.util.List<Player> candidates,
-                                               int remainingAdds) {
-        int playersAdded = 0;
-        int size = candidates.size();
-        for (int i = 0; i < size; i++) {
-            Player other = candidates.get(i);
-            if (!shouldAddLocalPlayerCandidate(player, other)) {
-                continue;
-            }
-
-            player.addNewPlayer(other, stream, updateBlock);
-            if (!player.playersUpdating.contains(other)) {
-                continue;
-            }
-            playersAdded++;
-            SynchronizationContext.recordPlayerAdd();
-            if (DEBUG_ADDED_LOCAL_PLAYERS && logger.isDebugEnabled()) {
-                logger.debug("playerAddLocal viewer={} local={}", player.getPlayerName(), other.getPlayerName());
-            }
-
-            if (playersAdded >= remainingAdds || player.playerListSize >= MAX_LOCAL_PLAYER_CAP) {
-                break;
-            }
-        }
-    }
-
-    private void addPrioritizedChunkLocalPlayers(Player player,
-                                                 ByteMessage stream,
-                                                 ByteMessage updateBlock,
-                                                 int remainingAdds) {
-        Player[] prioritized = new Player[remainingAdds];
-        int[] prioritizedDistances = new int[remainingAdds];
-        int[] prioritizedCount = {0};
-        Server.chunkManager.forEachUpdatePlayerCandidate(player, 16, other -> {
-            if (!shouldAddLocalPlayerCandidate(player, other)) {
-                return;
-            }
-            insertPrioritizedCandidate(player, prioritized, prioritizedDistances, prioritizedCount, other);
-        });
-
-        for (int i = 0; i < prioritizedCount[0]; i++) {
-            Player other = prioritized[i];
-            if (!shouldAddLocalPlayerCandidate(player, other)) {
-                continue;
-            }
-            player.addNewPlayer(other, stream, updateBlock);
-            if (player.playersUpdating.contains(other)) {
-                SynchronizationContext.recordPlayerAdd();
-                if (DEBUG_ADDED_LOCAL_PLAYERS && logger.isDebugEnabled()) {
-                    logger.debug("playerAddLocal viewer={} local={}", player.getPlayerName(), other.getPlayerName());
-                }
-            }
-        }
-    }
-
-    private void addPrioritizedLocalPlayersFromCollection(Player player,
-                                                          ByteMessage stream,
-                                                          ByteMessage updateBlock,
-                                                          java.util.List<Player> candidates,
-                                                          int remainingAdds) {
-        Player[] prioritized = new Player[remainingAdds];
-        int[] prioritizedDistances = new int[remainingAdds];
-        int[] prioritizedCount = {0};
-        int size = candidates.size();
-        for (int i = 0; i < size; i++) {
-            Player other = candidates.get(i);
-            if (!shouldAddLocalPlayerCandidate(player, other)) {
-                continue;
-            }
-            insertPrioritizedCandidate(player, prioritized, prioritizedDistances, prioritizedCount, other);
-        }
-
-        for (int i = 0; i < prioritizedCount[0]; i++) {
-            Player other = prioritized[i];
-            if (!shouldAddLocalPlayerCandidate(player, other)) {
-                continue;
-            }
-            player.addNewPlayer(other, stream, updateBlock);
-            if (player.playersUpdating.contains(other)) {
-                SynchronizationContext.recordPlayerAdd();
-                if (DEBUG_ADDED_LOCAL_PLAYERS && logger.isDebugEnabled()) {
-                    logger.debug("playerAddLocal viewer={} local={}", player.getPlayerName(), other.getPlayerName());
-                }
-            }
-        }
-    }
-
-    private void insertPrioritizedCandidate(Player viewer,
-                                            Player[] prioritized,
-                                            int[] prioritizedDistances,
-                                            int[] prioritizedCount,
-                                            Player candidate) {
-        int distance = computeLongestDistance(viewer, candidate);
-        int count = prioritizedCount[0];
-        int limit = prioritized.length;
-
-        if (count == limit) {
-            Player worst = prioritized[count - 1];
-            if (compareCandidate(candidate, distance, worst, prioritizedDistances[count - 1]) >= 0) {
-                return;
-            }
-        } else {
-            prioritizedCount[0] = count + 1;
-        }
-
-        int insert = Math.min(count, limit - 1);
-        while (insert > 0 && compareCandidate(candidate, distance, prioritized[insert - 1], prioritizedDistances[insert - 1]) < 0) {
-            prioritized[insert] = prioritized[insert - 1];
-            prioritizedDistances[insert] = prioritizedDistances[insert - 1];
-            insert--;
-        }
-
-        prioritized[insert] = candidate;
-        prioritizedDistances[insert] = distance;
-    }
-
-    private int compareCandidate(Player left, int leftDistance, Player right, int rightDistance) {
-        if (right == null) {
-            return -1;
-        }
-        int distanceCompare = Integer.compare(leftDistance, rightDistance);
-        if (distanceCompare != 0) {
-            return distanceCompare;
-        }
-        return Integer.compare(left.getSlot(), right.getSlot());
-    }
-
-    private int computeLongestDistance(Player viewer, Player other) {
-        int dx = Math.abs(viewer.getPosition().getX() - other.getPosition().getX());
-        int dy = Math.abs(viewer.getPosition().getY() - other.getPosition().getY());
-        return Math.max(dx, dy);
-    }
-
-    private boolean shouldAddLocalPlayerCandidate(Player player, Player other) {
-        return PlayerVisibilityRules.canAddLocal(player, other);
-    }
-
-    private void pruneLocalsToProtocolCap(Player player) {
-        if (player.playerListSize <= MAX_LOCAL_PLAYER_CAP) {
-            return;
-        }
-        int originalSize = player.playerListSize;
-        int keep = 0;
-        for (int i = 0; i < originalSize && keep < MAX_LOCAL_PLAYER_CAP; i++) {
-            Player local = player.playerList[i];
-            if (local == null) {
-                continue;
-            }
-            player.playerList[keep++] = local;
-        }
-        for (int i = keep; i < originalSize; i++) {
-            Player local = player.playerList[i];
-            if (local != null) {
-                player.playersUpdating.remove(local);
-                player.playerList[i] = null;
-            }
-        }
-        if (keep != originalSize) {
-            player.bumpLocalPlayerMembershipRevision();
-        }
-        player.playerListSize = keep;
-    }
-
 
     public void updateLocalPlayerMovement(Player player, ByteMessage stream, boolean localPlayerUpdateRequired) {
         stream.startBitAccess();
@@ -494,62 +108,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         return Utils.xlateDirectionToClient[direction];
     }
 
-    public void writeLocalRemovals(Player viewer, ByteMessage stream, java.util.BitSet removals) {
-        int originalSize = viewer.playerListSize;
-        int keep = 0;
-        boolean localsChanged = false;
-        for (int i = 0; i < originalSize; i++) {
-            Player local = viewer.playerList[i];
-            if (local == null || removals.get(local.getSlot())) {
-                if (local != null) {
-                    viewer.playersUpdating.remove(local);
-                    localsChanged = true;
-                }
-                stream.putBits(1, 1);
-                stream.putBits(2, 3);
-                continue;
-            }
-            viewer.playerList[keep++] = local;
-        }
-        java.util.Arrays.fill(viewer.playerList, keep, originalSize, null);
-        if (keep != originalSize || localsChanged) {
-            viewer.bumpLocalPlayerMembershipRevision();
-        }
-        viewer.playerListSize = keep;
-    }
-
-    public void writeLocalAdditions(Player viewer, ByteMessage stream, ByteMessage updateBlock, RootPlayerInfoPlan plan) {
-        int[] additions = plan.getActualAdditions();
-        // Root player sync queues teleport reinserts ahead of ordinary admissions so
-        // retained teleports are encoded as remove+readd in one packet when capacity allows.
-        for (int slot : additions) {
-            Player other = resolvePlayerSlot(slot);
-            if (!shouldAddLocalPlayerCandidate(viewer, other)) {
-                continue;
-            }
-            writeLocalAdd(viewer, other, stream, updateBlock);
-            if (viewer.playersUpdating.contains(other)) {
-                SynchronizationContext.recordPlayerAdd();
-            }
-        }
-    }
-
-    public void writeRetainedLocalUpdate(Player local, ByteMessage stream, ByteMessage updateBlock, boolean changed) {
-        if (changed) {
-            local.updatePlayerMovement(stream);
-            appendBlockUpdate(local, updateBlock, UpdatePhase.UPDATE_LOCAL);
-        } else {
-            stream.putBits(1, 0);
-        }
-    }
-
     public void writeLocalRemoval(ByteMessage stream) {
         stream.putBits(1, 1);
-        stream.putBits(2, 3);
-    }
-
-    public void writeLocalAdd(Player viewer, Player other, ByteMessage stream, ByteMessage updateBlock) {
-        viewer.addNewPlayer(other, stream, updateBlock);
+        stream.putBits(2, LOCAL_REMOVE_TYPE);
     }
 
     /** Writes the active client's add-local wire shape without mutating viewer state. */
@@ -569,6 +130,30 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         } else {
             appendAddLocalBlockUpdate(other, updateBlock);
             SynchronizationContext.recordPlayerBlockCacheHit(false);
+        }
+        stream.putBits(1, 1);
+        int delta = other.getPosition().getY() - viewer.getPosition().getY();
+        if (delta < 0) delta += 32;
+        stream.putBits(5, delta);
+        delta = other.getPosition().getX() - viewer.getPosition().getX();
+        if (delta < 0) delta += 32;
+        stream.putBits(5, delta);
+    }
+
+    /**
+     * Add-local for a subject whose current appearance the viewer's client already caches
+     * (Apollo-style appearance ticket hit): the ~60-byte appearance block is skipped entirely.
+     * The client re-applies its cached appearance for this index on add
+     * (playerSynchronizationBuffers), so only the subject's other pending flags — if any — are
+     * sent, using the ordinary UPDATE_LOCAL block layout.
+     */
+    public void writeStagedLocalAddWithoutAppearance(Player viewer, Player other, ByteMessage stream,
+                                                     ByteMessage updateBlock) {
+        stream.putBits(11, other.getSlot());
+        boolean hasBlock = other.getUpdateFlags().isUpdateRequired();
+        stream.putBits(1, hasBlock ? 1 : 0);
+        if (hasBlock) {
+            appendBlockUpdate(other, updateBlock, UpdatePhase.UPDATE_LOCAL);
         }
         stream.putBits(1, 1);
         int delta = other.getPosition().getY() - viewer.getPosition().getY();
@@ -601,141 +186,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         appendBlockUpdate(player, buf, UpdatePhase.ADD_LOCAL);
     }
 
-    public PlayerSyncDecision shouldSkipPlayerSync(Player viewer) {
-        ViewerPlayerSyncState viewerState = SynchronizationContext.getViewerPlayerSyncState(viewer);
-        ViewportSnapshot viewportSnapshot = SynchronizationContext.getViewportSnapshot(viewer);
-        if (viewerState == null || viewportSnapshot == null || !viewer.loaded) {
-            return PlayerSyncDecision.BUILD;
-        }
-
-        long selfMovementRevision = SynchronizationContext.getPlayerMovementRevision(viewer);
-        long selfBlockRevision = SynchronizationContext.getPlayerBlockRevision(viewer);
-        boolean selfStable =
-                selfMovementRevision == viewerState.getLastSelfMovementRevision()
-                        && selfBlockRevision == viewerState.getLastSelfBlockRevision();
-        boolean regionStable =
-                viewer.mapRegionX == viewerState.getLastKnownMapRegionX()
-                        && viewer.mapRegionY == viewerState.getLastKnownMapRegionY()
-                        && viewer.getPosition().getZ() == viewerState.getLastKnownPlane();
-        long localActivityStamp = SynchronizationContext.getPlayerLocalActivityStamp(viewer);
-        long localMembershipRevision = viewer.getLocalPlayerMembershipRevision();
-        boolean localActivityStable =
-                localActivityStamp == viewerState.getLastLocalActivityStamp()
-                        && localMembershipRevision == viewerState.getLastLocalMembershipRevision();
-        boolean noImmediateStateChange =
-                !viewer.didTeleport()
-                        && !viewer.didMapRegionChange()
-                        && viewer.getPrimaryDirection() == -1
-                        && viewer.getSecondaryDirection() == -1
-                        && !viewer.getUpdateFlags().isUpdateRequired();
-
-        if (!selfStable || !regionStable || !localActivityStable || !noImmediateStateChange) {
-            return PlayerSyncDecision.BUILD;
-        }
-
-        PlayerVisibilitySignature visibleSignature = buildVisibleSignature(viewer, viewportSnapshot);
-        PlayerVisibilitySignature localSignature = buildLocalSignature(viewer);
-        if (visibleSignature.matches(localSignature)) {
-            return PlayerSyncDecision.SKIP;
-        }
-        return PlayerSyncDecision.BUILD;
-    }
-
-    private PlayerVisibilitySignature buildVisibleSignature(Player viewer, ViewportSnapshot snapshot) {
-        int count = 0;
-        int hash = 1;
-        for (Player other : snapshot.getPlayers()) {
-            if (!isVisiblePlayerCandidate(viewer, other)) {
-                continue;
-            }
-            count++;
-            hash = 31 * hash + other.getSlot();
-        }
-        return new PlayerVisibilitySignature(count, hash);
-    }
-
-    private PlayerVisibilitySignature buildLocalSignature(Player viewer) {
-        int count = 0;
-        int hash = 1;
-        for (int i = 0; i < viewer.playerListSize; i++) {
-            Player local = viewer.playerList[i];
-            if (!isVisiblePlayerCandidate(viewer, local)) {
-                continue;
-            }
-            count++;
-            hash = 31 * hash + local.getSlot();
-        }
-        return new PlayerVisibilitySignature(count, hash);
-    }
-
-    private boolean isVisiblePlayerCandidate(Player viewer, Player other) {
-        return PlayerVisibilityRules.isVisibleTo(viewer, other);
-    }
-
-    private static final class PlayerVisibilitySignature {
-        private final int count;
-        private final int hash;
-
-        private PlayerVisibilitySignature(int count, int hash) {
-            this.count = count;
-            this.hash = hash;
-        }
-
-        private int count() {
-            return count;
-        }
-
-        private int hash() {
-            return hash;
-        }
-
-        private boolean matches(PlayerVisibilitySignature other) {
-            return other != null && count == other.count && hash == other.hash;
-        }
-    }
-
-    public PlayerSyncTemplateKey buildPlayerSyncTemplateKey(Player viewer) {
-        int[] localSlots = new int[viewer.playerListSize];
-        for (int i = 0; i < viewer.playerListSize; i++) {
-            Player local = viewer.playerList[i];
-            localSlots[i] = local == null ? -1 : local.getSlot();
-        }
-        return new PlayerSyncTemplateKey(
-                localSlots,
-                viewer.playerListSize,
-                movementMode(viewer),
-                hasUpdatesForPhase(viewer, UpdatePhase.UPDATE_SELF),
-                viewer.didTeleport(),
-                viewer.didMapRegionChange()
-        );
-    }
-
-    public PlayerSyncTemplate buildPlayerSyncTemplate(Player viewer) {
-        ByteMessage stream = withSharedBlock();
-        try {
-            writePlayerSyncTemplate(viewer, stream, null);
-            return new PlayerSyncTemplate(stream.toByteArray());
-        } finally {
-            releaseScratch(stream);
-        }
-    }
-
-    public void writePlayerSyncTemplate(Player viewer, ByteMessage stream, PlayerSyncTemplate template) {
-        if (template != null) {
-            stream.putBytes(template.getPayload());
-            return;
-        }
-
-        stream.startBitAccess();
-        stream.putBits(1, 0);
-        stream.putBits(8, viewer.playerListSize);
-        for (int i = 0; i < viewer.playerListSize; i++) {
-            stream.putBits(1, 0);
-        }
-        stream.putBits(11, 2047);
-        stream.endBitAccess();
-    }
-
     public byte[] buildSharedBlock(Player player, String phaseName) {
         UpdatePhase phase = UpdatePhase.valueOf(phaseName);
         ByteMessage block = withSharedBlock();
@@ -766,7 +216,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     public void appendGraphic(Player player, ByteMessage buf) {
-        buf.putShort(player.getGraphicId(), ByteOrder.LITTLE); // writeWordBigEndian  
+        buf.putShort(player.getGraphicId(), ByteOrder.LITTLE); // writeWordBigEndian
         buf.putInt(player.getGraphicHeight()); // writeDWord
     }
 
@@ -976,16 +426,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         // Scratch buffers are reused from thread-local storage.
     }
 
-    private int movementMode(Player player) {
-        if (player.didTeleport()) {
-            return 3;
-        }
-        if (player.getPrimaryDirection() == -1) {
-            return 0;
-        }
-        return player.getSecondaryDirection() == -1 ? 1 : 2;
-    }
-
     public void sendServerUpdateIfNeeded(Player player) {
         if (Server.updateRunning) {
             int seconds = Server.updateSeconds + ((int) (Server.updateStartTime - System.currentTimeMillis()) / 1000);
@@ -1002,33 +442,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             client.updateGroundItems();
             StaticObjectOverrides.replayTo(client);
         }
-    }
-
-    private void finishPlayerSync(ByteMessage stream, ByteMessage updateBlock) {
-        stream.putBits(11, 2047);
-        stream.endBitAccess();
-        if (updateBlock.getBuffer().writerIndex() > 0) {
-            stream.putBytes(updateBlock);
-        }
-    }
-
-    private java.util.BitSet toBitSet(int[] slots, int count) {
-        java.util.BitSet set = new java.util.BitSet(PlayerRegistry.players.length);
-        int limit = Math.min(count, slots.length);
-        for (int i = 0; i < limit; i++) {
-            int slot = slots[i];
-            if (slot >= 0) {
-                set.set(slot);
-            }
-        }
-        return set;
-    }
-
-    private Player resolvePlayerSlot(int slot) {
-        if (slot < 0 || slot >= PlayerRegistry.players.length) {
-            return null;
-        }
-        return net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[slot];
     }
 
     @Override

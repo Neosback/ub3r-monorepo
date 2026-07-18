@@ -162,3 +162,27 @@ stood. Two lessons already encoded in the plans, worth stating plainly:
    the repo turned a one-machine corruption into a fleet-wide one, and made the self-healing
    checksum mechanism enforce the corruption. Cache flows one way: pristine archive → server →
    clients.
+
+---
+
+## Part D — Execution status (2026-07-18, end of day)
+
+All planned sync work through PR 7's ticket half is **done and green** (195 server tests,
+3 client tests, all passing; goldens byte-stable across the refactor):
+
+| Item | Status |
+|---|---|
+| Golden-bytes harness (`SyncGoldenBytesTest`, 9 scenarios, canonical-cross-verified before deletion) | ✅ done |
+| Delete OPTIMIZED (25 files: `playerinfo/**`, `template/**`, `player/fragments/**`, mode enum) | ✅ done |
+| Delete CANONICAL (`PlayerUpdating.update`, `NpcUpdating.update` + null-hole landmine, packet writers, `Client.update()`) | ✅ done — STAGED is unconditional |
+| `PlayerVisibilityRules` / `PlayerSyncInvariantValidator` relocated to `engine/sync/player` | ✅ done |
+| Correctness/hygiene: dead `getBytesReverse` deleted, mask-overflow + removal-type + terminator constants named, telemetry trimmed to live counters | ✅ done |
+| Budgets: player 60KB→32KB (client buffer is 40KB), NPC additions byte-budgeted (was count-only) | ✅ done |
+| Allocation: staged encoders reuse `ThreadLocalSyncScratch` (no per-viewer `raw()`); NPC plan membership `IntHashSet` (was O(n²) scan); `playersUpdating` already BitSet-backed | ✅ done |
+| Appearance tickets (Apollo model): globally-unique ticket bumped on real byte change, per-viewer seen-array, skip block on re-add, stamped in `commit()` only on delivery acceptance; `AppearanceTicketSyncTest` locks first-add/re-add/changed-gear wire bytes | ✅ done |
+| `PlayerUpdating.java` 1070 → ~490 lines; `NpcUpdating.java` 314 → ~220 | ✅ |
+
+Still open (deliberately): the zone pipeline rebuild (PR 7's second half / region-zone plan 4b),
+ground-item chunk indexing (region-zone plan 4a), idle-skip, and the profiling-gated parallel
+encode. Manual two-client matrix (enter/leave/teleport/death/gear/hits, and specifically a re-add
+after walking out of view to eyeball the ticket skip) still needs a live run before shipping.

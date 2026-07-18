@@ -2195,20 +2195,6 @@ public class Client extends Player implements Runnable {
         new PlayerInitializer().initializePlayer(this);
     }
 
-    public void update() { //Update player before npc for some reason!
-        sendPlayerSynchronization();
-        sendNpcSynchronization();
-    }
-
-    public void sendPlayerSynchronization() {
-        PlayerUpdatePacket.sendTo(this, this);
-    }
-
-    public void sendNpcSynchronization() {
-        NpcUpdatePacket.sendTo(this, this);
-    }
-
-
     public boolean canAttack = true;
 
     public long getLastEffectsPeriodicDirtyAtMs() {

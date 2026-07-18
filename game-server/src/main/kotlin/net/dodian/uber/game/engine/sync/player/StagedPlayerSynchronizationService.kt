@@ -5,8 +5,9 @@ import java.util.Arrays
 import net.dodian.uber.game.Constants
 import net.dodian.uber.game.engine.metrics.OperationalTelemetry
 import net.dodian.uber.game.engine.sync.SynchronizationContext
-import net.dodian.uber.game.engine.sync.playerinfo.PlayerVisibilityRules
+import net.dodian.uber.game.engine.sync.player.PlayerVisibilityRules
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.entity.player.PlayerUpdating
@@ -106,38 +107,41 @@ class StagedPlayerSynchronizationService {
 
     internal fun encode(viewer: Client, plan: Plan, stream: ByteMessage) {
         plan.requireFrozen()
-        val updateBlock = ByteMessage.raw(8192)
-        try {
-            updating.updateLocalPlayerMovement(viewer, stream, updating.hasSelfUpdate(viewer))
-            updating.appendSelfBlockUpdate(viewer, updateBlock)
-            stream.putBits(8, plan.previousCount)
-            for (index in 0 until plan.previousCount) {
-                val local = plan.previous[index]
-                if (!plan.retainPrevious[index] || local == null) {
-                    updating.writeLocalRemoval(stream)
+        // Thread-local reused buffer instead of a fresh pooled allocation per viewer per tick.
+        // Safe because encode() runs to completion for one viewer before the next begins on this
+        // thread (see WorldSynchronizationService.encodePlayers' sequential loop).
+        val updateBlock = updating.withScratchUpdateBlock()
+        updating.updateLocalPlayerMovement(viewer, stream, updating.hasSelfUpdate(viewer))
+        updating.appendSelfBlockUpdate(viewer, updateBlock)
+        stream.putBits(8, plan.previousCount)
+        for (index in 0 until plan.previousCount) {
+            val local = plan.previous[index]
+            if (!plan.retainPrevious[index] || local == null) {
+                updating.writeLocalRemoval(stream)
+            } else {
+                local.updatePlayerMovement(stream)
+                val sharedBlock = SynchronizationContext.getSharedPlayerBlock(local, "UPDATE_LOCAL")
+                if (sharedBlock != null) {
+                    updateBlock.putBytes(sharedBlock)
+                    SynchronizationContext.recordPlayerBlockCacheHit(true)
                 } else {
-                    local.updatePlayerMovement(stream)
-                    val sharedBlock = SynchronizationContext.getSharedPlayerBlock(local, "UPDATE_LOCAL")
-                    if (sharedBlock != null) {
-                        updateBlock.putBytes(sharedBlock)
-                        SynchronizationContext.recordPlayerBlockCacheHit(true)
-                    } else {
-                        updating.appendBlockUpdate(local, updateBlock)
-                    }
+                    updating.appendBlockUpdate(local, updateBlock)
                 }
             }
-            for (index in 0 until plan.additionCount) {
-                val addition = plan.additions[index]!!
+        }
+        for (index in 0 until plan.additionCount) {
+            val addition = plan.additions[index]!!
+            if (viewer.hasSeenCurrentAppearance(addition)) {
+                updating.writeStagedLocalAddWithoutAppearance(viewer, addition, stream, updateBlock)
+            } else {
                 val sharedBlock = SynchronizationContext.getSharedPlayerBlock(addition, "ADD_LOCAL")
                 updating.writeStagedLocalAdd(viewer, addition, stream, updateBlock, sharedBlock)
-                SynchronizationContext.recordPlayerAdd()
             }
-            stream.putBits(11, 2047)
-            stream.endBitAccess()
-            if (updateBlock.buffer.writerIndex() > 0) stream.putBytes(updateBlock)
-        } finally {
-            updateBlock.releaseAll()
+            SynchronizationContext.recordPlayerAdd()
         }
+        stream.putBits(11, PlayerUpdating.LOCAL_LIST_TERMINATOR)
+        stream.endBitAccess()
+        if (updateBlock.buffer.writerIndex() > 0) stream.putBytes(updateBlock)
     }
 
     internal fun commit(viewer: Client, plan: Plan) {
@@ -160,6 +164,24 @@ class StagedPlayerSynchronizationService {
         }
         viewer.playerListSize = plan.nextCount
         if (changed) viewer.bumpLocalPlayerMembershipRevision()
+
+        // Appearance-ticket bookkeeping, applied only on delivery acceptance (same staging
+        // contract as the local list itself):
+        //  - additions either carried the full appearance block or their ticket already matched,
+        //    so stamping is correct in both cases;
+        //  - retained locals delivered appearance this packet only when the APPEARANCE flag was
+        //    set (the UPDATE_LOCAL block includes it then). A silent defensive-signature change
+        //    without the flag must NOT be stamped — those viewers haven't seen the new look.
+        for (index in 0 until plan.additionCount) {
+            val addition = plan.additions[index] ?: continue
+            viewer.noteAppearanceSeen(addition)
+        }
+        for (index in 0 until plan.nextCount) {
+            val local = plan.next[index] ?: continue
+            if (local.updateFlags.isRequired(UpdateFlag.APPEARANCE)) {
+                viewer.noteAppearanceSeen(local)
+            }
+        }
     }
 
     private fun isRetained(viewer: Client, local: Player?): Boolean {
@@ -295,7 +317,12 @@ class StagedPlayerSynchronizationService {
         private const val MAX_LOCALS = 255
         private const val MAX_PLAN_CAPACITY = 255
         private const val MAX_VAR_SHORT_PAYLOAD = 65535
-        private const val MAX_STAGED_PAYLOAD_BUDGET = 60 * 1024
+
+        // The game-client incoming read buffer is 40,000 bytes (Buffer.create() -> new
+        // byte[40_000]); budget well under that so a full-size packet 81 never risks overflowing
+        // it alongside whatever else lands in the same read cycle. The prior 60KB constant
+        // exceeded the client's own buffer.
+        private const val MAX_STAGED_PAYLOAD_BUDGET = 32 * 1024
         private const val BASE_PACKET_BUDGET = 64
         private const val ADD_LOCAL_BIT_BYTES = 4
         private const val MAX_APPEARANCE_BLOCK_ESTIMATE = 256

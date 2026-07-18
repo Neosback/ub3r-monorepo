@@ -427,8 +427,6 @@ public abstract class Player extends Entity {
 
     public abstract void initialize();
 
-    public abstract void update();
-
     public void receieveDamage(Entity e, int amount, Entity.hitType type) {
         amount = Math.min(amount, currentHealth);
         if (getDamage().containsKey(e)) {
@@ -852,6 +850,38 @@ public abstract class Player extends Entity {
 
     public void cacheAppearanceBytes(byte[] bytes) {
         updateState.cacheAppearanceBytes(bytes);
+    }
+
+    public long getAppearanceTicket() {
+        return updateState.getAppearanceTicket();
+    }
+
+    /**
+     * Appearance tickets this viewer has already delivered to its client, indexed by subject
+     * slot. The 377 client caches appearance per player index for the whole session
+     * (playerSynchronizationBuffers) and re-applies it automatically on re-add, so an add-local
+     * whose ticket the viewer already holds can skip the appearance block entirely.
+     * Fresh (all-zero) per login session, matching the client clearing its cache only at
+     * login/world-reset; tickets are globally unique and start at 1, so zero never matches.
+     */
+    private final long[] appearanceTicketsSeen = new long[Constants.maxPlayers + 1];
+
+    public boolean hasSeenCurrentAppearance(Player other) {
+        int slot = other.getSlot();
+        if (slot < 0 || slot >= appearanceTicketsSeen.length) {
+            return false;
+        }
+        // An invalid cache means the ticket may be stale (appearance changed but not yet
+        // rebuilt) — treat as unseen so the add path rebuilds and re-sends.
+        return other.isCachedAppearanceValid()
+                && appearanceTicketsSeen[slot] == other.getAppearanceTicket();
+    }
+
+    public void noteAppearanceSeen(Player other) {
+        int slot = other.getSlot();
+        if (slot >= 0 && slot < appearanceTicketsSeen.length) {
+            appearanceTicketsSeen[slot] = other.getAppearanceTicket();
+        }
     }
 
     public byte[] getChatText() {

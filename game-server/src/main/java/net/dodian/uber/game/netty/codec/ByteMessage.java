@@ -937,37 +937,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
         return data;
     }
 
-    /**
-     * Reads bytes in reverse into an array, starting at {@code current_position + amount} until the
-     * current position.
-     *
-     * @param amount The amount of bytes to read.
-     * @param transform The byte transformation.
-     * @return The read bytes.
-     */
-    public byte[] getBytesReverse(int amount, ValueType transform) {
-        byte[] data = new byte[amount];
-        int dataPosition = 0;
-        for (int i = buf.readerIndex() + amount - 1; i >= buf.readerIndex(); i--) {
-            int value = buf.getByte(i);
-            switch (transform) {
-                case ADD:
-                    value -= 128;
-                    break;
-                case NEGATE:
-                    value = -value;
-                    break;
-                case SUBTRACT:
-                    value = 128 - value;
-                    break;
-                case NORMAL:
-                    break;
-            }
-            data[dataPosition++] = (byte) value;
-        }
-        return data;
-    }
-
     public int getBitIndex() {
         return bitIndex;
     }

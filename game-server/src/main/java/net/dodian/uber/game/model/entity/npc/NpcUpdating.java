@@ -1,6 +1,5 @@
 package net.dodian.uber.game.model.entity.npc;
 
-import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
@@ -9,14 +8,10 @@ import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
-import net.dodian.uber.game.engine.sync.SynchronizationContext;
 import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
-import net.dodian.uber.game.engine.sync.viewport.ViewportSnapshot;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Iterator;
 
 
 /**
@@ -25,107 +20,19 @@ import java.util.Iterator;
 public class NpcUpdating extends EntityUpdating<Npc> {
 
     private static final Logger logger = LoggerFactory.getLogger(NpcUpdating.class);
-    static final int NPC_SLOT_BITS = 16;
+    public static final int NPC_SLOT_BITS = 16;
     static final int NPC_DEFINITION_BITS = 16;
-    static final int NPC_SLOT_TERMINATOR = (1 << NPC_SLOT_BITS) - 1;
+    public static final int NPC_SLOT_TERMINATOR = (1 << NPC_SLOT_BITS) - 1;
     static final int MAX_CLIENT_NPC_SLOT = 16_383;
     static final int MAX_NPC_DEFINITION_ID = (1 << NPC_DEFINITION_BITS) - 1;
-    private static final boolean DEBUG_NPC_MOVEMENT_WRITES = false;
-    private static final int MAX_LOCAL_NPC_ADDS_PER_TICK = 15;
-    private static final int MAX_LOCAL_NPC_CAP = 255;
+    /** Local-list entry type marking a slot as removed from the viewer's local set. */
+    private static final int LOCAL_REMOVE_TYPE = 3;
     private static final NpcUpdateBlockSet BLOCK_SET = new NpcUpdateBlockSet();
 
     private static final NpcUpdating instance = new NpcUpdating();
 
     public static NpcUpdating getInstance() {
         return instance;
-    }
-
-    @Override
-    public void update(Player player, ByteMessage stream) {
-        ByteMessage updateBlock = withUpdateBlock();
-        ByteMessage buf = stream;
-        int movementWrites = 0;
-        try {
-            stream.startBitAccess();
-
-            pruneLocalNpcsToProtocolCap(player);
-            int size = player.getLocalNpcSize();
-            stream.putBits(8, size);
-            int keep = 0;
-            for (int i = 0; i < size; i++) {
-                Npc npc = player.getLocalNpcs()[i];
-                if (npc == null) {
-                    continue;
-                }
-                boolean exceptions = removeNpc(player, npc);
-                if (player.withinDistance(npc) && npc.isVisible() && !exceptions) {
-                    updateNPCMovement(npc, stream);
-                    movementWrites++;
-                    appendBlockUpdate(npc, updateBlock);
-                    player.getLocalNpcs()[keep++] = npc;
-                } else {
-                    buf.putBits(1, 1);
-                    stream.putBits(2, 3); // tells client to remove this npc from list
-                    player.bumpLocalNpcMembershipRevision();
-                }
-            }
-            java.util.Arrays.fill(player.getLocalNpcs(), keep, size, null);
-            player.setLocalNpcSize(keep);
-
-            int npcsAdded = 0;
-            java.util.List<Npc> nearby = findNearbyNpcs(player);
-            int nearbySize = nearby.size();
-            for (int k = 0; k < nearbySize; k++) {
-                Npc npc = nearby.get(k);
-                if (npcsAdded >= MAX_LOCAL_NPC_ADDS_PER_TICK || player.getLocalNpcSize() >= MAX_LOCAL_NPC_CAP) {
-                    break;
-                }
-                boolean exceptions = removeNpc(player, npc);
-                if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
-                if (player.addLocalNpc(npc)) {
-                    player.bumpLocalNpcMembershipRevision();
-                    addNpc(player, npc, stream);
-                    appendBlockUpdate(npc, updateBlock);
-                    SynchronizationContext.recordNpcAdd();
-                    npcsAdded++;
-                }
-            }
-            if (updateBlock.getBuffer().writerIndex() > 0) {
-                stream.putBits(NPC_SLOT_BITS, NPC_SLOT_TERMINATOR);
-                stream.endBitAccess();
-                stream.putBytes(updateBlock);
-            } else {
-                stream.endBitAccess();
-            }
-
-            if (DEBUG_NPC_MOVEMENT_WRITES && movementWrites > 0 && logger.isDebugEnabled()) {
-                logger.debug("npcMovementWrites viewer={} count={}", player.getPlayerName(), movementWrites);
-            }
-        } finally {
-            releaseScratch(updateBlock);
-        }
-    }
-
-    private java.util.List<Npc> findNearbyNpcs(Player player) {
-        ViewportSnapshot snapshot = SynchronizationContext.getViewportSnapshot(player);
-        if (snapshot != null) {
-            return snapshot.getNpcs();
-        }
-        return new java.util.ArrayList<>(Server.npcManager.getNpcs());
-    }
-
-    private void pruneLocalNpcsToProtocolCap(Player player) {
-        int size = player.getLocalNpcSize();
-        if (size <= MAX_LOCAL_NPC_CAP) {
-            return;
-        }
-
-        for (int i = MAX_LOCAL_NPC_CAP; i < size; i++) {
-            player.getLocalNpcs()[i] = null;
-            player.bumpLocalNpcMembershipRevision();
-        }
-        player.setLocalNpcSize(MAX_LOCAL_NPC_CAP);
     }
 
     public static boolean removeNpc(Player player, Npc npc) {
@@ -135,6 +42,11 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             return true;
         }
         return c.quests[1] > 0 && npc.getId() == 999 && npc.getPosition().getX() == 2 && npc.getPosition().getY() == 2;
+    }
+
+    public void writeLocalRemoval(ByteMessage stream) {
+        stream.putBits(1, 1);
+        stream.putBits(2, LOCAL_REMOVE_TYPE);
     }
 
 
@@ -193,10 +105,6 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         } finally {
             releaseScratch(block);
         }
-    }
-
-    private ByteMessage withUpdateBlock() {
-        return ThreadLocalSyncScratch.npcUpdateBlock();
     }
 
     private ByteMessage withSharedBlock() {

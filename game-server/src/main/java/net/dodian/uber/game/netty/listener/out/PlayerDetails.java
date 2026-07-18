@@ -3,6 +3,7 @@ package net.dodian.uber.game.netty.listener.out;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 
 /**
@@ -23,7 +24,7 @@ public class PlayerDetails implements OutgoingPacket {
         ByteMessage msg = ByteMessage.message(249);
         msg.put(memberFlag, ValueType.ADD);
 
-        msg.putShort(slot, ValueType.ADD);
+        msg.putShort(slot, ByteOrder.LITTLE, ValueType.ADD);
 
         client.send(msg);
     }

@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf
 import java.util.Arrays
 import net.dodian.uber.game.engine.metrics.OperationalTelemetry
 import net.dodian.uber.game.engine.sync.SynchronizationContext
+import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch
+import net.dodian.uber.game.engine.sync.util.IntHashSet
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
@@ -58,9 +60,14 @@ class StagedNpcSynchronizationService {
 
         val nearby = SynchronizationContext.getViewportSnapshot(viewer)?.npcs
             ?: net.dodian.uber.game.Server.npcManager.getNpcs().toList()
+        var estimatedBytes = BASE_PACKET_BUDGET
         for (npc in nearby) {
             if (plan.additionCount >= MAX_ADDITIONS_PER_CYCLE || plan.nextCount >= MAX_LOCALS) break
             if (!isRetained(viewer, npc) || plan.contains(npc)) continue
+            val sharedBlock = SynchronizationContext.getSharedNpcBlock(npc)
+            val additionBytes = ADD_NPC_BIT_BYTES + (sharedBlock?.size ?: MAX_NPC_BLOCK_ESTIMATE)
+            if (estimatedBytes + additionBytes > MAX_STAGED_NPC_PAYLOAD_BUDGET) break
+            estimatedBytes += additionBytes
             plan.addAddition(npc)
         }
         plan.freeze()
@@ -69,35 +76,33 @@ class StagedNpcSynchronizationService {
 
     internal fun encode(viewer: Client, plan: Plan, stream: ByteMessage) {
         plan.requireFrozen()
-        val updateBlock = ByteMessage.raw(16384)
-        try {
-            stream.startBitAccess()
-            stream.putBits(8, plan.previousCount)
-            for (index in 0 until plan.previousCount) {
-                val npc = plan.previous[index]
-                if (!plan.retainPrevious[index] || npc == null) {
-                    stream.putBits(1, 1)
-                    stream.putBits(2, 3)
-                } else {
-                    updating.updateNPCMovement(npc, stream)
-                    appendSharedOrEncode(npc, updateBlock)
-                }
-            }
-            for (index in 0 until plan.additionCount) {
-                val npc = plan.additions[index] ?: continue
-                updating.addNpc(viewer, npc, stream)
-                appendSharedOrEncode(npc, updateBlock)
-                SynchronizationContext.recordNpcAdd()
-            }
-            if (updateBlock.buffer.writerIndex() > 0) {
-                stream.putBits(NPC_SLOT_BITS, NPC_SLOT_TERMINATOR)
-                stream.endBitAccess()
-                stream.putBytes(updateBlock)
+        // Thread-local reused buffer instead of a fresh pooled allocation per viewer per tick.
+        // Safe because encode() runs to completion for one viewer before the next begins on this
+        // thread (see WorldSynchronizationService.encodeNpcs' sequential loop).
+        val updateBlock = ThreadLocalSyncScratch.npcUpdateBlock()
+        stream.startBitAccess()
+        stream.putBits(8, plan.previousCount)
+        for (index in 0 until plan.previousCount) {
+            val npc = plan.previous[index]
+            if (!plan.retainPrevious[index] || npc == null) {
+                updating.writeLocalRemoval(stream)
             } else {
-                stream.endBitAccess()
+                updating.updateNPCMovement(npc, stream)
+                appendSharedOrEncode(npc, updateBlock)
             }
-        } finally {
-            updateBlock.releaseAll()
+        }
+        for (index in 0 until plan.additionCount) {
+            val npc = plan.additions[index] ?: continue
+            updating.addNpc(viewer, npc, stream)
+            appendSharedOrEncode(npc, updateBlock)
+            SynchronizationContext.recordNpcAdd()
+        }
+        if (updateBlock.buffer.writerIndex() > 0) {
+            stream.putBits(NpcUpdating.NPC_SLOT_BITS, NpcUpdating.NPC_SLOT_TERMINATOR)
+            stream.endBitAccess()
+            stream.putBytes(updateBlock)
+        } else {
+            stream.endBitAccess()
         }
     }
 
@@ -159,6 +164,9 @@ class StagedNpcSynchronizationService {
         val additions = arrayOfNulls<Npc>(MAX_LOCALS)
         val next = arrayOfNulls<Npc>(MAX_LOCALS)
         val nextSlots = IntArray(MAX_LOCALS)
+        // O(1) membership instead of an O(n) linear scan of nextSlots per candidate per viewer per
+        // tick (mirrors the player-side Scratch.membership pattern).
+        private val membership = IntHashSet(MAX_LOCALS)
         var previousCount = 0
         var additionCount = 0
         var nextCount = 0
@@ -169,6 +177,7 @@ class StagedNpcSynchronizationService {
             Arrays.fill(retainPrevious, false)
             Arrays.fill(additions, null)
             Arrays.fill(next, null)
+            membership.clear()
             previousCount = 0
             additionCount = 0
             nextCount = 0
@@ -180,6 +189,7 @@ class StagedNpcSynchronizationService {
             next[nextCount] = npc
             nextSlots[nextCount] = npc.slot
             nextCount++
+            membership.add(npc.slot)
         }
 
         fun addAddition(npc: Npc) {
@@ -187,10 +197,7 @@ class StagedNpcSynchronizationService {
             addNext(npc)
         }
 
-        fun contains(npc: Npc): Boolean {
-            for (index in 0 until nextCount) if (next[index] === npc || nextSlots[index] == npc.slot) return true
-            return false
-        }
+        fun contains(npc: Npc): Boolean = membership.contains(npc.slot)
 
         fun freeze() { frozen = true }
         fun requireFrozen() = check(frozen) { "NPC synchronization plan is not frozen" }
@@ -200,7 +207,13 @@ class StagedNpcSynchronizationService {
         private const val MAX_LOCALS = 255
         private const val MAX_ADDITIONS_PER_CYCLE = 25
         private const val MAX_VAR_SHORT_PAYLOAD = 65535
-        private const val NPC_SLOT_BITS = 16
-        private const val NPC_SLOT_TERMINATOR = (1 shl NPC_SLOT_BITS) - 1
+
+        // The game-client incoming read buffer is 40,000 bytes (Buffer.create() -> new
+        // byte[40_000]); budget well under that so a full-size packet 65 never risks overflowing
+        // it alongside whatever else lands in the same read cycle. Mirrors the player-side budget.
+        private const val MAX_STAGED_NPC_PAYLOAD_BUDGET = 32 * 1024
+        private const val BASE_PACKET_BUDGET = 64
+        private const val ADD_NPC_BIT_BYTES = 6
+        private const val MAX_NPC_BLOCK_ESTIMATE = 128
     }
 }

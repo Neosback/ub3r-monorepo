@@ -6,10 +6,8 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerUpdating
 import net.dodian.uber.game.netty.codec.ByteMessage
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -39,33 +37,23 @@ class StagedPlayerSynchronizationServiceTest {
     }
 
     @Test
-    fun `staged encoder matches canonical packet for the same snapshot`() {
-        val canonicalViewer = client(1, "viewer", 3200, 3200)
-        val canonicalSubject = client(2, "subject", 3201, 3200)
-        PlayerRegistry.players[1] = canonicalViewer
-        PlayerRegistry.players[2] = canonicalSubject
-        val canonical = ByteMessage.raw(4096)
-        PlayerUpdating.getInstance().update(canonicalViewer, canonical)
-        val canonicalBytes = canonical.toByteArray()
-        canonical.releaseAll()
-
-        PlayerRegistry.players.fill(null)
-        val stagedViewer = client(1, "viewer", 3200, 3200)
-        val stagedSubject = client(2, "subject", 3201, 3200)
-        PlayerRegistry.players[1] = stagedViewer
-        PlayerRegistry.players[2] = stagedSubject
+    fun `encoding a new local admission does not commit until commit is called`() {
+        // Exact byte layout for this scenario is locked by SyncGoldenBytesTest; this test covers
+        // the plan/encode/commit staging contract instead.
+        val viewer = client(1, "viewer", 3200, 3200)
+        val subject = client(2, "subject", 3201, 3200)
+        PlayerRegistry.players[1] = viewer
+        PlayerRegistry.players[2] = subject
         val service = StagedPlayerSynchronizationService()
-        val plan = service.buildPlan(stagedViewer)
+        val plan = service.buildPlan(viewer)
         val staged = ByteMessage.raw(4096)
-        service.encode(stagedViewer, plan, staged)
-        val stagedBytes = staged.toByteArray()
+        service.encode(viewer, plan, staged)
         staged.releaseAll()
 
-        assertArrayEquals(canonicalBytes, stagedBytes)
-        assertEquals(0, stagedViewer.playerListSize, "encoding must not commit viewer state")
-        service.commit(stagedViewer, plan)
-        assertEquals(1, stagedViewer.playerListSize)
-        assertSame(stagedSubject, stagedViewer.playerList[0])
+        assertEquals(0, viewer.playerListSize, "encoding must not commit viewer state")
+        service.commit(viewer, plan)
+        assertEquals(1, viewer.playerListSize)
+        assertSame(subject, viewer.playerList[0])
     }
 
     @Test
@@ -125,19 +113,19 @@ class StagedPlayerSynchronizationServiceTest {
     }
 
     @Test
-    fun `randomized 317 local sets remain byte compatible with canonical encoder`() {
+    fun `randomized local sets commit to internally consistent viewer state`() {
+        // No canonical encoder to cross-check against anymore (deleted). Instead this exercises a
+        // wide variety of membership/flag combinations and verifies the staged commit never leaves
+        // the viewer's local-list bookkeeping inconsistent — the exact invariant that caused sync
+        // desyncs historically (see PlayerSyncInvariantValidator).
         repeat(24) { seed ->
-            val canonical = encodeScenario(seed, staged = false)
-            PlayerRegistry.players.fill(null)
-            PlayerRegistry.playersOnline.clear()
-            val staged = encodeScenario(seed, staged = true)
-            assertArrayEquals(canonical, staged, "seed=$seed")
+            encodeAndCommitScenario(seed)
             PlayerRegistry.players.fill(null)
             PlayerRegistry.playersOnline.clear()
         }
     }
 
-    private fun encodeScenario(seed: Int, staged: Boolean): ByteArray {
+    private fun encodeAndCommitScenario(seed: Int) {
         val random = Random(seed)
         val viewer = client(1, "viewer-$seed", 3200, 3200)
         PlayerRegistry.players[1] = viewer
@@ -158,15 +146,15 @@ class StagedPlayerSynchronizationServiceTest {
             if (random.nextInt(4) == 0) subject.faceTarget(random.nextInt(0, 2047))
         }
 
+        val service = StagedPlayerSynchronizationService()
+        val before = PlayerSyncInvariantValidator.snapshot(viewer)
+        val plan = service.buildPlan(viewer)
         val packet = ByteMessage.raw(8192)
-        if (staged) {
-            val service = StagedPlayerSynchronizationService()
-            val plan = service.buildPlan(viewer)
-            service.encode(viewer, plan, packet)
-        } else {
-            PlayerUpdating.getInstance().update(viewer, packet)
-        }
-        return packet.toByteArray().also { packet.releaseAll() }
+        service.encode(viewer, plan, packet)
+        assertTrue(packet.buffer.writerIndex() > 0, "seed=$seed produced an empty packet")
+        packet.releaseAll()
+        service.commit(viewer, plan)
+        PlayerSyncInvariantValidator.validateViewerLocals(viewer, before)
     }
 
     private fun client(slot: Int, name: String, x: Int, y: Int): Client =

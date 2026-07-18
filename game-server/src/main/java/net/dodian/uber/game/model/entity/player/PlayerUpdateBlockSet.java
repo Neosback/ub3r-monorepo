@@ -9,6 +9,11 @@ import net.dodian.uber.game.engine.sync.SynchronizationContext;
  */
 final class PlayerUpdateBlockSet {
 
+    /** Set on the low mask byte when the mask needs a second (high) byte. */
+    private static final int MASK_OVERFLOW_FLAG = 0x40;
+    /** Masks at or above this value don't fit in a single byte alongside {@link #MASK_OVERFLOW_FLAG}. */
+    private static final int MASK_OVERFLOW_THRESHOLD = 0x100;
+
     void encode(PlayerUpdating updating, Player player, ByteMessage out, PlayerUpdating.UpdatePhase phase) {
         boolean cacheablePhase = phase == PlayerUpdating.UpdatePhase.UPDATE_LOCAL;
         boolean includeChat = phase != PlayerUpdating.UpdatePhase.UPDATE_SELF;
@@ -73,8 +78,8 @@ final class PlayerUpdateBlockSet {
     }
 
     private void writeMask(ByteMessage blockBuf, int updateMask) {
-        if (updateMask >= 0x100) {
-            int overflowMask = updateMask | 0x40;
+        if (updateMask >= MASK_OVERFLOW_THRESHOLD) {
+            int overflowMask = updateMask | MASK_OVERFLOW_FLAG;
             blockBuf.put(overflowMask & 0xFF);
             blockBuf.put(overflowMask >> 8);
             return;

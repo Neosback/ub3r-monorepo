@@ -10,6 +10,8 @@ import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.model.entity.player.Client
 
+/** Manual throughput/allocation profiling tool for the staged player sync encoder. Not part of
+ * the automated syncTest task — run directly when investigating SYNC_PLAYER_ENCODE performance. */
 object SyncPipelineBenchmark {
     @JvmStatic
     fun main(args: Array<String>) {
@@ -18,25 +20,9 @@ object SyncPipelineBenchmark {
         GameThreadContext.bindCurrentThread()
         Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
         try {
-            val canonical = measure("CANONICAL", iterations, staged = false)
-            val staged = measure("STAGED", iterations, staged = true)
+            val staged = measure(iterations)
             println("mode,iterations,first_packet_us,packets_per_second,avg_packet_bytes,allocated_bytes")
-            println(canonical.csv())
             println(staged.csv())
-            val ratio = staged.packetsPerSecond / canonical.packetsPerSecond
-            println("staged/canonical throughput ratio=${"%.3f".format(ratio)}")
-            require(ratio >= MIN_STAGED_THROUGHPUT_RATIO) {
-                "Staged synchronization throughput regressed: ratio=$ratio minimum=$MIN_STAGED_THROUGHPUT_RATIO"
-            }
-            require(staged.averagePacketBytes <= canonical.averagePacketBytes * MAX_PACKET_SIZE_RATIO) {
-                "Staged synchronization payload regressed: staged=${staged.averagePacketBytes} canonical=${canonical.averagePacketBytes}"
-            }
-            if (canonical.allocatedBytes > 0L && staged.allocatedBytes > 0L) {
-                val allocationRatio = staged.allocatedBytes.toDouble() / canonical.allocatedBytes
-                require(allocationRatio <= MAX_ALLOCATION_RATIO) {
-                    "Staged synchronization allocations regressed: ratio=$allocationRatio maximum=$MAX_ALLOCATION_RATIO"
-                }
-            }
         } finally {
             PlayerRegistry.players.fill(null)
             PlayerRegistry.playersOnline.clear()
@@ -44,7 +30,7 @@ object SyncPipelineBenchmark {
         }
     }
 
-    private fun measure(label: String, iterations: Int, staged: Boolean): Measurement {
+    private fun measure(iterations: Int): Measurement {
         PlayerRegistry.players.fill(null)
         PlayerRegistry.playersOnline.clear()
         val clients = ArrayList<Client>(100)
@@ -57,12 +43,12 @@ object SyncPipelineBenchmark {
         }
         val service = StagedPlayerSynchronizationService()
         val firstStarted = System.nanoTime()
-        if (staged) service.synchronize(viewer) else viewer.sendPlayerSynchronization()
+        service.synchronize(viewer)
         val firstMicros = (System.nanoTime() - firstStarted) / 1_000L
         drain(viewer)
 
         repeat(200) {
-            if (staged) service.synchronize(viewer) else viewer.sendPlayerSynchronization()
+            service.synchronize(viewer)
             drain(viewer)
         }
         val bean = (ManagementFactory.getThreadMXBean() as? com.sun.management.ThreadMXBean)
@@ -71,7 +57,7 @@ object SyncPipelineBenchmark {
         var totalBytes = 0L
         val started = System.nanoTime()
         repeat(iterations) {
-            if (staged) service.synchronize(viewer) else viewer.sendPlayerSynchronization()
+            service.synchronize(viewer)
             totalBytes += drain(viewer)
         }
         val elapsed = System.nanoTime() - started
@@ -81,7 +67,7 @@ object SyncPipelineBenchmark {
             it.destruct()
         }
         return Measurement(
-            label,
+            "STAGED",
             iterations,
             firstMicros,
             iterations * 1_000_000_000.0 / elapsed,
@@ -121,8 +107,4 @@ object SyncPipelineBenchmark {
         fun csv(): String =
             "$label,$iterations,$firstPacketMicros,${"%.1f".format(packetsPerSecond)},${"%.1f".format(averagePacketBytes)},$allocatedBytes"
     }
-
-    private const val MIN_STAGED_THROUGHPUT_RATIO = 0.75
-    private const val MAX_PACKET_SIZE_RATIO = 1.05
-    private const val MAX_ALLOCATION_RATIO = 1.25
 }

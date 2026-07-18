@@ -1,11 +1,11 @@
 package net.dodian.uber.game.engine.sync
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.engine.sync.playerinfo.PlayerVisibilityRules
+import net.dodian.uber.game.engine.sync.player.PlayerVisibilityRules
+import net.dodian.uber.game.engine.sync.player.StagedPlayerSynchronizationService
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerUpdating
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.codec.ByteMessage
 import io.netty.channel.embedded.EmbeddedChannel
@@ -26,28 +26,15 @@ class DeterministicPlayerSynchronizationTest {
     fun setUp() {
         previousItemManager = Server.itemManager
         Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
-        System.clearProperty("player.sync.mode")
     }
 
     @AfterEach
     fun tearDown() {
         clients.forEach { it.channel?.close() }
         clients.clear()
-        System.clearProperty("player.sync.mode")
         PlayerRegistry.players.fill(null)
         PlayerRegistry.playersOnline.clear()
         Server.itemManager = previousItemManager
-    }
-
-    @Test
-    fun `staged synchronization is the default and alternatives require opt in`() {
-        assertEquals(PlayerSynchronizationMode.STAGED, PlayerSynchronizationMode.configured())
-        System.setProperty("player.sync.mode", "canonical")
-        assertEquals(PlayerSynchronizationMode.CANONICAL, PlayerSynchronizationMode.configured())
-        System.setProperty("player.sync.mode", "optimized")
-        assertEquals(PlayerSynchronizationMode.OPTIMIZED, PlayerSynchronizationMode.configured())
-        System.setProperty("player.sync.mode", "unknown")
-        assertEquals(PlayerSynchronizationMode.STAGED, PlayerSynchronizationMode.configured())
     }
 
     @Test
@@ -79,7 +66,10 @@ class DeterministicPlayerSynchronizationTest {
 
         val packet = ByteMessage.raw(4096)
         try {
-            PlayerUpdating.getInstance().update(viewer, packet)
+            val service = StagedPlayerSynchronizationService()
+            val plan = service.buildPlan(viewer)
+            service.encode(viewer, plan, packet)
+            service.commit(viewer, plan)
             assertEquals(1, viewer.playerListSize)
             assertSame(replacement, viewer.playerList[0])
             assertTrue(viewer.playersUpdating.contains(replacement))

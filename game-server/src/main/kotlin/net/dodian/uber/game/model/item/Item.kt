@@ -249,6 +249,23 @@ class Item(
             val full = deriveFull(nameLower, effectiveSlot)
             val mask = deriveMask(nameLower, effectiveSlot)
 
+            val derivedAppearanceType = if (effectiveSlot == 0) {
+                val name = itemName.lowercase()
+                when {
+                    name.startsWith("hood") || name.endsWith("hood") -> TarnishEquipmentAppearanceType.FACE
+                    name.contains("full helm") || name == "masori mask" || name == "masori mask (f)" || name == "gas mask" -> TarnishEquipmentAppearanceType.HELM
+                    name.contains("bloodbark helm") -> TarnishEquipmentAppearanceType.HAT
+                    name.contains("med helm") -> TarnishEquipmentAppearanceType.FACE
+                    name.contains("helm") -> {
+                        if (name.startsWith("dharok")) TarnishEquipmentAppearanceType.FACE else TarnishEquipmentAppearanceType.HELM
+                    }
+                    name.contains("mask") -> TarnishEquipmentAppearanceType.MASK
+                    else -> tarnishAppearanceType
+                }
+            } else {
+                tarnishAppearanceType
+            }
+
             return Item(
                 id = base.id,
                 name = itemName,
@@ -281,7 +298,7 @@ class Item(
                 requirements = requirements,
                 attackAnimations = attackAnimationsArray,
                 blockAnimation = jsonBlockAnimation,
-                tarnishAppearanceType = tarnishAppearanceType,
+                tarnishAppearanceType = derivedAppearanceType,
             )
         }
     }

@@ -8,6 +8,14 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import java.util.Arrays;
 
 final class PlayerUpdateState {
+    /**
+     * Globally-unique appearance ticket source. Uniqueness across all player instances means a
+     * viewer's remembered ticket for a slot can never falsely match after the slot is reused by
+     * a different session.
+     */
+    private static final java.util.concurrent.atomic.AtomicLong APPEARANCE_TICKETS =
+            new java.util.concurrent.atomic.AtomicLong();
+
     private final Player owner;
     private ByteMessage cachedUpdateBlock = null;
     private boolean cachedUpdateBlockValid = false;
@@ -15,6 +23,8 @@ final class PlayerUpdateState {
     private volatile long cachedAppearanceRevision = -1L;
     private volatile int cachedAppearanceSignature = Integer.MIN_VALUE;
     private volatile byte[] cachedAppearanceBytes = null;
+    private volatile long appearanceTicket = APPEARANCE_TICKETS.incrementAndGet();
+    private volatile byte[] ticketedAppearanceBytes = null;
     private final byte[] chatText = new byte[4096];
     private int chatTextSize = 0;
     private int chatTextEffects = 0;
@@ -77,6 +87,16 @@ final class PlayerUpdateState {
         cachedAppearanceBytes = bytes;
         cachedAppearanceRevision = appearanceRevision;
         cachedAppearanceSignature = appearanceSignature();
+        // A new ticket only when the visible bytes actually changed — a defensive-signature
+        // rebuild that produces identical bytes must not force viewers to re-receive appearance.
+        if (ticketedAppearanceBytes == null || !Arrays.equals(ticketedAppearanceBytes, bytes)) {
+            ticketedAppearanceBytes = bytes;
+            appearanceTicket = APPEARANCE_TICKETS.incrementAndGet();
+        }
+    }
+
+    long getAppearanceTicket() {
+        return appearanceTicket;
     }
 
     /**

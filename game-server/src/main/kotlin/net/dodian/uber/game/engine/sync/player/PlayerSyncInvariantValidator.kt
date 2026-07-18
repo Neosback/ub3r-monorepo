@@ -1,4 +1,4 @@
-package net.dodian.uber.game.engine.sync.playerinfo
+package net.dodian.uber.game.engine.sync.player
 
 import java.util.LinkedHashSet
 import net.dodian.uber.game.model.entity.player.Player
