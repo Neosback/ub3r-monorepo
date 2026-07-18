@@ -19,7 +19,13 @@ class FileRequestHandler(
     override fun channelRead0(ctx: ChannelHandlerContext, msg: FilePair) {
         val response = responses[msg]
         if (response == null) {
-            logger.warn("Request was null for {}", msg)
+            val remote = (ctx.channel().remoteAddress() as? java.net.InetSocketAddress)
+                ?.address?.hostAddress ?: ctx.channel().remoteAddress().toString()
+            org.jire.swiftfup.server.net.SwiftFupDiagnostics.missingResponse(
+                remote,
+                msg,
+                responses.presentAtStartup(msg),
+            )
 
             val byteBufSize = FilePair.SIZE_BYTES + 4
             val byteBuf = Unpooled.directBuffer(byteBufSize, byteBufSize)
@@ -28,6 +34,7 @@ class FileRequestHandler(
 
             ctx.write(byteBuf, ctx.voidPromise())
         } else {
+            org.jire.swiftfup.server.net.SwiftFupDiagnostics.responseServed(response.readableBytes())
             ctx.write(response.retainedDuplicate(), ctx.voidPromise())
         }
         if (!ctx.channel().isWritable) {
@@ -41,6 +48,7 @@ class FileRequestHandler(
 
     @Deprecated("Deprecated in Java")
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+        org.jire.swiftfup.server.net.SwiftFupDiagnostics.channelFailure()
         logger.error("Exception caught from remote \"${ctx.channel().remoteAddress()}\"", cause)
 
         ctx.close()

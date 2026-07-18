@@ -15,6 +15,7 @@ import dev.kord.core.on
 import dev.kord.rest.builder.interaction.string
 import dev.kord.rest.builder.message.embed
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,11 +39,16 @@ data class DiscordRuntimeConfiguration(
     val staffAlertChannelId: String,
 ) {
     fun enabled(): Boolean = token.isNotBlank()
-    fun valid(): Boolean = enabled() && guildId.asSnowflakeOrNull() != null &&
-        announcementChannelId.asSnowflakeOrNull() != null && staffAlertChannelId.asSnowflakeOrNull() != null
+    fun valid(): Boolean = enabled() &&
+        announcementChannelId.asSnowflakeOrNull() != null &&
+        (guildId.isBlank() || guildId.asSnowflakeOrNull() != null) &&
+        (staffAlertChannelId.isBlank() || staffAlertChannelId.asSnowflakeOrNull() != null)
+
+    fun effectiveStaffAlertChannelId(): String = staffAlertChannelId.ifBlank { announcementChannelId }
 }
 
 enum class DiscordAlertKind { PLAYER_LOGIN, PLAYER_LOGOUT, MODERATION, TRADE_SECURITY, LIFECYCLE }
+enum class DiscordRuntimeStatus { DISABLED, CONNECTING, READY, FAILED, STOPPED }
 
 object DiscordCommandPolicy {
     fun requiresAdministrator(command: String): Boolean = command in setOf("announce", "alert-test")
@@ -69,6 +75,8 @@ object DiscordService {
     private const val DEDUPLICATION_WINDOW_MS = 30_000L
     private val logger = LoggerFactory.getLogger(DiscordService::class.java)
     private val running = AtomicBoolean(false)
+    private val runtimeStatus = AtomicReference(DiscordRuntimeStatus.DISABLED)
+    private val commandsRegistered = AtomicBoolean(false)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val outbound = Channel<OutboundDiscordMessage>(capacity = 256, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     private val recentAlerts = java.util.concurrent.ConcurrentHashMap<String, Long>()
@@ -79,24 +87,29 @@ object DiscordService {
     @JvmStatic
     fun start() = start(configuration)
 
+    @JvmStatic
+    fun status(): DiscordRuntimeStatus = runtimeStatus.get()
+
     internal fun start(runtime: DiscordRuntimeConfiguration) {
         configuration = runtime
         if (!runtime.enabled()) {
+            runtimeStatus.set(DiscordRuntimeStatus.DISABLED)
             logger.info("Discord is disabled because DISCORD_TOKEN is blank.")
             return
         }
         if (!runtime.valid()) {
-            logger.error("Discord is disabled: DISCORD_GUILD_ID, DISCORD_CHANNEL_ID, and DISCORD_STAFF_ALERT_CHANNEL_ID must be numeric snowflakes.")
+            runtimeStatus.set(DiscordRuntimeStatus.FAILED)
+            logger.warn("Discord is unavailable: DISCORD_CHANNEL_ID is required and Discord ID overrides must be numeric snowflakes.")
             return
         }
         if (!running.compareAndSet(false, true)) return
+        runtimeStatus.set(DiscordRuntimeStatus.CONNECTING)
 
         scope.launch {
             try {
                 val client = Kord(runtime.token)
                 kord = client
                 installHandlers(client)
-                registerCommands(client, Snowflake(runtime.guildId))
                 launch { deliveryLoop(client) }
                 client.login { presence { status = PresenceStatus.Online } }
             } catch (cancelled: CancellationException) {
@@ -104,7 +117,8 @@ object DiscordService {
             } catch (failure: Throwable) {
                 running.set(false)
                 kord = null
-                logger.error("Discord bot failed to start or disconnected.", failure)
+                runtimeStatus.set(DiscordRuntimeStatus.FAILED)
+                logger.warn("Discord bot failed to start or disconnected; the game server will remain online.", failure)
             }
         }
     }
@@ -112,6 +126,7 @@ object DiscordService {
     @JvmStatic
     fun stop() {
         if (!running.getAndSet(false)) return
+        runtimeStatus.set(DiscordRuntimeStatus.STOPPED)
         val active = kord
         kord = null
         scope.launch {
@@ -131,7 +146,7 @@ object DiscordService {
 
     @JvmStatic
     fun publishAlert(alert: DiscordAlert) {
-        val channel = configuration.staffAlertChannelId.asSnowflakeOrNull() ?: return
+        val channel = configuration.effectiveStaffAlertChannelId().asSnowflakeOrNull() ?: return
         val now = System.currentTimeMillis()
         val previous = recentAlerts.put(alert.deduplicationKey, now)
         if (previous != null && now - previous < DEDUPLICATION_WINDOW_MS) return
@@ -148,9 +163,21 @@ object DiscordService {
 
     private suspend fun installHandlers(client: Kord) {
         client.on<ReadyEvent> {
-            logger.info("Discord bot ready guilds={}", client.guilds.count())
-            sendToGeneral("Dodian Server is now online!")
-            publishAlert(DiscordAlert(DiscordAlertKind.LIFECYCLE, "Discord bot online", "Kord gateway connected.", "discord-ready"))
+            try {
+                val channelId = configuration.announcementChannelId.asSnowflakeOrNull()
+                    ?: error("DISCORD_CHANNEL_ID is unavailable")
+                val channel = client.getChannelOf<GuildMessageChannel>(channelId)
+                    ?: error("DISCORD_CHANNEL_ID does not identify an accessible guild channel")
+                val guildId = configuration.guildId.asSnowflakeOrNull() ?: channel.guildId
+                if (commandsRegistered.compareAndSet(false, true)) registerCommands(client, guildId)
+                runtimeStatus.set(DiscordRuntimeStatus.READY)
+                logger.info("Discord bot ready guild={} channel={} visibleGuilds={}", guildId, channelId, client.guilds.count())
+                sendToGeneral("Dodian Server is now online!")
+                publishAlert(DiscordAlert(DiscordAlertKind.LIFECYCLE, "Discord bot online", "Kord gateway connected.", "discord-ready"))
+            } catch (failure: Throwable) {
+                runtimeStatus.set(DiscordRuntimeStatus.FAILED)
+                logger.warn("Discord connected but its configured channel or guild is unavailable; the game server will remain online.", failure)
+            }
         }
         client.on<ChatInputCommandInteractionCreateEvent> {
             val interaction = interaction as? GuildChatInputCommandInteraction ?: return@on
@@ -225,6 +252,8 @@ object DiscordService {
     internal fun resetForTests() {
         running.set(false)
         kord = null
+        runtimeStatus.set(DiscordRuntimeStatus.DISABLED)
+        commandsRegistered.set(false)
         recentAlerts.clear()
         configuration = configuredRuntime()
     }

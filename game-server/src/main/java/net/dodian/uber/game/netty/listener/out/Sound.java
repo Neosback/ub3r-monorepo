@@ -45,7 +45,6 @@ public final class Sound implements OutgoingPacket {
         message.putShort(soundId);
         message.put(volume);
         message.putShort(delay);
-        message.putShort(volume);
         client.send(message);
     }
 

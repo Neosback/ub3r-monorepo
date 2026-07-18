@@ -1,13 +1,13 @@
 package org.jire.swiftfup.server.net
 
 import org.jire.swiftfup.server.FilePair
+import org.jire.swiftfup.server.SwiftFupCache
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.net.ServerSocket
 import java.net.Socket
-import java.nio.file.Files
 import java.nio.file.Path
 
 class FileResponsesIntegrationTest {
@@ -23,6 +23,11 @@ class FileResponsesIntegrationTest {
         val titleArchive = requireNotNull(responses[FilePair(0, 1)])
         assertEquals(FilePair(0, 1).bitpack, titleArchive.readUnsignedMedium())
         assertTrue(titleArchive.readInt() > 0)
+
+        // Item 995 at amount 2,000 selects the Tarnish coin-stack model 2710.
+        val coinStackModel = requireNotNull(responses[FilePair(1, 2710)])
+        assertEquals(FilePair(1, 2710).bitpack, coinStackModel.readUnsignedMedium())
+        assertTrue(coinStackModel.readInt() > 0)
     }
 
     @Test
@@ -58,7 +63,7 @@ class FileResponsesIntegrationTest {
     }
 
     @Test
-    fun `cache server closes only the channel that exceeds its request budget`() {
+    fun `cache server accepts normal request bursts without a per-request limiter`() {
         val responses = FileResponses()
         responses.load(cachePath().toString(), print = false)
         val port = ServerSocket(0).use { it.localPort }
@@ -69,7 +74,9 @@ class FileResponsesIntegrationTest {
             Socket("127.0.0.1", port).use { client ->
                 client.soTimeout = 5_000
                 handshake(client)
-                requestAndDrain(client, FilePair(0, 1))
+                repeat(600) {
+                    requestAndDrain(client, FilePair(0, 1))
+                }
             }
         } finally {
             server.shutdown()
@@ -77,7 +84,7 @@ class FileResponsesIntegrationTest {
     }
 
     @Test
-    fun `multiple connections from same ip both succeed without protection`() {
+    fun `multiple connections within the same ip budget both succeed`() {
         val responses = FileResponses()
         responses.load(cachePath().toString(), print = false)
         val port = ServerSocket(0).use { it.localPort }
@@ -121,9 +128,7 @@ class FileResponsesIntegrationTest {
     }
 
     private fun cachePath(): Path =
-        sequenceOf(Path.of("data/cache"), Path.of("game-server/data/cache"))
-            .firstOrNull(Files::isDirectory)
-            ?: error("Unable to locate game-server cache")
+        SwiftFupCache.path()
 
     private fun medium(value: Int): ByteArray =
         byteArrayOf((value ushr 16).toByte(), (value ushr 8).toByte(), value.toByte())

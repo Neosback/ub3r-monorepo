@@ -22,12 +22,18 @@ class FileResponses {
 
     operator fun get(filePair: FilePair): ByteBuf? = bitpack2Response[filePair.bitpack]
 
+    fun presentAtStartup(filePair: FilePair): Boolean = bitpack2Response.containsKey(filePair.bitpack)
+
     fun load(cachePath: String, print: Boolean = true) {
         val library = CacheLibrary.create(cachePath)
         val indices = library.validIndices()
 
         val checksumsBuffer = directBuffer(indices.size * 8)
         checksumsBuffer.writeByte(indices.size)
+        var emptyArchives = 0
+        var unreadableArchives = 0
+        val emptySamples = ArrayList<FilePair>(10)
+        val unreadableSamples = ArrayList<FilePair>(10)
 
         if (print) println("[Building cache responses]")
         for (index in indices) {
@@ -42,17 +48,25 @@ class FileResponses {
             var responsesBuilt = 0
             for (archive in archives) {
                 val archiveId = archive.id
+                val filePair = FilePair(indexId, archiveId)
 
-                val sector = index.readArchiveSector(archiveId)
+                val sector = try {
+                    index.readArchiveSector(archiveId)
+                } catch (exception: RuntimeException) {
+                    unreadableArchives++
+                    if (unreadableSamples.size < 10) unreadableSamples += filePair
+                    logger.debug("Unable to read SwiftFUP archive {}", filePair, exception)
+                    null
+                }
                 val data = sector?.data
                 val dataSize = data?.size ?: 0
                 if (dataSize < 1) {
+                    emptyArchives++
+                    if (emptySamples.size < 10) emptySamples += filePair
                     checksumsBuffer
                         .writeInt(0)
                     continue
                 }
-
-                val filePair = FilePair(indexId, archiveId)
 
                 val byteBufSize = FilePair.SIZE_BYTES + 4 + dataSize
                 val byteBuf = directBuffer(byteBufSize, byteBufSize)
@@ -97,6 +111,20 @@ class FileResponses {
         }
         bitpack2Response[FilePair.checksumsFilePair.bitpack] = checksumsResponse
         logger.info("swiftfup_cache_ready indices={} responses={}", indices.size, bitpack2Response.size)
+        if (emptyArchives > 0) {
+            logger.debug(
+                "swiftfup_sparse_archives emptyArchives={} samples={}",
+                emptyArchives,
+                emptySamples,
+            )
+        }
+        if (unreadableArchives > 0) {
+            logger.warn(
+                "swiftfup_cache_unreadable unreadableArchives={} samples={}",
+                unreadableArchives,
+                unreadableSamples,
+            )
+        }
     }
 
 }

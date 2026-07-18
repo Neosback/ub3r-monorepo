@@ -1203,6 +1203,10 @@ public class Client extends Player implements Runnable {
         if (fromSlot < 0 || fromSlot >= bankItems.length || bankItems[fromSlot] - 1 != itemID) {
             return;
         }
+        if (bankItemsN[fromSlot] == 0) {
+            PlayerBankService.releasePlaceholder(this, fromSlot);
+            return;
+        }
         int id = getNotedItem(itemID);
         if (amount == -2) { //draw all from bank!
             if (!takeAsNote && !Server.itemManager.isStackable(itemID))
@@ -1218,7 +1222,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage(Server.itemManager.getName(itemID) + " can't be drawn as note."));
         }
         amount = Math.min(amount, bankItemsN[fromSlot]);
-        if (!EconomyTransaction.transferBankToInventory(this, itemID, fromSlot, amount, receivedItemId)) {
+        if (!EconomyTransaction.transferBankToInventory(this, itemID, fromSlot, amount, receivedItemId, bankPlaceholdersEnabled)) {
             send(new SendMessage("Not enough space in your inventory."));
         }
     }
@@ -1597,8 +1601,16 @@ public class Client extends Player implements Runnable {
             markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
             resetItems(moveWindow);
         }
-        if (PlayerBankService.moveBankItems(this, from, to, moveWindow)) {
+        if (PlayerBankService.moveBankItems(this, from, to, moveWindow, 0)) {
         }
+    }
+
+    public void moveBankItems(int from, int to, int moveWindow, int mode) {
+        PlayerBankService.moveBankItems(this, from, to, moveWindow, mode);
+    }
+
+    public boolean createBankPlaceholder(int itemId) {
+        return PlayerBankService.createPlaceholder(this, itemId);
     }
 
     public int freeBankSlots() {
@@ -1903,6 +1915,15 @@ public class Client extends Player implements Runnable {
             slots[slot] = slot;
         }
         equipmentChanged(slots);
+        // The original Tarnish server finishes login with a complete opcode 53
+        // refresh for widget 1688. Keep the slot updates used by live equipment
+        // changes, then publish the canonical full snapshot so every view that
+        // reuses the equipment widgets (including Equipment Bonuses) starts from
+        // one coherent container.
+        send(new SendItemOnInterface(
+                1688,
+                java.util.Arrays.copyOf(getEquipment(), getEquipment().length),
+                java.util.Arrays.copyOf(getEquipmentN(), getEquipmentN().length)));
     }
 
     /** Commits a staged equipment snapshot and publishes one visual update. */

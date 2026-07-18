@@ -12,6 +12,7 @@ public class RemoveInterfaces implements OutgoingPacket {
         client.clearBankStyleView();
         client.currentSkill = -1;
         ByteMessage bm = ByteMessage.message(219);
+        bm.put(1);
         client.send(bm);
        // System.out.println("RemoveInterfaces packet sent");
     }

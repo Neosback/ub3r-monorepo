@@ -33,6 +33,7 @@ data class EquipmentSegmentSnapshot(
 
 data class BankSegmentSnapshot(
     val entries: List<ItemSlotEntry>,
+    val placeholdersEnabled: Boolean = false,
 ) : PlayerSaveSegmentSnapshot {
     override val segment: PlayerSaveSegment = PlayerSaveSegment.BANK
 }

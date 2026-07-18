@@ -27,7 +27,6 @@ package net.runelite.client.hiscore;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
-import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -40,15 +39,10 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 @Slf4j
+@RequiredArgsConstructor
 public class HiscoreClient
 {
 	private final OkHttpClient client;
-
-	@Inject
-	public HiscoreClient(OkHttpClient client)
-	{
-		this.client = client;
-	}
 
 	public HiscoreResult lookup(String username, HiscoreEndpoint endpoint) throws IOException
 	{

@@ -37,8 +37,7 @@ public class ChatListener implements PacketListener {
                 client,
                 decoded.getColor(),
                 decoded.getEffects(),
-                decoded.getMessage(),
-                decoded.getMessage().getBytes(java.nio.charset.StandardCharsets.ISO_8859_1)
+                decoded.getMessage()
         );
 
         if (logger.isDebugEnabled()) {

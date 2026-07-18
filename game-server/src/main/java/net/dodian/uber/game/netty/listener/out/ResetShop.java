@@ -18,29 +18,13 @@ public class ResetShop implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-
-        // Mystic client SEND_UPDATE_ITEMS expects:
-        // int interfaceId, short itemCount, then for each slot:
-        //   int amount, and if amount != 0 then short id (container value)
-
-        message.putInt(3900);
-        message.putShort(ShopManager.MaxShopItems);
-
+        int[] itemIds = new int[ShopManager.MaxShopItems];
+        int[] amounts = new int[ShopManager.MaxShopItems];
         for (int i = 0; i < ShopManager.MaxShopItems; i++) {
-            int amount = ShopManager.ShopItemsN[shopId][i];
-
-            message.putInt(amount);
-
-            if (amount != 0) {
-                int itemId = ShopManager.ShopItems[shopId][i]; // already stored as container id (id + 1)
-                if (itemId < 0) {
-                    itemId = 0;
-                }
-                message.putShort(itemId, ByteOrder.BIG);
-            }
+            amounts[i] = ShopManager.ShopItemsN[shopId][i];
+            itemIds[i] = ShopManager.ShopItems[shopId][i] - 1;
         }
-
+        ByteMessage message = TarnishItemContainerEncoder.full(3900, itemIds, amounts);
         client.send(message);
     }
 }

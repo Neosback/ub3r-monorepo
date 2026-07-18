@@ -82,11 +82,7 @@ public class Texture extends Linkable implements RSTexture {
         }
         if (!ready) {
             client.flushFileClient();
-            for (final int spriteGroupId : this.fileIds) {
-                if (IndexedImage.indexedImages.get(spriteGroupId) == null) {
-                    return false;
-                }
-            }
+            return false;
         }
 
         int pixelCount = textureSize * textureSize;

@@ -6,6 +6,7 @@ import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.item.Equipment;
+import net.dodian.uber.game.item.TarnishEquipmentAppearanceType;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -37,6 +38,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     private static final boolean DEBUG_ADDED_LOCAL_PLAYERS = false;
     private static final int MAX_LOCAL_PLAYER_ADDS_PER_TICK = 15;
     private static final int MAX_LOCAL_PLAYER_CAP = 255;
+    private static final byte NO_TARNISH_BOUNTY_ICON = -1;
 
     private static final PlayerUpdating instance = new PlayerUpdating();
     private static final PlayerUpdateBlockSet BLOCK_SET = new PlayerUpdateBlockSet();
@@ -780,13 +782,10 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     public static void appendPlayerChatText(Player player, ByteMessage buf) {
         buf.putShort(((player.getChatTextColor() & 0xFF) << 8) + (player.getChatTextEffects() & 0xFF), ByteOrder.LITTLE); // writeWordBigEndian
         buf.put(player.playerRights);
-
-        // Mystic client expects a null-terminated string for chat (not the packed 317 bytes).
-        String chatMessage = player.getChatTextMessage();
-        if (chatMessage == null) {
-            chatMessage = "";
-        }
-        buf.putString(chatMessage);
+        int length = Math.min(player.getChatTextSize(), player.getChatText().length);
+        buf.put(length, ValueType.NEGATE);
+        byte[] encoded = java.util.Arrays.copyOf(player.getChatText(), length);
+        buf.putBytesReverse(encoded);
     }
 
     @Override
@@ -813,67 +812,75 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
         ByteMessage playerProps = withAppearanceScratch();
         try {
-            playerProps.put(player.getGender());
+            int[] visualLook = TarnishAppearanceValidator.projectLook(player.playerLooks);
+            int[] visualEquipment = TarnishAppearanceValidator.projectEquipment(player.getEquipment());
+            playerProps.put(visualLook[0]);
             playerProps.put((byte) player.headIcon); // Head icon aka prayer over head
             playerProps.put((byte) player.skullIcon); // Skull icon
+            // Tarnish displays bounty icon indexes 0..4. Unsigned 255 means absent.
+            playerProps.put(NO_TARNISH_BOUNTY_ICON);
             if (!player.isNpc) {
-                if (player.getEquipment()[Equipment.Slot.HEAD.getId()] > 1) {
-                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.HEAD.getId()]);
+                if (visualEquipment[Equipment.Slot.HEAD.getId()] > 1) {
+                    playerProps.putShort(0x200 + visualEquipment[Equipment.Slot.HEAD.getId()]);
                 } else {
                     playerProps.put(0);
                 }
-                if (player.getEquipment()[Equipment.Slot.CAPE.getId()] > 1) {
-                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.CAPE.getId()]);
+                if (visualEquipment[Equipment.Slot.CAPE.getId()] > 1) {
+                    playerProps.putShort(0x200 + visualEquipment[Equipment.Slot.CAPE.getId()]);
                 } else {
                     playerProps.put(0);
                 }
-                if (player.getEquipment()[Equipment.Slot.NECK.getId()] > 1) {
-                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.NECK.getId()]);
+                if (visualEquipment[Equipment.Slot.NECK.getId()] > 1) {
+                    playerProps.putShort(0x200 + visualEquipment[Equipment.Slot.NECK.getId()]);
                 } else {
                     playerProps.put(0);
                 }
-                if (player.getEquipment()[Equipment.Slot.WEAPON.getId()] > 1 && !player.UsingAgility) {
-                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.WEAPON.getId()]);
+                if (visualEquipment[Equipment.Slot.WEAPON.getId()] > 1 && !player.UsingAgility) {
+                    playerProps.putShort(0x200 + visualEquipment[Equipment.Slot.WEAPON.getId()]);
                 } else {
                     playerProps.put(0);
                 }
-                if (player.getEquipment()[Equipment.Slot.CHEST.getId()] > 1) {
-                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.CHEST.getId()]);
+                if (visualEquipment[Equipment.Slot.CHEST.getId()] > 1) {
+                    playerProps.putShort(0x200 + visualEquipment[Equipment.Slot.CHEST.getId()]);
                 } else {
-                    playerProps.putShort(0x100 + player.getTorso());
+                    playerProps.putShort(0x100 + visualLook[3]);
                 }
-                if (player.getEquipment()[Equipment.Slot.SHIELD.getId()] > 1 && !player.UsingAgility) {
-                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.SHIELD.getId()]);
-                } else {
-                    playerProps.put(0);
-                }
-                if (!Server.itemManager.isFullBody(player.getEquipment()[Equipment.Slot.CHEST.getId()])) {
-                    playerProps.putShort(0x100 + player.getArms());
+                if (visualEquipment[Equipment.Slot.SHIELD.getId()] > 1 && !player.UsingAgility) {
+                    playerProps.putShort(0x200 + visualEquipment[Equipment.Slot.SHIELD.getId()]);
                 } else {
                     playerProps.put(0);
                 }
-                if (player.getEquipment()[Equipment.Slot.LEGS.getId()] > 1) {
-                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.LEGS.getId()]);
-                } else {
-                    playerProps.putShort(0x100 + player.getLegs());
-                }
-                if (!Server.itemManager.isFullHelm(player.getEquipment()[Equipment.Slot.HEAD.getId()]) && !Server.itemManager.isMask(player.getEquipment()[Equipment.Slot.HEAD.getId()])) {
-                    playerProps.putShort(0x100 + player.getHead()); // head
+                TarnishEquipmentAppearanceType chestAppearance = Server.itemManager.getTarnishAppearanceType(
+                        visualEquipment[Equipment.Slot.CHEST.getId()]);
+                if (chestAppearance.getShowArms()) {
+                    playerProps.putShort(0x100 + visualLook[4]);
                 } else {
                     playerProps.put(0);
                 }
-                if (player.getEquipment()[Equipment.Slot.HANDS.getId()] > 1) {
-                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.HANDS.getId()]);
+                if (visualEquipment[Equipment.Slot.LEGS.getId()] > 1) {
+                    playerProps.putShort(0x200 + visualEquipment[Equipment.Slot.LEGS.getId()]);
                 } else {
-                    playerProps.putShort(0x100 + player.getHands());
+                    playerProps.putShort(0x100 + visualLook[6]);
                 }
-                if (player.getEquipment()[Equipment.Slot.FEET.getId()] > 1) {
-                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.FEET.getId()]);
+                TarnishEquipmentAppearanceType headAppearance = Server.itemManager.getTarnishAppearanceType(
+                        visualEquipment[Equipment.Slot.HEAD.getId()]);
+                if (headAppearance.getShowHead()) {
+                    playerProps.putShort(0x100 + visualLook[1]); // head
                 } else {
-                    playerProps.putShort(0x100 + player.getFeet());
+                    playerProps.put(0);
                 }
-                if (!Server.itemManager.isMask(player.getEquipment()[Equipment.Slot.HEAD.getId()]) && (player.playerLooks[0] != 1)) {
-                    playerProps.putShort(0x100 + player.getBeard());
+                if (visualEquipment[Equipment.Slot.HANDS.getId()] > 1) {
+                    playerProps.putShort(0x200 + visualEquipment[Equipment.Slot.HANDS.getId()]);
+                } else {
+                    playerProps.putShort(0x100 + visualLook[5]);
+                }
+                if (visualEquipment[Equipment.Slot.FEET.getId()] > 1) {
+                    playerProps.putShort(0x200 + visualEquipment[Equipment.Slot.FEET.getId()]);
+                } else {
+                    playerProps.putShort(0x100 + visualLook[7]);
+                }
+                if (headAppearance.getShowBeard() && visualLook[0] != 1) {
+                    playerProps.putShort(0x100 + visualLook[2]);
                 } else {
                     playerProps.put(0); // 0 = nothing on and girl don't have beard
                     // so send 0. -bakatool
@@ -883,11 +890,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 playerProps.putShort(player.getPlayerNpc());
             }
             // array of 5 bytes defining the colors
-            playerProps.put(player.playerLooks[8]); // hair color
-            playerProps.put(player.playerLooks[9]); // torso color.
-            playerProps.put(player.playerLooks[10]); // leg color
-            playerProps.put(player.playerLooks[11]); // feet color
-            playerProps.put(player.playerLooks[12]); // skin color (0-6)
+            playerProps.put(visualLook[8]); // hair color
+            playerProps.put(visualLook[9]); // torso color.
+            playerProps.put(visualLook[10]); // leg color
+            playerProps.put(visualLook[11]); // feet color
+            playerProps.put(visualLook[12]); // skin color (0-9)
             int standAnim = player.getStandAnim();
             int walkAnim = player.getWalkAnim();
             int runAnim = player.getRunAnim();
@@ -919,9 +926,23 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             playerProps.putShort(runAnim); // runAnimIndex
 
             playerProps.putLong(Utils.playerNameToInt64(player.getPlayerName()));
-            playerProps.put(player.determineCombatLevel()); // combat level
-            playerProps.putShort(0); // incase != 0, writes skill-%d
+            playerProps.putString(""); // title
+            playerProps.putInt(0); // title color
+            playerProps.putString(""); // clan channel
+            playerProps.putString(""); // clan tag
+            playerProps.putString(""); // clan tag color
+            playerProps.putLong(Double.doubleToLongBits(player.determineCombatLevel()));
+            playerProps.put(player.playerRights);
+            playerProps.putShort(0); // non-zero displays skill-%d instead of combat level
             byte[] appearanceBytes = playerProps.toByteArray();
+            TarnishAppearanceValidator.Validation validation = TarnishAppearanceValidator.validate(appearanceBytes);
+            if (!validation.valid) {
+                logger.warn("tarnish_appearance_invalid player={} slot={} reason={} hash={} bytes={}",
+                        player.getPlayerName(), player.getSlot(), validation.reason, validation.hash, appearanceBytes.length);
+            } else if (logger.isDebugEnabled()) {
+                logger.debug("tarnish_appearance player={} slot={} hash={} bytes={}",
+                        player.getPlayerName(), player.getSlot(), validation.hash, appearanceBytes.length);
+            }
             player.cacheAppearanceBytes(appearanceBytes);
             SynchronizationContext.recordPlayerAppearanceCacheHit(false);
             return appearanceBytes;
@@ -1013,61 +1034,35 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     @Override
     public void appendPrimaryHit(Player player, ByteMessage buf) {
         synchronized (this) {
-            // Client appendPlayerUpdateMask (mask & 0x20) expects:
-            // short damage, byte type, short currentHp, short maxHp
-            int damage = player.getDamageDealt();
-            if (damage < Short.MIN_VALUE) damage = Short.MIN_VALUE;
-            if (damage > Short.MAX_VALUE) damage = Short.MAX_VALUE;
-            buf.putShort(damage);
-
-            int type;
-            if (player.getDamageDealt() == 0) {
-                type = 0; // miss
-            } else if (player.getHitType() == Entity.hitType.BURN) {
-                type = 4;
-            } else if (player.getHitType() == Entity.hitType.CRIT) {
-                type = 3;
-            } else if (player.getHitType() == Entity.hitType.POISON) {
-                type = 2;
-            } else {
-                type = 1; // normal
-            }
-            buf.put(type);
-
-            int current = Math.max(0, player.getCurrentHealth());
-            int max = Math.max(1, player.getMaxHealth());
-            buf.putShort(current);
-            buf.putShort(max);
+            appendTarnishPlayerHit(buf, player.getDamageDealt(), player.getHitType(), player, ValueType.ADD);
         }
     }
 
     public void appendPrimaryHit2(Player player, ByteMessage buf) {
         synchronized(this) {
-            // Client appendPlayerUpdateMask (mask & 0x200) uses same layout as primary hit
-            int damage = player.getDamageDealt2();
-            if (damage < Short.MIN_VALUE) damage = Short.MIN_VALUE;
-            if (damage > Short.MAX_VALUE) damage = Short.MAX_VALUE;
-            buf.putShort(damage);
-
-            int type;
-            if (player.getDamageDealt2() == 0) {
-                type = 0; // miss
-            } else if (player.getHitType2() == Entity.hitType.BURN) {
-                type = 4;
-            } else if (player.getHitType2() == Entity.hitType.CRIT) {
-                type = 3;
-            } else if (player.getHitType2() == Entity.hitType.POISON) {
-                type = 2;
-            } else {
-                type = 1; // normal
-            }
-            buf.put(type);
-
-            int current = Math.max(0, player.getCurrentHealth());
-            int max = Math.max(1, player.getMaxHealth());
-            buf.putShort(current);
-            buf.putShort(max);
+            appendTarnishPlayerHit(buf, player.getDamageDealt2(), player.getHitType2(), player, ValueType.SUBTRACT);
         }
+    }
+
+    private static void appendTarnishPlayerHit(ByteMessage buf, int damage, Entity.hitType hitType,
+                                                Player player, ValueType typeTransform) {
+        int maximum = player.getMaxHealth() >= 500 ? 200 : 100;
+        int health = Math.max(0, Math.min(maximum,
+                player.getCurrentHealth() * maximum / Math.max(1, player.getMaxHealth())));
+        buf.put(0); // single hit
+        buf.put(Math.max(0, Math.min(255, damage)));
+        buf.put(tarnishHitType(damage, hitType), typeTransform);
+        buf.put(0); // no separate hit icon in the current combat model
+        buf.put(health);
+        buf.put(maximum, ValueType.NEGATE);
+    }
+
+    private static int tarnishHitType(int damage, Entity.hitType hitType) {
+        if (damage == 0) return 0;
+        if (hitType == Entity.hitType.BURN) return 4;
+        if (hitType == Entity.hitType.CRIT) return 3;
+        if (hitType == Entity.hitType.POISON) return 2;
+        return 1;
     }
 
 }

@@ -95,8 +95,7 @@ object BankInterface : InterfaceButtonContent {
                     requiredInterfaceId = INTERFACE_ID,
                 ) { client, _ ->
                     if (!client.IsBanking || client.bankStyleViewOpen) return@buttonBinding true
-                    client.takeAsNote = true
-                    client.sendMessage("You can now note items.")
+                    PlayerBankService.toggleNoteMode(client)
                     true
                 },
             )
@@ -109,8 +108,7 @@ object BankInterface : InterfaceButtonContent {
                     requiredInterfaceId = INTERFACE_ID,
                 ) { client, _ ->
                     if (!client.IsBanking || client.bankStyleViewOpen) return@buttonBinding true
-                    client.takeAsNote = false
-                    client.sendMessage("You can no longer note items.")
+                    PlayerBankService.toggleInsertMode(client)
                     true
                 },
             )
@@ -140,7 +138,15 @@ object BankInterface : InterfaceButtonContent {
                     rawButtonIds = releasePlaceholdersButtons,
                     requiredInterfaceId = INTERFACE_ID,
                 ) { client, _ ->
-                    client.sendMessage("Placeholders are not supported.")
+                    if (!client.IsBanking || client.bankStyleViewOpen) return@buttonBinding true
+                    val released = PlayerBankService.releaseAllPlaceholders(client)
+                    client.sendMessage(
+                        if (released == 0) {
+                            "There are no place holders available for you to release."
+                        } else {
+                            "You have released $released place holders."
+                        },
+                    )
                     true
                 },
             )
@@ -151,8 +157,8 @@ object BankInterface : InterfaceButtonContent {
                     componentKey = "bank.toggle_placeholders",
                     rawButtonIds = togglePlaceholdersButtons,
                     requiredInterfaceId = INTERFACE_ID,
-                ) { _, _ ->
-                    // Client toggles settings[315] locally; nothing for server to do.
+                ) { client, _ ->
+                    PlayerBankService.togglePlaceholders(client)
                     true
                 },
             )

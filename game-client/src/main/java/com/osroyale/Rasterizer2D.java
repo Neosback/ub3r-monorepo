@@ -108,7 +108,7 @@ public class Rasterizer2D extends Cacheable {
 	}
 
 	public static void drawAlpha(int[] pixels, int index, int value, int alpha) {
-		if (Client.instance == null || !Client.instance.isGpu() || pixels != Client.instance.getBufferProvider().getPixels()) {
+		if (!Client.instance.isGpu() || pixels != Client.instance.getBufferProvider().getPixels()) {
 			pixels[index] = value;
 			return;
 		}

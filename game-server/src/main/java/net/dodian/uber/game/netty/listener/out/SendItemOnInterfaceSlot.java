@@ -21,12 +21,7 @@ public class SendItemOnInterfaceSlot implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(34, MessageType.VAR_SHORT);
-        message.putShort(interfaceId);
-        message.put(slot);
-        message.putInt(amount);
-        int containerId = (amount > 0 && itemId >= 0) ? (itemId + 1) : 0;
-        message.putShort(containerId);
+        ByteMessage message = TarnishItemContainerEncoder.slot(interfaceId, slot, itemId, amount);
         client.send(message);
     }
 }

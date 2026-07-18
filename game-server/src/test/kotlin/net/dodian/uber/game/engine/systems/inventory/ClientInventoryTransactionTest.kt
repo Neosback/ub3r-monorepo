@@ -107,6 +107,75 @@ class ClientInventoryTransactionTest {
     }
 
     @Test
+    fun `complete bank withdrawal retains zero amount item when placeholder requested`() {
+        val client = Client(null, 1).apply {
+            bankItems[4] = 101
+            bankItemsN[4] = 1
+            bankSlotTabs = IntArray(bankSize()).also { it[4] = 2 }
+        }
+
+        assertTrue(EconomyTransaction.transferBankToInventory(client, 100, 4, 1, retainPlaceholder = true))
+
+        assertEquals(101, client.bankItems[4])
+        assertEquals(0, client.bankItemsN[4])
+        assertEquals(2, client.bankSlotTabs[4])
+    }
+
+    @Test
+    fun `complete bank withdrawal clears slot without placeholder request`() {
+        val client = Client(null, 1).apply {
+            bankItems[4] = 101
+            bankItemsN[4] = 1
+        }
+
+        assertTrue(EconomyTransaction.transferBankToInventory(client, 100, 4, 1))
+
+        assertEquals(0, client.bankItems[4])
+        assertEquals(0, client.bankItemsN[4])
+    }
+
+    @Test
+    fun `sequential complete withdrawals expose each placeholder to its first refresh`() {
+        val snapshots = mutableListOf<List<Pair<Int, Int>>>()
+        val client = object : Client(null, 1) {
+            override fun checkItemUpdate() {
+                snapshots += bankItems.indices
+                    .filter { bankItems[it] > 0 }
+                    .map { bankItems[it] to bankItemsN[it] }
+            }
+        }.apply {
+            bankItems[3] = 101
+            bankItemsN[3] = 1
+            bankItems[4] = 201
+            bankItemsN[4] = 1
+        }
+
+        assertTrue(EconomyTransaction.transferBankToInventory(client, 100, 3, 1, retainPlaceholder = true))
+        assertEquals(listOf(101 to 0, 201 to 1), snapshots.single())
+
+        assertTrue(EconomyTransaction.transferBankToInventory(client, 200, 4, 1, retainPlaceholder = true))
+        assertEquals(listOf(101 to 0, 201 to 0), snapshots.last())
+        assertEquals(2, snapshots.size)
+    }
+
+    @Test
+    fun `failed retained withdrawal leaves bank entry unchanged`() {
+        val client = Client(null, 1).apply {
+            bankItems[4] = 101
+            bankItemsN[4] = 2
+            playerItems.indices.forEach { slot ->
+                playerItems[slot] = 201
+                playerItemsN[slot] = 1
+            }
+        }
+
+        assertFalse(EconomyTransaction.transferBankToInventory(client, 100, 4, 2, retainPlaceholder = true))
+
+        assertEquals(101, client.bankItems[4])
+        assertEquals(2, client.bankItemsN[4])
+    }
+
+    @Test
     fun `inventory deposit adds exactly the requested non stackable amount`() {
         val client = Client(null, 1).apply {
             repeat(3) { slot ->

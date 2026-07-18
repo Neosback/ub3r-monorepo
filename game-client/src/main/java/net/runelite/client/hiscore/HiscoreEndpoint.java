@@ -31,13 +31,13 @@ import okhttp3.HttpUrl;
 @Getter
 public enum HiscoreEndpoint
 {
-	NORMAL("Normal", "http://localhost:8080/api/hiscores"),
-	IRONMAN("Ironman", "http://localhost:8080/api/hiscores"),
-	HARDCORE_IRONMAN("Hardcore Ironman", "http://localhost:8080/api/hiscores"),
-	ULTIMATE_IRONMAN("Ultimate Ironman", "http://localhost:8080/api/hiscores"),
-	DEADMAN("Deadman", "http://localhost:8080/api/hiscores"),
-	LEAGUE("Leagues", "http://localhost:8080/api/hiscores"),
-	TOURNAMENT("Tournament", "http://localhost:8080/api/hiscores");
+	NORMAL("Normal", "https://services.runescape.com/m=hiscore_oldschool/index_lite.ws"),
+	IRONMAN("Ironman", "https://services.runescape.com/m=hiscore_oldschool_ironman/index_lite.ws"),
+	HARDCORE_IRONMAN("Hardcore Ironman", "https://services.runescape.com/m=hiscore_oldschool_hardcore_ironman/index_lite.ws"),
+	ULTIMATE_IRONMAN("Ultimate Ironman", "https://services.runescape.com/m=hiscore_oldschool_ultimate/index_lite.ws"),
+	DEADMAN("Deadman", "https://services.runescape.com/m=hiscore_oldschool_deadman/index_lite.ws"),
+	LEAGUE("Leagues", "https://services.runescape.com/m=hiscore_oldschool_seasonal/index_lite.ws"),
+	TOURNAMENT("Tournament", "https://services.runescape.com/m=hiscore_oldschool_tournament/index_lite.ws");
 
 	private final String name;
 	private final HttpUrl hiscoreURL;

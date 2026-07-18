@@ -14,8 +14,10 @@ class DiscordConfigurationTest {
     }
 
     @Test
-    fun `enabled discord requires numeric guild and channel ids`() {
+    fun `token and channel are sufficient while overrides remain optional`() {
         assertTrue(DiscordRuntimeConfiguration("token", "1", "2", "3").valid())
+        assertTrue(DiscordRuntimeConfiguration("token", "", "2", "").valid())
+        assertTrue(DiscordRuntimeConfiguration("token", "", "2", "").effectiveStaffAlertChannelId() == "2")
         assertFalse(DiscordRuntimeConfiguration("token", "guild", "2", "3").valid())
         assertFalse(DiscordRuntimeConfiguration("token", "1", "", "3").valid())
         assertFalse(DiscordRuntimeConfiguration("token", "1", "2", "alerts").valid())

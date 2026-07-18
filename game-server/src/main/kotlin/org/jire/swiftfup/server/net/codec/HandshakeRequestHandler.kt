@@ -22,11 +22,17 @@ class HandshakeRequestHandler(
     override fun channelRead0(ctx: ChannelHandlerContext, msg: HandshakeRequest) {
         val version = this.version
         if (version == msg.version) {
+            org.jire.swiftfup.server.net.SwiftFupDiagnostics.handshakeSucceeded()
             ctx.writeAndFlush(HandshakeResponse.SUCCESS.buf.retainedDuplicate(), ctx.voidPromise())
 
             ctx.pipeline().replace(DECODER_HANDLER, DECODER_HANDLER, FileRequestDecoder())
             ctx.pipeline().replace(TAIL_HANDLER, TAIL_HANDLER, FileRequestHandler(fileResponses))
         } else {
+            org.jire.swiftfup.server.net.SwiftFupDiagnostics.versionMismatch()
+            logger.warn(
+                "swiftfup_version_mismatch remote={} expected={} actual={}",
+                ctx.channel().remoteAddress(), version, msg.version,
+            )
             ctx.writeAndFlush(HandshakeResponse.VERSION_MISMATCH.buf.retainedDuplicate())
                 .addListener(ChannelFutureListener.CLOSE)
         }
@@ -34,6 +40,7 @@ class HandshakeRequestHandler(
 
     @Deprecated("Deprecated in Java")
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+        org.jire.swiftfup.server.net.SwiftFupDiagnostics.channelFailure()
         if (cause !is IOException) {
             logger.debug("SwiftFUP handshake failure remote={}", ctx.channel().remoteAddress(), cause)
         }

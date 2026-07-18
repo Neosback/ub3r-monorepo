@@ -101,7 +101,7 @@ data class PlayerSaveEnvelope(
                     val tab = if (bankTabs != null && slot < bankTabs.size) bankTabs[slot] else 0
                     bankEntries += ItemSlotEntry(slot = slot, itemId = rawId - 1, amount = bankAmts[slot], tab = tab)
                 }
-                segments += BankSegmentSnapshot(bankEntries)
+                segments += BankSegmentSnapshot(bankEntries, client.bankPlaceholdersEnabled)
             }
             if (has(PlayerSaveSegment.EQUIPMENT)) {
                 segments +=

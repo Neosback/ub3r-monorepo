@@ -6,6 +6,7 @@ import net.dodian.uber.game.item.ItemEquipmentDef
 import net.dodian.uber.game.item.ItemRequirement
 import net.dodian.uber.game.item.ItemWeaponDef
 import net.dodian.uber.game.item.ItemWeaponStance
+import net.dodian.uber.game.item.TarnishEquipmentAppearanceType
 import net.dodian.uber.game.item.toRequiredArray
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.engine.systems.animation.AttackAnimationService
@@ -43,6 +44,7 @@ class Item(
     val requirements: IntArray = IntArray(23),
     val attackAnimations: IntArray? = null,
     val blockAnimation: Int = 0,
+    val tarnishAppearanceType: TarnishEquipmentAppearanceType = TarnishEquipmentAppearanceType.DEFAULT,
 ) {
     private val flags: Int = run {
         var f = 0
@@ -180,7 +182,11 @@ class Item(
             else -> ""
         }
 
-        fun fromDefs(base: ItemDefBase, json: ItemDefJson?): Item {
+        fun fromDefs(
+            base: ItemDefBase,
+            json: ItemDefJson?,
+            tarnishAppearanceType: TarnishEquipmentAppearanceType = TarnishEquipmentAppearanceType.DEFAULT,
+        ): Item {
             val itemName = json?.name ?: base.name
             val nameLower = itemName.lowercase()
 
@@ -275,6 +281,7 @@ class Item(
                 requirements = requirements,
                 attackAnimations = attackAnimationsArray,
                 blockAnimation = jsonBlockAnimation,
+                tarnishAppearanceType = tarnishAppearanceType,
             )
         }
     }

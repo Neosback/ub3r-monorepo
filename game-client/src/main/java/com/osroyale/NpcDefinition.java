@@ -169,29 +169,10 @@ public final class NpcDefinition {
                 entityDef.actions[0] = "Open";
                 entityDef.actions[3] = "Trade";
                 break;
-            case 11434:
-            case 11435:
-                entityDef.name = "Aubury";
-                entityDef.actions = new String[5];
-                entityDef.actions[0] = "Talk-to";
-                entityDef.actions[2] = "Trade";
-                entityDef.actions[3] = "Teleport";
-                break;
             /** Crafting master. */
             case 5811:
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Tan";
-                entityDef.actions[2] = "Trade";
-                break;
-            case 5809:
-                entityDef.actions = new String[5];
-                entityDef.actions[0] = "Talk-to";
-                entityDef.actions[2] = "Trade";
-                break;
-            case 2882:
-                entityDef.name = "Horvik";
-                entityDef.actions = new String[5];
-                entityDef.actions[0] = "Talk-to";
                 entityDef.actions[2] = "Trade";
                 break;
             /* Clanmaster */
@@ -263,6 +244,13 @@ public final class NpcDefinition {
                 entityDef.actions[0] = "Open";
                 break;
 
+            /* Farming */
+            case 3258:
+                entityDef.name = "Farming store";
+                entityDef.actions = new String[5];
+                entityDef.actions[0] = "Open";
+                break;
+
             /* Achievement */
             case 5527:
                 entityDef.actions = new String[5];
@@ -304,7 +292,7 @@ public final class NpcDefinition {
                 break;
 
             case 306:
-                entityDef.name = "Tarnish Guide";
+                entityDef.name = "Dodian Guide";
                 break;
             case 5366:
                 entityDef.name = "Skilling Shop";

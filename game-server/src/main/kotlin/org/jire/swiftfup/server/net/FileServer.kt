@@ -12,14 +12,16 @@ import io.netty.channel.epoll.EpollEventLoopGroup
 import io.netty.channel.epoll.EpollServerSocketChannel
 import org.slf4j.LoggerFactory
 
-class FileServer(
+class FileServer @JvmOverloads constructor(
     private val version: Int,
     private val fileResponses: FileResponses,
+    private val protectionConfig: FileServerProtectionConfig = FileServerProtectionConfig(),
 ) {
     private val logger = LoggerFactory.getLogger(FileServer::class.java)
     private var bossGroup: EventLoopGroup? = null
     private var workerGroup: EventLoopGroup? = null
     private var channelFuture: ChannelFuture? = null
+    private val protectionRegistry = FileServerProtectionRegistry(protectionConfig)
 
     fun start(port: Int) {
         val useEpoll = Epoll.isAvailable()
@@ -41,7 +43,7 @@ class FileServer(
                 ChannelOption.WRITE_BUFFER_WATER_MARK,
                 WriteBufferWaterMark(512 * 1024, 2 * 1024 * 1024)
             )
-            .childHandler(FileServerChannelInitializer(version, fileResponses))
+            .childHandler(FileServerChannelInitializer(version, fileResponses, protectionConfig, protectionRegistry))
             
         logger.info("[SwiftFUP] Binding SwiftFUP server on port {}", port)
         channelFuture = bootstrap.bind(port).sync()

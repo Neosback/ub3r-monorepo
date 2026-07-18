@@ -2,18 +2,24 @@ package com.osroyale;
 
 import com.osroyale.engine.impl.MouseHandler;
 import net.runelite.rs.api.RSSpritePixels;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.MemoryImageSource;
 import java.awt.image.PixelGrabber;
-import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import javax.imageio.ImageIO;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class Sprite extends Rasterizer2D implements RSSpritePixels {
+
+	private static final Logger logger = LoggerFactory.getLogger(Sprite.class);
+	private static final Set<Path> invalidImageWarnings = ConcurrentHashMap.newKeySet();
 
 	private int idenfier;
 
@@ -177,15 +183,21 @@ public final class Sprite extends Rasterizer2D implements RSSpritePixels {
 
 	public Sprite(byte abyte0[], Component component) {
 		try {
-			BufferedImage image = ImageIO.read(new ByteArrayInputStream(abyte0));
-			if (image == null) {
-				System.err.println("Failed to decode sprite byte payload length=" + (abyte0 == null ? -1 : abyte0.length));
-				return;
-			}
-			loadFromImage(image, image.getWidth(), image.getHeight());
-		} catch (Exception ex) {
-			System.err.println("Failed to decode sprite byte payload length=" + (abyte0 == null ? -1 : abyte0.length));
-			ex.printStackTrace();
+			Image image = Toolkit.getDefaultToolkit().createImage(abyte0);
+			MediaTracker mediatracker = new MediaTracker(component);
+			mediatracker.addImage(image, 0);
+			mediatracker.waitForAll();
+			width = image.getWidth(component);
+			height = image.getHeight(component);
+			resizeWidth = width;
+			resizeHeight = height;
+			offsetX = 0;
+			offsetY = 0;
+			raster = new int[width * height];
+			PixelGrabber pixelgrabber = new PixelGrabber(image, 0, 0, width, height, raster, 0, width);
+			pixelgrabber.grabPixels();
+		} catch (Exception _ex) {
+			System.out.println("Error converting jpg");
 		}
 	}
 
@@ -215,64 +227,51 @@ public final class Sprite extends Rasterizer2D implements RSSpritePixels {
 	}
 
 	public Sprite(String img, int width, int height) {
+		Path imagePath = Path.of(img).toAbsolutePath().normalize();
+		if (!Files.isRegularFile(imagePath)) {
+			return;
+		}
 		try {
-			Path path = Path.of(img);
-			if(Files.exists(path)) {
-				byte[] bytes = Files.readAllBytes(path);
-				BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
-				if (image == null) {
-					System.err.println("Failed to decode sprite path=" + path + " byteLength=" + bytes.length);
-					return;
-				}
-				loadFromImage(image, width, height);
-			} else if (Configuration.DEBUG_MODE) {
-				System.err.println("Sprite file does not exist path=" + path);
+			BufferedImage image = ImageIO.read(imagePath.toFile());
+			if (image == null || image.getWidth() != width || image.getHeight() != height) {
+				warnInvalidImageOnce(imagePath, "expected " + width + "x" + height);
+				return;
 			}
+			this.width = width;
+			this.height = height;
+			resizeWidth = width;
+			resizeHeight = height;
+			offsetX = 0;
+			offsetY = 0;
+			raster = image.getRGB(0, 0, width, height, null, 0, width);
 		} catch (Exception ex) {
-			if (Configuration.DEBUG_MODE) {
-				System.err.println("Failed to decode sprite path=" + img);
-				ex.printStackTrace();
-			}
+			warnInvalidImageOnce(imagePath, ex.getMessage());
+		}
+	}
+
+	private static void warnInvalidImageOnce(Path imagePath, String reason) {
+		if (invalidImageWarnings.add(imagePath)) {
+			logger.warn("Skipping invalid profile image {} ({})", imagePath, reason == null ? "decode failed" : reason);
 		}
 	}
 
 	public Sprite(String img) {
 		try {
-			Path path = Path.of(location + img + ".png");
-			if (!Files.exists(path)) {
-				throw new java.io.FileNotFoundException("Sprite file not found: " + path);
-			}
-			byte[] bytes = Files.readAllBytes(path);
-			BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
-			if (image == null) {
-				throw new java.io.IOException("Failed to decode sprite: " + path);
-			}
-			loadFromImage(image, image.getWidth(), image.getHeight());
+			Image image = Toolkit.getDefaultToolkit().getImage(location + img + ".png");
+			ImageIcon sprite = new ImageIcon(image);
+			width = sprite.getIconWidth();
+			height = sprite.getIconHeight();
+			resizeWidth = width;
+			resizeHeight = height;
+			offsetX = 0;
+			offsetY = 0;
+			raster = new int[width * height];
+			PixelGrabber pixelgrabber = new PixelGrabber(image, 0, 0, width, height, raster, 0, width);
+			pixelgrabber.grabPixels();
 			setTransparency(255, 0, 255);
 		} catch (Exception ex) {
-			throw new RuntimeException(ex);
+			ex.printStackTrace();
 		}
-	}
-
-	private void loadFromImage(BufferedImage image, int targetWidth, int targetHeight) {
-		if (image.getWidth() != targetWidth || image.getHeight() != targetHeight) {
-			BufferedImage resized = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
-			Graphics2D graphics = resized.createGraphics();
-			try {
-				graphics.drawImage(image, 0, 0, targetWidth, targetHeight, null);
-			} finally {
-				graphics.dispose();
-			}
-			image = resized;
-		}
-		width = targetWidth;
-		height = targetHeight;
-		resizeWidth = width;
-		resizeHeight = height;
-		offsetX = 0;
-		offsetY = 0;
-		raster = new int[width * height];
-		image.getRGB(0, 0, width, height, raster, 0, width);
 	}
 
 	public Sprite(Sprite target) {
@@ -928,19 +927,18 @@ public final class Sprite extends Rasterizer2D implements RSSpritePixels {
 
 	public Sprite(byte spriteData[]) {
 		try {
-			BufferedImage bimage = ImageIO.read(new ByteArrayInputStream(spriteData));
-			if (bimage == null) {
-				System.err.println("Failed to decode sprite from byte data");
-				return;
-			}
-			width = bimage.getWidth();
-			height = bimage.getHeight();
+			Image image = Toolkit.getDefaultToolkit().createImage(spriteData);
+			ImageIcon sprite = new ImageIcon(image);
+			width = sprite.getIconWidth();
+			height = sprite.getIconHeight();
 			resizeWidth = width;
 			resizeHeight = height;
 			offsetX = 0;
 			offsetY = 0;
 			raster = new int[width * height];
-			bimage.getRGB(0, 0, width, height, raster, 0, width);
+			PixelGrabber pixelgrabber = new PixelGrabber(image, 0, 0, width, height, raster, 0, width);
+			pixelgrabber.grabPixels();
+			image = null;
 			setTransparency(255, 0, 255);
 		} catch (Exception ex) {
 			ex.printStackTrace();

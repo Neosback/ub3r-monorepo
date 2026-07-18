@@ -42,33 +42,33 @@ object AccountPersistenceService {
         scope.launch {
             val startedAt = System.nanoTime()
             var pendingRetries = 0
-            val code =
+            val prepared =
                 try {
                     val deadline = System.currentTimeMillis() + 3_000L
-                    var finalCode = 13
+                    var finalResult = AccountLoginService.PreparedLogin.failure(13)
                     while (true) {
-                        val loadCode = AccountLoginService.loadGame(client, username, password)
-                        if (loadCode != AccountLoginService.FINAL_SAVE_PENDING_INTERNAL) {
-                            finalCode = loadCode
+                        val loadResult = AccountLoginService.prepareGame(client, username, password)
+                        if (loadResult.code != AccountLoginService.FINAL_SAVE_PENDING_INTERNAL) {
+                            finalResult = loadResult
                             break
                         }
                         pendingRetries++
                         if (System.currentTimeMillis() >= deadline) {
-                            finalCode = 5
+                            finalResult = AccountLoginService.PreparedLogin.failure(5)
                             break
                         }
                         delay(50L)
                     }
-                    finalCode
+                    finalResult
                 } catch (exception: CancellationException) {
                     logger.info("Account load cancelled for {}", username)
-                    13
+                    AccountLoginService.PreparedLogin.failure(13)
                 } catch (exception: RuntimeException) {
                     logger.warn("Account load failed for {}", username, exception)
-                    13
+                    AccountLoginService.PreparedLogin.failure(13)
                 }
             val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
-            onComplete.accept(LoginLoadResult(code, durationMs, pendingRetries))
+            onComplete.accept(LoginLoadResult(prepared.code, durationMs, pendingRetries, prepared.takeIf { it.code == 0 }))
         }
     }
 
@@ -176,5 +176,6 @@ object AccountPersistenceService {
         val code: Int,
         val durationMs: Long,
         val pendingRetries: Int,
+        val hydration: AccountLoginService.PreparedLogin? = null,
     )
 }

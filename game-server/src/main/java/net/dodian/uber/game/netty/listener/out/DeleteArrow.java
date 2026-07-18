@@ -21,21 +21,8 @@ public class DeleteArrow implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(34, MessageType.VAR_SHORT);
-
-        // Match mystic client's UPDATE_SPECIFIC_ITEM layout:
-        // interfaceId (uShort), slot (uByte), amount (int), id (uShort)
-
-        message.putShort(1688);
-
-        message.put(slot);
-
-        // Remaining arrow amount
         int safeAmount = Math.max(0, amount);
-        message.putInt(safeAmount);
-
-        int containerId = (safeAmount > 0 && itemId > 0) ? (itemId + 1) : 0;
-        message.putShort(containerId);
+        ByteMessage message = TarnishItemContainerEncoder.slot(1688, slot, itemId, safeAmount);
 
         client.send(message);
     }

@@ -209,8 +209,14 @@ object ContentModuleIndex {
         ContentPlatformCatalog.publish(discoveredManifests)
         val platformSnapshot = ContentPlatformCatalog.snapshot()
         logger.info(
-            "Content manifest frozen fingerprint={} enabled=[{}] disabled=[{}]",
+            "Content manifest frozen fingerprint={} modules={} enabled={} disabled={}",
             platformSnapshot.fingerprint.take(12),
+            platformSnapshot.modules.size,
+            platformSnapshot.enabledCount,
+            platformSnapshot.disabledCount,
+        )
+        logger.debug(
+            "Content manifest modules enabled=[{}] disabled=[{}]",
             platformSnapshot.modules.filter { it.id in platformSnapshot.enabledModuleIds }.joinToString { it.id },
             platformSnapshot.modules.filter { it.id !in platformSnapshot.enabledModuleIds }.joinToString { it.id },
         )

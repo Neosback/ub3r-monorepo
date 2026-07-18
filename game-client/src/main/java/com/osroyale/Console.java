@@ -101,7 +101,8 @@ public class Console {
 		}
 
 		Client.instance.outgoing.writeOpcode(103);
-		CommandPacket.write(Client.instance.outgoing, consoleCommand);
+		Client.instance.outgoing.writeByte(consoleCommand.length() + 1);
+		Client.instance.outgoing.writeString(consoleCommand);
 		commandIndex = -1;
 	}
 
@@ -156,3 +157,4 @@ public class Console {
 		terminal[0] = message;
 	}
 }
+

@@ -42,7 +42,7 @@ class PlayerSaveSqlRepository(
         )
         envelope.segment<EquipmentSegmentSnapshot>()?.let { values["equipment"] = encodeItemSlots(it.entries) }
         envelope.segment<InventorySegmentSnapshot>()?.let { values["inventory"] = encodeItemSlots(it.entries) }
-        envelope.segment<BankSegmentSnapshot>()?.let { values["bank"] = encodeItemSlots(it.entries) }
+        envelope.segment<BankSegmentSnapshot>()?.let { values["bank"] = encodeBank(it) }
         envelope.segment<SocialSegmentSnapshot>()?.let { values["friends"] = it.friends.joinToString(" ") }
         envelope.segment<SlayerSegmentSnapshot>()?.let {
             values["slayerData"] = it.slayerData
@@ -190,7 +190,7 @@ class PlayerSaveSqlRepository(
                 setRaw("inventory='${encodeItemSlots(inventory.entries)}'")
             }
             if (bank != null) {
-                setRaw("bank='${encodeItemSlots(bank.entries)}'")
+                setRaw("bank='${encodeBank(bank)}'")
             }
             if (social != null) {
                 val friendsValue = social.friends.joinToString(" ")
@@ -239,6 +239,16 @@ class PlayerSaveSqlRepository(
             if (entry.tab != 0) "${entry.slot}-${entry.itemId}-${entry.amount}-${entry.tab}"
             else "${entry.slot}-${entry.itemId}-${entry.amount}"
         }
+
+    /** Backward-compatible metadata in the existing bank text column; old readers ignore this token. */
+    private fun encodeBank(bank: BankSegmentSnapshot): String =
+        buildList {
+            addAll(bank.entries.map { entry ->
+                if (entry.tab != 0) "${entry.slot}-${entry.itemId}-${entry.amount}-${entry.tab}"
+                else "${entry.slot}-${entry.itemId}-${entry.amount}"
+            })
+            if (bank.placeholdersEnabled) add("@ph=1")
+        }.joinToString(" ")
 
     private fun encodeNamedCounts(entries: List<NamedCountEntry>, kvSeparator: String, entrySeparator: String): String =
         entries.joinToString(entrySeparator) { entry -> "${entry.name}$kvSeparator${entry.count}" }

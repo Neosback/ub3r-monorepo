@@ -26,6 +26,7 @@ public class SetChatOptions implements OutgoingPacket {
         ByteMessage message = ByteMessage.message(206, MessageType.FIXED);
         message.put(publicChat);
         message.put(privateChat);
+        message.put(0); // clan chat mode
         message.put(tradeBlock);
         
         client.send(message);

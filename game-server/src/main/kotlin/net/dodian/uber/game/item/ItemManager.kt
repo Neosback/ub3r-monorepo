@@ -43,6 +43,19 @@ fun parseItemDefsFile(filePath: String): List<ItemDefBase> {
     }
 }
 
+fun parseTarnishAppearanceTypes(filePath: String): Map<Int, TarnishEquipmentAppearanceType> {
+    val file = File(filePath)
+    if (!file.exists()) return emptyMap()
+    return file.useLines { lines ->
+        lines.filter { it.isNotBlank() && !it.startsWith("#") }
+            .associate { line ->
+                val parts = line.split(',', limit = 2)
+                require(parts.size == 2) { "Invalid Tarnish appearance type row: $line" }
+                parts[0].trim().toInt() to TarnishEquipmentAppearanceType.valueOf(parts[1].trim())
+            }
+    }
+}
+
 open class ItemManager @JvmOverloads constructor(
     private val definitionLoader: (() -> Map<Int, Item>)? = null,
     private val globalSpawnBootstrap: (() -> Unit)? = null,
@@ -98,6 +111,7 @@ open class ItemManager @JvmOverloads constructor(
         val loaded = LinkedHashMap<Int, Item>()
 
         val baseDefs = parseItemDefsFile("data/def/item/item_definitions.json")
+        val tarnishAppearanceTypes = parseTarnishAppearanceTypes("data/def/item/tarnish_equipment_appearance.csv")
         val baseMap = LinkedHashMap<Int, ItemDefBase>()
         for (base in baseDefs) {
             baseMap[base.id] = base
@@ -143,14 +157,22 @@ open class ItemManager @JvmOverloads constructor(
                 )
                 loaded[json.id] = item
             } else {
-                loaded[json.id] = Item.fromDefs(base, json)
+                loaded[json.id] = Item.fromDefs(
+                    base,
+                    json,
+                    tarnishAppearanceTypes[json.id] ?: TarnishEquipmentAppearanceType.DEFAULT,
+                )
             }
             processedIds.add(json.id)
         }
 
         for ((id, base) in baseMap) {
             if (id !in processedIds) {
-                loaded[id] = Item.fromDefs(base, null)
+                loaded[id] = Item.fromDefs(
+                    base,
+                    null,
+                    tarnishAppearanceTypes[id] ?: TarnishEquipmentAppearanceType.DEFAULT,
+                )
             }
         }
 
@@ -260,6 +282,9 @@ open class ItemManager @JvmOverloads constructor(
         val item = getItem(id)
         return item != null && item.slot == 0 && item.mask
     }
+
+    fun getTarnishAppearanceType(id: Int): TarnishEquipmentAppearanceType =
+        getItem(id)?.tarnishAppearanceType ?: TarnishEquipmentAppearanceType.DEFAULT
 
     fun getShopSellValue(id: Int): Int = getItem(id)?.getShopSellValue() ?: 1
 

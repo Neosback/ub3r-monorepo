@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
  * Native Netty listener for the "change appearance" packet.
  * Migrates the legacy {@code ChangeAppearance} Stream-based handler to Netty.
  */
-@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {11, 101})
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {101})
 public class ChangeAppearanceListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ChangeAppearanceListener.class);

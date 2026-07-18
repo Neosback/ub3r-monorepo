@@ -4,7 +4,7 @@ import java.sql.Connection
 import java.sql.ResultSet
 import net.dodian.uber.game.model.player.skills.Skill
 
-internal object AccountLoginRepository {
+object AccountLoginRepository {
     data class WebUserRow(
         val dbId: Int,
         val username: String,

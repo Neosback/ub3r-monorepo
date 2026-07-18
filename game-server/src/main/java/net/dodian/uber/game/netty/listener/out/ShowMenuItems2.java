@@ -25,15 +25,7 @@ public class ShowMenuItems2 implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        message.putInt(8847);
-        message.putShort(items.length); // Number of items
-        // Write each item
-        for (int i = 0; i < items.length; i++) {
-            message.putInt(amounts[i]);
-            if (amounts[i] != 0)
-                message.putShort(items[i] + 1);
-        }
+        ByteMessage message = TarnishItemContainerEncoder.full(8847, items, amounts);
         
         client.send(message);
     }

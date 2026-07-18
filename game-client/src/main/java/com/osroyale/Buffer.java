@@ -166,19 +166,8 @@ public final class Buffer extends Cacheable {
 	}
 
 	public void writeOpcode(int i) {
-		if (reservePacketSlots && currentPacketStart != -1) {
-			int totalSize = position - (currentPacketStart - 2);
-			array[currentPacketStart - 1] = (byte) (totalSize + encryption.getNextKey());
-		}
-
+		// System.out.println("Frame: " + i);
 		array[position++] = (byte) (i + encryption.getNextKey());
-
-		if (reservePacketSlots) {
-			position++; // reserve slot for size
-			currentPacketStart = position;
-		} else {
-			currentPacketStart = -1;
-		}
 	}
 
 	public void writeByte(int i) {
@@ -551,16 +540,5 @@ public final class Buffer extends Cacheable {
 
 	public void setPosition(int offset) {
 		this.position = offset;
-	}
-
-	public boolean reservePacketSlots = false;
-	private int currentPacketStart = -1;
-
-	public void endPacket() {
-		if (reservePacketSlots && currentPacketStart != -1) {
-			int totalSize = position - (currentPacketStart - 2);
-			array[currentPacketStart - 1] = (byte) (totalSize + encryption.getNextKey());
-			currentPacketStart = -1;
-		}
 	}
 }

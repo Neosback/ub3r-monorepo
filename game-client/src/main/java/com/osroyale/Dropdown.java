@@ -13,10 +13,6 @@ public enum Dropdown {
 			client.outgoing.writeDWord(rsint.interfaceId);
 			client.outgoing.writeByte(option);
 			Client.sendString(rsint.disabledMessage, option);
-			if (rsint.interfaceId == 50205) {
-				Settings.ENTITY_ATTACK_OPTION = option;
-				Settings.save();
-			}
 		}
 	},
 	KEYBINDING() {

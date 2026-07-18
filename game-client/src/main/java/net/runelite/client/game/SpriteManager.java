@@ -66,10 +66,6 @@ public class SpriteManager
 	@Nullable
 	public BufferedImage getSprite(int archive, int file)
 	{
-		if (archive < 0 || file < 0)
-		{
-			return null;
-		}
 		if (client.getGameState().ordinal() < GameState.LOGIN_SCREEN.ordinal())
 		{
 			return null;
@@ -82,12 +78,8 @@ public class SpriteManager
 			return cached;
 		}
 
-		if (client.getIndexSprites() == null)
-		{
-			return null;
-		}
-		SpritePixels[] sp = client.getSprites(client.getIndexSprites(), archive, file);
-		if (sp == null || sp.length == 0 || archive >= sp.length || sp[archive] == null)
+		SpritePixels[] sp = client.getSprites(client.getIndexSprites(), archive, 0);
+		if (sp == null || archive >= sp.length)
 		{
 			return null;
 		}
@@ -100,11 +92,6 @@ public class SpriteManager
 
 	public void getSpriteAsync(int archive, int file, Consumer<BufferedImage> user)
 	{
-		if (archive < 0 || file < 0 || client.getIndexSprites() == null)
-		{
-			user.accept(null);
-			return;
-		}
 		BufferedImage cached = cache.getIfPresent((long) archive << 32 | file);
 		if (cached != null)
 		{

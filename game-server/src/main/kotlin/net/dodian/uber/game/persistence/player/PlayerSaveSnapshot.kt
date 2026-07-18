@@ -73,6 +73,9 @@ data class PlayerSaveSnapshot(
                     bank.append(i).append('-').append(client.bankItems[i] - 1).append('-').append(client.bankItemsN[i]).append('-').append(tab).append(' ')
                 }
             }
+            if (client.bankPlaceholdersEnabled) {
+                bank.append("@ph=1 ")
+            }
             for (i in client.equipment.indices) {
                 if (client.equipment[i] > 0) {
                     equipment.append(i).append('-').append(client.equipment[i]).append('-').append(client.equipmentN[i]).append(' ')

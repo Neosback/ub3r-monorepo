@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.dodian.uber.game.engine.systems.cache.CacheBootstrapService;
 import net.dodian.uber.game.engine.systems.interaction.ObjectClipService;
+import org.jire.swiftfup.server.SwiftFupCache;
 
 
 import net.dodian.uber.game.netty.bootstrap.NettyGameServer;
@@ -136,8 +137,13 @@ public class Server {
 
         logger.info("Starting SwiftFUP server...");
         org.jire.swiftfup.server.net.FileResponses fileResponses = new org.jire.swiftfup.server.net.FileResponses();
-        fileResponses.load("data/cache", false);
-        fileServer = new org.jire.swiftfup.server.net.FileServer(3, fileResponses);
+        fileResponses.load(SwiftFupCache.path().toString(), false);
+        org.jire.swiftfup.server.net.FileServerProtectionConfig swiftFupProtection =
+                new org.jire.swiftfup.server.net.FileServerProtectionConfig(
+                        DotEnvKt.getSwiftFupConnectionsPerIp(),
+                        DotEnvKt.getSwiftFupReadTimeoutSeconds(),
+                        DotEnvKt.getSwiftFupMaxTrackedIps());
+        fileServer = new org.jire.swiftfup.server.net.FileServer(3, fileResponses, swiftFupProtection);
         fileServer.start(DotEnvKt.getSwiftFupPort());
 
         System.gc();
@@ -175,7 +181,7 @@ public class Server {
                 itemDefinitionCount,
                 objects.size(),
                 DotEnvKt.getWebApiEnabled() ? "enabled" : "disabled",
-                DotEnvKt.getDiscordToken().isBlank() ? "disabled" : "starting"
+                net.dodian.uber.game.discord.DiscordService.status().name().toLowerCase(Locale.ROOT)
         );
     }
 
@@ -215,6 +221,12 @@ public class Server {
             }
         } catch (Exception exception) {
             logger.warn("Failed to request final player saves during shutdown", exception);
+        }
+
+        try {
+            net.dodian.uber.game.netty.login.LoginPreparationService.shutdown(Duration.ofSeconds(10));
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown login preparation workers", exception);
         }
 
         try {

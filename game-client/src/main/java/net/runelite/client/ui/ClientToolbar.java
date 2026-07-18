@@ -26,7 +26,6 @@ package net.runelite.client.ui;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.swing.SwingUtilities;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import net.runelite.client.eventbus.EventBus;
@@ -40,14 +39,12 @@ import net.runelite.client.events.NavigationButtonRemoved;
 public class ClientToolbar
 {
 	private final EventBus eventBus;
-	private final ClientUI clientUI;
 	private final Set<NavigationButton> buttons = new HashSet<>();
 
 	@Inject
-	private ClientToolbar(final EventBus eventBus, final ClientUI clientUI)
+	private ClientToolbar(final EventBus eventBus)
 	{
 		this.eventBus = eventBus;
-		this.clientUI = clientUI;
 	}
 
 	/**
@@ -78,18 +75,6 @@ public class ClientToolbar
 		if (buttons.remove(button))
 		{
 			eventBus.post(new NavigationButtonRemoved(button));
-		}
-	}
-
-	public void openPanel(final NavigationButton button)
-	{
-		if (SwingUtilities.isEventDispatchThread())
-		{
-			clientUI.openPanel(button, true);
-		}
-		else
-		{
-			SwingUtilities.invokeLater(() -> clientUI.openPanel(button, true));
 		}
 	}
 }

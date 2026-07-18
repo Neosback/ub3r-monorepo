@@ -107,7 +107,7 @@ import static org.lwjgl.opengl.GL43C.*;
 @PluginDependency(EntityHiderPlugin.class)
 @Slf4j
 public class HdPlugin extends Plugin implements DrawCallbacks {
-	public static final String DISCORD_URL = "https://discord.gg/m4CkqrakHn";
+	public static final String DISCORD_URL = "https://discord.gg/U4p6ChjgSE";
 	public static final String RUNELITE_URL = "https://runelite.net";
 
 	public static final int TEXTURE_UNIT_UI = GL_TEXTURE0; // default state
@@ -2689,6 +2689,9 @@ public class HdPlugin extends Plugin implements DrawCallbacks {
 	@Subscribe
 	public void onBeforeRender(BeforeRender beforeRender) {
 		// The game runs significantly slower when drawing lower planes, even though it in certain areas makes useful visual difference
+		// BeforeRender can fire while the legacy client is still constructing its scene.
+		// The original Tarnish client dereferenced it unconditionally, producing a
+		// short burst of harmless startup NPEs whenever 117 HD was enabled.
 		Scene scene = client.getScene();
 		if (scene != null) {
 			scene.setMinLevel(isInChambersOfXeric ? client.getPlane() : 0);

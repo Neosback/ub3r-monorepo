@@ -6,16 +6,7 @@ import net.dodian.uber.game.netty.codec.MessageType;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 
 /**
- * Clears an item container interface by sending empty slots.
- * This replaces legacy methods that manually clear item containers.
- * 
- * Packet structure (must match Mystic's SEND_UPDATE_ITEMS handler):
- * - Opcode: 53 (variable size word)
- * - Interface ID: 4 bytes (int)
- * - Item count: 2 bytes (number of slots to clear)
- * - For each slot:
- *   - Amount: 4 bytes (0)
- *   - No item ID is written when amount is 0
+ * Clears an item container interface using Tarnish's opcode-53 layout.
  */
 public class ClearItemContainer implements OutgoingPacket {
 
@@ -30,14 +21,7 @@ public class ClearItemContainer implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-
-        message.putInt(interfaceId);
-        message.putShort(slotCount);
-
-        for (int i = 0; i < slotCount; i++) {
-            message.putInt(0);
-        }
+        ByteMessage message = TarnishItemContainerEncoder.full(interfaceId, new int[slotCount], new int[slotCount]);
 
         ItemContainerTrace.log(client, "ClearItemContainer", interfaceId, slotCount, "all-zero");
         client.send(message);

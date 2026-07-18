@@ -1,7 +1,6 @@
 package com.osroyale.engine.impl;
 
 
-import com.osroyale.ButtonPacket;
 import com.osroyale.Client;
 import com.osroyale.login.ScreenType;
 import net.runelite.api.GameState;
@@ -75,7 +74,7 @@ public final class KeyHandler implements KeyListener, FocusListener, RSKeyHandle
             if(Client.instance.getGameState() == GameState.LOGGED_IN) {
                 if (Client.instance.chatDelay.elapsed() > 599 && keyevent.getKeyCode() == KeyEvent.VK_ESCAPE || keyevent.getKeyCode() == KeyEvent.VK_TAB || keyevent.getKeyCode() == KeyEvent.VK_SPACE || keyevent.getKeyCode() == KeyEvent.VK_1 || keyevent.getKeyCode() == KeyEvent.VK_2 || keyevent.getKeyCode() == KeyEvent.VK_3 || keyevent.getKeyCode() == KeyEvent.VK_4 || keyevent.getKeyCode() == KeyEvent.VK_5 || keyevent.getKeyCode() == KeyEvent.VK_NUMPAD1 || keyevent.getKeyCode() == KeyEvent.VK_NUMPAD2 || keyevent.getKeyCode() == KeyEvent.VK_NUMPAD3 || keyevent.getKeyCode() == KeyEvent.VK_NUMPAD4 || keyevent.getKeyCode() == KeyEvent.VK_NUMPAD5) {
                     Client.instance.outgoing.writeOpcode(186);
-                    ButtonPacket.writeAction(Client.instance.outgoing, keyevent.getKeyCode(), 0);
+                    Client.instance.outgoing.writeShort(keyevent.getKeyCode());
                 }
             }
 

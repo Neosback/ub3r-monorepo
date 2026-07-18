@@ -14,7 +14,7 @@ public class LoadPrivateMessage implements OutgoingPacket {
     
     public LoadPrivateMessage(long name, int world) {
         this.name = name;
-        this.world = world != 0 ? world + 9 : 1;
+        this.world = world != 0 ? world + 9 : 0;
         //System.out.println("loadpm " + name + " " + this.world);
     }
 
@@ -22,7 +22,8 @@ public class LoadPrivateMessage implements OutgoingPacket {
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(50, MessageType.FIXED);
         message.putLong(name); 
-        message.put(world);    
+        message.put(world);
+        message.put(1); // display login/logout notification
         client.send(message);
     }
 }

@@ -33,8 +33,6 @@ public class DuelConfirmItems implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-
         int interfaceId;
         Collection<GameItem> itemsToSend;
 
@@ -46,16 +44,11 @@ public class DuelConfirmItems implements OutgoingPacket {
             itemsToSend = otherItems;
         }
 
-        message.putInt(interfaceId);
-        message.putShort(itemsToSend.size());
+        ByteMessage message = TarnishItemContainerEncoder.full(interfaceId, itemsToSend);
 
         StringBuilder preview = new StringBuilder();
         for (GameItem item : itemsToSend) {
             int amount = item.getAmount();
-            message.putInt(amount);
-            if (amount != 0) {
-                message.putShort(item.getId() + 1);
-            }
             if (preview.length() < 120) {
                 if (preview.length() > 0) {
                     preview.append(", ");

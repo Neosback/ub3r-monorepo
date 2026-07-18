@@ -11,12 +11,7 @@ import java.util.Collection;
 /**
  * Sends items to the duel victory screen container (interface 6822).
  *
- * Mystic's item-container update path reads:
- * - interface id: int
- * - item count: short
- * - for each item:
- *   - amount: int
- *   - item id: short (only when amount != 0)
+ * Uses Tarnish's canonical opcode-53 item-container layout.
  */
 public class ItemsToVScreen implements OutgoingPacket {
 
@@ -29,17 +24,10 @@ public class ItemsToVScreen implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-
-        message.putInt(6822);
-        message.putShort(items.size());
+        ByteMessage message = TarnishItemContainerEncoder.full(6822, items);
 
         StringBuilder preview = new StringBuilder();
         for (GameItem item : items) {
-            message.putInt(item.getAmount());
-            if (item.getAmount() != 0) {
-                message.putShort(item.getId() + 1);
-            }
             if (preview.length() < 120) {
                 if (preview.length() > 0) {
                     preview.append(", ");

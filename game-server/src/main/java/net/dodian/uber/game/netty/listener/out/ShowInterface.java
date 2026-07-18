@@ -21,7 +21,7 @@ public final class ShowInterface implements OutgoingPacket {
     public void send(Client client) {
         //System.out.println("Show interface: " + interfaceId);
         ByteMessage message = ByteMessage.message(97);
-        message.putShort(interfaceId);
+        message.putInt(interfaceId);
         client.send(message);
     }
 }

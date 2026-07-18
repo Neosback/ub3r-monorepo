@@ -2128,7 +2128,7 @@ final class SceneGraph implements RSScene {
 		final boolean checkClick = Client.instance.isCheckClick();
 
 		int tilePlane = z;
-		if ((tileSettings[1][x][y] & 2) != 0)
+		if ((tileSettings[1][x][x] & 2) != 0)
 		{
 			tilePlane = z - 1;
 		}

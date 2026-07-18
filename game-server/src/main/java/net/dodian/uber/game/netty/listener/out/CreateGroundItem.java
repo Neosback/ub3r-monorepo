@@ -22,8 +22,9 @@ public class CreateGroundItem implements OutgoingPacket {
         client.send(new SetMap(position));
         ByteMessage message = ByteMessage.message(44);
         message.putShort(item.getId(), ByteOrder.LITTLE, ValueType.ADD);
-        message.putShort(item.getAmount());
-        message.put(0);
+        message.putLong(item.getAmount());
+        message.put(0); // normal ground-item type
+        message.put(0); // packed local coordinate
         client.send(message);
     }
 

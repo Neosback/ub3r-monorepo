@@ -50,10 +50,8 @@ public class MenuManager
 	/*
 	 * The index needs to be between 4 and 7,
 	 */
-	// The 317 client has six player options. The server owns 0..4; slot 5 is
-	// intentionally reserved for optional RuneLite player actions.
-	private static final int IDX_LOWER = 5;
-	private static final int IDX_UPPER = 6;
+	private static final int IDX_LOWER = 4;
+	private static final int IDX_UPPER = 8;
 
 	private final Client client;
 
@@ -147,11 +145,6 @@ public class MenuManager
 	public void addPlayerMenuItem(String menuText)
 	{
 		Preconditions.checkNotNull(menuText);
-		if (!hasUsablePlayerMenuArrays())
-		{
-			log.warn("Client player-menu bridge is unavailable; cannot add '{}'", menuText);
-			return;
-		}
 
 		int playerMenuIndex = findEmptyPlayerMenuIndex();
 		if (playerMenuIndex == IDX_UPPER)
@@ -211,32 +204,8 @@ public class MenuManager
 
 	private void removePlayerMenuItem(int playerOptionIndex)
 	{
-		String[] options = client.getPlayerOptions();
-		boolean[] priorities = client.getPlayerOptionsPriorities();
-		int[] types = client.getPlayerMenuTypes();
-		if (playerOptionIndex < options.length)
-		{
-			options[playerOptionIndex] = null;
-		}
-		if (playerOptionIndex < priorities.length)
-		{
-			priorities[playerOptionIndex] = false;
-		}
-		if (playerOptionIndex < types.length)
-		{
-			types[playerOptionIndex] = 0;
-		}
+		client.getPlayerOptions()[playerOptionIndex] = null;
 		playerMenuIndexMap.remove(playerOptionIndex);
-	}
-
-	private boolean hasUsablePlayerMenuArrays()
-	{
-		return client.getPlayerOptions() != null
-			&& client.getPlayerOptionsPriorities() != null
-			&& client.getPlayerMenuTypes() != null
-			&& client.getPlayerOptions().length > IDX_LOWER
-			&& client.getPlayerOptionsPriorities().length == client.getPlayerOptions().length
-			&& client.getPlayerMenuTypes().length == client.getPlayerOptions().length;
 	}
 
 	/**
@@ -247,12 +216,11 @@ public class MenuManager
 		int index = IDX_LOWER;
 
 		String[] playerOptions = client.getPlayerOptions();
-		int upper = Math.min(IDX_UPPER, playerOptions.length);
-		while (index < upper && playerOptions[index] != null)
+		while (index < IDX_UPPER && playerOptions[index] != null)
 		{
 			index++;
 		}
 
-		return index < upper ? index : IDX_UPPER;
+		return index;
 	}
 }

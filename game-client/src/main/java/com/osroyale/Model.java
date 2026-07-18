@@ -158,12 +158,10 @@ public class Model extends Renderable implements RSModel {
 		ModelHeader header = modelHeaders[file];
 		if (header == null) {
 			Client.instance.onDemandFetcher.loadData(0, file);
-			header = modelHeaders[file];
-			if (header == null) {
-				return null;
-			}
+			return null;
+		} else {
+			return new Model(file);
 		}
-		return new Model(file);
 	}
 
 	public static boolean isCached(int file) {
@@ -2142,7 +2140,7 @@ public class Model extends Renderable implements RSModel {
 		int sceneY = offsetY * pitchSine + sceneX * pitchCos >> 16;
 		int dimensionSinY = diagonal2DAboveOrigin * pitchCos >> 16;
 		int pos = sceneY + dimensionSinY;
-		final boolean gpu = Client.instance != null && Client.instance.isGpu() && Rasterizer3D.world;
+		final boolean gpu = Client.instance.isGpu() && Rasterizer3D.world;
 		if (pos <= 50 || (sceneY >= 3500 && !gpu))
 			return;
 		int xRot = offsetZ * yawSin + offsetX * yawCos >> 16;
@@ -2328,7 +2326,7 @@ public class Model extends Renderable implements RSModel {
 	}
 
 	final void withinObject(boolean var25, boolean highlighted, boolean bigSize, long uid) {
-		final boolean gpu = Client.instance != null && Client.instance.isGpu() && Rasterizer3D.world;
+		final boolean gpu = Client.instance.isGpu() && Rasterizer3D.world;
 
 		if (diagonal3D < 6000) {
 			for (int diagonalIndex = 0; diagonalIndex < diagonal3D; diagonalIndex++) {
@@ -2555,7 +2553,7 @@ public class Model extends Renderable implements RSModel {
 	}
 
 	public void drawFace(int face) { //method484
-		DrawCallbacks callbacks = Client.instance == null ? null : Client.instance.getDrawCallbacks();
+		DrawCallbacks callbacks = Client.instance.getDrawCallbacks();
 		if (callbacks == null || !callbacks.drawFace(this, face))
 		{
 			if (outOfReach[face]) {

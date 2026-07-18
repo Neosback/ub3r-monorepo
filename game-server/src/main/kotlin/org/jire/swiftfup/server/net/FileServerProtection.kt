@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory
 
 data class FileServerProtectionConfig @JvmOverloads constructor(
     val connectionsPerIp: Int = 8,
-    val requestsPerSecond: Int = 512,
     val readTimeoutSeconds: Int = 30,
     val maxTrackedIps: Int = 10_000,
 )
@@ -53,6 +52,7 @@ class FileServerProtectionRegistry(private val config: FileServerProtectionConfi
             return false
         }
         ctx.channel().attr(REGISTERED_IP).set(address)
+        SwiftFupDiagnostics.connectionAccepted()
         return true
     }
 
@@ -61,26 +61,7 @@ class FileServerProtectionRegistry(private val config: FileServerProtectionConfi
         val state = states[address] ?: return
         state.connections.decrementAndGet()
         state.lastSeenMillis = System.currentTimeMillis()
-    }
-
-    fun allowRequest(ctx: ChannelHandlerContext, nowMillis: Long = System.currentTimeMillis()): Boolean {
-        val address = ctx.channel().attr(REGISTERED_IP).get() ?: return false
-        val state = states[address] ?: return false
-        synchronized(state) {
-            if (nowMillis - state.windowStartMillis >= WINDOW_MILLIS) {
-                state.windowStartMillis = nowMillis
-                state.requests = 0
-            }
-            state.requests++
-            if (state.requests > config.requestsPerSecond) {
-                // Close the channel that crossed the line, then begin a clean shared-IP window so
-                // another legitimate channel on the same household address is not sacrificed.
-                state.requests = 0
-                state.windowStartMillis = nowMillis
-                return false
-            }
-            return true
-        }
+        SwiftFupDiagnostics.connectionClosed()
     }
 
     internal fun trackedIpCount(): Int = states.size
@@ -101,8 +82,6 @@ class FileServerProtectionRegistry(private val config: FileServerProtectionConfi
         @Volatile var lastSeenMillis = System.currentTimeMillis()
         var connectionWindowStartMillis = lastSeenMillis
         var connectionAttempts = 0
-        var windowStartMillis = System.currentTimeMillis()
-        var requests = 0
     }
 
     private companion object {
@@ -140,7 +119,10 @@ class FileServerProtectionHandler(
 
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         if (cause !== ReadTimeoutException.INSTANCE) {
+            SwiftFupDiagnostics.channelFailure()
             logger.debug("SwiftFUP channel failure remote={}", ctx.channel().remoteAddress(), cause)
+        } else {
+            SwiftFupDiagnostics.timeout()
         }
         ctx.close()
     }

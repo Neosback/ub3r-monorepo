@@ -76,6 +76,5 @@ val runtimePhaseWarnMs = 300L
 val gameMultiplierGlobalXp get() = SettingsLoader.settings.world.globalXpMultiplier
 val swiftFupPort get() = SettingsLoader.settings.network.swiftfupPort
 val swiftFupConnectionsPerIp get() = SettingsLoader.settings.network.swiftfupConnectionsPerIp
-val swiftFupRequestsPerSecond get() = SettingsLoader.settings.network.swiftfupRequestsPerSecond
 val swiftFupReadTimeoutSeconds get() = SettingsLoader.settings.network.swiftfupReadTimeoutSeconds
 val swiftFupMaxTrackedIps get() = SettingsLoader.settings.network.swiftfupMaxTrackedIps

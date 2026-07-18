@@ -24,17 +24,11 @@ public class DuelItemsUpdate implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        message.putInt(interfaceId);
-        message.putShort(items.size());
+        ByteMessage message = TarnishItemContainerEncoder.full(interfaceId, items);
 
         StringBuilder preview = new StringBuilder();
         for (GameItem item : items) {
             int amount = item.getAmount();
-            message.putInt(amount);
-            if (amount != 0) {
-                message.putShort(item.getId() + 1);
-            }
             if (preview.length() < 120) {
                 if (preview.length() > 0) {
                     preview.append(", ");

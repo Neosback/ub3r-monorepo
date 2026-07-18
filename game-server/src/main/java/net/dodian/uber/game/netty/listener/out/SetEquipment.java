@@ -24,15 +24,7 @@ public class SetEquipment implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(34, MessageType.VAR_SHORT);
-        message.putShort(1688);           
-        message.put(targetSlot);          
-
-        // Client expects: amount (int), then item id (short)
-        message.putInt(amount);            // stack size
-
-        int itemId = wearId > 0 ? wearId + 1 : 0; // container value (id+1 or 0)
-        message.putShort(itemId, ByteOrder.BIG);
+        ByteMessage message = TarnishItemContainerEncoder.slot(1688, targetSlot, wearId, amount);
         
         client.send(message);
     }

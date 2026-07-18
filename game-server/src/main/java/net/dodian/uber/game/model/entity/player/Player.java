@@ -124,6 +124,9 @@ public abstract class Player extends Entity {
     public int ip = 0;
     public String UUID = "";
     public boolean takeAsNote = false;
+    /** Tarnish bank preferences. Placeholder mode is persisted inside the existing bank text field. */
+    public boolean bankPlaceholdersEnabled = false;
+    public boolean bankInsertMode = false;
     public String playerName = null, playerPass = null;
     public int maxItemAmount = Integer.MAX_VALUE;
     public int[] playerItems = new int[28];

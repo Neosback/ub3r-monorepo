@@ -19,15 +19,11 @@ public class SetGoldItems implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-
-        message.putInt(slot);
-        message.putShort(items.length);
-
+        int[] amounts = new int[items.length];
+        java.util.Arrays.fill(amounts, 1);
+        ByteMessage message = TarnishItemContainerEncoder.full(slot, items, amounts);
         StringBuilder preview = new StringBuilder();
         for (int item : items) {
-            message.putInt(1);
-            message.putShort(item + 1);
             if (preview.length() < 120) {
                 if (preview.length() > 0) {
                     preview.append(", ");

@@ -71,7 +71,7 @@ class StagedNpcSynchronizationServiceTest {
     @Test
     fun `npc encoding failure leaves viewer state uncommitted`() {
         val viewer = client(1)
-        val invalidSlotNpc = Npc(16383, 1, Position(3201, 3200, 0), 0)
+        val invalidSlotNpc = Npc(16384, 1, Position(3201, 3200, 0), 0)
         Server.npcManager.npcMap[invalidSlotNpc.slot] = invalidSlotNpc
         val service = StagedNpcSynchronizationService()
         val plan = service.buildPlan(viewer)

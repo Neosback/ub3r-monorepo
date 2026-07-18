@@ -38,6 +38,14 @@ object PublicChatCodec {
         return DecodedPublicChat(color = color, effects = effects, message = formatSentence(decoded))
     }
 
+    /** Encodes text into the character indexes consumed by Tarnish TextInput. */
+    @JvmStatic
+    fun encode(message: String): ByteArray =
+        message.lowercase().take(MAX_MESSAGE_LENGTH).map { character ->
+            val index = characters.indexOf(character).takeIf { it >= 0 } ?: 0
+            index.toByte()
+        }.toByteArray()
+
     private fun subtractTransform(value: Byte): Int = (128 - (value.toInt() and 0xff)) and 0xff
 
     private fun addTransform(value: Byte): Int = ((value.toInt() and 0xff) - 128) and 0xff

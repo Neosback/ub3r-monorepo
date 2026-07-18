@@ -45,19 +45,6 @@ public final class ItemDefinition implements RSItemComposition {
         /* Customs added here? */
 
         switch (i) {
-            case 11748:
-            case 11749:
-            case 11750:
-            case 11751:
-            case 11752:
-            case 11753:
-            case 11754:
-            case 11755:
-            case 11756:
-            case 11757:
-            case 11758:
-                itemDef.itemActions = new String[]{null, "Wield", null, null, "Drop"};
-                break;
             case 2399://keepsake key - originally silverlight key
                 itemDef.name = "Keepsake key";
                 itemDef.itemActions = new String[]{null, null, null, null, "Drop"};
@@ -1094,53 +1081,47 @@ public final class ItemDefinition implements RSItemComposition {
         int l2 = Rasterizer2D.bottomX;
         int i3 = Rasterizer2D.topY;
         int j3 = Rasterizer2D.bottomY;
-        boolean previousWorld = Rasterizer3D.world;
-        boolean previousGpuRender = Rasterizer3D.renderOnGpu;
-        boolean previousClip = Rasterizer3D.aBoolean1464;
-        try {
-            Rasterizer3D.world = false;
-            Rasterizer3D.renderOnGpu = false;
-            Rasterizer3D.aBoolean1464 = false;
-            Rasterizer2D.initDrawingArea(enabledSprite.raster, 32, 32);
-            Rasterizer2D.fillRectangle(0, 0, 32, 32, 0);
-            Rasterizer3D.useViewport();
-            int k3 = itemDef.modelZoom;
-            if (color == -1)
-                k3 = (int) ((double) k3 * 1.5D);
-            if (color > 0)
-                k3 = (int) ((double) k3 * 1.04D);
-            int l3 = Rasterizer3D.SINE[itemDef.modelRotationY] * k3 >> 16;
-            int i4 = Rasterizer3D.COSINE[itemDef.modelRotationY] * k3 >> 16;
-            model.renderModel(itemDef.modelRotationX, itemDef.zan2d, itemDef.modelRotationY, itemDef.modelOffset1, l3 + model.modelBaseY / 2 + itemDef.modelOffset2, i4 + itemDef.modelOffset2);
-            enabledSprite.outline(1);
-            if (color > 0) {
-                enabledSprite.outline(16777215);
-            }
-            if (color == 0) {
-                enabledSprite.shadow(3153952);
-            }
-            Rasterizer2D.initDrawingArea(enabledSprite.raster, 32, 32);
-            if (itemDef.certTemplateID != -1) {
-                int l5 = sprite.resizeWidth;
-                int j6 = sprite.resizeHeight;
-                sprite.resizeWidth = 32;
-                sprite.resizeHeight = 32;
-                sprite.drawSprite(0, 0);
-                sprite.resizeWidth = l5;
-                sprite.resizeHeight = j6;
-            }
-            if (color == 0)
-                mruNodes1.put(enabledSprite, item);
-        } finally {
-            Rasterizer2D.initDrawingArea(ai1, i2, j2);
-            Rasterizer2D.setDrawingArea(k2, i3, l2, j3);
-            Rasterizer3D.originViewX = k1;
-            Rasterizer3D.originViewY = l1;
-            Rasterizer3D.scanOffsets = ai;
-            Rasterizer3D.aBoolean1464 = previousClip;
-            Rasterizer3D.renderOnGpu = previousGpuRender;
-            Rasterizer3D.world = previousWorld;
+        Rasterizer3D.world = false;
+        Rasterizer3D.aBoolean1464 = false;
+        Rasterizer2D.initDrawingArea(enabledSprite.raster, 32, 32);
+        Rasterizer2D.fillRectangle(0, 0, 32, 32, 0);
+        Rasterizer3D.useViewport();
+        int k3 = itemDef.modelZoom;
+        if (color == -1)
+            k3 = (int) ((double) k3 * 1.5D);
+        if (color > 0)
+            k3 = (int) ((double) k3 * 1.04D);
+        int l3 = Rasterizer3D.SINE[itemDef.modelRotationY] * k3 >> 16;
+        int i4 = Rasterizer3D.COSINE[itemDef.modelRotationY] * k3 >> 16;
+        Rasterizer3D.renderOnGpu = true;
+        model.renderModel(itemDef.modelRotationX, itemDef.zan2d, itemDef.modelRotationY, itemDef.modelOffset1, l3 + model.modelBaseY / 2 + itemDef.modelOffset2, i4 + itemDef.modelOffset2);
+        Rasterizer3D.renderOnGpu = false;
+        enabledSprite.outline(1);
+        if (color > 0) {
+            enabledSprite.outline(16777215);
         }
+        if (color == 0) {
+            enabledSprite.shadow(3153952);
+        }
+        Rasterizer2D.initDrawingArea(enabledSprite.raster, 32, 32);
+        if (itemDef.certTemplateID != -1) {
+            int l5 = sprite.resizeWidth;
+            int j6 = sprite.resizeHeight;
+            sprite.resizeWidth = 32;
+            sprite.resizeHeight = 32;
+            sprite.drawSprite(0, 0);
+            sprite.resizeWidth = l5;
+            sprite.resizeHeight = j6;
+        }
+        if (color == 0)
+            mruNodes1.put(enabledSprite, item);
+        Rasterizer2D.initDrawingArea(ai1, i2, j2);
+        Rasterizer2D.setDrawingArea(k2, i3, l2, j3);
+        Rasterizer3D.originViewX = k1;
+        Rasterizer3D.originViewY = l1;
+        Rasterizer3D.scanOffsets = ai;
+        Rasterizer3D.aBoolean1464 = true;
+        Rasterizer3D.world = true;
         if (itemDef.stackable)
             enabledSprite.resizeWidth = 33;
         else
@@ -1192,83 +1173,77 @@ public final class ItemDefinition implements RSItemComposition {
         int l2 = Rasterizer2D.bottomX;
         int i3 = Rasterizer2D.topY;
         int j3 = Rasterizer2D.bottomY;
-        boolean previousWorld = Rasterizer3D.world;
-        boolean previousGpuRender = Rasterizer3D.renderOnGpu;
-        boolean previousClip = Rasterizer3D.aBoolean1464;
-        try {
-            Rasterizer3D.world = false;
-            Rasterizer3D.renderOnGpu = false;
-            Rasterizer3D.aBoolean1464 = false;
-            Rasterizer2D.initDrawingArea(enabledSprite.raster, 32, 32);
-            Rasterizer2D.fillRectangle(0, 0, 32, 32, 0);
-            Rasterizer3D.useViewport();
-            int k3 = itemDef.modelZoom;
-            if (k == -1)
-                k3 = (int) ((double) k3 * 1.5D);
-            if (k > 0)
-                k3 = (int) ((double) k3 * 1.04D);
-            int l3 = Rasterizer3D.SINE[itemDef.modelRotationY] * k3 >> 16;
-            int i4 = Rasterizer3D.COSINE[itemDef.modelRotationY] * k3 >> 16;
-            model.renderModel(itemDef.modelRotationX, itemDef.zan2d, itemDef.modelRotationY, itemDef.modelOffset1, l3 + model.modelBaseY / 2 + itemDef.modelOffset2, i4 + itemDef.modelOffset2);
-            for (int i5 = 31; i5 >= 0; i5--) {
-                for (int j4 = 31; j4 >= 0; j4--)
-                    if (enabledSprite.raster[i5 + j4 * 32] == 0)
-                        if (i5 > 0 && enabledSprite.raster[(i5 - 1) + j4 * 32] > 1)
-                            enabledSprite.raster[i5 + j4 * 32] = 1;
-                        else if (j4 > 0 && enabledSprite.raster[i5 + (j4 - 1) * 32] > 1)
-                            enabledSprite.raster[i5 + j4 * 32] = 1;
-                        else if (i5 < 31 && enabledSprite.raster[i5 + 1 + j4 * 32] > 1)
-                            enabledSprite.raster[i5 + j4 * 32] = 1;
-                        else if (j4 < 31 && enabledSprite.raster[i5 + (j4 + 1) * 32] > 1)
-                            enabledSprite.raster[i5 + j4 * 32] = 1;
+        Rasterizer3D.world = false;
+        Rasterizer3D.aBoolean1464 = false;
+        Rasterizer2D.initDrawingArea(enabledSprite.raster, 32, 32);
+        Rasterizer2D.fillRectangle(0, 0, 32, 32, 0);
+        Rasterizer3D.useViewport();
+        int k3 = itemDef.modelZoom;
+        if (k == -1)
+            k3 = (int) ((double) k3 * 1.5D);
+        if (k > 0)
+            k3 = (int) ((double) k3 * 1.04D);
+        int l3 = Rasterizer3D.SINE[itemDef.modelRotationY] * k3 >> 16;
+        int i4 = Rasterizer3D.COSINE[itemDef.modelRotationY] * k3 >> 16;
+        Rasterizer3D.renderOnGpu = true;
+        model.renderModel(itemDef.modelRotationX, itemDef.zan2d, itemDef.modelRotationY, itemDef.modelOffset1, l3 + model.modelBaseY / 2 + itemDef.modelOffset2, i4 + itemDef.modelOffset2);
+        Rasterizer3D.renderOnGpu = false;
+        for (int i5 = 31; i5 >= 0; i5--) {
+            for (int j4 = 31; j4 >= 0; j4--)
+                if (enabledSprite.raster[i5 + j4 * 32] == 0)
+                    if (i5 > 0 && enabledSprite.raster[(i5 - 1) + j4 * 32] > 1)
+                        enabledSprite.raster[i5 + j4 * 32] = 1;
+                    else if (j4 > 0 && enabledSprite.raster[i5 + (j4 - 1) * 32] > 1)
+                        enabledSprite.raster[i5 + j4 * 32] = 1;
+                    else if (i5 < 31 && enabledSprite.raster[i5 + 1 + j4 * 32] > 1)
+                        enabledSprite.raster[i5 + j4 * 32] = 1;
+                    else if (j4 < 31 && enabledSprite.raster[i5 + (j4 + 1) * 32] > 1)
+                        enabledSprite.raster[i5 + j4 * 32] = 1;
 
-            }
-
-            if (k > 0) {
-                for (int j5 = 31; j5 >= 0; j5--) {
-                    for (int k4 = 31; k4 >= 0; k4--)
-                        if (enabledSprite.raster[j5 + k4 * 32] == 0)
-                            if (j5 > 0 && enabledSprite.raster[(j5 - 1) + k4 * 32] == 1)
-                                enabledSprite.raster[j5 + k4 * 32] = k;
-                            else if (k4 > 0 && enabledSprite.raster[j5 + (k4 - 1) * 32] == 1)
-                                enabledSprite.raster[j5 + k4 * 32] = k;
-                            else if (j5 < 31 && enabledSprite.raster[j5 + 1 + k4 * 32] == 1)
-                                enabledSprite.raster[j5 + k4 * 32] = k;
-                            else if (k4 < 31 && enabledSprite.raster[j5 + (k4 + 1) * 32] == 1)
-                                enabledSprite.raster[j5 + k4 * 32] = k;
-
-                }
-
-            } else if (k == 0) {
-                for (int k5 = 31; k5 >= 0; k5--) {
-                    for (int l4 = 31; l4 >= 0; l4--)
-                        if (enabledSprite.raster[k5 + l4 * 32] == 0 && k5 > 0 && l4 > 0 && enabledSprite.raster[(k5 - 1) + (l4 - 1) * 32] > 0)
-                            enabledSprite.raster[k5 + l4 * 32] = 0x302020;
-
-                }
-
-            }
-            if (itemDef.certTemplateID != -1) {
-                int l5 = sprite.resizeWidth;
-                int j6 = sprite.resizeHeight;
-                sprite.resizeWidth = 32;
-                sprite.resizeHeight = 32;
-                sprite.drawSprite(0, 0);
-                sprite.resizeWidth = l5;
-                sprite.resizeHeight = j6;
-            }
-            if (k == 0)
-                mruNodes1.put(enabledSprite, item);
-        } finally {
-            Rasterizer2D.initDrawingArea(ai1, i2, j2);
-            Rasterizer2D.setDrawingArea(k2, i3, l2, j3);
-            Rasterizer3D.originViewX = k1;
-            Rasterizer3D.originViewY = l1;
-            Rasterizer3D.scanOffsets = ai;
-            Rasterizer3D.aBoolean1464 = previousClip;
-            Rasterizer3D.renderOnGpu = previousGpuRender;
-            Rasterizer3D.world = previousWorld;
         }
+
+        if (k > 0) {
+            for (int j5 = 31; j5 >= 0; j5--) {
+                for (int k4 = 31; k4 >= 0; k4--)
+                    if (enabledSprite.raster[j5 + k4 * 32] == 0)
+                        if (j5 > 0 && enabledSprite.raster[(j5 - 1) + k4 * 32] == 1)
+                            enabledSprite.raster[j5 + k4 * 32] = k;
+                        else if (k4 > 0 && enabledSprite.raster[j5 + (k4 - 1) * 32] == 1)
+                            enabledSprite.raster[j5 + k4 * 32] = k;
+                        else if (j5 < 31 && enabledSprite.raster[j5 + 1 + k4 * 32] == 1)
+                            enabledSprite.raster[j5 + k4 * 32] = k;
+                        else if (k4 < 31 && enabledSprite.raster[j5 + (k4 + 1) * 32] == 1)
+                            enabledSprite.raster[j5 + k4 * 32] = k;
+
+            }
+
+        } else if (k == 0) {
+            for (int k5 = 31; k5 >= 0; k5--) {
+                for (int l4 = 31; l4 >= 0; l4--)
+                    if (enabledSprite.raster[k5 + l4 * 32] == 0 && k5 > 0 && l4 > 0 && enabledSprite.raster[(k5 - 1) + (l4 - 1) * 32] > 0)
+                        enabledSprite.raster[k5 + l4 * 32] = 0x302020;
+
+            }
+
+        }
+        if (itemDef.certTemplateID != -1) {
+            int l5 = sprite.resizeWidth;
+            int j6 = sprite.resizeHeight;
+            sprite.resizeWidth = 32;
+            sprite.resizeHeight = 32;
+            sprite.drawSprite(0, 0);
+            sprite.resizeWidth = l5;
+            sprite.resizeHeight = j6;
+        }
+        if (k == 0)
+            mruNodes1.put(enabledSprite, item);
+        Rasterizer2D.initDrawingArea(ai1, i2, j2);
+        Rasterizer2D.setDrawingArea(k2, i3, l2, j3);
+        Rasterizer3D.originViewX = k1;
+        Rasterizer3D.originViewY = l1;
+        Rasterizer3D.scanOffsets = ai;
+        Rasterizer3D.aBoolean1464 = true;
+        Rasterizer3D.world = true;
         if (itemDef.stackable)
             enabledSprite.resizeWidth = 33;
         else

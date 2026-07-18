@@ -51,48 +51,13 @@ public class SendBankItems implements OutgoingPacket {
             throw new IllegalArgumentException("Item IDs and amounts lists must be of equal size");
         }
 
-        int size = 4 + 2;
-        if (interfaceId == 5382) {
-            size += 2; // tab length short
-            if (tabAmounts != null) {
-                size += tabAmounts.length * 4; // tab amounts ints
-            }
-        }
+        int[] ids = new int[itemIds.size()];
+        int[] stacks = new int[amounts.size()];
         for (int i = 0; i < itemIds.size(); i++) {
-            size += 4;
-            if (amounts.get(i) != 0) {
-                size += 2;
-            }
+            ids[i] = itemIds.get(i);
+            stacks[i] = amounts.get(i);
         }
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT, ByteMessage.pooledBuffer(size + 8));
-
-        // Mystic client SEND_UPDATE_ITEMS layout:
-        // int interfaceId, short itemCount,
-        // then for each slot: int amount, and if amount != 0 then short id (container value)
-
-        message.putInt(interfaceId);           
-        message.putShort(itemIds.size());       // number of items
-        if (interfaceId == 5382) {
-            message.putShort(tabAmounts != null ? tabAmounts.length : 0);
-        }
-
-        for (int i = 0; i < itemIds.size(); i++) {
-            int itemId = itemIds.get(i);
-            int amount = amounts.get(i);
-
-            message.putInt(amount);
-
-            if (amount != 0) {
-                int containerId = itemId + 1;  // container value (id + 1)
-                message.putShort(containerId, ByteOrder.BIG);
-            }
-        }
-
-        if (interfaceId == 5382 && tabAmounts != null) {
-            for (int amount : tabAmounts) {
-                message.putInt(amount);
-            }
-        }
+        ByteMessage message = TarnishItemContainerEncoder.fullPreservingZeroAmounts(interfaceId, ids, stacks, tabAmounts);
 
         ItemContainerTrace.log(client, "SendBankItems", interfaceId, itemIds.size(), summarizePreview());
         client.send(message);

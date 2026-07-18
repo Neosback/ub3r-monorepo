@@ -2,11 +2,17 @@ package com.osroyale.profile;
 
 import com.osroyale.Client;
 import com.osroyale.Utility;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.*;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +21,8 @@ import static net.runelite.client.RuneLite.PROFILES_DIR;
 import static net.runelite.client.RuneLite.RUNELITE_DIR;
 
 public class ProfileManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProfileManager.class);
 
     public static final int MAX_PROFILES = 3;
     public static final List<Profile> profiles = Collections.synchronizedList(new ArrayList<>(MAX_PROFILES));
@@ -148,11 +156,35 @@ public class ProfileManager {
      * @param filePath The file path where the image will be saved.
      */
     public static void saveImage(BufferedImage image, String filePath) {
+        Path destination = Path.of(filePath).toAbsolutePath().normalize();
+        Path temporary = null;
         try {
-            File outputFile = new File(filePath);
-            ImageIO.write(image, "png", outputFile);
+            Path parent = destination.getParent();
+            if (parent == null) {
+                throw new IOException("Profile image has no parent directory: " + destination);
+            }
+            Files.createDirectories(parent);
+            temporary = Files.createTempFile(parent, destination.getFileName() + ".", ".tmp");
+            if (!ImageIO.write(image, "png", temporary.toFile())) {
+                throw new IOException("No PNG image writer is available");
+            }
+            try {
+                Files.move(temporary, destination,
+                        StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(temporary, destination, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException e) {
-            System.out.println("Error saving image: " + e.getMessage());
+            logger.warn("Unable to save profile image {}: {}", destination, e.getMessage());
+        } finally {
+            if (temporary != null) {
+                try {
+                    Files.deleteIfExists(temporary);
+                } catch (IOException cleanupFailure) {
+                    logger.debug("Unable to remove temporary profile image {}", temporary, cleanupFailure);
+                }
+            }
         }
     }
 }

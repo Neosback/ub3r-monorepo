@@ -29,10 +29,11 @@ class NpcProtocolWidthTest {
     }
 
     @Test
-    fun `slot terminator remains reserved in fourteen bit space`() {
-        assertEquals(14, NpcUpdating.NPC_SLOT_BITS)
-        assertEquals(16_383, NpcUpdating.NPC_SLOT_TERMINATOR)
-        NpcUpdating.validateNpcSlot(16_382)
-        assertThrows(IllegalArgumentException::class.java) { NpcUpdating.validateNpcSlot(16_383) }
+    fun `slots use Tarnish sixteen bit framing while respecting the client array`() {
+        assertEquals(16, NpcUpdating.NPC_SLOT_BITS)
+        assertEquals(65_535, NpcUpdating.NPC_SLOT_TERMINATOR)
+        assertEquals(16_383, NpcUpdating.MAX_CLIENT_NPC_SLOT)
+        NpcUpdating.validateNpcSlot(16_383)
+        assertThrows(IllegalArgumentException::class.java) { NpcUpdating.validateNpcSlot(16_384) }
     }
 }

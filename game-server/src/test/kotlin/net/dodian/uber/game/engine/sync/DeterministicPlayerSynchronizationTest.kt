@@ -103,7 +103,7 @@ class DeterministicPlayerSynchronizationTest {
             val appearanceLength = (-bytes[byteIndex++].toInt()) and 0xff
             assertTrue(appearanceLength > 0)
             val appearanceStart = byteIndex
-            var componentIndex = appearanceStart + 3 // gender, head icon, skull icon
+            var componentIndex = appearanceStart + 4 // gender, head icon, skull icon, bounty icon
             repeat(3) { componentIndex = nextAppearanceComponent(bytes, componentIndex).second }
             val weapon = nextAppearanceComponent(bytes, componentIndex).first
             assertEquals(0x200 + 1277, weapon, "observer must receive the replacement session's current weapon")

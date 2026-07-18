@@ -145,6 +145,12 @@ object PacketBankingService {
      */
     @JvmStatic
     fun handleRemoveItemDecoded(client: Client, interfaceId: Int, removeSlot: Int, removeID: Int) {
+        // Tarnish's custom per-item "Placeholder" action reuses opcode 145 and
+        // sends 968 in the interface field.
+        if (interfaceId == 968) {
+            client.createBankPlaceholder(removeID)
+            return
+        }
         if ((interfaceId == 5382 || interfaceId in 50300..50310) && client.bankStyleViewOpen) return
         var bankSlot = removeSlot
         var resolvedItemId = removeID
@@ -706,7 +712,11 @@ object PacketBankingService {
     }
 
     @JvmStatic
-    fun handleMoveItems(client: Client, interfaceId: Int, itemFrom: Int, itemTo: Int) {
+    fun handleMoveItems(client: Client, interfaceId: Int, itemFrom: Int, itemTo: Int, mode: Int = 0) {
+        if (interfaceId == 5382 || interfaceId in 50300..50310) {
+            client.moveBankItems(itemFrom, itemTo, interfaceId, mode)
+            return
+        }
         if (!isValidInventorySlot(client, itemFrom) || !isValidInventorySlot(client, itemTo)) {
             return
         }

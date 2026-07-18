@@ -20,6 +20,9 @@ import java.sql.Statement;
 import static net.dodian.uber.game.persistence.db.DatabaseKt.getDbConnection;
 
 public class PlayerInitializer {
+    static final int TARNISH_BRIGHTNESS_VARP = 166;
+    static final int DEFAULT_TARNISH_BRIGHTNESS = 3;
+
     public void initializePlayer(Client client) {
         initializeCriticalLoginState(client);
         initializeDeferredPostLoginState(client);
@@ -30,6 +33,10 @@ public class PlayerInitializer {
         /* Login write settings */
         client.send(new PlayerDetails(client.playerIsMember, client.getSlot()));
         client.send(new CameraReset()); // Resets the camera position
+        // Tarnish builds its software-rendering HSL palette when this varp is applied.
+        // The original server sends it during login; without it, item sprites and
+        // untextured terrain are rendered with an all-zero (black) palette.
+        sendTarnishVisualDefaults(client);
         client.setChatOptions(0, 0, 0);
         client.varbit(287, 1); // SPLIT PRIVATE CHAT ON/OFF
         
@@ -66,6 +73,10 @@ public class PlayerInitializer {
         client.lastProgressSave = now + hourJitterMs;
         PlayerDeferredLifecycleService.schedulePeriodicPersistence(client);
         PlayerDeferredLifecycleService.scheduleDailyResetTrigger(client);
+    }
+
+    static void sendTarnishVisualDefaults(Client client) {
+        client.setVarp(TARNISH_BRIGHTNESS_VARP, DEFAULT_TARNISH_BRIGHTNESS);
     }
 
     public void initializeDeferredPostLoginState(Client client) {

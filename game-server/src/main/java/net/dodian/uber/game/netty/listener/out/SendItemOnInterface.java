@@ -24,18 +24,7 @@ public class SendItemOnInterface implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        message.putInt(interfaceId);
-        message.putShort(itemIds.length);
-        for (int i = 0; i < itemIds.length; i++) {
-            int itemId = itemIds[i];
-            int amount = amounts[i];
-            message.putInt(amount);
-            if (amount != 0) {
-                int containerId = itemId >= 0 ? itemId + 1 : 0;
-                message.putShort(containerId, ByteOrder.BIG);
-            }
-        }
+        ByteMessage message = TarnishItemContainerEncoder.full(interfaceId, itemIds, amounts);
         client.send(message);
     }
 }

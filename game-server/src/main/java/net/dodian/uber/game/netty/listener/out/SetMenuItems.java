@@ -7,11 +7,7 @@ import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem;
 
 /**
  * Sends the shop/menu item list to interface 8847.
- * Legacy server wrote:
- *   createFrameVarSizeWord(53)
- *   writeWord(8847)
- *   writeWord(size)
- *   foreach item -> writeByte(1); writeWordBigEndianA(id+1)
+ * Uses Tarnish's canonical opcode-53 item-container layout.
  */
 public class SetMenuItems implements OutgoingPacket {
 
@@ -23,14 +19,9 @@ public class SetMenuItems implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage msg = ByteMessage.message(53, MessageType.VAR_SHORT);
-        msg.putInt(8847);                      
-        msg.putShort(items.length);
-        // Write each item
-        for (int id : items) {
-            msg.putInt(1);
-            msg.putShort(id + 1);
-        }
+        int[] amounts = new int[items.length];
+        java.util.Arrays.fill(amounts, 1);
+        ByteMessage msg = TarnishItemContainerEncoder.full(8847, items, amounts);
         client.send(msg);
     }
 }

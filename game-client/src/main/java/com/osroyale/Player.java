@@ -69,6 +69,8 @@ public final class Player extends Entity implements RSPlayer {
     }
 
     public Model getRotatedModel() {
+        TarnishClientDiagnostics.beginRender(this);
+        try {
 
         if (!visible) {
             return null;
@@ -149,6 +151,12 @@ public final class Player extends Entity implements RSPlayer {
         }
         animatedModel.singleTile = true;
         return animatedModel;
+        } catch (RuntimeException failure) {
+            TarnishClientDiagnostics.failure("player-render", failure);
+            throw failure;
+        } finally {
+            TarnishClientDiagnostics.endRender();
+        }
     }
 
     void updateAppearance(Buffer stream) {
@@ -156,9 +164,9 @@ public final class Player extends Entity implements RSPlayer {
         gender = stream.readUnsignedByte();
         headIcon = stream.readUnsignedByte();
         skullIcon = stream.readUnsignedByte();
+        bountyIcon = stream.readUnsignedByte();
         desc = null;
         team = 0;
-        bountyIcon = -1;
         for (int bodyPart = 0; bodyPart < 12; bodyPart++) {
             int reset = stream.readUnsignedByte();
             if (reset == 0) {
@@ -201,6 +209,7 @@ public final class Player extends Entity implements RSPlayer {
             } else if (maxCapeParticleColor == 3288622) {
                 maxCapeParticleColor = 7622056;
             }
+            //System.out.println("particle color: "+maxCapeParticleColor);
         }
 
         super.seqStandID = stream.readUnsignedShort();
@@ -238,21 +247,17 @@ public final class Player extends Entity implements RSPlayer {
             super.runAnimation = -1;
         }
         name = StringUtils.fixName(StringUtils.nameForLong(stream.readUnsignedLong()));
+        title = StringUtils.fixName(stream.readString());
+        titleColor = stream.readUnsignedInt();
+        clanChannel = stream.readString();
+        clanTag = stream.readString();
+        clanTagColor = stream.readString();
 
-        // Server does not send title, clan, or privelage in appearance data
-        title = "";
-        clanChannel = "";
-        clanTag = "";
-        clanTagColor = "";
-        titleColor = 0;
-        cachedName = name;
-
-        // Server sends combat level as a single byte, not as an 8-byte double
-        combatLevel = stream.readUnsignedByte();
-
-        // Server sends skill level as a short (place-holder, always 0 for now)
+        String tcolor = title.length() < 3 ? "" : "<col=" + Integer.toHexString(titleColor) + ">";
+        cachedName = tcolor + title + "</col> " + name;
+        combatLevel = Double.longBitsToDouble(stream.readUnsignedLong());
+        privelage = stream.readUnsignedByte();
         skill = stream.readUnsignedShort();
-
         visible = true;
         appearanceHash = 0L;
 
@@ -639,7 +644,7 @@ public final class Player extends Entity implements RSPlayer {
     @Nullable
     @Override
     public String getName() {
-        return name;
+        return null;
     }
 
     @Override

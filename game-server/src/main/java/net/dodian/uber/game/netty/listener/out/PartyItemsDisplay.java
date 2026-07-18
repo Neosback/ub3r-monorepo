@@ -24,19 +24,14 @@ public class PartyItemsDisplay implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        message.putInt(interfaceId);
-        message.putShort(items.size());
-        // Write each item
-        for (PartyRoomRewardItem item : items) {
-            int amount = item.getAmount();
-            message.putInt(amount);
-
-            if (amount != 0) {
-                int itemId = item.getId() + 1; // container value (id + 1)
-                message.putShort(itemId);
-            }
+        int[] itemIds = new int[items.size()];
+        int[] amounts = new int[items.size()];
+        for (int i = 0; i < items.size(); i++) {
+            PartyRoomRewardItem item = items.get(i);
+            itemIds[i] = item.getId();
+            amounts[i] = item.getAmount();
         }
+        ByteMessage message = TarnishItemContainerEncoder.full(interfaceId, itemIds, amounts);
         client.send(message);
     }
 }

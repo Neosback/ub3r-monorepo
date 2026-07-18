@@ -22,7 +22,7 @@ import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.engine.loop.GameThreadIngress;
 import net.dodian.uber.game.events.player.PlayerLoginEvent;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
-import net.dodian.uber.game.engine.config.DotEnvKt;
+import net.dodian.uber.game.persistence.account.login.AccountLoginService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,21 +45,10 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     private static final LoginAttemptLimiter LOGIN_ATTEMPTS = new LoginAttemptLimiter();
 
     private static final int LOGIN_SUCCESS_CODE = 2;
-    private static final int RSA_MAGIC          = 255;
-    private static final int CLIENT_VERSION     = 317;
-    private static final int RSA_PACKET_ID      = 10;
-
     private static final AttributeKey<ISAACCipher> IN_CIPHER_KEY  = AttributeKey.valueOf("inCipher");
     private static final AttributeKey<ISAACCipher> OUT_CIPHER_KEY = AttributeKey.valueOf("outCipher");
 
-    private long   clientSessionKey;
-    private long   serverSessionKey;
-    private String username;
-    private String password;
-
-    private int  reservedSlot = -1;
-    private long  longName = 0L;
-    private boolean loginFinished = false;
+    private volatile LoginAttempt attempt;
 
     public LoginProcessorHandler() {}
 
@@ -73,165 +62,91 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 sendAndClose(ctx, 13);
                 return;
             }
-            if (!parseLogin(ctx, in)) {
-                return; // parseLogin already handled failure
+            if (attempt != null) {
+                logger.warn("Login connection sent more than one payload remote={}", ctx.channel().remoteAddress());
+                ctx.close();
+                return;
             }
-            processLogin(ctx);
+            Long expectedSeed = ctx.channel().attr(LoginHandshakeHandler.SERVER_SEED_KEY).get();
+            if (expectedSeed == null) {
+                logger.warn("Login payload arrived without a server seed remote={}", ctx.channel().remoteAddress());
+                ctx.close();
+                return;
+            }
+            byte[] payload = new byte[in.readableBytes()];
+            in.readBytes(payload);
+            LoginAttempt submitted = new LoginAttempt(
+                    ctx.channel(), remoteIp, expectedSeed, payload, payloadHolder.reconnecting());
+            attempt = submitted;
+            boolean accepted = LoginPreparationService.submit(submitted, result -> {
+                try {
+                    ctx.channel().eventLoop().execute(() -> preparedLogin(ctx, submitted, result));
+                } catch (java.util.concurrent.RejectedExecutionException rejected) {
+                    submitted.setStage(LoginAttempt.Stage.FAILED);
+                    releaseAttempt(submitted);
+                }
+            });
+            if (!accepted) {
+                submitted.setStage(LoginAttempt.Stage.FAILED);
+                logger.warn("Login preparation queue full remote={}; rejecting attempt", ctx.channel().remoteAddress());
+                sendAndClose(ctx, 13);
+            }
         } finally {
             if (in.refCnt() > 0) in.release();
         }
     }
 
-    /* --------------- Parsing --------------- */
-    private boolean parseLogin(ChannelHandlerContext ctx, ByteBuf buf) {
-        if (buf.readableBytes() < 3) return false;
-
-        int magic = buf.readUnsignedByte();
-        if (magic != RSA_MAGIC) {
-            logger.debug("[Netty] Bad RSA magic {}", magic);
-            ctx.close();
-            return false;
+    private void preparedLogin(
+            ChannelHandlerContext ctx,
+            LoginAttempt current,
+            LoginPreparationService.Result result
+    ) {
+        if (attempt != current || !ctx.channel().isActive()) {
+            releaseAttempt(current);
+            return;
         }
-        int version = buf.readUnsignedShort();
-        if (version != DotEnvKt.getClientVersion()) {
-            logger.debug("[Netty] Unsupported client version {}, expected {}", version, DotEnvKt.getClientVersion());
-            sendAndClose(ctx, 6);
-            return false;
+        if (!result.isSuccess()) {
+            current.setStage(LoginAttempt.Stage.FAILED);
+            LOGIN_ATTEMPTS.recordFailure(current.getRemoteIp(), System.currentTimeMillis());
+            OperationalTelemetry.incrementCounter("login.prepare.failure", 1L);
+            logger.warn("Login preparation failed remote={} code={} reason={}",
+                    ctx.channel().remoteAddress(), result.getResponseCode(), result.getReason());
+            sendAndClose(ctx, result.getResponseCode());
+            return;
         }
-        if (buf.readableBytes() < 1) return false;
-        buf.readByte(); // lowMem flag
-        if (buf.readableBytes() < 9 * 4 + 1) return false;
-        buf.skipBytes(9 * 4); // CRC keys
-        int rsaLength = buf.readUnsignedByte();
-        if (buf.readableBytes() < rsaLength) return false;
-
-        byte[] rsaBytes = new byte[rsaLength];
-        buf.readBytes(rsaBytes);
-
-        // Decrypt using unsigned modPow on java.math.BigInteger
-        java.math.BigInteger encrypted = new java.math.BigInteger(1, rsaBytes);
-        java.math.BigInteger decrypted = encrypted.modPow(DotEnvKt.getRsaExponent(), DotEnvKt.getRsaModulus());
-
-        byte[] decryptedBytes = decrypted.toByteArray();
-
-        ByteBuf rsaBuf = ctx.alloc().buffer(decryptedBytes.length);
-        try {
-            rsaBuf.writeBytes(decryptedBytes);
-
-            // Skip a leading zero if present
-            if (rsaBuf.readableBytes() > 0 && rsaBuf.getByte(rsaBuf.readerIndex()) == 0) {
-                rsaBuf.readByte();
-            }
-
-            if (rsaBuf.readableBytes() < 1) {
-                logger.warn("Decrypted RSA block is empty");
-                ctx.close();
-                return false;
-            }
-
-            int rsaMagic = rsaBuf.readUnsignedByte();
-            if (rsaMagic != 10) {
-                logger.warn("RSA magic check failed: expected 10, got {}", rsaMagic);
-                ctx.close();
-                return false;
-            }
-
-            if (rsaBuf.readableBytes() < 8 + 8 + 1) {
-                logger.warn("Decrypted RSA block too short");
-                ctx.close();
-                return false;
-            }
-
-            clientSessionKey = rsaBuf.readLong();
-            serverSessionKey = rsaBuf.readLong();
-
-            int secondMagic = rsaBuf.readUnsignedByte();
-            if (secondMagic != 10) {
-                logger.warn("RSA second magic check failed: expected 10, got {}", secondMagic);
-                ctx.close();
-                return false;
-            }
-
-            username = safeReadString(rsaBuf, 12);
-            password = safeReadString(rsaBuf, 20);
-
-            if (username.isEmpty() || password.isEmpty()) {
-                logger.warn("Username or password empty in decrypted RSA block");
-                ctx.close();
-                return false;
-            }
-
-            // Check for trailing non-zero data
-            while (rsaBuf.isReadable()) {
-                if (rsaBuf.readByte() != 0) {
-                    logger.warn("RSA block contains trailing non-zero data");
-                    ctx.close();
-                    return false;
-                }
-            }
-
-        } finally {
-            rsaBuf.release();
-        }
-
-        logger.debug("[Netty] Login attempt {} from {}", username, ctx.channel().remoteAddress());
-        return true;
-    }
-
-    private static String safeReadString(ByteBuf buf, int maxLength) {
-        StringBuilder sb = new StringBuilder();
-        int count = 0;
-        while (buf.isReadable()) {
-            byte b = buf.readByte();
-            if (b == 10) {
-                break;
-            }
-            if (count < maxLength) {
-                sb.append((char) b);
-                count++;
-            }
-        }
-        return sb.toString().trim();
+        processLogin(ctx, current, result.getRequest());
     }
 
     /* --------------- Login logic --------------- */
-    private void processLogin(ChannelHandlerContext ctx) {
-        final long acceptedAtNanos = System.nanoTime();
-
-        longName = Utils.playerNameToLong(Utils.capitalize(username.replace('_', ' ')));
-        if (LOADING_ACCOUNTS.putIfAbsent(longName, longName) != null) {
+    private void processLogin(ChannelHandlerContext ctx, LoginAttempt current, ParsedLoginRequest parsed) {
+        String username = parsed.getUsername();
+        String password = parsed.getPassword();
+        long longName = Utils.playerNameToLong(Utils.capitalize(username.replace('_', ' ')));
+        current.longName = longName;
+        if (LOADING_ACCOUNTS.putIfAbsent(longName, current) != null) {
             sendAndClose(ctx, 5); // login in progress or already online
             return;
         }
         if (PlayerRegistry.isPlayerOn(username)) {
-            releaseToken();
+            releaseToken(current);
             sendAndClose(ctx, 5); // already online
             return;
         }
 
         final long slotReserveStart = System.nanoTime();
-        reservedSlot = reserveSlot();
+        int reservedSlot = reserveSlot();
+        current.setReservedSlot(reservedSlot);
         if (reservedSlot == -1) {
             long failures = LOGIN_SLOT_FAILURES.incrementAndGet();
             logger.warn("Login slot reservation failed for {} failures={}", username, failures);
-            releaseToken();
+            releaseToken(current);
             sendAndClose(ctx, 7); // world full
             return;
         }
         final long slotReserveDurationMs = (System.nanoTime() - slotReserveStart) / 1_000_000L;
 
-        // Configure ISAAC
-        int[] seed = new int[]{
-                (int) (clientSessionKey >>> 32),
-                (int) clientSessionKey,
-                (int) (serverSessionKey >>> 32),
-                (int) serverSessionKey
-        };
-        ISAACCipher inCipher = new ISAACCipher(seed);
-        for (int i = 0; i < 4; i++) seed[i] += 50;
-        ISAACCipher outCipher = new ISAACCipher(seed);
-        ctx.channel().attr(IN_CIPHER_KEY).set(inCipher);
-        ctx.channel().attr(OUT_CIPHER_KEY).set(outCipher);
+        ctx.channel().attr(IN_CIPHER_KEY).set(parsed.getInboundCipher());
+        ctx.channel().attr(OUT_CIPHER_KEY).set(parsed.getOutboundCipher());
 
         // Instantiate Client
         Client client;
@@ -239,22 +154,25 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             client = new Client(ctx.channel(), reservedSlot);
         } catch (Exception ex) {
             logger.error("[Netty] Failed to create Client: {}", ex.getMessage());
-            releaseSlot(reservedSlot);
-            releaseToken();
+            releaseSlot(current);
+            releaseToken(current);
             sendAndClose(ctx, 13);
             return;
         }
         client.setPlayerName(Utils.capitalize(username.replace('_', ' ')));
         client.playerPass = password;
         client.longName  = longName;
+        current.client = client;
         try {
             InetSocketAddress isa = (InetSocketAddress) ctx.channel().remoteAddress();
             client.connectedFrom = isa.getAddress().getHostAddress();
         } catch (Exception ignored) {}
 
+        current.setStage(LoginAttempt.Stage.ACCOUNT_LOADING);
         final int slotCopy = reservedSlot;
         AccountPersistenceService.submitLoginLoad(client, username, password, loadResult ->
-                ctx.channel().eventLoop().execute(() -> finishLogin(ctx, client, loadResult, slotCopy, acceptedAtNanos, slotReserveDurationMs)));
+                ctx.channel().eventLoop().execute(() -> finishLogin(
+                        ctx, current, parsed, client, loadResult, slotCopy, slotReserveDurationMs)));
     }
 
         /**
@@ -263,10 +181,11 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
      */
     private void finishLogin(
             ChannelHandlerContext ctx,
+            LoginAttempt current,
+            ParsedLoginRequest parsed,
             Client client,
             AccountPersistenceService.LoginLoadResult loadResult,
             int slot,
-            long acceptedAtNanos,
             long slotReserveDurationMs
     ) {
         if (loadResult.getCode() != 0) {
@@ -281,20 +200,23 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                     loadResult.getPendingRetries(),
                     failures
             );
-            releaseSlot(slot);
-            releaseToken();
+            releaseSlot(current);
+            releaseToken(current);
             sendAndClose(ctx, loadResult.getCode());
+            return;
+        }
+        AccountLoginService.PreparedLogin hydration = loadResult.getHydration();
+        if (hydration == null) {
+            logger.warn("Successful login load for {} had no hydration snapshot", client.getPlayerName());
+            releaseSlot(current);
+            releaseToken(current);
+            sendAndClose(ctx, 13);
             return;
         }
 
         LOGIN_ATTEMPTS.recordSuccess(remoteIp(ctx));
-
-        client.validLogin = true;
-        client.playerRights = (client.playerGroup == 9 || client.playerGroup == 5) ? 1 :
-                              ((client.playerGroup == 6 || client.playerGroup == 18 || client.playerGroup == 10) ? 2 : 0);
-        client.premium = client.playerRights > 0 || client.premium;
-
-        sendLoginSuccess(ctx, client.playerRights);
+        int loginRights = rightsForGroup(hydration.getPlayerGroup());
+        sendLoginSuccess(ctx, loginRights);
 
         // CRITICAL: Setup game pipeline BEFORE PlayerInitializer sends packets
         if (ctx.pipeline().get(net.dodian.uber.game.netty.login.LoginPayloadDecoder.class) != null) {
@@ -322,6 +244,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         final io.netty.channel.Channel channel = ctx.channel();
         final int slotCopy = slot;
         final long finalizerQueuedAtNanos = System.nanoTime();
+        current.setStage(LoginAttempt.Stage.FINALIZING);
         boolean finalizerAccepted = GameThreadIngress.submitCritical("login-finalize", () -> {
             net.dodian.uber.game.engine.loop.GameThreadContext.validateGameThread("player-registry.login-register");
             long finalizerStartedAtNanos = System.nanoTime();
@@ -330,11 +253,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 long failures = LOGIN_CHANNEL_CLOSES_BEFORE_FINALIZE.incrementAndGet();
                 OperationalTelemetry.incrementCounter("login.finalize.channel_closed", 1L);
                 // Channel died before the game thread could register the player; release the reserved slot.
-                synchronized (PlayerRegistry.slotLock) {
-                    PlayerRegistry.usedSlots.clear(slotCopy);
-                    net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[slotCopy] = null;
-                }
-                releaseToken();
+                releaseSlot(current);
+                releaseToken(current);
                 logger.warn(
                         "Login channel closed before game-thread finalization for {} queueWait={}ms failures={}",
                         client.getPlayerName(),
@@ -344,13 +264,30 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 return;
             }
 
+            try {
+                AccountLoginService.hydrateGame(client, hydration);
+                client.validLogin = true;
+                client.playerRights = loginRights;
+                client.premium = client.playerRights > 0 || client.premium;
+            } catch (Exception ex) {
+                long failures = LOGIN_INITIALIZER_FAILURES.incrementAndGet();
+                OperationalTelemetry.incrementCounter("login.hydration.failure", 1L);
+                releaseSlot(current);
+                releaseToken(current);
+                logger.warn(
+                        "[GameThread] Account hydration failed for {} queueWait={}ms failures={}",
+                        client.getPlayerName(), queueWaitMs, failures, ex);
+                channel.close();
+                return;
+            }
+
             Client previous = PlayerRegistry.playersOnline.putIfAbsent(client.longName, client);
             if (previous != null) {
                 boolean previousStale = previous.disconnected || !previous.isActive
                         || previous.channel == null || !previous.channel.isActive();
                 if (!previousStale) {
-                    releaseSlot(slotCopy);
-                    releaseToken();
+                    releaseSlot(current);
+                    releaseToken(current);
                     logger.warn(
                             "Duplicate login prevented for {} queueWait={}ms — another session already active",
                             client.getPlayerName(),
@@ -364,7 +301,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 PlayerRegistry.playersOnline.put(client.longName, client);
             }
             net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[slotCopy] = client;
-            releaseToken();
+            current.markSlotReleased(); // ownership has transferred to PlayerRegistry
+            releaseToken(current);
 
             long initializerDurationMs = 0L;
             try {
@@ -374,6 +312,11 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 initializerDurationMs = (System.nanoTime() - initializerStartNanos) / 1_000_000L;
                 client.initialized = true;
 
+                if (!channel.isActive() || client.disconnected) {
+                    current.setStage(LoginAttempt.Stage.FAILED);
+                    PlayerRegistry.removePlayer(client);
+                    return;
+                }
                 client.isActive = true;
                 if (client.getUpdateFlags() != null) {
                     client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
@@ -383,6 +326,21 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 // initial placement are all complete.
                 client.setSynchronizationReady(true);
                 GameEventBus.post(new PlayerLoginEvent(client));
+
+                long totalMs = (System.nanoTime() - current.getAcceptedAtNanos()) / 1_000_000L;
+                current.setStage(LoginAttempt.Stage.COMPLETE);
+                OperationalTelemetry.recordPhaseMillis("login.account_load", loadResult.getDurationMs());
+                OperationalTelemetry.recordPhaseMillis("login.finalize_queue", queueWaitMs);
+                OperationalTelemetry.recordPhaseMillis("login.initialize", initializerDurationMs);
+                OperationalTelemetry.recordPhaseMillis("login.total", totalMs);
+                logger.info(
+                        "Login finished player={} slot={} x={} y={} z={} remote={} parse={}ms load={}ms " +
+                                "queueWait={}ms init={}ms total={}ms pendingRetries={} slotReserve={}ms",
+                        client.getPlayerName(), slotCopy,
+                        client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ(),
+                        current.getRemoteIp(), parsed.getParseDurationMs(), loadResult.getDurationMs(),
+                        queueWaitMs, initializerDurationMs, totalMs, loadResult.getPendingRetries(), slotReserveDurationMs
+                );
 
                 final PlayerInitializer postInitializer = initializer;
                 GameThreadIngress.submitDeferred("login-post-init", () -> {
@@ -408,20 +366,12 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         if (!finalizerAccepted) {
             OperationalTelemetry.incrementCounter("login.finalize.rejected", 1L);
             logger.warn("Login finalization queue full for {}; closing session", client.getPlayerName());
-            releaseSlot(slotCopy);
-            releaseToken();
+            releaseSlot(current);
+            releaseToken(current);
             channel.close();
             return;
         }
 
-        loginFinished = true;
-        logger.info(
-                "[Netty] Login finished for {} slot {} (async) load={}ms pendingRetries={}",
-                client.getPlayerName(),
-                slot,
-                loadResult.getDurationMs(),
-                loadResult.getPendingRetries()
-        );
     }
 
     private static String remoteIp(ChannelHandlerContext ctx) {
@@ -431,6 +381,12 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         } catch (Exception ignored) {
             return null;
         }
+    }
+
+    private static int rightsForGroup(int playerGroup) {
+        if (playerGroup == 9 || playerGroup == 5) return 1;
+        if (playerGroup == 6 || playerGroup == 18 || playerGroup == 10) return 2;
+        return 0;
     }
 
     /* Slot helpers */
@@ -446,19 +402,40 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         return -1;
     }
 
-    private void releaseSlot(int slot) {
+    private static void releaseSlot(LoginAttempt current) {
+        if (!current.markSlotReleased()) return;
+        int slot = current.getReservedSlot();
         if (slot <= 0) return;
         synchronized (PlayerRegistry.slotLock) {
-            PlayerRegistry.usedSlots.clear(slot);
-            net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[slot] = null;
+            if (PlayerRegistry.players[slot] == null || PlayerRegistry.players[slot] == current.client) {
+                PlayerRegistry.usedSlots.clear(slot);
+                PlayerRegistry.players[slot] = null;
+            }
         }
     }
 
+    private static void releaseToken(LoginAttempt current) {
+        if (current.markTokenReleased() && current.longName != 0L) {
+            LOADING_ACCOUNTS.remove(current.longName, current);
+        }
+    }
+
+    private static void releaseAttempt(LoginAttempt current) {
+        if (current == null) return;
+        releaseToken(current);
+        releaseSlot(current);
+    }
+
     private void sendLoginSuccess(ChannelHandlerContext ctx, int rights) {
-        ByteBuf resp = ctx.alloc().buffer(2);
+        ctx.writeAndFlush(successResponse(ctx.alloc(), rights));
+    }
+
+    static ByteBuf successResponse(io.netty.buffer.ByteBufAllocator allocator, int rights) {
+        ByteBuf resp = allocator.buffer(3, 3);
         resp.writeByte(LOGIN_SUCCESS_CODE);
         resp.writeByte(rights);
-        ctx.writeAndFlush(resp);
+        resp.writeByte(0); // client flagged state
+        return resp;
     }
 
     private void sendAndClose(ChannelHandlerContext ctx, int code) {
@@ -471,30 +448,16 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        if (!loginFinished) {
-            releaseToken();
-            if (reservedSlot > 0) {
-                releaseSlot(reservedSlot);
-            }
-        }
+        LoginAttempt current = attempt;
+        if (current != null && current.getStage() != LoginAttempt.Stage.COMPLETE) releaseAttempt(current);
         ctx.fireChannelInactive();
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         logger.warn("[Netty] Login processing error for {}", ctx.channel().remoteAddress(), cause);
-        if (!loginFinished) {
-            releaseToken();
-            if (reservedSlot > 0) {
-                releaseSlot(reservedSlot);
-            }
-        }
+        LoginAttempt current = attempt;
+        if (current != null && current.getStage() != LoginAttempt.Stage.COMPLETE) releaseAttempt(current);
         ctx.close();
-    }
-
-    private void releaseToken() {
-        if (longName != 0L) {
-            LOADING_ACCOUNTS.remove(longName, longName);
-        }
     }
 }

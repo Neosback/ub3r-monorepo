@@ -78,7 +78,10 @@ public class ItemClient
 		{
 			if (!response.isSuccessful())
 			{
-				log.warn("Error looking up prices: {}", response);
+				// Old/custom client revisions are not served by RuneLite's versioned
+				// metadata endpoint. Prices are optional, so keep startup clean and
+				// continue with the empty local price map.
+				log.debug("RuneLite price metadata unavailable: {}", response);
 				return null;
 			}
 
@@ -110,7 +113,7 @@ public class ItemClient
 		{
 			if (!response.isSuccessful())
 			{
-				log.warn("Error looking up item stats: {}", response);
+				log.debug("RuneLite item-stat metadata unavailable: {}", response);
 				return null;
 			}
 

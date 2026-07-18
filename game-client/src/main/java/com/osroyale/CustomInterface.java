@@ -1209,7 +1209,7 @@ public class CustomInterface extends RSInterface {
         addConfigButton(50005, 50000, 140, 141, 40, 40, "View extra settings", 3, 5, 980, false);
         addConfigButton(50006, 50000, 127, 126, 40, 40, "Toggle accept aid", 0, 5, 427, false);
         addConfigButton(50007, 50000, 129, 128, 40, 40, "Toggle run", 0, 5, 152, true);
-        addConfigButton(50008, 50000, 731, 732, 40, 40, "Magic Switcher", 4, 5, 980, false);
+        addConfigButton(50008, 50000, 731, 732, 40, 40, "View donator tab", 4, 5, 980, false);
         tab.totalChildren(9);
         tab.child(0, 50001, 3, 48);
         tab.child(1, 50002, 5, 4);
@@ -1282,7 +1282,7 @@ public class CustomInterface extends RSInterface {
         addConfigButton(50202, 50200, 136, 137, 40, 40, "Toggle Scroll Camera Movement", 1, 5, 207);
         addConfigButton(50203, 50200, 138, 139, 40, 40, "Open Keybinding Interface", 1, 5, 208, false);
         addText(50204, "Entity 'Attack' option:", 0xFF9900, false, true, 52, TDA, 1);
-        addDropdownMenu(50205, 155, Settings.ENTITY_ATTACK_OPTION, false, true, Dropdown.DEFAULT, "Depends on combat levels", "Always right-click", "Left click where available", "Hidden");
+        addDropdownMenu(50205, 155, 0, false, true, Dropdown.DEFAULT, "Depends on combat levels", "Always right-click", "Left click where available", "Hidden");
         mainTab.totalChildren(6);
         mainTab.child(0, 50000, 0, 0);
         mainTab.child(1, 50201, 20, 75);
@@ -1330,30 +1330,29 @@ public class CustomInterface extends RSInterface {
         scrollInterface.contentType = 0;
         scrollInterface.width = 165;
         scrollInterface.height = 155;
-        scrollInterface.scrollMax = 200;
-        int y = 15;
+        scrollInterface.scrollMax = 300;
+        int y = 5;
         scrollInterface.totalChildren(6);
 
-        // We use config 981 for the spellbook selection (0 = Normal, 1 = Ancient, 2 = Lunar)
-        addConfigButton(50421, 50420, 234, 235, 15, 15, "Enable Normal Magic", 0, 1, 981, false);
-        addText(50424, "Normal Magic", TDA, 1, 0xFF9900, false, true);
+        addHoverButton(50421, 391, 118, 32, "Teleport to Donator Zone", 0, 50422, 1);
+        addHoveredButton(50422, 392, 118, 32, 50423);
+        addText(50424, "Donator Zone", TDA, 1, 0xFF9900, true, true);
 
-        addConfigButton(50425, 50420, 234, 235, 15, 15, "Enable Ancient Magic", 1, 1, 981, false);
-        addText(50428, "Ancient Magic", TDA, 1, 0xFF9900, false, true);
+        addHoverButton(50425, 391, 118, 32, "Manage donator titles", 0, 50426, 1);
+        addHoveredButton(50426, 392, 118, 32, 50427);
+        addText(50428, "Donator Titles", TDA, 1, 0xFF9900, true, true);
 
-        addConfigButton(50429, 50420, 234, 235, 15, 15, "Enable Lunar Magic", 2, 1, 981, false);
-        addText(50432, "Lunar Magic", TDA, 1, 0xFF9900, false, true);
 
-        scrollInterface.child(0, 50421, 20, y);
-        scrollInterface.child(1, 50424, 45, y + 2);
+        scrollInterface.child(0, 50421, 30, y);
+        scrollInterface.child(1, 50422, 30, y);
+        scrollInterface.child(2, 50424, 88, y + 7);
 
-        y = 55;
-        scrollInterface.child(2, 50425, 20, y);
-        scrollInterface.child(3, 50428, 45, y + 2);
+        y = 45;
+        scrollInterface.child(3, 50425, 30, y);
+        scrollInterface.child(4, 50426, 30, y);
+        scrollInterface.child(5, 50428, 88, y + 7);
 
-        y = 95;
-        scrollInterface.child(4, 50429, 20, y);
-        scrollInterface.child(5, 50432, 45, y + 2);
+
     }
 
     public static void settings(TextDrawingArea[] tda) {
@@ -3864,7 +3863,7 @@ public class CustomInterface extends RSInterface {
         addSprite(interfaceId + 1, Client.spriteCache.get(192));
         addHoverButton(interfaceId + 2, 24, 15, 15, "Close", 250, interfaceId + 3, 3);
         addHoveredButton(interfaceId + 3, 25, 15, 15, interfaceId + 4);
-        addText(interfaceId + 5, "The Bank of Dodian", tda, 2, 0xFF981F, true, true);
+        addText(interfaceId + 5, "The Bank of Tarnish", tda, 2, 0xFF981F, true, true);
         addConfigButton(interfaceId + 6, 60_000, 217, 218, 32, 20, "Toggle Insert/Swap", 1, 5, 304);
         addConfigButton(interfaceId + 7, 60_000, 219, 220, 32, 20, "Toggle Note/Un-note", 1, 5, 115);
 
@@ -3890,11 +3889,11 @@ public class CustomInterface extends RSInterface {
         addSprite(interfaceId + 29, Client.spriteCache.get(197));
         addContainer(5382, 109, 9, 89, "Withdraw-1", "Withdraw-5", "Withdraw-10", "Withdraw-All", "Withdraw-X", null, "Withdraw-All but one");
         addConfigButton(interfaceId + 72, 60_000, 233, 232, 35, 25, "Release Place Holders", 0, 5, 116);
-        addHoverButton(interfaceId + 73, 233, 35, 25, "Toggle Place Holders", -1, interfaceId + 72, 1);
+        addHoverButton(interfaceId + 73, "b", 1, 35, 25, "Toggle Place Holders", -1, interfaceId + 72, 1);
         addHoverButton(interfaceId + 74, 227, 115, 25, "Access bank pins settings", -1, interfaceId + 75, 1);
         addHoveredButton(interfaceId + 75, 228, 115, 25, interfaceId + 76);
-        removeSomething(interfaceId + 77);
-        removeSomething(interfaceId + 78);
+        addHoverButton(interfaceId + 77, "b", 1, 35, 25, "Deposit coins", -1, interfaceId + 14, 1);
+        addHoverButton(interfaceId + 78, "b:", 1, 35, 25, "Check vault", -1, interfaceId + 14, 1);
         //addText(interfaceId + 79, "Bank value: 0", tda, 0, 0xFF981F, false, true);
         addText(interfaceId + 80, "", tda, 0, 0xFF981F, false, true);
         interfaceCache[5385].width += 22;
@@ -4556,9 +4555,9 @@ public class CustomInterface extends RSInterface {
      */
     public static void equipmentTab(TextDrawingArea[] wid) {
         RSInterface Interface = interfaceCache[1644];
-        removeSomething(15101);
-        removeSomething(15102);
-        removeSomething(15109);
+        addSprite(15101, 0, "Interfaces/Equipment/bl");
+        addSprite(15102, 1, "Interfaces/Equipment/bl");
+        addSprite(15109, 2, "Interfaces/Equipment/bl");
         removeSomething(21338);
         removeSomething(21344); // remove "Stats" text
         //        removeConfig(21342);

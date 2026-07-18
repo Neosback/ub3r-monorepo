@@ -8,10 +8,10 @@ package com.osroyale;
  */
 public final class Configuration {
 
-    public static final String LIVE_GAME_ADDRESS = "Play.dodian.net";
+    public static final String LIVE_GAME_ADDRESS = "game.tarnishps.com";
     public static final int LIVE_GAME_PORT = 43594;
 
-    public static final String LIVE_CACHE_ADDRESS = "Play.dodian.net";
+    public static final String LIVE_CACHE_ADDRESS = "cache.tarnishps.com";
     public static final int LIVE_CACHE_PORT = 43595;
 
     public static final String DEV_GAME_ADDRESS = "localhost";
@@ -29,12 +29,12 @@ public final class Configuration {
     /**
      * State of client being in debug mode.
      */
-    public static boolean DEBUG_MODE = true;
+    public static boolean DEBUG_MODE = false;
 
     /**
      * Display client data.
      */
-    static boolean CLIENT_DATA = true;
+    static boolean CLIENT_DATA = false;
 
     /**
      * Debug the interfaces.
@@ -44,7 +44,7 @@ public final class Configuration {
     /**
      * State of client enabling RSA encryption.
      */
-    public static final boolean ENABLE_RSA = true;
+    static boolean ENABLE_RSA = true;
 
     /**
      * The current NPC bits.
@@ -54,7 +54,7 @@ public final class Configuration {
     /**
      * The current version of the client.
      */
-    public static final int CLIENT_VERSION = net.runelite.client.BuildConstants.CLIENT_VERSION;
+    public static final int CLIENT_VERSION = 12;
 
     /**
      * The name of the client.
@@ -81,7 +81,7 @@ public final class Configuration {
     };
 
     /**
-     * SwiftFUP is the authoritative source for cache archives.
+     * Whether to use Jire SwiftFUP update server.
      */
     public static final boolean USE_UPDATE_SERVER = true;
 

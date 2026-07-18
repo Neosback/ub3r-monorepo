@@ -31,7 +31,6 @@ data class NetworkSettings(
     @JsonProperty("packet_limit") val packetLimit: Int,
     @JsonProperty("leak_detection") val leakDetection: String,
     @JsonProperty("swiftfup_connections_per_ip") val swiftfupConnectionsPerIp: Int = 8,
-    @JsonProperty("swiftfup_requests_per_second") val swiftfupRequestsPerSecond: Int = 512,
     @JsonProperty("swiftfup_read_timeout_seconds") val swiftfupReadTimeoutSeconds: Int = 30,
     @JsonProperty("swiftfup_max_tracked_ips") val swiftfupMaxTrackedIps: Int = 10_000
 )
@@ -103,9 +102,6 @@ object SettingsLoader {
         }
         if (settings.network.swiftfupConnectionsPerIp !in 1..64) {
             throw IllegalStateException("swiftfup_connections_per_ip must be in range 1-64")
-        }
-        if (settings.network.swiftfupRequestsPerSecond !in 1..100_000) {
-            throw IllegalStateException("swiftfup_requests_per_second must be in range 1-100000")
         }
         if (settings.network.swiftfupReadTimeoutSeconds !in 5..300) {
             throw IllegalStateException("swiftfup_read_timeout_seconds must be in range 5-300")

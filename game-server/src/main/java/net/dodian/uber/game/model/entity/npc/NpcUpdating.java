@@ -25,9 +25,10 @@ import java.util.Iterator;
 public class NpcUpdating extends EntityUpdating<Npc> {
 
     private static final Logger logger = LoggerFactory.getLogger(NpcUpdating.class);
-    static final int NPC_SLOT_BITS = 14;
+    static final int NPC_SLOT_BITS = 16;
     static final int NPC_DEFINITION_BITS = 16;
     static final int NPC_SLOT_TERMINATOR = (1 << NPC_SLOT_BITS) - 1;
+    static final int MAX_CLIENT_NPC_SLOT = 16_383;
     static final int MAX_NPC_DEFINITION_ID = (1 << NPC_DEFINITION_BITS) - 1;
     private static final boolean DEBUG_NPC_MOVEMENT_WRITES = false;
     private static final int MAX_LOCAL_NPC_ADDS_PER_TICK = 15;
@@ -152,7 +153,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             z += 32;
         buf.putBits(5, z); // y coordinate relative to thisPlayer
 
-        buf.putBits(1, 1); // discard client walking queue on add-local
+        buf.putBits(1, 0); // Tarnish preserves the walking queue on add-local.
         int displayId = displayIdFor(player, npc);
         validateNpcDefinitionId(displayId);
         buf.putBits(NPC_DEFINITION_BITS, displayId);
@@ -168,7 +169,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     static void validateNpcSlot(int slot) {
-        if (slot < 0 || slot >= NPC_SLOT_TERMINATOR) {
+        if (slot < 0 || slot > MAX_CLIENT_NPC_SLOT) {
             throw new IllegalArgumentException("NPC slot cannot be encoded: " + slot);
         }
     }
@@ -223,59 +224,11 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     @Override
     public void appendPrimaryHit(Npc npc, ByteMessage buf) {
-
-        // Client npcUpdateMask (mask & 0x40) expects:
-        // short damage, byte type, short currentHp, short maxHp
-        int damage = npc.getDamageDealt();
-        if (damage < Short.MIN_VALUE) damage = Short.MIN_VALUE;
-        if (damage > Short.MAX_VALUE) damage = Short.MAX_VALUE;
-        buf.putShort(damage);
-
-        int type;
-        if (npc.getDamageDealt() == 0) {
-            type = 0; // miss
-        } else if (npc.getHitType() == Entity.hitType.BURN) {
-            type = 4;
-        } else if (npc.getHitType() == Entity.hitType.CRIT) {
-            type = 3;
-        } else if (npc.getHitType() == Entity.hitType.POISON) {
-            type = 2;
-        } else {
-            type = 1; // normal
-        }
-        buf.put(type);
-
-        int current = Math.max(0, npc.getCurrentHealth());
-        int max = Math.max(1, npc.getMaxHealth());
-        buf.putShort(current);
-        buf.putShort(max);
+        appendTarnishNpcHit(buf, npc.getDamageDealt(), npc.getHitType(), npc);
     }
 
     public void appendPrimaryHit2(Npc npc, ByteMessage buf) {
-        // Client npcUpdateMask (mask & 0x08) uses the same layout as primary hit
-        int damage = npc.getDamageDealt2();
-        if (damage < Short.MIN_VALUE) damage = Short.MIN_VALUE;
-        if (damage > Short.MAX_VALUE) damage = Short.MAX_VALUE;
-        buf.putShort(damage);
-
-        int type;
-        if (npc.getDamageDealt2() == 0) {
-            type = 0; // miss
-        } else if (npc.getHitType2() == Entity.hitType.BURN) {
-            type = 4;
-        } else if (npc.getHitType2() == Entity.hitType.CRIT) {
-            type = 3;
-        } else if (npc.getHitType2() == Entity.hitType.POISON) {
-            type = 2;
-        } else {
-            type = 1; // normal
-        }
-        buf.put(type);
-
-        int current = Math.max(0, npc.getCurrentHealth());
-        int max = Math.max(1, npc.getMaxHealth());
-        buf.putShort(current);
-        buf.putShort(max);
+        appendTarnishNpcHit(buf, npc.getDamageDealt2(), npc.getHitType2(), npc);
     }
     @Override
     public void appendFaceCoordinates(Npc npc, ByteMessage buf) {
@@ -293,14 +246,30 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     public void appendAppearanceUpdate(Npc npc, ByteMessage buf) {
-        // Mystic client expects: headIcon, transformFlag, optional transformedNpcId(LEShortA).
-        buf.put(npc.getHeadIcon());
         int transformedNpcId = npc.getTransformedNpcId();
-        boolean transform = transformedNpcId >= 0;
-        buf.put(transform ? 1 : 0);
-        if (transform) {
-            buf.putShort(transformedNpcId, ByteOrder.LITTLE, ValueType.ADD);
-        }
+        int definitionId = transformedNpcId >= 0 ? transformedNpcId : npc.getId();
+        validateNpcDefinitionId(definitionId);
+        buf.putShort(definitionId, ByteOrder.LITTLE, ValueType.ADD);
+    }
+
+    private static void appendTarnishNpcHit(ByteMessage buf, int damage, Entity.hitType hitType, Npc npc) {
+        int maximum = npc.getMaxHealth() >= 500 ? 200 : 100;
+        int health = Math.max(0, Math.min(maximum,
+                npc.getCurrentHealth() * maximum / Math.max(1, npc.getMaxHealth())));
+        buf.put(0); // single hit
+        buf.put(Math.max(0, Math.min(255, damage)));
+        buf.put(tarnishHitType(damage, hitType));
+        buf.put(0);
+        buf.put(health);
+        buf.put(maximum);
+    }
+
+    private static int tarnishHitType(int damage, Entity.hitType hitType) {
+        if (damage == 0) return 0;
+        if (hitType == Entity.hitType.BURN) return 4;
+        if (hitType == Entity.hitType.CRIT) return 3;
+        if (hitType == Entity.hitType.POISON) return 2;
+        return 1;
     }
 
     public void updateNPCMovement(Npc npc, ByteMessage buf) {

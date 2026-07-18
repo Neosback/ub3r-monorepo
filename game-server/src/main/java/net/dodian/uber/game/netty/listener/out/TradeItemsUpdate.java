@@ -22,18 +22,11 @@ public class TradeItemsUpdate implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        message.putInt(interfaceId);
-        message.putShort(items.size());
+        ByteMessage message = TarnishItemContainerEncoder.full(interfaceId, items);
 
         StringBuilder preview = new StringBuilder();
         for (GameItem item : items) {
             int amount = item.getAmount();
-            message.putInt(amount);
-            if (amount != 0) {
-                int itemId = item.getId() < 0 ? -1 : item.getId() + 1;
-                message.putShort(itemId);
-            }
             if (preview.length() < 120) {
                 if (preview.length() > 0) {
                     preview.append(", ");

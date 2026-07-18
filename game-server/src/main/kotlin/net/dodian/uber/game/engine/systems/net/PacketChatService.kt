@@ -7,6 +7,7 @@ import net.dodian.uber.game.events.widget.ChatMessageEvent
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.netty.codec.PublicChatCodec
 import net.dodian.uber.game.persistence.audit.ChatLog
 
 /**
@@ -25,10 +26,9 @@ object PacketChatService {
      * @param color    raw color byte from packet
      * @param effects  raw effects byte from packet
      * @param chat     decoded chat string (max 256 chars, null-terminated)
-     * @param chatBytes pre-computed byte representation of [chat]
      */
     @JvmStatic
-    fun handlePublicChat(client: Client, color: Int, effects: Int, chat: String, chatBytes: ByteArray) {
+    fun handlePublicChat(client: Client, color: Int, effects: Int, chat: String) {
         if (!client.validClient) {
             client.send(SendMessage("Please use another client"))
             return
@@ -45,10 +45,11 @@ object PacketChatService {
         client.chatTextEffects = effects
         client.chatTextColor = color
 
-        val copyLen = minOf(chatBytes.size, client.chatText.size)
+        val encodedChat = PublicChatCodec.encode(chat)
+        val copyLen = minOf(encodedChat.size, client.chatText.size)
         client.chatTextSize = copyLen
         if (copyLen > 0) {
-            System.arraycopy(chatBytes, 0, client.chatText, 0, copyLen)
+            System.arraycopy(encodedChat, 0, client.chatText, 0, copyLen)
         }
         client.chatTextMessage = chat
         GameEventBus.post(ChatMessageEvent(client, chat))

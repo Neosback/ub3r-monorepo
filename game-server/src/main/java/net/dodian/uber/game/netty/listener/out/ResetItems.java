@@ -17,16 +17,11 @@ public class ResetItems implements OutgoingPacket {
     @Override
     public void send(Client client) {
 
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        message.putInt(writeFrame);
-        message.putShort(client.playerItems.length);
+        int[] itemIds = new int[client.playerItems.length];
         StringBuilder preview = new StringBuilder();
         for (int i = 0; i < client.playerItems.length; i++) {
+            itemIds[i] = client.playerItems[i] - 1;
             int amount = client.playerItemsN[i];
-            message.putInt(amount);
-            if (amount != 0) {
-                message.putShort(client.playerItems[i]);
-            }
             if (preview.length() < 120) {
                 if (preview.length() > 0) {
                     preview.append(", ");
@@ -34,6 +29,7 @@ public class ResetItems implements OutgoingPacket {
                 preview.append(client.playerItems[i] - 1).append('x').append(amount);
             }
         }
+        ByteMessage message = TarnishItemContainerEncoder.full(writeFrame, itemIds, client.playerItemsN);
         ItemContainerTrace.log(client, "ResetItems", writeFrame, client.playerItems.length, preview.toString());
         client.send(message);
     }

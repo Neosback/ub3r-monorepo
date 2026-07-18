@@ -12,19 +12,28 @@ import net.dodian.uber.game.engine.systems.net.PacketBankingService;
 
 @net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {129})
 public class BankAllListener implements PacketListener {
-    private static final int MIN_PAYLOAD_BYTES = 8;
+    private static final int PAYLOAD_BYTES = 6;
 
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+        if (buf.readableBytes() != PAYLOAD_BYTES) {
             return;
         }
 
-        int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int interfaceId = ByteBufReader.readInt(buf);
-        int removeId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int[] decoded = decode(buf);
+        int interfaceId = decoded[0];
+        int removeId = decoded[1];
+        int removeSlot = decoded[2];
 
         PacketBankingService.handleBankAllDecoded(client, interfaceId, removeSlot, removeId);
+    }
+
+    static int[] decode(ByteBuf buf) {
+        return new int[] {
+                ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL),
+                ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD),
+                ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD)
+        };
     }
 }

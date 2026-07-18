@@ -6,6 +6,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.InventoryInterface
 import net.dodian.uber.game.netty.listener.out.SendBankItems
 import net.dodian.uber.game.netty.listener.out.SetVarbit
+import net.dodian.uber.game.netty.listener.out.SendTooltip
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
 import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
@@ -14,6 +15,13 @@ import java.util.ArrayList
 import java.util.Arrays
 
 object PlayerBankService {
+    private const val INSERT_MODE_VARP = 304
+    private const val NOTE_MODE_VARP = 115
+    private const val PLACEHOLDER_MODE_VARP = 116
+    private const val INSERT_MODE_BUTTON = 60006
+    private const val NOTE_MODE_BUTTON = 60007
+    private const val PLACEHOLDER_MODE_BUTTON = 60073
+
     @JvmStatic
     fun replaceBankContentsWithItemIds(client: Client, itemIds: List<Int>, amount: Int): Int? {
         val bankSize = client.bankSize()
@@ -69,7 +77,7 @@ object PlayerBankService {
     }
 
     @JvmStatic
-    fun moveBankItems(client: Client, from: Int, to: Int, moveWindow: Int): Boolean {
+    fun moveBankItems(client: Client, from: Int, to: Int, moveWindow: Int, mode: Int = 0): Boolean {
         if (moveWindow != 5382 && (moveWindow < 50300 || moveWindow > 50310)) {
             return false
         }
@@ -82,19 +90,23 @@ object PlayerBankService {
             return true
         }
         ensureBankTabState(client)
-        val tempItem = client.bankItems[actualFrom]
-        val tempAmount = client.bankItemsN[actualFrom]
-        val tempTab = client.bankSlotTabs[actualFrom]
-        client.bankItems[actualFrom] = client.bankItems[actualTo]
-        client.bankItemsN[actualFrom] = client.bankItemsN[actualTo]
-        client.bankSlotTabs[actualFrom] = client.bankSlotTabs[actualTo]
-        client.bankItems[actualTo] = tempItem
-        client.bankItemsN[actualTo] = tempAmount
-        client.bankSlotTabs[actualTo] = tempTab
-        if (client.bankItems[actualFrom] <= 0 || client.bankItemsN[actualFrom] <= 0) {
+        if (mode == 1) {
+            insertBankItem(client, actualFrom, actualTo)
+        } else {
+            val tempItem = client.bankItems[actualFrom]
+            val tempAmount = client.bankItemsN[actualFrom]
+            val tempTab = client.bankSlotTabs[actualFrom]
+            client.bankItems[actualFrom] = client.bankItems[actualTo]
+            client.bankItemsN[actualFrom] = client.bankItemsN[actualTo]
+            client.bankSlotTabs[actualFrom] = client.bankSlotTabs[actualTo]
+            client.bankItems[actualTo] = tempItem
+            client.bankItemsN[actualTo] = tempAmount
+            client.bankSlotTabs[actualTo] = tempTab
+        }
+        if (client.bankItems[actualFrom] <= 0) {
             client.bankSlotTabs[actualFrom] = 0
         }
-        if (client.bankItems[actualTo] <= 0 || client.bankItemsN[actualTo] <= 0) {
+        if (client.bankItems[actualTo] <= 0) {
             client.bankSlotTabs[actualTo] = 0
         }
         client.markSaveDirty(PlayerSaveSegment.BANK.mask)
@@ -130,6 +142,7 @@ object PlayerBankService {
         clearBankStyleView(client)
         // Reset the client-side search field to its placeholder so a previous search doesn't persist.
         client.sendString("Search...", 60019)
+        refreshBankPreferences(client)
         checkItemUpdate(client)
     }
 
@@ -206,7 +219,7 @@ object PlayerBankService {
         }
         var index = 0
         while (index < size) {
-            if (client.bankItems[index] <= 0 || client.bankItemsN[index] <= 0) {
+            if (client.bankItems[index] <= 0 || client.bankItemsN[index] < 0) {
                 client.bankSlotTabs[index] = 0
             } else if (client.bankSlotTabs[index] < 0 || client.bankSlotTabs[index] > 9) {
                 client.bankSlotTabs[index] = 0
@@ -367,7 +380,7 @@ object PlayerBankService {
         val size = client.bankSize()
         var i = 0
         while (i < size) {
-            if (client.bankItems[i] - 1 == itemId && client.bankItemsN[i] > 0) {
+            if (client.bankItems[i] - 1 == itemId && client.bankItemsN[i] >= 0) {
                 return i
             }
             i++
@@ -397,7 +410,7 @@ object PlayerBankService {
         val occupied = BooleanArray(10)
         var slot = 0
         while (slot < size) {
-            if (client.bankItems[slot] > 0 && client.bankItemsN[slot] > 0) {
+            if (client.bankItems[slot] > 0 && client.bankItemsN[slot] >= 0) {
                 val t = tabs[slot]
                 if (t in 0..9) occupied[t] = true
             }
@@ -422,7 +435,7 @@ object PlayerBankService {
         if (changed) {
             slot = 0
             while (slot < size) {
-                if (client.bankItems[slot] > 0 && client.bankItemsN[slot] > 0) {
+                if (client.bankItems[slot] > 0 && client.bankItemsN[slot] >= 0) {
                     val t = tabs[slot]
                     if (t in 0..9) tabs[slot] = remap[t]
                 } else {
@@ -450,7 +463,7 @@ object PlayerBankService {
         if (bankSlot < 0 || bankSlot >= client.bankSize()) {
             return
         }
-        if (client.bankItems[bankSlot] <= 0 || client.bankItemsN[bankSlot] <= 0) {
+        if (client.bankItems[bankSlot] <= 0 || client.bankItemsN[bankSlot] < 0) {
             return
         }
         val itemId = client.bankItems[bankSlot] - 1
@@ -466,7 +479,7 @@ object PlayerBankService {
         var i = 0
         val size = client.bankSize()
         while (i < size) {
-            if (i != bankSlot && client.bankItems[i] > 0 && client.bankItemsN[i] > 0) {
+            if (i != bankSlot && client.bankItems[i] > 0 && client.bankItemsN[i] >= 0) {
                 val t = client.bankSlotTabs[i]
                 if (t in 1..9 && t > highestUsed) highestUsed = t
             }
@@ -561,7 +574,7 @@ object PlayerBankService {
         var index = 0
         val size = client.bankSize()
         while (index < size) {
-            if (client.bankItems[index] > 0 && client.bankItemsN[index] > 0 && client.bankSlotTabs[index] == tab) {
+            if (client.bankItems[index] > 0 && client.bankItemsN[index] >= 0 && client.bankSlotTabs[index] == tab) {
                 return true
             }
             index++
@@ -603,7 +616,7 @@ object PlayerBankService {
         var index = 0
         val size = client.bankSize()
         while (index < size) {
-            if (client.bankItems[index] > 0 && client.bankItemsN[index] > 0) {
+            if (client.bankItems[index] > 0 && client.bankItemsN[index] >= 0) {
                 used++
             }
             index++
@@ -624,7 +637,7 @@ object PlayerBankService {
         val size = client.bankSize()
         var slot = 0
         while (slot < size) {
-            if (client.bankItems[slot] <= 0 || client.bankItemsN[slot] <= 0) {
+            if (client.bankItems[slot] <= 0 || client.bankItemsN[slot] < 0) {
                 client.bankSlotTabs[slot] = 0
                 slot++
                 continue
@@ -648,7 +661,7 @@ object PlayerBankService {
         if (!client.bankSearchActive || client.bankSearchQuery.isEmpty()) {
             return false
         }
-        if (slot < 0 || slot >= client.bankSize() || client.bankItems[slot] <= 0 || client.bankItemsN[slot] <= 0) {
+        if (slot < 0 || slot >= client.bankSize() || client.bankItems[slot] <= 0 || client.bankItemsN[slot] < 0) {
             return false
         }
         val itemName = client.getItemName(client.bankItems[slot] - 1) ?: return false
@@ -674,6 +687,134 @@ object PlayerBankService {
             client.bankStyleViewSlotMap[0][slot] = slot
             slot++
         }
+    }
+
+    @JvmStatic
+    fun togglePlaceholders(client: Client) {
+        if (!client.IsBanking || client.bankStyleViewOpen) return
+        client.bankPlaceholdersEnabled = !client.bankPlaceholdersEnabled
+        client.markSaveDirty(PlayerSaveSegment.BANK.mask)
+        refreshBankPreferences(client)
+    }
+
+    @JvmStatic
+    fun releaseAllPlaceholders(client: Client): Int {
+        if (!client.IsBanking || client.bankStyleViewOpen) return 0
+        var released = 0
+        for (slot in 0 until client.bankSize()) {
+            if (client.bankItems[slot] > 0 && client.bankItemsN[slot] == 0) {
+                clearBankEntry(client, slot)
+                released++
+            }
+        }
+        if (released > 0) {
+            normalizeBankTabs(client)
+            client.markSaveDirty(PlayerSaveSegment.BANK.mask)
+            checkItemUpdate(client)
+        }
+        return released
+    }
+
+    @JvmStatic
+    fun releasePlaceholder(client: Client, slot: Int): Boolean {
+        if (!client.IsBanking || slot !in 0 until client.bankSize()) return false
+        if (client.bankItems[slot] <= 0 || client.bankItemsN[slot] != 0) return false
+        clearBankEntry(client, slot)
+        normalizeBankTabs(client)
+        client.markSaveDirty(PlayerSaveSegment.BANK.mask)
+        checkItemUpdate(client)
+        return true
+    }
+
+    @JvmStatic
+    fun createPlaceholder(client: Client, itemId: Int): Boolean {
+        if (!client.IsBanking || client.bankStyleViewOpen) return false
+        val slot = resolveBankSlotByItemId(client, itemId)
+        if (slot < 0) return false
+        if (client.bankItemsN[slot] == 0) return true
+        val previous = client.bankPlaceholdersEnabled
+        client.bankPlaceholdersEnabled = true
+        try {
+            client.fromBank(itemId, slot, -2)
+        } finally {
+            client.bankPlaceholdersEnabled = previous
+        }
+        checkItemUpdate(client)
+        return client.bankItems[slot] == itemId + 1 && client.bankItemsN[slot] == 0
+    }
+
+    @JvmStatic
+    fun toggleInsertMode(client: Client) {
+        if (!client.IsBanking || client.bankStyleViewOpen) return
+        client.bankInsertMode = !client.bankInsertMode
+        refreshBankPreferences(client)
+    }
+
+    @JvmStatic
+    fun toggleNoteMode(client: Client) {
+        if (!client.IsBanking || client.bankStyleViewOpen) return
+        client.takeAsNote = !client.takeAsNote
+        refreshBankPreferences(client)
+    }
+
+    @JvmStatic
+    fun refreshBankPreferences(client: Client) {
+        client.send(SetVarbit(INSERT_MODE_VARP, if (client.bankInsertMode) 1 else 0))
+        client.send(SendTooltip(if (client.bankInsertMode) "Enable swapping" else "Enable inserting", INSERT_MODE_BUTTON))
+        client.send(SetVarbit(NOTE_MODE_VARP, if (client.takeAsNote) 1 else 0))
+        client.send(SendTooltip((if (client.takeAsNote) "Disable" else "Enable") + " noting", NOTE_MODE_BUTTON))
+        client.send(SetVarbit(PLACEHOLDER_MODE_VARP, if (client.bankPlaceholdersEnabled) 1 else 0))
+        client.send(
+            SendTooltip(
+                (if (client.bankPlaceholdersEnabled) "Disable" else "Enable") + " place holders",
+                PLACEHOLDER_MODE_BUTTON,
+            ),
+        )
+    }
+
+    private fun clearBankEntry(client: Client, slot: Int) {
+        client.bankItems[slot] = 0
+        client.bankItemsN[slot] = 0
+        client.bankSlotTabs[slot] = 0
+    }
+
+    private fun insertBankItem(client: Client, from: Int, to: Int) {
+        if (from == to) return
+        rebuildBankContainers(client)
+        val orderedSlots = ArrayList<Int>()
+        for (ownerTab in 0..9) {
+            for (physicalSlot in client.bankContainerSlotMap[ownerTab]) {
+                if (physicalSlot >= 0) orderedSlots.add(physicalSlot)
+            }
+        }
+        val fromIndex = orderedSlots.indexOf(from)
+        val toIndex = orderedSlots.indexOf(to)
+        if (fromIndex < 0 || toIndex < 0) return
+        val item = client.bankItems[from]
+        val amount = client.bankItemsN[from]
+        val sourceTab = client.bankSlotTabs[from]
+        val targetTab = client.bankSlotTabs[to]
+        if (fromIndex < toIndex) {
+            for (index in fromIndex until toIndex) {
+                val destination = orderedSlots[index]
+                val source = orderedSlots[index + 1]
+                client.bankItems[destination] = client.bankItems[source]
+                client.bankItemsN[destination] = client.bankItemsN[source]
+                client.bankSlotTabs[destination] = client.bankSlotTabs[source]
+            }
+        } else {
+            for (index in fromIndex downTo toIndex + 1) {
+                val destination = orderedSlots[index]
+                val source = orderedSlots[index - 1]
+                client.bankItems[destination] = client.bankItems[source]
+                client.bankItemsN[destination] = client.bankItemsN[source]
+                client.bankSlotTabs[destination] = client.bankSlotTabs[source]
+            }
+        }
+        val destination = orderedSlots[toIndex]
+        client.bankItems[destination] = item
+        client.bankItemsN[destination] = amount
+        client.bankSlotTabs[destination] = if (sourceTab == targetTab) sourceTab else targetTab
     }
 
     private fun clampOwnedTab(tab: Int): Int {

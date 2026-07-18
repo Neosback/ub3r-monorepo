@@ -14,20 +14,20 @@ import org.slf4j.LoggerFactory;
 @net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {214})
 public class MoveItemsListener implements PacketListener {
     private static final Logger logger = LoggerFactory.getLogger(MoveItemsListener.class);
-    private static final int MIN_PAYLOAD_BYTES = 9;
+    private static final int PAYLOAD_BYTES = 7;
 
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+        if (buf.readableBytes() != PAYLOAD_BYTES) {
             return;
         }
 
-        int interfaceId = ByteBufReader.readInt(buf);
-        int rawModeByte = buf.readUnsignedByte();
-        int mode = (-rawModeByte) & 0xFF;
-        int itemFrom = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        int itemTo = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
+        int[] decoded = decode(buf);
+        int interfaceId = decoded[0];
+        int mode = decoded[1];
+        int itemFrom = decoded[2];
+        int itemTo = decoded[3];
 
         if (client.playerRights >= 2) {
             client.println_debug("MoveItems: iface=" + interfaceId + " mode=" + mode + " from=" + itemFrom + " to=" + itemTo);
@@ -40,6 +40,14 @@ public class MoveItemsListener implements PacketListener {
             return;
         }
 
-        PacketBankingService.handleMoveItems(client, interfaceId, itemFrom, itemTo);
+        PacketBankingService.handleMoveItems(client, interfaceId, itemFrom, itemTo, mode);
+    }
+
+    static int[] decode(ByteBuf buf) {
+        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
+        int mode = (-buf.readUnsignedByte()) & 0xFF;
+        int itemFrom = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
+        int itemTo = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
+        return new int[] {interfaceId, mode, itemFrom, itemTo};
     }
 }

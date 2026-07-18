@@ -37,4 +37,33 @@ class PlayerSaveSqlRepositoryTest {
         assertTrue(statements.any { hostile in it.values })
         assertFalse(statements.any { it.sql.contains("'", ignoreCase = false) })
     }
+
+    @Test
+    fun `bank placeholders use existing bank column without changing positive entries`() {
+        val enabled = Skill.values().count { it.isEnabled() }
+        val envelope = PlayerSaveEnvelope(
+            sequence = 2,
+            createdAt = 1,
+            dbId = 7,
+            playerName = "banker",
+            reason = PlayerSaveReason.PERIODIC,
+            updateProgress = false,
+            finalSave = false,
+            dirtyMask = PlayerSaveSegment.BANK.mask,
+            saveRevisionAtCapture = 1,
+            segments = listOf(
+                StatsSegmentSnapshot(1, 3, 0, IntArray(enabled), 10, 1, intArrayOf(), IntArray(6), 0, 0),
+                BankSegmentSnapshot(
+                    entries = listOf(
+                        ItemSlotEntry(4, 995, 12_345, 0),
+                        ItemSlotEntry(9, 4151, 0, 2),
+                    ),
+                    placeholdersEnabled = true,
+                ),
+            ),
+        )
+
+        val statement = PlayerSaveSqlRepository().buildPreparedStatements(envelope).last()
+        assertTrue("4-995-12345 9-4151-0-2 @ph=1" in statement.values)
+    }
 }

@@ -37,6 +37,11 @@ class PublicChatCodecTest {
         assertNull(PublicChatCodec.decode(byteArrayOf(128.toByte(), 128.toByte(), 196.toByte())))
     }
 
+    @Test
+    fun `encodes Tarnish text indexes for outbound player updates`() {
+        assertEquals(listOf(6, 1, 11, 11, 4, 38), PublicChatCodec.encode("Hello!").map { it.toInt() and 0xff })
+    }
+
     private fun clientPayload(effects: Int, color: Int, message: String): ByteArray {
         val encoded = message.lowercase().map { character ->
             characterTable.indexOf(character).also { require(it >= 0) }

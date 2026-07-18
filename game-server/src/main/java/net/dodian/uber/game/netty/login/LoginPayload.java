@@ -11,9 +11,11 @@ import io.netty.buffer.ByteBuf;
 public final class LoginPayload {
 
     private final ByteBuf payload;
+    private final boolean reconnecting;
 
-    public LoginPayload(ByteBuf payload) {
+    public LoginPayload(ByteBuf payload, boolean reconnecting) {
         this.payload = payload;
+        this.reconnecting = reconnecting;
     }
 
     /**
@@ -21,5 +23,9 @@ public final class LoginPayload {
      */
     public ByteBuf payload() {
         return payload;
+    }
+
+    public boolean reconnecting() {
+        return reconnecting;
     }
 }

@@ -32,7 +32,7 @@ class EconomyTransaction private constructor() {
         return true
     }
 
-    private fun array(client: Client, kind: Container): Items {
+    private fun array(client: Client, kind: Container): ArrayContainer {
         val key = ArrayKey(client, kind)
         return arrays.getOrPut(key) { ArrayContainer(client, kind) }
     }
@@ -107,9 +107,13 @@ class EconomyTransaction private constructor() {
         }
 
         override fun removeAt(slot: Int, itemId: Int, amount: Int): Boolean {
+            return removeAt(slot, itemId, amount, retainIdOnZero = false)
+        }
+
+        fun removeAt(slot: Int, itemId: Int, amount: Int, retainIdOnZero: Boolean): Boolean {
             if (!valid(itemId, amount) || slot !in ids.indices || decode(ids[slot]) != itemId || amounts[slot] < amount) return fail()
             amounts[slot] -= amount
-            if (amounts[slot] == 0) ids[slot] = 0
+            if (amounts[slot] == 0 && !(retainIdOnZero && kind == Container.BANK)) ids[slot] = 0
             changed = true
             return true
         }
@@ -279,8 +283,15 @@ class EconomyTransaction private constructor() {
         }
 
         @JvmStatic
-        fun transferBankToInventory(client: Client, itemId: Int, slot: Int, amount: Int, receivedItemId: Int = itemId): Boolean = run {
-            bank(client).removeAt(slot, itemId, amount)
+        fun transferBankToInventory(
+            client: Client,
+            itemId: Int,
+            slot: Int,
+            amount: Int,
+            receivedItemId: Int = itemId,
+            retainPlaceholder: Boolean = false,
+        ): Boolean = run {
+            array(client, Container.BANK).removeAt(slot, itemId, amount, retainIdOnZero = retainPlaceholder)
             inventory(client).add(receivedItemId, amount)
         }
 

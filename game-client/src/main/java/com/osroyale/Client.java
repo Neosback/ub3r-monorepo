@@ -431,11 +431,7 @@ public class Client extends GameEngine
 
                 entries[i] = new MenuEntryTwo();
                 entries[i].setParam1(menuActionCmd3[i]); // widget id
-                int type = menuActionID[i];
-                if (type >= 2000) {
-                    type -= 2000;
-                }
-                entries[i].setType(type); // action effectType
+                entries[i].setType(menuActionID[i]); // action effectType
                 entries[i].setIdentifier(menuActionCmd1[i]);
                 entries[i].setParam0(menuActionCmd2[i]);
                 entries[i].setParam1(menuActionCmd3[i]);
@@ -1618,7 +1614,7 @@ public class Client extends GameEngine
 
     @Override
     public RSNPC[] getCachedNPCs() {
-        return npcs;
+        return new RSNPC[0];
     }
 
     @Override
@@ -1638,7 +1634,7 @@ public class Client extends GameEngine
 
     @Override
     public RSPlayer[] getCachedPlayers() {
-        return playerArray;
+        return new RSPlayer[0];
     }
 
     @Override
@@ -1703,17 +1699,17 @@ public class Client extends GameEngine
 
     @Override
     public String[] getPlayerOptions() {
-        return atPlayerActions;
+        return new String[0];
     }
 
     @Override
     public boolean[] getPlayerOptionsPriorities() {
-        return playerOptions;
+        return new boolean[0];
     }
 
     @Override
     public int[] getPlayerMenuTypes() {
-        return playerMenuTypes;
+        return new int[0];
     }
 
     @Override
@@ -5119,18 +5115,8 @@ public class Client extends GameEngine
                     int tabSlot = 0;
                     int heightShift = 0;
 
-                    // When the bank is searching, ignore tab offsets entirely (mirror the bank
-                    // draw loop) so the hover/menu slot maps 1:1 onto the filtered bankInvTemp.
-                    // This guarantees the right item is withdrawn regardless of the active tab.
-                    boolean bankSearching = child.contentType == 206
-                            && RSInterface.interfaceCache[60019] != null
-                            && RSInterface.interfaceCache[60019].disabledMessage != null
-                            && RSInterface.interfaceCache[60019].disabledMessage.length() > 0
-                            && !RSInterface.interfaceCache[60019].defaultInputFieldText
-                                    .equalsIgnoreCase(RSInterface.interfaceCache[60019].disabledMessage);
-
                     int newSlot = 0;
-                    if (child.contentType == 206 && settings[211] != 0 && !bankSearching) {
+                    if (child.contentType == 206 && settings[211] != 0) {
                         for (int tab = 0; tab < tabAmounts.length; tab++) {
                             if (tab == settings[211]) {
                                 break;
@@ -5145,7 +5131,7 @@ public class Client extends GameEngine
                         for (int i3 = 0; i3 < child.width; i3++) {
                             int j3 = xBounds + i3 * (32 + child.invSpritePadX);
                             int k3 = yBounds + l2 * (32 + child.invSpritePadY) + heightShift;
-                            if (child.contentType == 206 && !bankSearching) {
+                            if (child.contentType == 206) {
                                 if (settings[211] == 0) {
                                     if (itemSlot >= tabAm) {
                                         if (tabSlot + 1 < tabAmounts.length) {
@@ -5817,9 +5803,9 @@ public class Client extends GameEngine
                         }
                     } else if (MouseHandler.saveClickX >= 404 && MouseHandler.saveClickX <= 515 && MouseHandler.saveClickY >= yOffset + 482 && MouseHandler.saveClickY <= yOffset + 505) {
                         if (Utility.staff(localPlayer.privelage)) {
-                            Utility.launchURL("www.Dodian.net.com/admin");
+                            Utility.launchURL("www.tarnishps.com/admin");
                         } else {
-                            Utility.launchURL("www.Dodian.net");
+                            Utility.launchURL("www.tarnishps.com");
                         }
                     }
                 }
@@ -6324,7 +6310,7 @@ public class Client extends GameEngine
                 for (int index = 0; index < sideIconsTab459.length; index++) {
                     if (tabInterfaceIDs[sideIconsTab459[index]] != -1) {
                         if (sideIconsId459[index] != -1) {
-                            drawSideIcon(sideIconsId459[index], sideIconsX459[index] + xOffset, sideIconsY459[index] + yOffset);
+                            sideIcons[sideIconsId459[index]].drawSprite(sideIconsX459[index] + xOffset, sideIconsY459[index] + yOffset);
                         }
                     }
                 }
@@ -6332,7 +6318,7 @@ public class Client extends GameEngine
                 for (int i = 0; i < sideIconsTab459.length; i++) {
                     if (tabInterfaceIDs[sideIconsTab459[i]] != -1) {
                         if (sideIconsId459[i] != -1) {
-                            drawSideIcon(sideIconsId459[i], canvasWidth - iconX1[i], canvasHeight - iconY1[i]);
+                            sideIcons[sideIconsId459[i]].drawSprite(canvasWidth - iconX1[i], canvasHeight - iconY1[i]);
                         }
                     }
                 }
@@ -6340,7 +6326,7 @@ public class Client extends GameEngine
                 for (int i = 0; i < sideIconsTab459.length; i++) {
                     if (tabInterfaceIDs[sideIconsTab459[i]] != -1) {
                         if (sideIconsId459[i] != -1) {
-                            drawSideIcon(sideIconsId459[i], canvasWidth - 461 + iconX2[i], canvasHeight - iconY2[i]);
+                            sideIcons[sideIconsId459[i]].drawSprite(canvasWidth - 461 + iconX2[i], canvasHeight - iconY2[i]);
                         }
                     }
                 }
@@ -6351,7 +6337,7 @@ public class Client extends GameEngine
                 for (int index = 0; index < sideIconsTab.length; index++) {
                     if (tabInterfaceIDs[sideIconsTab[index]] != -1) {
                         if (sideIconsId[index] != -1) {
-                            drawSideIcon(sideIconsId[index], sideIconsX[index] + xOffset, sideIconsY[index] + yOffset);
+                            sideIcons[sideIconsId[index]].drawSprite(sideIconsX[index] + xOffset, sideIconsY[index] + yOffset);
                         }
                     }
                 }
@@ -6359,7 +6345,7 @@ public class Client extends GameEngine
                 for (int i = 0; i < sideIconsTab.length; i++) {
                     if (tabInterfaceIDs[sideIconsTab[i]] != -1) {
                         if (iconId1[i] != -1) {
-                            drawSideIcon(iconId1[i], canvasWidth - iconX1[i], canvasHeight - iconY1[i]);
+                            sideIcons[iconId1[i]].drawSprite(canvasWidth - iconX1[i], canvasHeight - iconY1[i]);
                         }
                     }
                 }
@@ -6367,27 +6353,11 @@ public class Client extends GameEngine
                 for (int i = 0; i < sideIconsTab.length; i++) {
                     if (tabInterfaceIDs[sideIconsTab[i]] != -1) {
                         if (iconId2[i] != -1) {
-                            drawSideIcon(iconId2[i], canvasWidth - 461 + iconX2[i], canvasHeight - iconY2[i]);
+                            sideIcons[iconId2[i]].drawSprite(canvasWidth - 461 + iconX2[i], canvasHeight - iconY2[i]);
                         }
                     }
                 }
             }
-        }
-    }
-
-    private void drawSideIcon(int iconId, int x, int y) {
-        if (iconId == 7) {
-            Sprite newSprite = spriteCache.get(26);
-            Sprite oldSprite = sideIcons[7];
-            if (newSprite != null && oldSprite != null) {
-                int dx = (oldSprite.width - newSprite.width) / 2;
-                int dy = (oldSprite.height - newSprite.height) / 2;
-                newSprite.drawSprite(x + dx, y + dy);
-            } else if (newSprite != null) {
-                newSprite.drawSprite(x, y);
-            }
-        } else {
-            sideIcons[iconId].drawSprite(x, y);
         }
     }
 
@@ -6892,13 +6862,9 @@ public class Client extends GameEngine
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-         socketStream = null;
-         loggedIn = false;
-         if (outgoing != null) {
-             outgoing.reservePacketSlots = false;
-         }
-         game_message_time = 0;
-        systemUpdateTime = 0;
+        socketStream = null;
+        loggedIn = false;
+        game_message_time = 0;
         console.openConsole = false;
         unlinkMRUNodes();
         scene.initToNull();
@@ -6937,16 +6903,10 @@ public class Client extends GameEngine
     }
 
     private void addNewNpcs(final int pktSize, final Buffer stream) {
-        final int npcSlotBits = 14;
-        final int npcSlotTerminator = (1 << npcSlotBits) - 1;
-        final int npcAddPayloadBits = 5 + 5 + 1 + Configuration.NPC_BITS + 1;
-        while (stream.bitPosition + npcSlotBits <= pktSize * 8) {
-            int npcIndex = stream.readBits(npcSlotBits);
-            if (npcIndex == npcSlotTerminator) {
+        while (stream.bitPosition + 15 < pktSize * 8) {
+            int npcIndex = stream.readBits(16); // since server supports 32000 NPCs
+            if (npcIndex == 65535) {
                 break;
-            }
-            if (stream.bitPosition + npcAddPayloadBits > pktSize * 8) {
-                throw new IllegalStateException("Truncated NPC addition for slot " + npcIndex);
             }
             if (npcs[npcIndex] == null) {
                 npcs[npcIndex] = new Npc();
@@ -6983,6 +6943,7 @@ public class Client extends GameEngine
     }
 
     public void processGameLoop() {
+        TarnishClientDiagnostics.heartbeat(loggedIn, tick, baseX, baseY, localPlayer);
         final FileRequests fileRequests = swiftFUP.getFileRequests();
         if (fileRequests != null) {
             fileRequests.processDecompressedResponses();
@@ -7190,7 +7151,9 @@ public class Client extends GameEngine
             if ((mask & 0x40) != 0) {
                 mask += buffer.readUnsignedByte() << 8;
             }
+            int maskStart = buffer.position;
             appendPlayerUpdateMask(mask, index, buffer, player);
+            TarnishClientDiagnostics.playerMask(index, mask, maskStart, buffer.position, player);
         }
     }
 
@@ -7364,6 +7327,7 @@ public class Client extends GameEngine
         }
         if (loadingStage == 1) {
             int j = method54();
+            TarnishClientDiagnostics.loadingResult(j, baseX, baseY, localPlayer);
             if (j != 0 && System.currentTimeMillis() - aLong824 > 0x57e40L) {
                 Utility.reporterror(myUsername + " glcfb " + aLong1215 + "," + j + "," + lowMem + "," + fileStores[0] + "," + onDemandFetcher.getNodeCount() + "," + plane + "," + lastRegionChunkX + "," + lastRegionChunkY);
                 aLong824 = System.currentTimeMillis();
@@ -7449,6 +7413,7 @@ public class Client extends GameEngine
 
             final int indexID = entry.getIndex() - 1;
             final int fileID = entry.getFile();
+            TarnishClientDiagnostics.fileResponse(indexID, fileID, buffer, loadingStage);
 
             switch (indexID) {
                 case 0: {
@@ -7555,6 +7520,7 @@ public class Client extends GameEngine
                     break;
                 }
             } catch (Exception e) {
+                TarnishClientDiagnostics.failure("packet opcode=" + opcode + " size=" + pktSize, e);
                 e.printStackTrace();
                 break;
             }
@@ -7747,7 +7713,10 @@ public class Client extends GameEngine
                         for (int i = 0; i < slots.length; i++) {
                             if ((MouseHandler.mouseX >= slots[i]) && (MouseHandler.mouseX <= (slots[i] + 41)) && (MouseHandler.mouseY >= northEast.getY()) && (MouseHandler.mouseY <= southWest.getY())) {
                                 outgoing.writeOpcode(214);
-                                MoveItemPacket.writeSwitch(outgoing, focusedDragWidget, 2, dragFromSlot, i);
+                                outgoing.writeLEShortA(focusedDragWidget);
+                                outgoing.writeNegatedByte(2);
+                                outgoing.writeLEShortA(dragFromSlot);
+                                outgoing.writeLEShort(i);
                                 return;
                             }
                         }
@@ -7810,7 +7779,10 @@ public class Client extends GameEngine
                         }
 
                         outgoing.writeOpcode(214);
-                        MoveItemPacket.writeSwitch(outgoing, focusedDragWidget, j1, dragFromSlot, mouseInvInterfaceIndex);
+                        outgoing.writeLEShortA(focusedDragWidget);
+                        outgoing.writeNegatedByte(j1);
+                        outgoing.writeLEShortA(dragFromSlot);
+                        outgoing.writeLEShort(mouseInvInterfaceIndex);
                     }
                 } else if ((anInt1253 == 1 || menuHasAddFriend(menuActionRow - 1)) && menuActionRow > 2) {
                     determineMenuSize();
@@ -7878,7 +7850,6 @@ public class Client extends GameEngine
         }
         try {
             if (socketStream != null && outgoing.position > 0) {
-                outgoing.endPacket();
                 socketStream.queueBytes(outgoing.position, outgoing.array);
                 outgoing.position = 0;
                 anInt1010 = 0;
@@ -8031,28 +8002,30 @@ public class Client extends GameEngine
 
         byte[] data = fileStores[0].readFile(groupID);
 
-        final FileRequests fileRequests = swiftFUP.getFileRequests();
+        if (Configuration.USE_UPDATE_SERVER) {
+            final FileRequests fileRequests = swiftFUP.getFileRequests();
 
-        final int filePair = FilePair.create(0, groupID);
+            final int filePair = FilePair.create(0, groupID);
 
-        if (data != null && !fileRequests.checksum(filePair, data)) {
-            data = null;
+            if (data != null && !fileRequests.checksum(filePair, data)) {
+                data = null;
 
-            drawLoadingText(loadingPercent, displayName + " checksum did not pass");
-            //System.out.println("did not pass checksum, data set to null");
-        }
+                drawLoadingText(loadingPercent, displayName + " checksum did not pass");
+                //System.out.println("did not pass checksum, data set to null");
+            }
 
-        if (data == null) {
-            drawLoadingText(loadingPercent, "Requesting " + displayName + "...");
+            if (data == null) {
+                drawLoadingText(loadingPercent, "Requesting " + displayName + "...");
 
-            final FileRequest request = fileRequests.filePair(filePair);
-            //fileClient.flush();
+                final FileRequest request = fileRequests.filePair(filePair);
+                //fileClient.flush();
 
-            try {
-                data = request.get(1, TimeUnit.HOURS).getData();
-            } catch (final InterruptedException | ExecutionException | TimeoutException e) {
-                log.error("Failed to get stream loader data \"" + displayName + "\"", e);
-                return null;
+                try {
+                    data = request.get(1, TimeUnit.HOURS).getData();
+                } catch (final InterruptedException | ExecutionException | TimeoutException e) {
+                    log.error("Failed to get stream loader data \"" + displayName + "\"", e);
+                    return null;
+                }
             }
         }
 
@@ -8086,9 +8059,6 @@ public class Client extends GameEngine
         destX = 0;
         BufferedConnection rsSocket = socketStream;
         loggedIn = false;
-        if (outgoing != null) {
-            outgoing.reservePacketSlots = false;
-        }
         loginFailures = 0;
         attemptLogin(myUsername, myPassword, true);
         console.openConsole = false;
@@ -8107,24 +8077,13 @@ public class Client extends GameEngine
     }
 
 
-    private void setCompassDirection(int dir) {
+    private void setNorth() {
         cameraX = 0;
         cameraY = 0;
+        cameraRotation = 0;
         cameraHorizontal = 0;
+        minimapRotation = 0;
         minimapZoom = 0;
-        if (dir == 0) { // North
-            cameraRotation = 0;
-            minimapRotation = 0;
-        } else if (dir == 1) { // South
-            cameraRotation = 1024;
-            minimapRotation = 1024;
-        } else if (dir == 2) { // East
-            cameraRotation = 512;
-            minimapRotation = 512;
-        } else if (dir == 3) { // West
-            cameraRotation = 1536;
-            minimapRotation = 1536;
-        }
     }
 
     private void processMenuActions(int id) {
@@ -8172,7 +8131,7 @@ public class Client extends GameEngine
 
         if (action == 851) {
             outgoing.writeOpcode(185);
-            ButtonPacket.writeClick(outgoing, 155);
+            outgoing.writeShort(155);
         }
 
         if (action == 769) {
@@ -8216,16 +8175,7 @@ public class Client extends GameEngine
         }
 
         if (action == 696) {
-            setCompassDirection(0);
-        }
-        if (action == 697) {
-            setCompassDirection(1);
-        }
-        if (action == 698) {
-            setCompassDirection(2);
-        }
-        if (action == 699) {
-            setCompassDirection(3);
+            setNorth();
         }
         if (action == 291) {
             outgoing.writeOpcode(140);
@@ -8248,7 +8198,7 @@ public class Client extends GameEngine
 
         if (action == 1506) {
             outgoing.writeOpcode(185);
-            ButtonPacket.writeClick(outgoing, 5001);
+            outgoing.writeShort(5001);
             prayClicked = true;
             tabID = 5;
             tabAreaAltered = true;
@@ -8257,7 +8207,7 @@ public class Client extends GameEngine
 
         if (action == 1500) {
             outgoing.writeOpcode(185);
-            ButtonPacket.writeClick(outgoing, 5000);
+            outgoing.writeShort(5000);
         }
 
         switch (action) {
@@ -8279,7 +8229,7 @@ public class Client extends GameEngine
             case 777:
                 // button click
                 outgoing.writeOpcode(185);
-                ButtonPacket.writeClick(outgoing, action);
+                outgoing.writeShort(action);
                 break;
 
         }
@@ -8291,17 +8241,17 @@ public class Client extends GameEngine
                 autocast = true;
                 autoCastId = class9_1.interfaceId;
                 outgoing.writeOpcode(185);
-                ButtonPacket.writeClick(outgoing, class9_1.interfaceId);
+                outgoing.writeShort(class9_1.interfaceId);
             } else if (autoCastId == class9_1.interfaceId) {
                 autocast = false;
                 autoCastId = 0;
                 outgoing.writeOpcode(185);
-                ButtonPacket.writeClick(outgoing, class9_1.interfaceId);
+                outgoing.writeShort(class9_1.interfaceId);
             } else if (autoCastId != class9_1.interfaceId) {
                 autocast = true;
                 autoCastId = class9_1.interfaceId;
                 outgoing.writeOpcode(185);
-                ButtonPacket.writeClick(outgoing, class9_1.interfaceId);
+                outgoing.writeShort(class9_1.interfaceId);
             }
         }
 
@@ -8334,7 +8284,12 @@ public class Client extends GameEngine
         }
         if (action == 62 && method66(objId, second, first)) {
             outgoing.writeOpcode(192);
-            ObjectPacket.writeItemOnObject(outgoing, anInt1284, localPlayerIndex, second + baseY, anInt1283, first + baseX, anInt1285);
+            outgoing.writeShort(anInt1284);
+            outgoing.writeLEShort(localPlayerIndex);
+            outgoing.writeLEShortA(second + baseY);
+            outgoing.writeLEShort(anInt1283);
+            outgoing.writeLEShortA(first + baseX);
+            outgoing.writeShort(anInt1285);
         }
         if (action == 511) {
             walk(first, second, 2);
@@ -8352,7 +8307,9 @@ public class Client extends GameEngine
         }
         if (action == 74) {
             outgoing.writeOpcode(122);
-            ItemPacket.writeFirstClick(outgoing, second, localPlayerIndex, first);
+            outgoing.writeLEShortA(second);
+            outgoing.writeShortA(first);
+            outgoing.writeLEShort(localPlayerIndex);
             atInventoryLoopCycle = 0;
             atInventoryInterface = second;
             atInventoryIndex = first;
@@ -8461,7 +8418,7 @@ public class Client extends GameEngine
 
                     default:
                         outgoing.writeOpcode(185);
-                        ButtonPacket.writeClick(outgoing, second);
+                        outgoing.writeShort(second);
                         if (second >= 61101 && second <= 61200) {
                             int selected = second - 61101;
 
@@ -8554,7 +8511,9 @@ public class Client extends GameEngine
         if (action == 1062) {
             method66(objId, second, first);
             outgoing.writeOpcode(228);
-            ObjectPacket.writeFifthClick(outgoing, localPlayerIndex, second + baseY, first + baseX);
+            outgoing.writeShortA(localPlayerIndex);
+            outgoing.writeShortA(second + baseY);
+            outgoing.writeShort(first + baseX);
         }
         if (action == 679 && !aBoolean1149) {
             // dialogue
@@ -8564,7 +8523,9 @@ public class Client extends GameEngine
         }
         if (action == 431) {
             outgoing.writeOpcode(129);
-            ItemPacket.writeBankAll(outgoing, first, second, localPlayerIndex);
+            outgoing.writeLEShort(second);
+            outgoing.writeShortA(localPlayerIndex);
+            outgoing.writeShortA(first);
             atInventoryLoopCycle = 0;
             atInventoryInterface = second;
             atInventoryIndex = first;
@@ -8614,7 +8575,9 @@ public class Client extends GameEngine
         }
         if (action == 539) {
             outgoing.writeOpcode(16);
-            ItemPacket.writeSecondClick(outgoing, localPlayerIndex, first);
+            outgoing.writeShortA(localPlayerIndex);
+            outgoing.writeLEShortA(first);
+            outgoing.writeLEShortA(second);
             atInventoryLoopCycle = 0;
             atInventoryInterface = second;
             atInventoryIndex = first;
@@ -8733,7 +8696,9 @@ public class Client extends GameEngine
         }
         if (action == 78) {
             outgoing.writeOpcode(117);
-            ItemPacket.writeBank5(outgoing, second, localPlayerIndex, first);
+            outgoing.writeLEShortA(second);
+            outgoing.writeLEShortA(localPlayerIndex);
+            outgoing.writeLEShort(first);
             atInventoryLoopCycle = 0;
             atInventoryInterface = second;
             atInventoryIndex = first;
@@ -8774,7 +8739,9 @@ public class Client extends GameEngine
         }
         if (action == 632) {
             outgoing.writeOpcode(145);
-            ItemPacket.writeRemove(outgoing, second, first, localPlayerIndex);
+            outgoing.writeShortA(second);
+            outgoing.writeShortA(first);
+            outgoing.writeShortA(localPlayerIndex);
             atInventoryLoopCycle = 0;
             atInventoryInterface = second;
             atInventoryIndex = first;
@@ -8953,7 +8920,9 @@ public class Client extends GameEngine
         }
         if (action == 493) {
             outgoing.writeOpcode(75);
-            ItemPacket.writeThirdClick(outgoing, second, first, localPlayerIndex);
+            outgoing.writeLEShortA(second);
+            outgoing.writeLEShort(first);
+            outgoing.writeShortA(localPlayerIndex);
             atInventoryLoopCycle = 0;
             atInventoryInterface = second;
             atInventoryIndex = first;
@@ -8990,24 +8959,16 @@ public class Client extends GameEngine
         }
         if (action == 646) {
             outgoing.writeOpcode(185);
-            ButtonPacket.writeClick(outgoing, second);
+            outgoing.writeShort(second);
             RSInterface class9_2 = RSInterface.interfaceCache[second];
             if (class9_2.scripts != null && class9_2.scripts[0][0] == 5) {
                 int i2 = class9_2.scripts[0][1];
                 if (settings[i2] != class9_2.requiredValues[0]) {
                     if (class9_2.updateConfig) {
-                        // Bank tab buttons drive config 211. Don't locally switch into an empty
-                        // tab: the server rejects it (and reverts via varbit), so applying it here
-                        // first just flashes the empty tab open for a frame.
-                        int target = class9_2.requiredValues[0];
-                        boolean emptyBankTab = i2 == 211 && target > 0
-                                && (target >= tabAmounts.length || tabAmounts[target] <= 0);
-                        if (!emptyBankTab) {
-                            Settings.config(this, second);
-                            settings[i2] = class9_2.requiredValues[0];
+                        Settings.config(this, second);
+                        settings[i2] = class9_2.requiredValues[0];
 //                        System.out.println("setting: " + settings[i2] + " value=" + i2);
-                            method33(i2);
-                        }
+                        method33(i2);
                     }
                 }
             }
@@ -9092,7 +9053,9 @@ public class Client extends GameEngine
         if (action == 900) {
             method66(objId, second, first);
             outgoing.writeOpcode(252);
-            ObjectPacket.writeSecondClick(outgoing, localPlayerIndex, second + baseY, first + baseX);
+            outgoing.writeLEShortA(localPlayerIndex);
+            outgoing.writeLEShort(second + baseY);
+            outgoing.writeShortA(first + baseX);
         }
         if (action == 412) {
             Npc class30_sub2_sub4_sub1_sub1_6 = npcs[localPlayerIndex];
@@ -9185,7 +9148,9 @@ public class Client extends GameEngine
         }
         if (action == 968) {//custom place holder packet
             outgoing.writeOpcode(145);
-            ItemPacket.writeRemove(outgoing, second, first, localPlayerIndex);
+            outgoing.writeShortA(968);
+            outgoing.writeShortA(first);
+            outgoing.writeShortA(localPlayerIndex);
             atInventoryLoopCycle = 0;
             atInventoryInterface = second;
             atInventoryIndex = first;
@@ -9203,7 +9168,9 @@ public class Client extends GameEngine
         }
         if (action == 867) {
             outgoing.writeOpcode(43);
-            ItemPacket.writeBank10(outgoing, second, localPlayerIndex, first);
+            outgoing.writeLEShort(second);
+            outgoing.writeShortA(localPlayerIndex);
+            outgoing.writeShortA(first);
             atInventoryLoopCycle = 0;
             atInventoryInterface = second;
             atInventoryIndex = first;
@@ -9236,7 +9203,7 @@ public class Client extends GameEngine
             String s2 = menuActionName[id];
             int j2 = s2.indexOf(">");
             if (j2 != -1) {
-                Utility.launchURL("www.Dodian.net");
+                Utility.launchURL("www.tarnishps.com");
                 System.out.println("here1");
             }
         }
@@ -9329,17 +9296,23 @@ public class Client extends GameEngine
         if (action == 113) {
             method66(objId, second, first);
             outgoing.writeOpcode(70);
-            ObjectPacket.writeThirdClick(outgoing, first + baseX, second + baseY, localPlayerIndex);
+            outgoing.writeLEShort(first + baseX);
+            outgoing.writeShort(second + baseY);
+            outgoing.writeLEShortA(localPlayerIndex);
         }
         if (action == 872) {
             method66(objId, second, first);
             outgoing.writeOpcode(234);
-            ObjectPacket.writeFourthClick(outgoing, first + baseX, localPlayerIndex, second + baseY);
+            outgoing.writeLEShortA(first + baseX);
+            outgoing.writeShortA(localPlayerIndex);
+            outgoing.writeLEShortA(second + baseY);
         }
         if (action == 502) {
             method66(objId, second, first);
             outgoing.writeOpcode(132);
-            ObjectPacket.writeFirstClick(outgoing, first + baseX, localPlayerIndex, second + baseY);
+            outgoing.writeLEShortA(first + baseX);
+            outgoing.writeShort(localPlayerIndex);
+            outgoing.writeShortA(second + baseY);
         }
         if (action == 1125) {
             ItemDefinition definition = ItemDefinition.lookup(localPlayerIndex);
@@ -9368,7 +9341,7 @@ public class Client extends GameEngine
         }
         if (action == 169) {
             outgoing.writeOpcode(185);
-            ButtonPacket.writeClick(outgoing, second);
+            outgoing.writeShort(second);
             RSInterface rsi = RSInterface.interfaceCache[second];
             if (rsi.scripts != null && rsi.scripts[0][0] == 5) {
                 int l2 = rsi.scripts[0][1];
@@ -10107,7 +10080,8 @@ public class Client extends GameEngine
                     }
                     if (inputString.startsWith("::")) {
                         outgoing.writeOpcode(103);
-                        CommandPacket.write(outgoing, inputString.substring(2));
+                        outgoing.writeByte(inputString.length() - 1);
+                        outgoing.writeString(inputString.substring(2));
                     } else {
                         String s = inputString.toLowerCase();
                         int j2 = 0;
@@ -11816,13 +11790,21 @@ public class Client extends GameEngine
                 socketStream.flushInputStream(incoming.array, 8);
                 incoming.position = 0;
                 aLong1215 = incoming.readUnsignedLong();
-                long clientSessionKey = ((long) (Math.random() * 99999999D) << 32)
-                        | (long) (Math.random() * 99999999D);
+                int ai[] = new int[4];
+                ai[0] = (int) (Math.random() * 99999999D);
+                ai[1] = (int) (Math.random() * 99999999D);
+                ai[2] = (int) (aLong1215 >> 32);
+                ai[3] = (int) aLong1215;
                 outgoing.position = 0;
                 outgoing.writeByte(10);
-                outgoing.writeQWord(clientSessionKey);
-                outgoing.writeQWord(aLong1215);
-                outgoing.writeByte(10);
+                outgoing.writeDWord(ai[0]);
+                outgoing.writeDWord(ai[1]);
+                outgoing.writeDWord(ai[2]);
+                outgoing.writeDWord(ai[3]);
+                outgoing.writeDWord(ai[3]);
+                outgoing.writeDWord(0);
+                outgoing.writeString("");
+                outgoing.writeString("");
                 outgoing.writeString(username);
                 outgoing.writeString(password);
                 outgoing.encodeRSA(NetworkConstants.RSA_EXPONENT, NetworkConstants.RSA_MODULUS);
@@ -11833,10 +11815,10 @@ public class Client extends GameEngine
                     aStream_847.writeByte(16);
                 }
 
-                aStream_847.writeByte(outgoing.position + 40);
+                aStream_847.writeByte(outgoing.position + 37);
 
                 aStream_847.writeByte(255);
-                aStream_847.writeShort(Configuration.CLIENT_VERSION);
+                aStream_847.writeByte(Configuration.CLIENT_VERSION);
 
                 aStream_847.writeByte(lowMem ? 1 : 0);
 
@@ -11845,13 +11827,6 @@ public class Client extends GameEngine
                 }
 
                 aStream_847.writeBytes(outgoing.array, outgoing.position, 0);
-
-                int ai[] = new int[4];
-                ai[0] = (int) (clientSessionKey >>> 32);
-                ai[1] = (int) clientSessionKey;
-                ai[2] = (int) (aLong1215 >> 32);
-                ai[3] = (int) aLong1215;
-
                 outgoing.encryption = new ISAACRandomGen(ai);
 
                 for (int i = 0; i < 4; i++) {
@@ -11869,14 +11844,13 @@ public class Client extends GameEngine
             }
             if (response == 2) {
                 myPrivilege = socketStream.read();
-                // flagged = socketStream.read() == 1;
+                flagged = socketStream.read() == 1;
                 aLong1220 = 0L;
                 anInt1022 = 0;
                 mouseDetection.coordsIndex = 0;
                 setGameState(GameState.LOGGING_IN);
                 aBoolean954 = true;
                 outgoing.position = 0;
-                outgoing.reservePacketSlots = true;
                 incoming.position = 0;
                 opcode = -1;
                 lastOpcode1 = -1;
@@ -11898,7 +11872,7 @@ public class Client extends GameEngine
                 spellSelected = 0;
                 loadingStage = 0;
                 anInt1062 = 0;
-                setCompassDirection(0);
+                setNorth();
                 minimapState = 0;
                 anInt985 = -1;
                 destX = 0;
@@ -11944,12 +11918,9 @@ public class Client extends GameEngine
                 for (int j3 = 0; j3 < 5; j3++) {
                     characterColor[j3] = 0;
                 }
-            for (int l3 = 0; l3 < 6; l3++) {
-                if (playerMenuTypes[l3] != MenuAction.RUNELITE_PLAYER.getId()) {
+                for (int l3 = 0; l3 < 6; l3++) {
                     atPlayerActions[l3] = null;
                     playerOptions[l3] = false;
-                    playerMenuTypes[l3] = 0;
-                }
                 }
                 frameMode(Settings.RESIZABLE);
                 sendFrame36(429, 1);
@@ -12116,7 +12087,7 @@ public class Client extends GameEngine
             }
 
             if (response == 28) {
-                loginMessage1 = "Dodian early access has reached it's limit!";
+                loginMessage1 = "Tarnish early access has reached it's limit!";
                 loginMessage2 = "Please wait for the official release!";
                 return;
             }
@@ -12170,142 +12141,9 @@ public class Client extends GameEngine
             outgoing.writeOpcode(98);
         }
 
-        int stepCount = buildWalkRoute(targetX, targetY);
-        if (stepCount > 0) {
-            WalkPacket.writePayload(outgoing, bigX, bigY, stepCount, baseX, baseY, KeyHandler.keyArray[5] == 1);
-        } else {
-            WalkPacket.writePayload(outgoing, targetX + baseX, targetY + baseY, KeyHandler.keyArray[5] == 1);
-        }
-    }
-
-    private int buildWalkRoute(int targetX, int targetY) {
-        if (localPlayer == null || collisionMaps == null || plane < 0 || plane >= collisionMaps.length || collisionMaps[plane] == null) {
-            return 0;
-        }
-        int startX = localPlayer.smallX[0];
-        int startY = localPlayer.smallY[0];
-        if (startX < 0 || startY < 0 || startX >= 104 || startY >= 104 || targetX < 0 || targetY < 0 || targetX >= 104 || targetY >= 104) {
-            return 0;
-        }
-
-        int[][] directions = new int[104][104];
-        int[][] distances = new int[104][104];
-        for (int x = 0; x < 104; x++) {
-            for (int y = 0; y < 104; y++) {
-                distances[x][y] = 0x5f5e0ff;
-            }
-        }
-
-        int read = 0;
-        int write = 0;
-        bigX[write] = startX;
-        bigY[write++] = startY;
-        directions[startX][startY] = 99;
-        distances[startX][startY] = 0;
-        int currentX = startX;
-        int currentY = startY;
-        boolean found = false;
-        int[][] flags = collisionMaps[plane].clipData;
-        int routeQueueSize = bigX.length;
-        while (read != write) {
-            currentX = bigX[read];
-            currentY = bigY[read];
-            read = (read + 1) % routeQueueSize;
-            if (currentX == targetX && currentY == targetY) {
-                found = true;
-                break;
-            }
-            int distance = distances[currentX][currentY] + 1;
-            if (currentX > 0 && directions[currentX - 1][currentY] == 0 && (flags[currentX - 1][currentY] & 0x1280108) == 0) {
-                write = enqueueRouteStep(directions, distances, currentX - 1, currentY, 2, distance, write);
-            }
-            if (currentX < 103 && directions[currentX + 1][currentY] == 0 && (flags[currentX + 1][currentY] & 0x1280180) == 0) {
-                write = enqueueRouteStep(directions, distances, currentX + 1, currentY, 8, distance, write);
-            }
-            if (currentY > 0 && directions[currentX][currentY - 1] == 0 && (flags[currentX][currentY - 1] & 0x1280102) == 0) {
-                write = enqueueRouteStep(directions, distances, currentX, currentY - 1, 1, distance, write);
-            }
-            if (currentY < 103 && directions[currentX][currentY + 1] == 0 && (flags[currentX][currentY + 1] & 0x1280120) == 0) {
-                write = enqueueRouteStep(directions, distances, currentX, currentY + 1, 4, distance, write);
-            }
-            if (currentX > 0 && currentY > 0 && directions[currentX - 1][currentY - 1] == 0
-                    && (flags[currentX - 1][currentY - 1] & 0x128010e) == 0
-                    && (flags[currentX - 1][currentY] & 0x1280108) == 0
-                    && (flags[currentX][currentY - 1] & 0x1280102) == 0) {
-                write = enqueueRouteStep(directions, distances, currentX - 1, currentY - 1, 3, distance, write);
-            }
-            if (currentX < 103 && currentY > 0 && directions[currentX + 1][currentY - 1] == 0
-                    && (flags[currentX + 1][currentY - 1] & 0x1280183) == 0
-                    && (flags[currentX + 1][currentY] & 0x1280180) == 0
-                    && (flags[currentX][currentY - 1] & 0x1280102) == 0) {
-                write = enqueueRouteStep(directions, distances, currentX + 1, currentY - 1, 9, distance, write);
-            }
-            if (currentX > 0 && currentY < 103 && directions[currentX - 1][currentY + 1] == 0
-                    && (flags[currentX - 1][currentY + 1] & 0x1280138) == 0
-                    && (flags[currentX - 1][currentY] & 0x1280108) == 0
-                    && (flags[currentX][currentY + 1] & 0x1280120) == 0) {
-                write = enqueueRouteStep(directions, distances, currentX - 1, currentY + 1, 6, distance, write);
-            }
-            if (currentX < 103 && currentY < 103 && directions[currentX + 1][currentY + 1] == 0
-                    && (flags[currentX + 1][currentY + 1] & 0x12801e0) == 0
-                    && (flags[currentX + 1][currentY] & 0x1280180) == 0
-                    && (flags[currentX][currentY + 1] & 0x1280120) == 0) {
-                write = enqueueRouteStep(directions, distances, currentX + 1, currentY + 1, 12, distance, write);
-            }
-        }
-
-        if (!found) {
-            return 0;
-        }
-
-        int stepCount = 0;
-        bigX[stepCount] = currentX;
-        bigY[stepCount++] = currentY;
-        for (int direction = directions[currentX][currentY], lastDirection = direction;
-             currentX != startX || currentY != startY;
-             direction = directions[currentX][currentY]) {
-            if (direction != lastDirection) {
-                lastDirection = direction;
-                bigX[stepCount] = currentX;
-                bigY[stepCount++] = currentY;
-            }
-            if ((direction & 2) != 0) {
-                currentX++;
-            } else if ((direction & 8) != 0) {
-                currentX--;
-            }
-            if ((direction & 1) != 0) {
-                currentY++;
-            } else if ((direction & 4) != 0) {
-                currentY--;
-            }
-            if (stepCount >= 25) {
-                break;
-            }
-        }
-
-        reverseRoute(stepCount);
-        return stepCount;
-    }
-
-    private int enqueueRouteStep(int[][] directions, int[][] distances, int x, int y, int direction, int distance, int write) {
-        bigX[write] = x;
-        bigY[write] = y;
-        write = (write + 1) % bigX.length;
-        directions[x][y] = direction;
-        distances[x][y] = distance;
-        return write;
-    }
-
-    private void reverseRoute(int stepCount) {
-        for (int left = 0, right = stepCount - 1; left < right; left++, right--) {
-            int x = bigX[left];
-            int y = bigY[left];
-            bigX[left] = bigX[right];
-            bigY[left] = bigY[right];
-            bigX[right] = x;
-            bigY[right] = y;
-        }
+        outgoing.writeLEShort(targetX + baseX);
+        outgoing.writeLEShortA(targetY + baseY);
+        outgoing.writeNegatedByte(KeyHandler.keyArray[5] != 1 ? 0 : 1);
     }
 
     private void updateNpcs(Buffer stream) {
@@ -12365,32 +12203,80 @@ public class Client extends GameEngine
                 npc.textColor = 0;
             }
             if ((mask & 0x40) != 0) {
-                int damage = stream.readShort();
-                int type = stream.readUnsignedByte();
-                int current = stream.readShort();
-                int max = stream.readShort();
-                npc.damage(type, damage, tick, -1);
+                boolean multipleHits = stream.readUnsignedByte() == 1;
+
+                if (multipleHits) {
+                    int totalHits = stream.readUnsignedByte();
+
+                    for (int i = 0; i < totalHits; i++) {
+                        int damage = stream.readUnsignedByte();
+                        int type = stream.readUnsignedByte();
+                        int icon = stream.readUnsignedByte();
+                        npc.damage(type, damage, tick, icon);
+                    }
+
+                } else {
+                    int damage = stream.readUnsignedByte();
+                    int type = stream.readUnsignedByte();
+                    int icon = stream.readUnsignedByte();
+                    npc.damage(type, damage, tick, icon);
+                }
+
+                int current = stream.readUnsignedByte();
+                int max = stream.readUnsignedByte();
                 npc.cycleStatus = tick + 300;
                 npc.currentHealth = current;
                 npc.maximumHealth = max;
+
+                /*int damage = stream.readUnsignedByte();
+                int type = stream.readUByteA();
+                int icon = stream.readUnsignedByte();
+                int current = stream.readUnsignedByte();
+                int max = stream.readNegUByte();
+
+                npc.damage(type, damage, tick, icon);
+                npc.cycleStatus = tick + 300;
+                npc.currentHealth = current;
+                npc.maximumHealth = max;*/
             }
             if ((mask & 0x8) != 0) {
-                int damage = stream.readShort();
-                int type = stream.readUnsignedByte();
-                int current = stream.readShort();
-                int max = stream.readShort();
-                npc.damage(type, damage, tick, -1);
+                boolean multipleHits = stream.readUnsignedByte() == 1;
+
+                if (multipleHits) {
+                    int totalHits = stream.readUnsignedByte();
+
+                    for (int i = 0; i < totalHits; i++) {
+                        int damage = stream.readUnsignedByte();
+                        int type = stream.readUnsignedByte();
+                        int icon = stream.readUnsignedByte();
+                        npc.damage(type, damage, tick, icon);
+                    }
+
+                } else {
+                    int damage = stream.readUnsignedByte();
+                    int type = stream.readUnsignedByte();
+                    int icon = stream.readUnsignedByte();
+                    npc.damage(type, damage, tick, icon);
+                }
+
+                int current = stream.readUnsignedByte();
+                int max = stream.readUnsignedByte();
                 npc.cycleStatus = tick + 300;
                 npc.currentHealth = current;
                 npc.maximumHealth = max;
+                /*int damage = stream.readUnsignedByte();
+                int type = stream.readUByteS();
+                int icon = stream.readUnsignedByte();
+                int current = stream.readUnsignedByte();
+                int max = stream.readNegUByte();
+
+                npc.damage(type, damage, tick, icon);
+                npc.cycleStatus = tick + 300;
+                npc.currentHealth = current;
+                npc.maximumHealth = max;*/
             }
             if ((mask & 0x2) != 0) {
-                stream.readUnsignedByte();
-                int transformFlag = stream.readUnsignedByte();
-                if (transformFlag == 1) {
-                    int transformedId = stream.readLEUShortA();
-                    npc.definition = NpcDefinition.lookup(transformedId);
-                }
+                npc.definition = NpcDefinition.lookup(stream.readLEUShortA());
                 npc.size = npc.definition.size;
                 npc.rotation = npc.definition.rotation;
                 npc.walkingAnimation = npc.definition.walkingAnimation;
@@ -12472,18 +12358,9 @@ public class Client extends GameEngine
             if (entityDef.actions != null) {
                 for (int i1 = 4; i1 >= 0; i1--) {
                     if (entityDef.actions[i1] != null && entityDef.actions[i1].equalsIgnoreCase("attack")) {
-                        if (Settings.ENTITY_ATTACK_OPTION == 3) {
-                            continue;
-                        }
                         char c = '\0';
-                        if (Settings.ENTITY_ATTACK_OPTION == 1) {
+                        if (!Settings.ATTACK_PRIORITY && entityDef.combatLevel > localPlayer.combatLevel) {
                             c = '\u07D0';
-                        } else if (Settings.ENTITY_ATTACK_OPTION == 2) {
-                            c = '\0';
-                        } else {
-                            if (!Settings.ATTACK_PRIORITY && entityDef.combatLevel > localPlayer.combatLevel) {
-                                c = '\u07D0';
-                            }
                         }
                         menuActionName[menuActionRow] = entityDef.actions[i1] + " <col=ffff00>" + s;
                         if (i1 == 0) {
@@ -12565,25 +12442,13 @@ public class Client extends GameEngine
         } else {
             for (int option = 5; option >= 0; option--) {
                 if (atPlayerActions[option] != null) {
-                    if (atPlayerActions[option].equalsIgnoreCase("attack") && Settings.ENTITY_ATTACK_OPTION == 3) {
-                        continue;
-                    }
-                    boolean runelitePlayerOption = playerMenuTypes[option] == MenuAction.RUNELITE_PLAYER.getId();
-                    menuActionName[menuActionRow] = runelitePlayerOption
-                            ? atPlayerActions[option]
-                            : atPlayerActions[option] + " <col=FFFFFF>" + s;
-                    menuActionTarget[menuActionRow] = runelitePlayerOption ? "<col=FFFFFF>" + s : null;
+                    menuActionName[menuActionRow] = atPlayerActions[option] + " <col=FFFFFF>" + s;
                     int identifier = '\0';
 
                     if (atPlayerActions[option].equalsIgnoreCase("attack")) {
-                        if (Settings.ENTITY_ATTACK_OPTION == 1) {
+
+                        if (!Settings.ATTACK_PRIORITY && player.combatLevel > localPlayer.combatLevel) {
                             identifier = '\u07D0';
-                        } else if (Settings.ENTITY_ATTACK_OPTION == 2) {
-                            identifier = '\0';
-                        } else {
-                            if (!Settings.ATTACK_PRIORITY && player.combatLevel > localPlayer.combatLevel) {
-                                identifier = '\u07D0';
-                            }
                         }
 
                         if (localPlayer.team != 0 && localPlayer.team == player.team) {
@@ -12594,35 +12459,33 @@ public class Client extends GameEngine
                         identifier = '\u07D0';
                     }
 
-                    if (playerMenuTypes[option] != 0) {
-                        menuActionID[menuActionRow] = playerMenuTypes[option] + identifier;
                     // player option 1 : duel request : opcode 128
-                    } else if (option == 0) {
+                    if (option == 0) {
                         menuActionID[menuActionRow] = 561 + identifier;
                     }
 
                     // player option 2 : report abuse : opcode 153
-                    else if (option == 1) {
+                    if (option == 1) {
                         menuActionID[menuActionRow] = 779 + identifier;
                     }
 
                     // player option 3 : attack : opcode 73
-                    else if (option == 2) {
+                    if (option == 2) {
                         menuActionID[menuActionRow] = 27 + identifier;
                     }
 
                     // player option 4 : trade : opcode 139
-                    else if (option == 3) {
+                    if (option == 3) {
                         menuActionID[menuActionRow] = 577 + identifier;
                     }
 
                     // player option 5 : follow : opcode 39
-                    else if (option == 4) {
+                    if (option == 4) {
                         menuActionID[menuActionRow] = 729 + identifier;
                     }
 
                     // player option 6 : gamble : opcode 136
-                    else if (option == 5) {
+                    if (option == 5) {
                         menuActionID[menuActionRow] = 709 + identifier;
                     }
 
@@ -12714,31 +12577,33 @@ public class Client extends GameEngine
             }
         }
 
-        drawLoadingText(11, "Initializing SwiftFUP...");
-        swiftFUP = SwiftFUP.create(this, this);
+        if (Configuration.USE_UPDATE_SERVER) {
+            drawLoadingText(11, "Initializing SwiftFUP...");
+            swiftFUP = SwiftFUP.create(this, this);
 
-        drawLoadingText(12, "Initializing SwiftFUP file requests...");
-        final FileRequests fileRequests = swiftFUP.initializeFileRequests();
+            drawLoadingText(12, "Initializing SwiftFUP file requests...");
+            final FileRequests fileRequests = swiftFUP.initializeFileRequests();
 
-        drawLoadingText(13, "Initializing SwiftFUP file client...");
+            drawLoadingText(13, "Initializing SwiftFUP file client...");
 
-        final SocketAddress swiftClientSocketAddress =
-                new InetSocketAddress(Configuration.UPDATE_SERVER_IP, Configuration.UPDATE_SERVER_PORT);
+            final SocketAddress swiftClientSocketAddress =
+                    new InetSocketAddress(Configuration.UPDATE_SERVER_IP, Configuration.UPDATE_SERVER_PORT);
 
-        swiftFUP.initializeFileClient(
-                FileClientGroups.ONE_THREAD,
-                () -> drawLoadingText(14, "Initializing SwiftFUP file client..."),
-                null,
-                swiftClientSocketAddress
-        );
+            swiftFUP.initializeFileClient(
+                    FileClientGroups.ONE_THREAD,
+                    () -> drawLoadingText(14, "Initializing SwiftFUP file client..."),
+                    null,
+                    swiftClientSocketAddress
+            );
 
-        drawLoadingText(15, "Initializing SwiftFUP auto-processor...");
-        swiftFUP.startAutoProcessor();
+            drawLoadingText(15, "Initializing SwiftFUP auto-processor...");
+            swiftFUP.startAutoProcessor();
 
-        drawLoadingText(17, "Requesting SwiftFUP checksums...");
-        final FileRequest fileChecksumsRequest = fileRequests.checksums();
-        while (!fileChecksumsRequest.isDone()) {
-            drawLoadingText(18, "Processing SwiftFUP checksums...");
+            drawLoadingText(17, "Requesting SwiftFUP checksums...");
+            final FileRequest fileChecksumsRequest = fileRequests.checksums();
+            while (!fileChecksumsRequest.isDone()) {
+                drawLoadingText(18, "Processing SwiftFUP checksums...");
+            }
         }
 
         drawSmoothLoading(19, "Loading stream loaders...");
@@ -12900,8 +12765,8 @@ public class Client extends GameEngine
             drawSmoothLoading(75, "Loading resources");
 
             TextureProvider textureProvider = new TextureProvider(this, configArchive, 20, Rasterizer3D.lowMem ? 64 : 128); // L: 1947
+            textureProvider.setBrightness(0.80000000000000004D);
             Rasterizer3D.setTextureLoader(textureProvider); // L: 1948
-            Rasterizer3D.setBrightness(0.80000000000000004D);
 
             Animation.unpackConfig(configArchive);
             FrameBase.loadFrameBases(configArchive);
@@ -13074,20 +12939,20 @@ public class Client extends GameEngine
             g.setFont(new Font("Helvetica", 1, 16));
             g.setColor(Color.yellow);
             int k = 35;
-            g.drawString("Something when wrong whilst loading Dodian!", 30, k);
+            g.drawString("Something when wrong whilst loading Tarnish!", 30, k);
             k += 50;
             g.setColor(Color.white);
             g.drawString("Please try the following to fix (in order):", 30, k);
             k += 50;
             g.setColor(Color.white);
             g.setFont(new Font("Helvetica", 1, 12));
-            g.drawString("1: Delete the cache (located in user home directory, called DodianOSRS.Cache)", 30, k);
+            g.drawString("1: Delete the cache (located in user home directory, called Tarnish.Cache)", 30, k);
             k += 30;
-            g.drawString("2: Download the latest client from www.Dodian.net/play", 30, k);
+            g.drawString("2: Download the latest client from www.tarnishps.com/play", 30, k);
             k += 30;
-            g.drawString("3: Make a report on our forums", 30, k);//
+            g.drawString("3: Make a report on our forums", 30, k);
             k += 30;
-            g.drawString("4: Contact a staff member on our discord -https://discord.gg/m4CkqrakHn", 30, k);
+            g.drawString("4: Contact a staff member on our discord - https://discord.gg/tarnishps/", 30, k);
             k += 30;
             g.drawString("", 30, k);
         }
@@ -14489,42 +14354,37 @@ public class Client extends GameEngine
                                 sprite.drawSprite(childX, childY);
                             }
                         }
-	                    } else if (child.type == 6) {
-	                        int k3 = Rasterizer3D.originViewX;
-	                        int j4 = Rasterizer3D.originViewY;
-	                        boolean previousWorld = Rasterizer3D.world;
-	                        boolean previousGpuRender = Rasterizer3D.renderOnGpu;
-	                        try {
-	                            Rasterizer3D.renderOnGpu = isGpu();
-	                            Rasterizer3D.originViewX = childX + child.width / 2;
-	                            Rasterizer3D.originViewY = childY + child.height / 2;
-	                            int i5 = Rasterizer3D.SINE[child.modelRotation1] * child.modelZoom >> 16;
-	                            int l5 = Rasterizer3D.COSINE[child.modelRotation1] * child.modelZoom >> 16;
-	                            boolean flag2 = interfaceIsSelected(child);
-	                            int i7;
-	                            if (flag2) {
-	                                i7 = child.anInt258;
-	                            } else {
-	                                i7 = child.anInt257;
-	                            }
-	                            Model model;
-	                            if (i7 == -1) {
-	                                model = child.getModel(-1, -1, flag2);
-	                            } else {
-	                                Animation animation = Animation.animations[i7];
-	                                model = child.getModel(animation.secondaryFrameIds[child.anInt246], animation.primaryFrameIds[child.anInt246], flag2);
-	                            }
-	                            if (model != null) {
-	                                Rasterizer3D.world = false;
-	                                model.renderModel(child.modelRotation2, 0, child.modelRotation1, 0, i5, l5);
-	                            }
-	                        } finally {
-	                            Rasterizer3D.originViewX = k3;
-	                            Rasterizer3D.originViewY = j4;
-	                            Rasterizer3D.world = previousWorld;
-	                            Rasterizer3D.renderOnGpu = previousGpuRender;
-	                        }
-	                    } else if (child.type == 7) {
+                    } else if (child.type == 6) {
+                        Rasterizer3D.renderOnGpu = true;
+                        int k3 = Rasterizer3D.originViewX;
+                        int j4 = Rasterizer3D.originViewY;
+                        Rasterizer3D.originViewX = childX + child.width / 2;
+                        Rasterizer3D.originViewY = childY + child.height / 2;
+                        int i5 = Rasterizer3D.SINE[child.modelRotation1] * child.modelZoom >> 16;
+                        int l5 = Rasterizer3D.COSINE[child.modelRotation1] * child.modelZoom >> 16;
+                        boolean flag2 = interfaceIsSelected(child);
+                        int i7;
+                        if (flag2) {
+                            i7 = child.anInt258;
+                        } else {
+                            i7 = child.anInt257;
+                        }
+                        Model model;
+                        if (i7 == -1) {
+                            model = child.getModel(-1, -1, flag2);
+                        } else {
+                            Animation animation = Animation.animations[i7];
+                            model = child.getModel(animation.secondaryFrameIds[child.anInt246], animation.primaryFrameIds[child.anInt246], flag2);
+                        }
+                        if (model != null) {
+                            Rasterizer3D.world = false;
+                            model.renderModel(child.modelRotation2, 0, child.modelRotation1, 0, i5, l5);
+                            Rasterizer3D.world = true;
+                        }
+                        Rasterizer3D.originViewX = k3;
+                        Rasterizer3D.originViewY = j4;
+                        Rasterizer3D.renderOnGpu = false;
+                    } else if (child.type == 7) {
                         TextDrawingArea textDrawingArea_1 = child.textDrawingAreas;
                         int k4 = 0;
                         for (int j5 = 0; j5 < child.height; j5++) {
@@ -14798,7 +14658,7 @@ public class Client extends GameEngine
             player.initialY = buffer.readUByteS();
             player.destinationX = buffer.readUByteS();
             player.destinationY = buffer.readUByteS();
-            int temp = buffer.readUShortA();
+            int temp = buffer.readLEUShortA();
             int temp2 = buffer.readUShortA();
             player.startForceMovement = temp + tick;
             player.endForceMovement = temp2 + tick;
@@ -14871,7 +14731,8 @@ public class Client extends GameEngine
         if ((mask & 0x80) != 0) {
             int packed = buffer.readLEUShort();
             int privelage = buffer.readUnsignedByte();
-            String message = buffer.readString();
+            int offset = buffer.readNegUByte();
+            int off = buffer.position;
             if (player.name != null && player.visible) {
                 long name = StringUtils.longForName(player.name);
                 boolean invalid = false;
@@ -14887,6 +14748,10 @@ public class Client extends GameEngine
 
                 if (!invalid && onTutorialIsland == 0) {
                     try {
+                        chatBuffer.position = 0;
+                        buffer.readReverseData(offset, 0, chatBuffer.array);
+                        chatBuffer.position = 0;
+                        String message = TextInput.decode(offset, chatBuffer);
                         if (Settings.PROFANITY_FILTER) {
 //                            message = Censor.doCensor(message);
                         }
@@ -14905,6 +14770,8 @@ public class Client extends GameEngine
                     }
                 }
             }
+
+            buffer.position = off + offset;
         }
 
         if ((mask & 0x1) != 0) {
@@ -14922,6 +14789,7 @@ public class Client extends GameEngine
             buffer.readBytes(length, 0, data);
             playerSynchronizationBuffers[playerIndex] = appearanceBuffer;
             player.updateAppearance(appearanceBuffer);
+            TarnishClientDiagnostics.appearance(playerIndex, length, data, player);
         }
 
         if ((mask & 0x2) != 0) {
@@ -14930,22 +14798,55 @@ public class Client extends GameEngine
         }
 
         if ((mask & 0x20) != 0) {
-            int damage = buffer.readShort();
-            int type = buffer.readUnsignedByte();
-            int current = buffer.readShort();
-            int max = buffer.readShort();
-            player.damage(type, damage, tick, -1);
+            boolean multipleHits = buffer.readUnsignedByte() == 1;
+
+            if (multipleHits) {
+                int totalHits = buffer.readUnsignedByte();
+
+                for (int index = 0; index < totalHits; index++) {
+                    int damage = buffer.readUnsignedByte();
+                    int type = buffer.readUByteA();
+                    int icon = buffer.readUnsignedByte();
+
+                    player.damage(type, damage, tick, icon);
+                }
+
+            } else {
+                int damage = buffer.readUnsignedByte();
+                int type = buffer.readUByteA();
+                int icon = buffer.readUnsignedByte();
+                player.damage(type, damage, tick, icon);
+            }
+
+            int current = buffer.readUnsignedByte();
+            int max = buffer.readNegUByte();
             player.cycleStatus = tick + 300;
             player.currentHealth = current;
             player.maximumHealth = max;
         }
 
         if ((mask & 0x200) != 0) {
-            int damage = buffer.readShort();
-            int type = buffer.readUnsignedByte();
-            int current = buffer.readShort();
-            int max = buffer.readShort();
-            player.damage(type, damage, tick, -1);
+            boolean multipleHits = buffer.readUnsignedByte() == 1;
+
+            if (multipleHits) {
+                int totalHits = buffer.readUnsignedByte();
+
+                for (int index = 0; index < totalHits; index++) {
+                    int damage = buffer.readUnsignedByte();
+                    int type = buffer.readUByteA();
+                    int icon = buffer.readUnsignedByte();
+
+                    player.damage(type, damage, tick, icon);
+                }
+            } else {
+                int damage = buffer.readUnsignedByte();
+                int type = buffer.readUByteS();
+                int icon = buffer.readUnsignedByte();
+                player.damage(type, damage, tick, icon);
+            }
+
+            int current = buffer.readUnsignedByte();
+            int max = buffer.readNegUByte();
             player.cycleStatus = tick + 300;
             player.currentHealth = current;
             player.maximumHealth = max;
@@ -15286,22 +15187,11 @@ public class Client extends GameEngine
 
             game_message_time--;
         }
-
-        if (openInterfaceID == -1 && systemUpdateTime > 0) {
-            int yOffset = !isResized() ? 0 : canvasHeight - 498;
-            int seconds = systemUpdateTime / 50;
-            int minutes = seconds / 60;
-            seconds %= 60;
-            String timeStr = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
-            newRegularFont.drawBasicString("System update: " + timeStr, 4, 329 + yOffset, 0xffff00, 50);
-            systemUpdateTime--;
-        }
     }
 
     private int game_message_id;
     private int game_message_time;
     private String game_message_context;
-    private int systemUpdateTime;
 
     private void addIgnore(long usernameLong) {
         try {
@@ -15416,10 +15306,6 @@ public class Client extends GameEngine
                 yClick = 0;
             }
             menuOpen = true;
-
-            MenuOpened event = new MenuOpened();
-            event.setMenuEntries(getMenuEntries());
-            callbacks.post(event);
 
             if (removeShiftDropOnMenuOpen && menuActionCmd3[menuActionRow - 1] == 3214) {
                 removeShiftDropOnMenuOpen = false;
@@ -15930,7 +15816,6 @@ public class Client extends GameEngine
                 }
             }
 
-/*
             if (!isResized() ? MouseHandler.mouseX >= 742 && MouseHandler.mouseX <= 765 && MouseHandler.mouseY >= 0 && MouseHandler.mouseY <= 24 : MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1 && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24) {
                 spriteCache.get(26).drawARGBSprite(!isResized() ? xOffset + 226 : canvasWidth - 23, 0, 205);
             } else {
@@ -15939,7 +15824,6 @@ public class Client extends GameEngine
             if (tabID == 14) {
                 spriteCache.get(27).drawSprite(!isResized() ? xOffset + 226 : canvasWidth - 23, 0);
             }
-*/
 
             compass.rotate(33, cameraHorizontal, anIntArray1057, xOffset + 256, anIntArray968, (!isResized() ? 25 + compassYOffset : 24 + compassYOffset), 4, (!isResized() ? 29 + compassXOffset : canvasWidth - 176 + compassXOffset), 33, 25);
 
@@ -16059,7 +15943,6 @@ public class Client extends GameEngine
             }
         }
 
-/*
         if (!isResized() ? MouseHandler.mouseX >= 742 && MouseHandler.mouseX <= 765 && MouseHandler.mouseY >= 0 && MouseHandler.mouseY <= 24 : MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1 && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24) {
             spriteCache.get(26).drawARGBSprite(!isResized() ? xOffset + 226 : canvasWidth - 23, 0, 205);
         } else {
@@ -16068,7 +15951,6 @@ public class Client extends GameEngine
         if (tabID == 14) {
             spriteCache.get(27).drawSprite(!isResized() ? xOffset + 226 : canvasWidth - 23, 0);
         }
-*/
 
         if (menuOpen) {
             drawMenu();
@@ -16580,7 +16462,8 @@ public class Client extends GameEngine
         }
         if (j == 44) {
             int itemID = stream.readLEUShortA();
-            int itemAmount = stream.readUnsignedShort();
+            long itemAmount = stream.readUnsignedLong();
+            int rarity = stream.readUnsignedByte();
             int empty = stream.readUnsignedByte();
 
             int l10 = packetLocalX + (empty >> 4 & 7);
@@ -16588,8 +16471,8 @@ public class Client extends GameEngine
             if (l10 >= 0 && i13 >= 0 && l10 < 104 && i13 < 104) {
                 Item groundItem = new Item();
                 groundItem.itemId = itemID;
-                groundItem.itemAmount = itemAmount;
-                groundItem.type = 0;
+                groundItem.itemAmount = ((int) itemAmount);
+                groundItem.type = rarity;
 
                 if (groundArray[plane][l10][i13] == null) {
                     groundArray[plane][l10][i13] = new Deque();
@@ -16853,55 +16736,24 @@ public class Client extends GameEngine
 
         for (int count = 0; count < removedMobCount; count++) {
             int index = removedMobs[count];
-            Player removed = index >= 0 && index < playerArray.length ? playerArray[index] : null;
-            if (removed == null) {
-                reportPlayerSynchronizationFailure("removed player was already null", packetSize, buffer, index);
-                continue;
-            }
-            if (removed.time != tick) {
+
+            if (playerArray[index].time != tick) {
                 playerArray[index] = null;
             }
         }
 
         if (buffer.position != packetSize) {
-            reportPlayerSynchronizationFailure("packet size mismatch", packetSize, buffer, -1);
-            throw new RuntimeException("Player synchronization packet size mismatch");
+            Utility.reporterror("Error packet size mismatch in getplayer pos:" + buffer.position + " psize:" + packetSize);
+            throw new RuntimeException("eek");
         }
 
         for (int playerIndex = 0; playerIndex < playerCount; playerIndex++) {
             if (playerArray[playerIndices[playerIndex]] == null) {
-                reportPlayerSynchronizationFailure("null local entry at list position " + playerIndex,
-                        packetSize, buffer, playerIndices[playerIndex]);
-                throw new RuntimeException("Player synchronization contains a null local player");
+                Utility.reporterror(myUsername + " null entry in pl list - pos:" + playerIndex + " size:" + playerCount);
+                throw new RuntimeException("eek");
             }
         }
 
-    }
-
-    private void reportPlayerSynchronizationFailure(String reason, int packetSize, Buffer buffer, int subjectIndex) {
-        StringBuilder locals = new StringBuilder();
-        int limit = Math.min(playerCount, 32);
-        for (int i = 0; i < limit; i++) {
-            if (i > 0) {
-                locals.append(',');
-            }
-            int index = playerIndices[i];
-            locals.append(index).append(playerArray[index] == null ? "(null)" : "");
-        }
-        if (playerCount > limit) {
-            locals.append(",...");
-        }
-        Utility.reporterror(
-                "Player sync failure reason=" + reason
-                        + " user=" + myUsername
-                        + " tick=" + tick
-                        + " packetSize=" + packetSize
-                        + " position=" + buffer.position
-                        + " subject=" + subjectIndex
-                        + " locals=" + playerCount + '[' + locals.toString() + ']'
-                        + " updates=" + mobsAwaitingUpdateCount
-                        + " removals=" + removedMobCount
-                        + " opcodes=" + opcode + ',' + lastOpcode1 + ',' + lastOpcode2 + ',' + lastOpcode3);
     }
 
     private void updateLocalPlayerMovement(Buffer buffer) {
@@ -16967,9 +16819,8 @@ public class Client extends GameEngine
         }
 
         if (count > playerCount) {
-            reportPlayerSynchronizationFailure("server local count " + count + " exceeds client count " + playerCount,
-                    pktSize, stream, -1);
-            throw new RuntimeException("Player synchronization local count exceeds client state");
+            Utility.reporterror(myUsername + " Too many players");
+            throw new RuntimeException("eek");
         }
 
         playerCount = 0;
@@ -17100,12 +16951,12 @@ public class Client extends GameEngine
                 }
                 if (flag8) {
                     outgoing.writeOpcode(185);
-                    ButtonPacket.writeClick(outgoing, button);
+                    outgoing.writeShort(button);
                 }
                 break;
             case 646:
                 outgoing.writeOpcode(185);
-                ButtonPacket.writeClick(outgoing, button);
+                outgoing.writeShort(button);
                 RSInterface class9_2 = RSInterface.interfaceCache[button];
                 if (class9_2.scripts != null && class9_2.scripts[0][0] == 5) {
                     if (settings[toggle] != class9_2.requiredValues[0]) {
@@ -17116,7 +16967,7 @@ public class Client extends GameEngine
                 break;
             case 169:
                 outgoing.writeOpcode(185);
-                ButtonPacket.writeClick(outgoing, button);
+                outgoing.writeShort(button);
                 RSInterface class9_3 = RSInterface.interfaceCache[button];
                 if (class9_3.scripts != null && class9_3.scripts[0][0] == 5) {
                     settings[toggle] = 1 - settings[toggle];
@@ -17199,23 +17050,39 @@ public class Client extends GameEngine
                 return false;
             }
             if (opcode == -1) {
-                if (i < 3) {
-                    return false;
-                }
                 socketStream.flushInputStream(incoming.array, 1);
                 opcode = incoming.array[0] & 0xff;
                 if (encryption != null) {
                     opcode = opcode - encryption.getNextKey() & 0xff;
                 }
-                socketStream.flushInputStream(incoming.array, 2);
-                pktSize = ((incoming.array[0] & 0xff) << 8) + (incoming.array[1] & 0xff);
-                i -= 3;
+                pktSize = SizeConstants.PACKET_SIZES[opcode];
+                i--;
+            }
+            if (pktSize == -1) {
+                if (i > 0) {
+                    socketStream.flushInputStream(incoming.array, 1);
+                    pktSize = incoming.array[0] & 0xff;
+                    i--;
+                } else {
+                    return false;
+                }
+            }
+            if (pktSize == -2) {
+                if (i > 1) {
+                    socketStream.flushInputStream(incoming.array, 2);
+                    incoming.position = 0;
+                    pktSize = incoming.readUnsignedShort();
+                    i -= 2;
+                } else {
+                    return false;
+                }
             }
             if (i < pktSize) {
                 return false;
             }
             incoming.position = 0;
             socketStream.flushInputStream(incoming.array, pktSize);
+            TarnishClientDiagnostics.packet(opcode, pktSize, incoming.array, tick, baseX, baseY, localPlayer);
             anInt1009 = 0;
             lastOpcode3 = lastOpcode2;
             lastOpcode2 = lastOpcode1;
@@ -17307,7 +17174,7 @@ public class Client extends GameEngine
                         aBooleanArray876[l] = false;
                     }
                     // xpCounter = 0;
-                    setCompassDirection(0);
+                    setNorth();
                     opcode = -1;
                     return true;
 
@@ -17357,18 +17224,17 @@ public class Client extends GameEngine
 
                 case 134: {
                     int skill = incoming.readUnsignedByte();
-                    int level = incoming.readInt();
-                    int maxLevel = incoming.readInt();
-                    int experience = incoming.readInt();
-                    currentExp[skill] = experience;
-                    currentStats[skill] = level;
-                    maxStats[skill] = maxLevel;
+                    int level = incoming.method439();
+                    int l15 = incoming.readUnsignedByte();
+                    currentExp[skill] = level;
+                    currentStats[skill] = l15;
+                    maxStats[skill] = 1;
                     for (int k20 = 0; k20 < 98; k20++) {
-                        if (experience >= anIntArray1019[k20]) {
+                        if (level >= anIntArray1019[k20]) {
                             maxStats[skill] = k20 + 2;
                         }
                     }
-                    callbacks.post(new StatChanged(Skill.values()[skill], experience, maxLevel, level));
+                    callbacks.post(new StatChanged(Skill.values()[skill], level, 1, l15));
                     opcode = -1;
                     return true;
                 }
@@ -17618,6 +17484,8 @@ public class Client extends GameEngine
                     isCameraLocked = false;
                     chaseCameraX -= i17 << 7;
                     chaseCameraY -= j21 << 7;
+                    TarnishClientDiagnostics.region(lastRegionChunkX, lastRegionChunkY, baseX, baseY,
+                            viewportRegions, viewportMapFiles, viewportLandscapeFiles);
                     opcode = -1;
                     return true;
 
@@ -17631,9 +17499,9 @@ public class Client extends GameEngine
                     return true;
 
                 case 208: {
-                    int interfaceID = incoming.readInt();
+                    int interfaceID = incoming.readUnsignedShort();
 
-                    if (interfaceID == -1) {
+                    if (interfaceID == 65535) {
                         interfaceID = -1;
                     }
 
@@ -17683,9 +17551,12 @@ public class Client extends GameEngine
                     opcode = -1;
                     return true;
 
-                // system update timer
+                // sync with server
                 case 114:
-                    systemUpdateTime = incoming.readLEUShort() * 30;
+                    game_message_id = incoming.readUnsignedShort();
+                    game_message_time = incoming.readUnsignedShort();
+                    game_message_context = incoming.readString();
+                    buildSplitPrivateChatMenu();
                     opcode = -1;
                     return true;
 
@@ -17716,7 +17587,6 @@ public class Client extends GameEngine
                     int i4 = incoming.readUnsignedShort();
                     int l11 = incoming.readUnsignedByte();
                     int k17 = incoming.readUnsignedShort();
-                    incoming.readUnsignedShort();
                     if (aBoolean848 && !lowMem && anInt1062 < 50) {
                         anIntArray1207[anInt1062] = i4;
                         anIntArray1241[anInt1062] = l11;
@@ -17737,7 +17607,6 @@ public class Client extends GameEngine
                         }
                         atPlayerActions[slot2 - 1] = playerOption;
                         playerOptions[slot2 - 1] = top == 0;
-                        playerMenuTypes[slot2 - 1] = 0;
                     }
                     opcode = -1;
                     return true;
@@ -17935,7 +17804,7 @@ public class Client extends GameEngine
                     return true;
 
                 case 248:
-                    int i5 = incoming.readUShortA();
+                    int i5 = incoming.readUnsignedInt();
                     int k12 = incoming.readUnsignedShort();
                     if (backDialogueId != -1) {
                         backDialogueId = -1;
@@ -17954,8 +17823,8 @@ public class Client extends GameEngine
                     return true;
 
                 case 79:
-                    int j5 = incoming.readUnsignedShort();
-                    int l12 = incoming.readUnsignedShort();
+                    int j5 = incoming.readLEUShort();
+                    int l12 = incoming.readUShortA();
                     RSInterface class9_3 = RSInterface.interfaceCache[j5];
                     if (class9_3 != null && class9_3.type == 0) {
                         if (l12 < 0) {
@@ -18379,6 +18248,7 @@ public class Client extends GameEngine
                 case 206:
                     publicChatMode = incoming.readUnsignedByte();
                     privateChatMode = incoming.readUnsignedByte();
+                    clanChatMode = incoming.readUnsignedByte();
                     tradeMode = incoming.readUnsignedByte();
                     redrawDialogueBox = true;
                     opcode = -1;
@@ -18426,77 +18296,26 @@ public class Client extends GameEngine
                 case 53: {//senditemoninterface
                     int interfaceID = incoming.readInt();
                     int length = incoming.readUnsignedShort();
-                    int tabLength = 0;
-                    if (interfaceID == 5382) {
-                        tabLength = incoming.readUnsignedShort();
-                    }
+                    int tabLength = incoming.readUnsignedShort();
 
                     RSInterface rsinterface = RSInterface.interfaceCache[interfaceID];
                     if (rsinterface == null) {
-                        for (int index = 0; index < length; index++) {
-                            int amount = incoming.readInt();
-                            if (amount != 0) {
-                                incoming.readUnsignedShort();
-                            }
-                        }
-                        for (int index = 0; index < tabLength; index++) {
-                            incoming.readInt();
-                        }
-                        opcode = -1;
-                        return true;
+                        throw new RuntimeException("Invalid interface ID " + interfaceID);
                     }
 
                     for (int index = 0; index < length; index++) {
-                        int amount = incoming.readInt();
-                        int itemId = 0;
-                        if (amount != 0) {
-                            int containerId = incoming.readUnsignedShort();
-                            itemId = containerId;
+                        int amount = incoming.readUnsignedByte();
+                        if (amount == 255) {
+                            amount = incoming.readInt();
                         }
-                        if (index < rsinterface.inv.length) {
-                            rsinterface.inv[index] = itemId;
-                            rsinterface.invStackSizes[index] = amount;
-                        }
+                        int itemId = incoming.readUnsignedShort();
+                        rsinterface.inv[index] = itemId;
+                        rsinterface.invStackSizes[index] = amount;
                     }
 
                     for (int index = length; index < rsinterface.inv.length; index++) {
                         rsinterface.inv[index] = 0;
                         rsinterface.invStackSizes[index] = 0;
-                    }
-
-                    if (interfaceID == 5382 && tabLength > 0) {
-                        for (int index = 0; index < tabLength; index++) {
-                            int tabAm = incoming.readInt();
-                            if (index < tabAmounts.length) {
-                                tabAmounts[index] = tabAm;
-                            }
-                        }
-                    }
-
-                    // If the bank is in search mode, rebuild bankInvTemp from the freshly-updated
-                    // bank.inv[] so that withdrawals during search refresh the display immediately.
-                    if (interfaceID == 5382) {
-                        RSInterface searchField = RSInterface.interfaceCache[60019];
-                        if (searchField != null && searchField.disabledMessage != null
-                                && searchField.disabledMessage.length() > 0
-                                && !searchField.defaultInputFieldText.equalsIgnoreCase(searchField.disabledMessage)) {
-                            Arrays.fill(bankInvTemp, 0);
-                            Arrays.fill(bankStackTemp, 0);
-                            int bankSlot = 0;
-                            for (int slot = 0; slot < rsinterface.inv.length; slot++) {
-                                if (rsinterface.inv[slot] - 1 > 0) {
-                                    ItemDefinition def = ItemDefinition.lookup(rsinterface.inv[slot] - 1);
-                                    if (def == null || def.name == null) continue;
-                                    if (def.name.toLowerCase().contains(searchField.disabledMessage.toLowerCase())) {
-                                        bankInvTemp[bankSlot] = rsinterface.inv[slot];
-                                        bankStackTemp[bankSlot++] = rsinterface.invStackSizes[slot];
-                                    }
-                                }
-                            }
-                            if (RSInterface.interfaceCache[5385] != null) {
-                                RSInterface.interfaceCache[5385].scrollMax = (int) Math.ceil(bankSlot / 9.0) * 36;
-                            }
-                        }
                     }
 
                     try {
@@ -18506,6 +18325,33 @@ public class Client extends GameEngine
                             callbacks.post(new ItemContainerChanged(1688, getEquipment()));
                     } catch (Exception e) {
                         e.printStackTrace();
+                    }
+
+                    if (tabLength > 0) {
+                        for (int tab = 0; tab < tabLength; tab++) {
+                            int amount = incoming.readInt();
+                            tabAmounts[tab] = amount;
+                        }
+
+                        if ((!RSInterface.interfaceCache[60019].disabledMessage.isEmpty() && !RSInterface.interfaceCache[60019].defaultInputFieldText.equalsIgnoreCase(RSInterface.interfaceCache[60019].disabledMessage))) {
+                            RSInterface bank = RSInterface.interfaceCache[5382];
+                            Arrays.fill(bankInvTemp, 0);
+                            Arrays.fill(bankStackTemp, 0);
+                            int bankSlot = 0;
+                            for (int slot = 0; slot < bank.inv.length; slot++) {
+                                if (bank.inv[slot] - 1 > 0) {
+                                    ItemDefinition def = ItemDefinition.lookup(bank.inv[slot] - 1);
+                                    if (def == null || def.name == null) {
+                                        continue;
+                                    }
+                                    if (def.name.toLowerCase().contains(RSInterface.interfaceCache[60019].disabledMessage.toLowerCase())) {
+                                        bankInvTemp[bankSlot] = rsinterface.inv[slot];
+                                        bankStackTemp[bankSlot++] = rsinterface.invStackSizes[slot];
+                                    }
+                                }
+                            }
+                            RSInterface.interfaceCache[5385].scrollMax = (int) Math.ceil(bankSlot / 9.0) * 36;
+                        }
                     }
 
                     opcode = -1;
@@ -18557,7 +18403,7 @@ public class Client extends GameEngine
 
                 case 249:
                     anInt1046 = incoming.readUByteA();
-                    localPlayerIndex = incoming.readUShortA();
+                    localPlayerIndex = incoming.readLEUShortA();
                     opcode = -1;
                     return true;
 
@@ -18578,6 +18424,7 @@ public class Client extends GameEngine
 
                 case 187:
                     inputMessage = incoming.readString();
+                    inputLength = incoming.readUShortA();
                     messagePromptRaised = false;
                     inputDialogState = 2;
                     amountOrNameInput = "";
@@ -18586,7 +18433,7 @@ public class Client extends GameEngine
                     return true;
 
                 case 97: {
-                    int interfaceID = incoming.readUnsignedShort();
+                    int interfaceID = incoming.readUnsignedInt();
                     openWalkable(interfaceID);
                     if (invOverlayInterfaceID != -1) {
                         invOverlayInterfaceID = -1;
@@ -18679,7 +18526,7 @@ public class Client extends GameEngine
                     return true;
 
                 case 219:
-                    int closeInterface = pktSize > 0 ? incoming.readUnsignedByte() : 1;
+                    int closeInterface = incoming.readUnsignedByte();
                     if (closeInterface == 1 && invOverlayInterfaceID != -1) {
                         invOverlayInterfaceID = -1;
                         tabAreaAltered = true;
@@ -18707,10 +18554,13 @@ public class Client extends GameEngine
                     int interfaceId = incoming.readUnsignedShort();
                     RSInterface rsint = RSInterface.interfaceCache[interfaceId];
 
-                    int slot = incoming.readUnsignedByte();
-                    int amount = incoming.readInt();
-                    int containerId = incoming.readUnsignedShort();
-                    int itemId = containerId;
+                    int slot = incoming.readUnsignedShort();
+                    int itemId = incoming.readUnsignedShort();
+                    int amount = incoming.readUnsignedByte();
+
+                    if (amount == 255) {
+                        amount = incoming.readUnsignedInt();
+                    }
 
                     if (slot >= 0 && slot < rsint.inv.length) {
                         rsint.inv[slot] = itemId;
@@ -18967,26 +18817,15 @@ public class Client extends GameEngine
     private void processMinimapActions() {
         final boolean fixed = !isResized();
         if (fixed ? MouseHandler.mouseX >= 542 && MouseHandler.mouseX <= 579 && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 38 : MouseHandler.mouseX >= canvasWidth - 180 && MouseHandler.mouseX <= canvasWidth - 139 && MouseHandler.mouseY >= 0 && MouseHandler.mouseY <= 40) {
-            menuActionName[menuActionRow] = "Face North";
-            menuActionID[menuActionRow] = 696;
-            menuActionRow++;
-            menuActionName[menuActionRow] = "Face South";
-            menuActionID[menuActionRow] = 697;
-            menuActionRow++;
-            menuActionName[menuActionRow] = "Face East";
-            menuActionID[menuActionRow] = 698;
-            menuActionRow++;
-            menuActionName[menuActionRow] = "Face West";
-            menuActionID[menuActionRow] = 699;
-            menuActionRow++;
+            menuActionName[1] = "Face North";
+            menuActionID[1] = 696;
+            menuActionRow = 2;
         }
-        /*
         if (fixed ? MouseHandler.mouseX >= 742 && MouseHandler.mouseX <= 765 && MouseHandler.mouseY >= 0 && MouseHandler.mouseY <= 24 : MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1 && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24) {
             menuActionName[1] = "Logout";
             menuActionID[1] = 700;
             menuActionRow = 2;
         }
-        */
 
         if (Settings.STATUS_ORB) {
             if (worldHover) {
@@ -19375,7 +19214,6 @@ public class Client extends GameEngine
         anIntArray968 = new int[33];
         fileStores = new RSFileStore[RSFileStore.CACHE_INDEX_COUNT];
         settings = new int[60_000];
-        settings[981] = 1;
         aBoolean972 = false;
         anInt975 = 50;
         anIntArray976 = new int[anInt975];
@@ -19431,7 +19269,6 @@ public class Client extends GameEngine
         aString1121 = "";
         atPlayerActions = new String[6];
         playerOptions = new boolean[6];
-        playerMenuTypes = new int[6];
         anIntArrayArrayArray1129 = new int[4][13][13];
         anInt1132 = 2;
         aClass30_Sub2_Sub1_Sub1Array1140 = new Sprite[1000];
@@ -19673,6 +19510,7 @@ public class Client extends GameEngine
 
     public volatile SwiftFUP swiftFUP;
     public volatile OnDemandFetcher onDemandFetcher;
+
     private int lastRegionChunkX;
     private int lastRegionChunkY;
     private int anInt1071;
@@ -19719,7 +19557,6 @@ public class Client extends GameEngine
     public static Player localPlayer;
     private final String[] atPlayerActions;
     private final boolean[] playerOptions;
-    private final int[] playerMenuTypes;
     private final int[][][] anIntArrayArrayArray1129;
     public static final int[] tabInterfaceIDs = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     private int cameraY;
@@ -20075,84 +19912,8 @@ public class Client extends GameEngine
     public final void flushFileClient() {
     }
 
-    public static byte[] decompressGZIP(byte[] compressed) {
-        if (compressed == null) return null;
-        if (compressed.length < 2 || compressed[0] != 0x1f || compressed[1] != (byte) 0x8b) {
-            return compressed;
-        }
-        try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(compressed);
-             java.util.zip.GZIPInputStream gzis = new java.util.zip.GZIPInputStream(bais);
-             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
-            byte[] buffer = new byte[1024];
-            int len;
-            while ((len = gzis.read(buffer)) > 0) {
-                baos.write(buffer, 0, len);
-            }
-            return baos.toByteArray();
-        } catch (java.io.IOException e) {
-            e.printStackTrace();
-            return compressed;
-        }
-    }
-
-    public static byte[] decompressJagexContainer(byte[] data) {
-        if (data == null || data.length < 5) return data;
-
-        if (data[0] == 0x1f && data[1] == (byte) 0x8b) {
-            return decompressGZIP(data);
-        }
-
-        int compressionType = data[0] & 0xFF;
-        int compressedLength = ((data[1] & 0xFF) << 24)
-                | ((data[2] & 0xFF) << 16)
-                | ((data[3] & 0xFF) << 8)
-                | (data[4] & 0xFF);
-
-        if (compressedLength < 0 || compressedLength > data.length) {
-            return data;
-        }
-
-        if (compressionType == 0) {
-            if (data.length < 5 + compressedLength) return data;
-            byte[] decompressed = new byte[compressedLength];
-            System.arraycopy(data, 5, decompressed, 0, compressedLength);
-            return decompressed;
-        } else if (compressionType == 1) {
-            if (data.length < 9) return data;
-            int decompressedLength = ((data[5] & 0xFF) << 24)
-                    | ((data[6] & 0xFF) << 16)
-                    | ((data[7] & 0xFF) << 8)
-                    | (data[8] & 0xFF);
-            byte[] decompressed = new byte[decompressedLength];
-            BZip2Decompressor.method225(decompressed, decompressedLength, data, compressedLength, 9);
-            return decompressed;
-        } else if (compressionType == 2) {
-            if (data.length < 9) return data;
-            int decompressedLength = ((data[5] & 0xFF) << 24)
-                    | ((data[6] & 0xFF) << 16)
-                    | ((data[7] & 0xFF) << 8)
-                    | (data[8] & 0xFF);
-            byte[] decompressed = new byte[decompressedLength];
-            try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(data, 9, compressedLength);
-                 java.util.zip.GZIPInputStream gzis = new java.util.zip.GZIPInputStream(bais)) {
-                int read = 0;
-                while (read < decompressedLength) {
-                    int len = gzis.read(decompressed, read, decompressedLength - read);
-                    if (len == -1) break;
-                    read += len;
-                }
-                return decompressed;
-            } catch (java.io.IOException e) {
-                e.printStackTrace();
-                return data;
-            }
-        }
-
-        return data;
-    }
-
     public final boolean loadData(final int indexID,
-                                   final int fileID,
+                                  final int fileID,
                                   final boolean flush) {
         swiftFUP.getFileRequests().file(indexID + 1, fileID);
         return true;

@@ -32,9 +32,6 @@ public class Profile {
         this.equipment = DEFAULT_EQUIPMENT;
     }
 
-    private Sprite headSprite;
-    private boolean headSpriteLoaded;
-
     public Profile(String username, String password, int gender, int[] equipment, int[] recolours) {
         this.username = username;
         this.password = password;
@@ -51,14 +48,11 @@ public class Profile {
      */
     public void drawProfileHead(int x, int y) {
         if (!username.isEmpty()) {
-            if (!headSpriteLoaded) {
-                final String imagePath = PROFILES_DIR + "/" + username + ".png";
-                headSprite = new Sprite(imagePath, 50, 50);
-                headSpriteLoaded = true;
-            }
-            if (headSprite != null && headSprite.raster != null) {
-                if (headSprite.raster.length != 0) {
-                    headSprite.drawSprite(x, y);
+            final String imagePath = PROFILES_DIR + "/" + username + ".png";
+            final Sprite sprite = new Sprite(imagePath, 50, 50);
+            if (sprite.raster != null) {
+                if(sprite.raster.length != 0) {
+                    sprite.drawSprite(x, y);
                 }
             }
         }
@@ -78,32 +72,26 @@ public class Profile {
         int x2 = Rasterizer2D.bottomX;
         int y1 = Rasterizer2D.topY;
         int y2 = Rasterizer2D.bottomY;
-        boolean previousClip = Rasterizer3D.aBoolean1464;
-        boolean previousWorld = Rasterizer3D.world;
-        boolean previousGpuRender = Rasterizer3D.renderOnGpu;
-        try {
-            Rasterizer3D.aBoolean1464 = false;
-            Rasterizer3D.world = false;
-            Rasterizer3D.renderOnGpu = false;
-            Rasterizer2D.initDrawingArea(sprite.raster, spriteWidth, spriteHeight);
-            Rasterizer3D.useViewport();
+        Rasterizer3D.aBoolean1464 = false;
+        Rasterizer3D.world = false;
+        Rasterizer2D.initDrawingArea(sprite.raster, spriteWidth, spriteHeight);
+        Rasterizer3D.useViewport();
 
-            int rotationX = 40;
-            int rotationY = 2020;
-            int zoom = 1600;
-            int sine = Model.SINE[rotationY] * zoom >> 16;
-            int cosine = Model.COSINE[rotationY] * zoom >> 16;
-            model.renderModel(rotationX, 0, rotationY, 0, sine, cosine);
-        } finally {
-            Rasterizer2D.initDrawingArea(raster, w, h);
-            Rasterizer2D.setDrawingArea(x1, y1, x2, y2);
-            Rasterizer3D.originViewX = origX;
-            Rasterizer3D.originViewY = origY;
-            Rasterizer3D.scanOffsets = scanline;
-            Rasterizer3D.aBoolean1464 = previousClip;
-            Rasterizer3D.world = previousWorld;
-            Rasterizer3D.renderOnGpu = previousGpuRender;
-        }
+        int rotationX = 40;
+        int rotationY = 2020;
+        int zoom = 1600;
+        int sine = Model.SINE[rotationY] * zoom >> 16;
+        int cosine = Model.COSINE[rotationY] * zoom >> 16;
+        Rasterizer3D.renderOnGpu = true;
+        model.renderModel(rotationX, 0, rotationY, 0, sine, cosine);
+        Rasterizer3D.renderOnGpu = false;
+        Rasterizer2D.initDrawingArea(raster, w, h);
+        Rasterizer2D.setDrawingArea(x1, y1, x2, y2);
+        Rasterizer3D.originViewX = origX;
+        Rasterizer3D.originViewY = origY;
+        Rasterizer3D.scanOffsets = scanline;
+        Rasterizer3D.aBoolean1464 = true;
+        Rasterizer3D.world = true;
         return sprite;
     }
 

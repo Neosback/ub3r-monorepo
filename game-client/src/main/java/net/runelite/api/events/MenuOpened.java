@@ -27,14 +27,14 @@ package net.runelite.api.events;
 import java.util.Iterator;
 import lombok.AccessLevel;
 import lombok.Setter;
-import net.runelite.api.MenuEntryTwo;
+import net.runelite.api.MenuEntry;
 import lombok.Data;
 
 /**
  * An event where a menu has been opened.
  */
 @Data
-public class MenuOpened implements Iterable<MenuEntryTwo>
+public class MenuOpened implements Iterable<MenuEntry>
 {
 	/**
 	 * This should be set to true if anything about the menu
@@ -50,14 +50,14 @@ public class MenuOpened implements Iterable<MenuEntryTwo>
 	 * The entries in this menu are reversed, the last entry in the
 	 * array will appear first (at the top) in the opened menu.
 	 */
-	private MenuEntryTwo[] menuEntries;
+	private MenuEntry[] menuEntries;
 
 	/**
 	 * Gets the entry that will be displayed first in the menu.
 	 *
 	 * @return the first entry
 	 */
-	public MenuEntryTwo getFirstEntry()
+	public MenuEntry getFirstEntry()
 	{
 		if (menuEntries.length > 0)
 		{
@@ -73,9 +73,9 @@ public class MenuOpened implements Iterable<MenuEntryTwo>
 	}
 
 	@Override
-	public Iterator<MenuEntryTwo> iterator()
+	public Iterator<MenuEntry> iterator()
 	{
-		return new Iterator<MenuEntryTwo>()
+		return new Iterator<MenuEntry>()
 		{
 			int index = 0;
 
@@ -86,7 +86,7 @@ public class MenuOpened implements Iterable<MenuEntryTwo>
 			}
 
 			@Override
-			public MenuEntryTwo next()
+			public MenuEntry next()
 			{
 				return menuEntries[index++];
 			}

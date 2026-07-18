@@ -27,7 +27,9 @@ public class Utility {
     public static final Path CACHE_DIRECTORY = Path.of(System.getProperty("user.home"), Configuration.CACHE_NAME);
 
     public static String findcachedir() {
-        return RuneLite.CACHE_DIR.getAbsolutePath() + File.separator;
+
+
+        return RuneLite.CACHE_DIR.getAbsolutePath() + "/";
     }
 
 

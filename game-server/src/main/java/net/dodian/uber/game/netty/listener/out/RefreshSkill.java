@@ -29,10 +29,8 @@ public class RefreshSkill implements OutgoingPacket {
     public void send(Client client) {
         ByteMessage out = ByteMessage.message(134);
         out.put(skill.getId());
-        // Client expects: level, maxLevel, experience as 3 big-endian ints
-        out.putInt(level);
-        out.putInt(maxLevel);
-        out.putInt(experience);
+        out.putInt(experience, ByteOrder.MIDDLE);
+        out.put(level);
         client.send(out);
        // System.out.println("Sending RefreshSkill packet for skill " + skill + " with level " + level + " and experience " + experience);
     }

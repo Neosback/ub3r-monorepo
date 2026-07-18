@@ -222,6 +222,10 @@ internal object AccountLoginMapper {
             player.bankSlotTabs = IntArray(size)
         }
         for (entry in bank.split(" ")) {
+            if (entry == "@ph=1") {
+                player.bankPlaceholdersEnabled = true
+                continue
+            }
             val parse = entry.split("-")
             if (parse.size <= 2) {
                 continue
@@ -230,12 +234,12 @@ internal object AccountLoginMapper {
             val rawId = parse[1].toIntOrNull() ?: continue
             val amount = parse[2].toIntOrNull() ?: continue
             val tab = if (parse.size >= 4) parse[3].toIntOrNull()?.coerceIn(0, 9) ?: 0 else 0
-            if (amount > 0 && slot in 0 until size && Server.itemManager.hasDefinition(rawId)) {
+            if (amount >= 0 && slot in 0 until size && Server.itemManager.hasDefinition(rawId)) {
                 // Tarnish banks never retain notes. Only explicit notes are normalized;
                 // placeholders and other linked variants keep their original identity.
                 val itemId = Server.itemManager.normalizeForBank(rawId)
                 val existing = (0 until size).firstOrNull {
-                    player.bankItems[it] - 1 == itemId && player.bankItemsN[it] > 0
+                    player.bankItems[it] - 1 == itemId && player.bankItemsN[it] >= 0
                 }
                 val destination = existing ?: when {
                     player.bankItems[slot] <= 0 -> slot
@@ -243,7 +247,8 @@ internal object AccountLoginMapper {
                 }
                 player.bankItems[destination] = itemId + 1
                 player.bankItemsN[destination] =
-                    (player.bankItemsN[destination].toLong() + amount).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                    if (amount == 0 && existing == null) 0
+                    else (player.bankItemsN[destination].toLong() + amount).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
                 if (existing == null) {
                     player.bankSlotTabs[destination] = tab
                 }

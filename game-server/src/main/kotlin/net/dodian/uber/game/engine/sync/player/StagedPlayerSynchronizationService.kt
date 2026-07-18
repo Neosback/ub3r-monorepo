@@ -10,8 +10,10 @@ import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.entity.player.PlayerUpdating
+import net.dodian.uber.game.model.entity.player.TarnishAppearanceValidator
 import net.dodian.uber.game.netty.codec.ByteMessage
 import net.dodian.uber.game.netty.codec.MessageType
+import org.slf4j.LoggerFactory
 
 /**
  * Protocol-317 player synchronization with Kronos-style staged ownership:
@@ -33,6 +35,15 @@ class StagedPlayerSynchronizationService {
             message = ByteMessage.message(81, MessageType.VAR_SHORT, pooledBuffer)
             encode(viewer, plan, message)
             val packetBytes = message.content().writerIndex()
+            if (logger.isDebugEnabled) {
+                logger.debug(
+                    "tarnish_player_update viewer={} slot={} bytes={} hash={}",
+                    viewer.playerName,
+                    viewer.slot,
+                    packetBytes,
+                    TarnishAppearanceValidator.hash(message.content()),
+                )
+            }
             require(packetBytes <= MAX_VAR_SHORT_PAYLOAD) {
                 "Player synchronization payload exceeds protocol limit: $packetBytes"
             }
@@ -280,6 +291,7 @@ class StagedPlayerSynchronizationService {
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(StagedPlayerSynchronizationService::class.java)
         private const val MAX_LOCALS = 255
         private const val MAX_PLAN_CAPACITY = 255
         private const val MAX_VAR_SHORT_PAYLOAD = 65535

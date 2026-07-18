@@ -200,7 +200,7 @@ class StagedNpcSynchronizationService {
         private const val MAX_LOCALS = 255
         private const val MAX_ADDITIONS_PER_CYCLE = 25
         private const val MAX_VAR_SHORT_PAYLOAD = 65535
-        private const val NPC_SLOT_BITS = 14
+        private const val NPC_SLOT_BITS = 16
         private const val NPC_SLOT_TERMINATOR = (1 shl NPC_SLOT_BITS) - 1
     }
 }
