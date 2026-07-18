@@ -20,6 +20,33 @@ data class CacheManifest(
 
 object CacheManifestValidator {
     private val mapper = ObjectMapper().registerKotlinModule()
+    private val logger = org.slf4j.LoggerFactory.getLogger(CacheManifestValidator::class.java)
+
+    /**
+     * Validates [cachePath] against [manifestPath] if the manifest exists, otherwise logs a
+     * warning and skips (a manifest is an opt-in, locally-provisioned pin, not a hard
+     * requirement for every environment). When a manifest IS present, any mismatch is fatal —
+     * this is what stops a substituted/corrupted cache directory from being served silently.
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun validateIfPresent(
+        cachePath: Path = Path.of("data/cache"),
+        manifestPath: Path = Path.of("data/def/cache-manifest.json"),
+    ): CacheManifest? {
+        if (!Files.isRegularFile(manifestPath)) {
+            logger.warn(
+                "No cache manifest at {} — skipping cache integrity validation for {}. " +
+                    "Generate one to catch a substituted/corrupted cache at startup instead of at runtime.",
+                manifestPath.toAbsolutePath().normalize(),
+                cachePath.toAbsolutePath().normalize(),
+            )
+            return null
+        }
+        val manifest = validateOrThrow(cachePath, manifestPath)
+        logger.info("cache_manifest_verified files={} cachePath={}", manifest.files.size, cachePath.toAbsolutePath().normalize())
+        return manifest
+    }
 
     @JvmStatic
     @JvmOverloads

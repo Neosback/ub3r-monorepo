@@ -42,6 +42,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     private static final PlayerUpdating instance = new PlayerUpdating();
     private static final PlayerUpdateBlockSet BLOCK_SET = new PlayerUpdateBlockSet();
+    private static final java.util.Map<Integer, String> lastWarnedAppearanceHash = new java.util.concurrent.ConcurrentHashMap<>();
 
     enum UpdatePhase {
         UPDATE_SELF,
@@ -776,7 +777,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     public static void appendForcedChatText(Player player, ByteMessage buf) {
-        buf.putString(player.getForcedChat());
+        String forcedChat = player.getForcedChat();
+        // Client does textSpoken.charAt(0) unguarded on this mask; an empty string crashes it.
+        buf.putString(forcedChat == null || forcedChat.isEmpty() ? " " : forcedChat);
     }
 
     public static void appendPlayerChatText(Player player, ByteMessage buf) {
@@ -937,8 +940,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             byte[] appearanceBytes = playerProps.toByteArray();
             TarnishAppearanceValidator.Validation validation = TarnishAppearanceValidator.validate(appearanceBytes);
             if (!validation.valid) {
-                logger.warn("tarnish_appearance_invalid player={} slot={} reason={} hash={} bytes={}",
-                        player.getPlayerName(), player.getSlot(), validation.reason, validation.hash, appearanceBytes.length);
+                String signature = validation.reason + ":" + validation.hash;
+                if (!signature.equals(lastWarnedAppearanceHash.put(player.getSlot(), signature))) {
+                    logger.warn("tarnish_appearance_invalid player={} slot={} reason={} hash={} bytes={}",
+                            player.getPlayerName(), player.getSlot(), validation.reason, validation.hash, appearanceBytes.length);
+                }
             } else if (logger.isDebugEnabled()) {
                 logger.debug("tarnish_appearance player={} slot={} hash={} bytes={}",
                         player.getPlayerName(), player.getSlot(), validation.hash, appearanceBytes.length);
@@ -1033,15 +1039,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     @Override
     public void appendPrimaryHit(Player player, ByteMessage buf) {
-        synchronized (this) {
-            appendTarnishPlayerHit(buf, player.getDamageDealt(), player.getHitType(), player, ValueType.ADD);
-        }
+        appendTarnishPlayerHit(buf, player.getDamageDealt(), player.getHitType(), player, ValueType.ADD);
     }
 
     public void appendPrimaryHit2(Player player, ByteMessage buf) {
-        synchronized(this) {
-            appendTarnishPlayerHit(buf, player.getDamageDealt2(), player.getHitType2(), player, ValueType.SUBTRACT);
-        }
+        appendTarnishPlayerHit(buf, player.getDamageDealt2(), player.getHitType2(), player, ValueType.SUBTRACT);
     }
 
     private static void appendTarnishPlayerHit(ByteMessage buf, int damage, Entity.hitType hitType,

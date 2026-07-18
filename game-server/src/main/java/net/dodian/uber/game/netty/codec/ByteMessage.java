@@ -559,7 +559,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return This buffer instance.
      */
     public ByteMessage putString(String value) {
-        for (byte charValue : value.getBytes()) {
+        for (byte charValue : value.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1)) {
             put(charValue);
         }
         put(10);

@@ -24,7 +24,16 @@ class FileResponses {
 
     fun presentAtStartup(filePair: FilePair): Boolean = bitpack2Response.containsKey(filePair.bitpack)
 
-    fun load(cachePath: String, print: Boolean = true) {
+    /** Summary of a [load] pass, so callers (and tests) can assert cache integrity. */
+    data class LoadSummary(
+        val indices: Int,
+        val responses: Int,
+        val emptyArchives: Int,
+        val unreadableArchives: Int,
+        val unreadableSamples: List<FilePair>,
+    )
+
+    fun load(cachePath: String, print: Boolean = true): LoadSummary {
         val library = CacheLibrary.create(cachePath)
         val indices = library.validIndices()
 
@@ -125,6 +134,7 @@ class FileResponses {
                 unreadableSamples,
             )
         }
+        return LoadSummary(indices.size, bitpack2Response.size, emptyArchives, unreadableArchives, unreadableSamples)
     }
 
 }

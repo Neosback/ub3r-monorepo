@@ -73,6 +73,13 @@ class EquipmentAppearanceSynchronizationTest {
         }
 
         val bytes = PlayerUpdating.getInstance().getAppearanceBytes(client)
+
+        // Regression for the false-positive "unterminated string" validator bug: the validator
+        // previously read 5 lines after the name instead of title + titleColor(int) + 3 lines,
+        // which drifted it into the combat-level double and threw on every encode.
+        val validation = TarnishAppearanceValidator.validate(bytes)
+        assertTrue(validation.valid, "validator reason: ${validation.reason}")
+
         val buffer = ByteBuffer.wrap(bytes)
 
         assertEquals(client.gender, buffer.unsignedByte())

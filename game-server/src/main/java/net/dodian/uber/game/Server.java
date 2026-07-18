@@ -32,6 +32,7 @@ import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.dodian.uber.game.engine.systems.cache.CacheBootstrapService;
+import net.dodian.uber.game.engine.systems.cache.CacheManifestValidator;
 import net.dodian.uber.game.engine.systems.interaction.ObjectClipService;
 import org.jire.swiftfup.server.SwiftFupCache;
 
@@ -122,6 +123,10 @@ public class Server {
         login = new Login();
         GameObjectData.init();
         net.dodian.uber.game.engine.systems.objectexamines.ObjectExamines.load();
+        // Verifies the cache both CacheBootstrapService (below) and SwiftFUP (further down) read
+        // from matches its known-good fingerprint, so a substituted or corrupted cache directory
+        // fails loudly at boot instead of silently serving bad terrain/objects to clients.
+        CacheManifestValidator.validateIfPresent();
         new CacheBootstrapService().bootstrap();
         loadObjects();
         new DoorRegistry();

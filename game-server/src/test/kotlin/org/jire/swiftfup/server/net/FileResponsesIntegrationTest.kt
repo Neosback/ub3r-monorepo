@@ -12,6 +12,16 @@ import java.nio.file.Path
 
 class FileResponsesIntegrationTest {
     @Test
+    fun `served cache has no unreadable archives`() {
+        // Regression for a corrupted cache being bundled/pointed at by SwiftFupCache: an
+        // unreadable map archive there previously froze clients loading the adjacent region
+        // instead of failing loudly at server startup.
+        val responses = FileResponses()
+        val summary = responses.load(cachePath().toString(), print = false)
+        assertEquals(0, summary.unreadableArchives, "unreadable archives: ${summary.unreadableSamples}")
+    }
+
+    @Test
     fun `serves checksum and startup archive responses from the shipped cache`() {
         val responses = FileResponses()
         responses.load(cachePath().toString(), print = false)

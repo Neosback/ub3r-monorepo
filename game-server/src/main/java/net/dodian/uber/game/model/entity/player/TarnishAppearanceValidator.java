@@ -72,7 +72,9 @@ public final class TarnishAppearanceValidator {
             for (int i = 0; i < 5; i++) u8(buffer);
             for (int i = 0; i < 7; i++) u16(buffer);
             buffer.getLong();
-            for (int i = 0; i < 5; i++) readLine(buffer);
+            readLine(buffer); // title
+            buffer.getInt(); // title color
+            for (int i = 0; i < 3; i++) readLine(buffer); // clan channel, clan tag, clan tag color
             buffer.getLong(); int rights = u8(buffer); u16(buffer);
             if (buffer.hasRemaining()) throw new IllegalArgumentException("remaining=" + buffer.remaining());
             if (gender > 1 || headIcon > 255 || skullIcon > 255 || bountyIcon != 255 || rights > 16) {
