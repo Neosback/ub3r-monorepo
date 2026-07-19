@@ -1984,10 +1984,16 @@ public class Client extends Player implements Runnable {
         equipmentChanged(changed.stream().mapToInt(Integer::intValue).toArray());
     }
 
+    private void wearLog(String format, Object... args) {
+        if (getGameWorldId() == 2) {
+            logger.info(format, args);
+        }
+    }
+
     public void wear(int wearID, int slot, int interFace) {
-                    logger.info("[WEAR:WEAR] wearID={} slot={} interface={}", wearID, slot, interFace);
+                    wearLog("[WEAR:WEAR] wearID={} slot={} interface={}", wearID, slot, interFace);
         if (isBusy() || interFace != 3214) {
-                            logger.info("[WEAR:WEAR] rejected busy={} interface={}", isBusy(), interFace);
+                            wearLog("[WEAR:WEAR] rejected busy={} interface={}", isBusy(), interFace);
             return;
         }
         if (net.dodian.uber.game.skill.runecrafting.Runecrafting.emptyPouch(this, wearID)) { //Runecrafting Pouches
@@ -2015,29 +2021,29 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (duelConfirmed && !duelFight) {
-                            logger.info("[WEAR:WEAR] rejected pending duel confirmation");
+                            wearLog("[WEAR:WEAR] rejected pending duel confirmation");
             return;
         }
         if (!playerHasItem(wearID)) {
-                            logger.info("[WEAR:WEAR] rejected item missing id={}", wearID);
+                            wearLog("[WEAR:WEAR] rejected item missing id={}", wearID);
             return;
         }
         int targetSlot = Server.itemManager.getSlot(wearID);
-                    logger.info("[WEAR:WEAR] targetSlot={}", targetSlot);
+                    wearLog("[WEAR:WEAR] targetSlot={}", targetSlot);
         if (canUse(wearID)) {
-                            logger.info("[WEAR:WEAR] rejected premium item id={}", wearID);
+                            wearLog("[WEAR:WEAR] rejected premium item id={}", wearID);
             send(new SendMessage("You must be a premium member to use this item"));
             return;
         }
         if (targetSlot != 8 && duelBodyRules[falseSlots[targetSlot]]) {
-                            logger.info("[WEAR:WEAR] rejected by duel equipment rule slot={}", targetSlot);
+                            wearLog("[WEAR:WEAR] rejected by duel equipment rule slot={}", targetSlot);
             send(new SendMessage("Current duel rules restrict this from being worn!"));
             return;
         }
         if ((playerItems[slot] - 1) == wearID) {
-                            logger.info("[WEAR:WEAR] validating requirements id={} slot={}", wearID, targetSlot);
+                            wearLog("[WEAR:WEAR] validating requirements id={} slot={}", wearID, targetSlot);
             if (!checkEquip(wearID, targetSlot, slot)) {
-                                    logger.info("[WEAR:WEAR] rejected by equipment requirements id={}", wearID);
+                                    wearLog("[WEAR:WEAR] rejected by equipment requirements id={}", wearID);
                 return;
             }
             int wearAmount = playerItemsN[slot];
@@ -2060,14 +2066,14 @@ public class Client extends Player implements Runnable {
             markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
             wearing = false;
             equipmentChanged(targetSlot);
-            logger.info("[WEAR:WEAR] equipped id={} targetSlot={} amount={}", wearID, targetSlot, wearAmount);
+            wearLog("[WEAR:WEAR] equipped id={} targetSlot={} amount={}", wearID, targetSlot, wearAmount);
         } else {
-            logger.info("[WEAR:WEAR] rejected slot/item mismatch playerItems[slot]={} expected={}", playerItems[slot] - 1, wearID);
+            wearLog("[WEAR:WEAR] rejected slot/item mismatch playerItems[slot]={} expected={}", playerItems[slot] - 1, wearID);
         }
     }
 
     public boolean checkEquip(int id, int slot, int invSlot) {
-                    logger.info("[WEAR:EQUIP] id={} slot={} invSlot={}", id, slot, invSlot);
+                    wearLog("[WEAR:EQUIP] id={} slot={} invSlot={}", id, slot, invSlot);
         boolean maxCheck = getItemName(id).contains(("Max cape")) || getItemName(id).contains(("Max hood"));
         if (maxCheck && totalLevel() < Skills.maxTotalLevel()) {
             send(new SendMessage("You need a total level of " + Skills.maxTotalLevel() + " to equip the " + getItemName(id).toLowerCase() + "."));
@@ -2184,7 +2190,7 @@ public class Client extends Player implements Runnable {
             }
             checkItemUpdate();
         }
-        logger.info("[WEAR:EQUIP] id={} slot={} invSlot={} result={}", id, slot, invSlot, !failCheck);
+        wearLog("[WEAR:EQUIP] id={} slot={} invSlot={} result={}", id, slot, invSlot, !failCheck);
         return !failCheck;
     }
 

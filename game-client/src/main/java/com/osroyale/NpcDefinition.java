@@ -50,6 +50,7 @@ public final class NpcDefinition {
         entityDef.npcId = npcId;
         entityDef.decode(buffer);
 
+        /*
         switch (npcId) {
             case 9855:
                 entityDef.actions = new String[5];
@@ -109,7 +110,7 @@ public final class NpcDefinition {
             case 7062:
                 entityDef.name = "Ensouled Hunter";
                 break;
-            /* Fishing */
+            // Fishing
             case 1518:
                 entityDef.name = "Shimps & Anchovies";
                 entityDef.actions = new String[5];
@@ -169,40 +170,40 @@ public final class NpcDefinition {
                 entityDef.actions[0] = "Open";
                 entityDef.actions[3] = "Trade";
                 break;
-            /** Crafting master. */
+            // Crafting master.
             case 5811:
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Tan";
                 entityDef.actions[2] = "Trade";
                 break;
-            /* Clanmaster */
+            // Clanmaster
             case 3841:
                 entityDef.name = "Clanmaster";
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Open";
                 break;
-            /* Clothing */
+            // Clothing
             case 534:
                 entityDef.name = "Clothing store";
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Open";
                 break;
 
-            /* Pure */
+            // Pure
             case 5440:
                 entityDef.name = "Pure store";
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Open";
                 break;
 
-            /* Mage */
+            // Mage
             case 4400:
                 entityDef.name = "Mage store";
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Open";
                 break;
 
-            /* Range */
+            // Range
             case 1576:
                 entityDef.name = "Range store";
                 entityDef.actions = new String[5];
@@ -223,49 +224,49 @@ public final class NpcDefinition {
                 entityDef.actions[2] = "Pick-up";
                 break;
 
-            /* Skill */
+            // Skill
             case 505:
                 entityDef.name = "Skilling store";
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Open";
                 break;
 
-            /* Hunter */
+            // Hunter
             case 1504:
                 entityDef.name = "Hunter store";
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Open";
                 break;
 
-            /* Cook */
+            // Cook
             case 1199:
                 entityDef.name = "Consumable store";
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Open";
                 break;
 
-            /* Farming */
+            // Farming
             case 3258:
                 entityDef.name = "Farming store";
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Open";
                 break;
 
-            /* Achievement */
+            // Achievement
             case 5527:
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Talk-to";
                 entityDef.actions[2] = "Trade";
                 break;
 
-            /* Banker */
+            // Banker
             case 1480:
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Talk-to";
                 entityDef.actions[2] = "Bank";
                 break;
 
-            /* Voting */
+            // Voting
             case 3531:
                 entityDef.name = "Vote";
                 entityDef.actions = new String[5];
@@ -274,14 +275,14 @@ public final class NpcDefinition {
                 entityDef.actions[3] = "Claim";
                 break;
 
-            /* Spellbook */
+            // Spellbook
             case 4397:
                 entityDef.name = "Spellbook";
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Change";
                 break;
 
-            /* Royal Points */
+            // Royal Points
             case 5523:
                 entityDef.name = "The Donator King";
                 entityDef.actions = new String[5];
@@ -301,13 +302,13 @@ public final class NpcDefinition {
                 entityDef.name = "Skilling Store";
                 break;
 
-            /* Clothing */
+            // Clothing
             case 1307:
                 entityDef.actions = new String[5];
                 entityDef.actions[0] = "Makeover";
                 break;
 
-            /* Thieving Stalls */
+            // Thieving Stalls
             case 3439:
                 entityDef.name = "Merchant";
                 entityDef.actions = new String[5];
@@ -329,7 +330,7 @@ public final class NpcDefinition {
                 entityDef.actions[0] = "Exchange for firecape";
                 break;
 
-            /* Nieve */
+            // Nieve
             case 490:
             case 6797:
                 entityDef.actions = new String[5];
@@ -414,6 +415,7 @@ public final class NpcDefinition {
                 entityDef.description = "The protector of the donator zone.".getBytes(); // NPC description
                 break;
         }
+        */
 
         return entityDef;
     }

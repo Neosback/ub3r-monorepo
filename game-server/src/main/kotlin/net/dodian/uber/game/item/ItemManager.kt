@@ -125,10 +125,13 @@ open class ItemManager @JvmOverloads constructor(
         for (json in jsonDefs) {
             val base = baseMap[json.id]
             if (base == null) {
+                val isTwoHanded = json.equipment?.let { Item.isTwoHandedFromSlot(it.slot) } == true
+                val slotVal = json.equipment?.let { Item.slotFromName(it.slot, isTwoHanded) } ?: 0
+                val nameLower = json.name.lowercase()
                 val item = Item(
                     id = json.id,
                     name = json.name,
-                    slot = 0,
+                    slot = slotVal,
                     standAnim = defaultStandAnim,
                     walkAnim = defaultWalkAnim,
                     runAnim = defaultRunAnim,
@@ -141,9 +144,9 @@ open class ItemManager @JvmOverloads constructor(
                     placeholder = json.placeholder,
                     noteable = json.noteable,
                     tradeable = json.tradeable,
-                    twoHanded = json.equipment?.slot == "2h",
-                    full = false,
-                    mask = false,
+                    twoHanded = isTwoHanded,
+                    full = Item.deriveFull(nameLower, slotVal),
+                    mask = Item.deriveMask(nameLower, slotVal),
                     premium = json.members,
                     examine = json.examine ?: "It's a ${json.name}.",
                     alchemy = json.highAlch,

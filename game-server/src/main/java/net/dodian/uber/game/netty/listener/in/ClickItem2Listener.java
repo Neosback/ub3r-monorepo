@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 @net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {16})
 public class ClickItem2Listener implements PacketListener {
   private static final Logger logger = LoggerFactory.getLogger(ClickItem2Listener.class);
-    private static final int MIN_PAYLOAD_BYTES = 4;
+    private static final int MIN_PAYLOAD_BYTES = 6;
 
     @Override
     public void handle(Client client, GamePacket packet) {
@@ -28,16 +28,19 @@ public class ClickItem2Listener implements PacketListener {
             return;
         }
 
+        // Tarnish client (action==454... second-option variant) writes: ShortA itemId,
+        // LEShortA slot, LEShortA interfaceId — matches Tarnish server's handleSecondOption.
         int itemId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int itemSlot = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
+        int itemSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
+        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
 
-        logger.debug("ClickItem2Listener: slot {} item {}", itemSlot, itemId);
+        logger.debug("ClickItem2Listener: slot {} item {} interface {}", itemSlot, itemId, interfaceId);
 
         if (!PacketItemActionService.validateInventorySlot(client, itemSlot)) return;
         if (client.playerItems[itemSlot] - 1 != itemId) return;
         if (client.randomed || client.UsingAgility) return;
 
-        if (ItemDispatcher.tryHandle(client, 2, itemId, itemSlot, -1)) {
+        if (ItemDispatcher.tryHandle(client, 2, itemId, itemSlot, interfaceId)) {
             return;
         }
 

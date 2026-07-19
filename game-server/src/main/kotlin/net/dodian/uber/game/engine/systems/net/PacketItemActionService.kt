@@ -89,6 +89,11 @@ object PacketItemActionService {
         }
         if (ItemDispatcher.tryHandle(client, 1, item, slot, interfaceId)) {
             client.checkItemUpdate()
+            return
+        }
+        val equipSlot = net.dodian.uber.game.Server.itemManager.getSlot(id)
+        if (equipSlot in 0..13) {
+            client.wear(id, slot, interfaceId)
         }
     }
 

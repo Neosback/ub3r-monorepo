@@ -28,7 +28,9 @@ public class WearItemListener implements PacketListener {
         int wearSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
 
-        logger.info("[WEAR:PACKET] player={} item={} slot={} interface={}", client.getPlayerName(), wearId, wearSlot, interfaceId);
+        if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+            logger.info("[WEAR:PACKET] player={} item={} slot={} interface={}", client.getPlayerName(), wearId, wearSlot, interfaceId);
+        }
 
         PacketItemActionService.handleWear(client, wearId, wearSlot, interfaceId);
     }

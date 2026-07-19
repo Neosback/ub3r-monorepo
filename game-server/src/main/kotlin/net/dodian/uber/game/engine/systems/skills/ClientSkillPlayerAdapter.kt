@@ -243,7 +243,7 @@ private fun renderSkillMulti(client: Client, config: SkillMultiConfig, layout: S
         SkillMultiLayout.SINGLE -> {
             val entry = entries.single()
             client.sendInterfaceModel(1746, 190, entry.recipe.outputItemId)
-            client.sendString("\n\n\n\n\n${entry.label ?: client.getItemName(entry.recipe.outputItemId)}", 2799)
+            client.sendString("\\n\\n\\n\\n\\n${entry.label ?: client.getItemName(entry.recipe.outputItemId)}", 2799)
             client.sendChatboxInterface(4429)
         }
         SkillMultiLayout.TWO -> {

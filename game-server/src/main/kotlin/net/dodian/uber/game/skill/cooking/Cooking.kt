@@ -1,5 +1,7 @@
 package net.dodian.uber.game.skill.cooking
 
+import net.dodian.uber.game.engine.config.gameWorldId
+
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
@@ -106,8 +108,23 @@ object Cooking {
             return true
         }
         client.cookingState = CookingState(itemId, CookingData.recipes.indexOf(recipe), remaining = 0)
-        client.enterAmountId = 1
-        client.send(SendFrame27("How many would you like to cook?"))
+        val skillPlayer = client.asSkillPlayer()
+        val skillRecipe = net.dodian.uber.skills.api.SkillRecipe(
+            key = "cooking.recipe.$itemId",
+            outputItemId = recipe.cookedItemId,
+            materials = listOf(net.dodian.uber.skills.api.Material(itemId, 1)),
+            requiredLevel = recipe.requiredLevel,
+            experience = recipe.experience
+        )
+        val config = net.dodian.uber.skills.api.SkillMultiConfig(
+            key = "cooking.single.$itemId",
+            verb = "cook",
+            action = net.dodian.uber.skills.api.SkillMultiAction.COOK,
+            entries = listOf(net.dodian.uber.skills.api.SkillMultiEntry(skillRecipe))
+        )
+        skillPlayer.production.open(config) { selection ->
+            start(client, CookingRequest(itemId, CookingData.recipes.indexOf(recipe), selection.amount))
+        }
         return true
     }
 
