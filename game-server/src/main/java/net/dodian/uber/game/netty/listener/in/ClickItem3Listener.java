@@ -27,9 +27,10 @@ public class ClickItem3Listener implements PacketListener {
             return;
         }
 
-        int interfaceId = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.NORMAL);
+        // Tarnish client (action==847) writes: LEShortA interfaceId, LEShort slot, ShortA itemId.
+        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
         int itemSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
-        int itemId = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int itemId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
 
         logger.debug("ClickItem3Listener: slot {} item {}", itemSlot, itemId);
 

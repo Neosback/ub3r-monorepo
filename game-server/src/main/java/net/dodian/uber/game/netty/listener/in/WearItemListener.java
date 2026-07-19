@@ -28,7 +28,7 @@ public class WearItemListener implements PacketListener {
         int wearSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
 
-        logger.debug("WearItemListener: item {} slot {} interface {}", wearId, wearSlot, interfaceId);
+        logger.info("[WEAR:PACKET] player={} item={} slot={} interface={}", client.getPlayerName(), wearId, wearSlot, interfaceId);
 
         PacketItemActionService.handleWear(client, wearId, wearSlot, interfaceId);
     }

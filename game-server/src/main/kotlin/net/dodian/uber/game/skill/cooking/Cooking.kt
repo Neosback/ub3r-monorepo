@@ -16,6 +16,7 @@ import net.dodian.uber.game.skill.runtime.action.productionAction
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
+import net.dodian.uber.game.netty.listener.out.SendFrame27
 import java.util.Collections
 import java.util.WeakHashMap
 
@@ -82,6 +83,38 @@ object Cooking {
 
     @JvmStatic
     fun attempt(client: Client, itemId: Int) = start(client, itemId)
+
+    /**
+     * Entry point for both "use item on range" and "click range" — cooks a single item
+     * outright when that's all the player is carrying, otherwise stashes the pending
+     * recipe and opens the "how many would you like to cook?" chatbox instead of
+     * silently cooking the player's entire inventory stack.
+     */
+    @JvmStatic
+    fun promptQuantity(client: Client, itemId: Int): Boolean {
+        if (client.isBusy) {
+            client.sendMessage("You are currently busy to be cooking!")
+            return true
+        }
+        val recipe = CookingData.findRecipe(itemId) ?: return false
+        val available = client.getInvAmt(itemId)
+        if (available <= 0) {
+            return false
+        }
+        if (available == 1) {
+            start(client, itemId)
+            return true
+        }
+        client.cookingState = CookingState(itemId, CookingData.recipes.indexOf(recipe), remaining = 0)
+        client.enterAmountId = 1
+        client.send(SendFrame27("How many would you like to cook?"))
+        return true
+    }
+
+    /** Finds the first raw item in the player's inventory that this recipe table can cook. */
+    @JvmStatic
+    fun firstCookableInInventory(client: Client): Int =
+        CookingData.recipes.map { it.rawItemId }.firstOrNull { client.getInvAmt(it) > 0 } ?: -1
 
     @JvmStatic
     fun startFromEnteredAmount(client: Client, amount: Int) {
@@ -160,9 +193,22 @@ object CookingSkillPlugin : SkillPlugin {
                 } else {
                     val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
                     client.setInteractionAnchor(position.x, position.y, position.z)
-                    Cooking.attempt(client, itemId)
+                    Cooking.promptQuantity(client, itemId)
                     true
                 }
+            }
+
+            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *rangeObjectIds) { interaction ->
+                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
+                val position = interaction.position
+                val itemId = Cooking.firstCookableInInventory(client)
+                if (itemId == -1) {
+                    client.sendMessage("You don't have anything to cook.")
+                } else {
+                    client.setInteractionAnchor(position.x, position.y, position.z)
+                    Cooking.promptQuantity(client, itemId)
+                }
+                true
             }
         }
 }

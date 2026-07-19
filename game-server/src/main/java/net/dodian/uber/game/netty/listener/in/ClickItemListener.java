@@ -27,9 +27,14 @@ public class ClickItemListener implements PacketListener {
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
 
-        int interfaceId = buf.readUnsignedShort();
-        int itemId = buf.readUnsignedShort();
-        int itemSlot = buf.readUnsignedShort();
+        // Tarnish client (Client.java action==74) writes: LEShortA interfaceId,
+        // ShortA slot, LEShort itemId — decode must mirror that exactly.
+        int interfaceId = net.dodian.uber.game.netty.codec.ByteBufReader.readShortUnsigned(
+                buf, net.dodian.uber.game.netty.codec.ByteOrder.LITTLE, net.dodian.uber.game.netty.codec.ValueType.ADD);
+        int itemSlot = net.dodian.uber.game.netty.codec.ByteBufReader.readShortUnsigned(
+                buf, net.dodian.uber.game.netty.codec.ByteOrder.BIG, net.dodian.uber.game.netty.codec.ValueType.ADD);
+        int itemId = net.dodian.uber.game.netty.codec.ByteBufReader.readShortUnsigned(
+                buf, net.dodian.uber.game.netty.codec.ByteOrder.LITTLE, net.dodian.uber.game.netty.codec.ValueType.NORMAL);
 
         logger.debug("ClickItem: [interface={}, slot={}, id={}] for player {}", interfaceId, itemSlot, itemId, client.getPlayerName());
 

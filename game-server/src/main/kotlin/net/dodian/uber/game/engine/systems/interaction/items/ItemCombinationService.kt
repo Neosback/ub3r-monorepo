@@ -15,12 +15,11 @@ import net.dodian.uber.game.api.content.ContentActions
 import net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher
 
 object ItemCombinationService {
-    private const val MAX_INVENTORY_SLOT = 28
-
     @JvmStatic
     fun handle(client: Client, usedWithSlot: Int, itemUsedSlot: Int) {
-        if (usedWithSlot !in 0..MAX_INVENTORY_SLOT || itemUsedSlot !in 0..MAX_INVENTORY_SLOT) {
-            client.disconnected = true
+        val lastSlot = client.playerItems.size - 1
+        if (usedWithSlot !in 0..lastSlot || itemUsedSlot !in 0..lastSlot) {
+            // Malformed slot = drop the packet, never disconnect (see PacketItemActionService).
             return
         }
 

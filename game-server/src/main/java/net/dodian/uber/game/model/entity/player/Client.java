@@ -628,15 +628,18 @@ public class Client extends Player implements Runnable {
         private final int mousePacketsProcessed;
         private final int walkPacketsReplaced;
         private final int mousePacketsReplaced;
+        private final int itemClickPacketsReplaced;
         private final int fifoPacketsDropped;
 
         public InboundProcessResult(int processedPackets, int walkPacketsProcessed, int mousePacketsProcessed,
-                                    int walkPacketsReplaced, int mousePacketsReplaced, int fifoPacketsDropped) {
+                                    int walkPacketsReplaced, int mousePacketsReplaced, int itemClickPacketsReplaced,
+                                    int fifoPacketsDropped) {
             this.processedPackets = processedPackets;
             this.walkPacketsProcessed = walkPacketsProcessed;
             this.mousePacketsProcessed = mousePacketsProcessed;
             this.walkPacketsReplaced = walkPacketsReplaced;
             this.mousePacketsReplaced = mousePacketsReplaced;
+            this.itemClickPacketsReplaced = itemClickPacketsReplaced;
             this.fifoPacketsDropped = fifoPacketsDropped;
         }
 
@@ -658,6 +661,10 @@ public class Client extends Player implements Runnable {
 
         public int mousePacketsReplaced() {
             return mousePacketsReplaced;
+        }
+
+        public int itemClickPacketsReplaced() {
+            return itemClickPacketsReplaced;
         }
 
         public int fifoPacketsDropped() {
@@ -740,17 +747,44 @@ public class Client extends Player implements Runnable {
         }
         InboundPacketMailbox.EnqueueResult result = inboundPacketMailbox.enqueue(packet);
         if (!result.accepted()) {
+            pauseInboundReads();
             return false;
+        }
+        if (inboundPacketMailbox.pendingCount() >= net.dodian.uber.game.netty.NetworkConstants.INBOUND_READ_PAUSE_THRESHOLD) {
+            pauseInboundReads();
         }
         markInboundReadyIfNeeded();
         return true;
+    }
+
+    /**
+     * rsprot-style backpressure: rather than dropping packets or disconnecting when the
+     * mailbox backs up, stop reading from the socket so TCP throttles the client. Reading
+     * resumes from the game thread once the backlog drains below the resume threshold.
+     */
+    private void pauseInboundReads() {
+        io.netty.channel.Channel currentChannel = channel;
+        if (currentChannel != null && currentChannel.config().isAutoRead()) {
+            currentChannel.config().setAutoRead(false);
+        }
+    }
+
+    private void resumeInboundReadsIfDrained() {
+        io.netty.channel.Channel currentChannel = channel;
+        if (currentChannel == null || disconnected || currentChannel.config().isAutoRead()) {
+            return;
+        }
+        if (inboundPacketMailbox.pendingCount() <= net.dodian.uber.game.netty.NetworkConstants.INBOUND_READ_RESUME_THRESHOLD) {
+            currentChannel.config().setAutoRead(true);
+        }
     }
 
     public InboundProcessResult processQueuedPackets(int maxPacketsPerTick) {
         net.dodian.uber.game.engine.loop.GameThreadContext.validateGameThread("inbound.packet-dispatch");
         if (maxPacketsPerTick <= 0 || disconnected) {
             InboundPacketMailbox.MailboxCounters counters = inboundPacketMailbox.snapshotAndResetCounters();
-            return new InboundProcessResult(0, 0, 0, counters.walkReplaced(), counters.mouseReplaced(), counters.fifoDropped());
+            return new InboundProcessResult(0, 0, 0, counters.walkReplaced(), counters.mouseReplaced(),
+                    counters.itemClickReplaced(), counters.fifoDropped());
         }
 
         int processedCount = 0;
@@ -772,6 +806,10 @@ public class Client extends Player implements Runnable {
             try {
                 dispatchQueuedPacket(packet);
             } catch (Exception ex) {
+                // A content bug in one packet listener must not kill the whole session —
+                // the packet is dropped and logged, and the player keeps playing. Anything
+                // else turns every content exception (a bad wield handler, a broken skill
+                // action) into a forced disconnect and, worse, a zombie session.
                 PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.LISTENER_EXCEPTION);
                 PacketErrorTelemetry.recordListenerException(packet.opcode(), getPlayerName(), getSlot(), packet.size(), ex);
                 logger.error(
@@ -783,17 +821,15 @@ public class Client extends Player implements Runnable {
                         describeRecentInboundPackets(),
                         ex
                 );
-                noteDisconnectReason("inbound-listener-exception opcode=" + packet.opcode());
-                net.dodian.uber.game.engine.metrics.OperationalTelemetry.incrementCounter("player.disconnect.listener_exception", 1L);
-                disconnected = true;
+                net.dodian.uber.game.engine.metrics.OperationalTelemetry.incrementCounter("packet.listener_exception", 1L);
                 println_debug("Error processing opcode " + packet.opcode() + " for " + getPlayerName() + ": " + ex.getMessage());
-                break;
             } finally {
                 if (packet.payload() != null && packet.payload().refCnt() > 0) {
                     packet.payload().release();
                 }
             }
         }
+        resumeInboundReadsIfDrained();
         InboundPacketMailbox.MailboxCounters counters = inboundPacketMailbox.snapshotAndResetCounters();
         return new InboundProcessResult(
                 processedCount,
@@ -801,6 +837,7 @@ public class Client extends Player implements Runnable {
                 mouseProcessed,
                 counters.walkReplaced(),
                 counters.mouseReplaced(),
+                counters.itemClickReplaced(),
                 counters.fifoDropped()
         );
     }
@@ -1948,13 +1985,9 @@ public class Client extends Player implements Runnable {
     }
 
     public void wear(int wearID, int slot, int interFace) {
-        if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
-            logger.debug("[W2-WEAR] wearID={} slot={} interface={}", wearID, slot, interFace);
-        }
+                    logger.info("[WEAR:WEAR] wearID={} slot={} interface={}", wearID, slot, interFace);
         if (isBusy() || interFace != 3214) {
-            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
-                logger.debug("[W2-WEAR] rejected busy={} interface={}", isBusy(), interFace);
-            }
+                            logger.info("[WEAR:WEAR] rejected busy={} interface={}", isBusy(), interFace);
             return;
         }
         if (net.dodian.uber.game.skill.runecrafting.Runecrafting.emptyPouch(this, wearID)) { //Runecrafting Pouches
@@ -1982,43 +2015,29 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (duelConfirmed && !duelFight) {
-            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
-                logger.debug("[W2-WEAR] rejected pending duel confirmation");
-            }
+                            logger.info("[WEAR:WEAR] rejected pending duel confirmation");
             return;
         }
         if (!playerHasItem(wearID)) {
-            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
-                logger.debug("[W2-WEAR] rejected item missing id={}", wearID);
-            }
+                            logger.info("[WEAR:WEAR] rejected item missing id={}", wearID);
             return;
         }
         int targetSlot = Server.itemManager.getSlot(wearID);
-        if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
-            logger.debug("[W2-WEAR] targetSlot={}", targetSlot);
-        }
+                    logger.info("[WEAR:WEAR] targetSlot={}", targetSlot);
         if (canUse(wearID)) {
-            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
-                logger.debug("[W2-WEAR] rejected premium item id={}", wearID);
-            }
+                            logger.info("[WEAR:WEAR] rejected premium item id={}", wearID);
             send(new SendMessage("You must be a premium member to use this item"));
             return;
         }
         if (targetSlot != 8 && duelBodyRules[falseSlots[targetSlot]]) {
-            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
-                logger.debug("[W2-WEAR] rejected by duel equipment rule slot={}", targetSlot);
-            }
+                            logger.info("[WEAR:WEAR] rejected by duel equipment rule slot={}", targetSlot);
             send(new SendMessage("Current duel rules restrict this from being worn!"));
             return;
         }
         if ((playerItems[slot] - 1) == wearID) {
-            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
-                logger.debug("[W2-WEAR] validating requirements id={} slot={}", wearID, targetSlot);
-            }
+                            logger.info("[WEAR:WEAR] validating requirements id={} slot={}", wearID, targetSlot);
             if (!checkEquip(wearID, targetSlot, slot)) {
-                if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
-                    logger.debug("[W2-WEAR] rejected by equipment requirements id={}", wearID);
-                }
+                                    logger.info("[WEAR:WEAR] rejected by equipment requirements id={}", wearID);
                 return;
             }
             int wearAmount = playerItemsN[slot];
@@ -2041,13 +2060,14 @@ public class Client extends Player implements Runnable {
             markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
             wearing = false;
             equipmentChanged(targetSlot);
+            logger.info("[WEAR:WEAR] equipped id={} targetSlot={} amount={}", wearID, targetSlot, wearAmount);
+        } else {
+            logger.info("[WEAR:WEAR] rejected slot/item mismatch playerItems[slot]={} expected={}", playerItems[slot] - 1, wearID);
         }
     }
 
     public boolean checkEquip(int id, int slot, int invSlot) {
-        if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
-            logger.debug("[W2-EQUIP] id={} slot={} invSlot={}", id, slot, invSlot);
-        }
+                    logger.info("[WEAR:EQUIP] id={} slot={} invSlot={}", id, slot, invSlot);
         boolean maxCheck = getItemName(id).contains(("Max cape")) || getItemName(id).contains(("Max hood"));
         if (maxCheck && totalLevel() < Skills.maxTotalLevel()) {
             send(new SendMessage("You need a total level of " + Skills.maxTotalLevel() + " to equip the " + getItemName(id).toLowerCase() + "."));
@@ -2164,6 +2184,7 @@ public class Client extends Player implements Runnable {
             }
             checkItemUpdate();
         }
+        logger.info("[WEAR:EQUIP] id={} slot={} invSlot={} result={}", id, slot, invSlot, !failCheck);
         return !failCheck;
     }
 

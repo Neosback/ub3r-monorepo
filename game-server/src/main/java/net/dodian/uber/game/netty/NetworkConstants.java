@@ -21,6 +21,16 @@ public final class NetworkConstants {
     public static final int PACKET_RATE_LIMIT_VIOLATIONS_BEFORE_CLOSE = 3;
 
     /**
+     * Backpressure thresholds for the per-client inbound mailbox (rsprot-style):
+     * when pending packets reach the pause threshold, the channel's autoRead is
+     * disabled so TCP throttles the client instead of the server dropping packets
+     * or disconnecting; reading resumes once the game thread drains the backlog
+     * below the resume threshold.
+     */
+    public static final int INBOUND_READ_PAUSE_THRESHOLD = 150;
+    public static final int INBOUND_READ_RESUME_THRESHOLD = 50;
+
+    /**
      * Compatibility accessors for code that historically looked in network
      * constants. RSA remains configured and validated exclusively by DotEnv.
      */

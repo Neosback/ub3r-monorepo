@@ -12,6 +12,7 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
         FIFO,
         WALK,
         MOUSE,
+        ITEM_CLICK,
     }
 
     class EnqueueResult private constructor(
@@ -31,26 +32,29 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
     class MailboxCounters private constructor(
         private val walkReplaced: Int,
         private val mouseReplaced: Int,
+        private val itemClickReplaced: Int,
         private val fifoDropped: Int,
     ) {
         fun walkReplaced(): Int = walkReplaced
 
         fun mouseReplaced(): Int = mouseReplaced
 
+        fun itemClickReplaced(): Int = itemClickReplaced
+
         fun fifoDropped(): Int = fifoDropped
 
         companion object {
-            private val EMPTY = MailboxCounters(0, 0, 0)
+            private val EMPTY = MailboxCounters(0, 0, 0, 0)
 
             @JvmStatic
             fun empty(): MailboxCounters = EMPTY
 
             @JvmStatic
-            fun of(walkReplaced: Int, mouseReplaced: Int, fifoDropped: Int): MailboxCounters =
-                if (walkReplaced == 0 && mouseReplaced == 0 && fifoDropped == 0) {
+            fun of(walkReplaced: Int, mouseReplaced: Int, itemClickReplaced: Int, fifoDropped: Int): MailboxCounters =
+                if (walkReplaced == 0 && mouseReplaced == 0 && itemClickReplaced == 0 && fifoDropped == 0) {
                     EMPTY
                 } else {
-                    MailboxCounters(walkReplaced, mouseReplaced, fifoDropped)
+                    MailboxCounters(walkReplaced, mouseReplaced, itemClickReplaced, fifoDropped)
                 }
         }
     }
@@ -87,9 +91,11 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
 
     private var walkPacket: SequencedPacket? = null
     private var mousePacket: SequencedPacket? = null
+    private var itemClickPacket: SequencedPacket? = null
 
     private var walkReplacedSinceSnapshot = 0
     private var mouseReplacedSinceSnapshot = 0
+    private var itemClickReplacedSinceSnapshot = 0
     private var fifoDroppedSinceSnapshot = 0
 
     @Synchronized
@@ -100,12 +106,8 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
         val family = familyOf(packet.opcode())
         val sequenced = SequencedPacket(++nextSequence, family, packet)
         return when (family) {
-            Family.WALK -> {
-                replaceSupersedingPacket(sequenced, walkFamily = true)
-                EnqueueResult.of(true, family)
-            }
-            Family.MOUSE -> {
-                replaceSupersedingPacket(sequenced, walkFamily = false)
+            Family.WALK, Family.MOUSE, Family.ITEM_CLICK -> {
+                replaceSupersedingPacket(sequenced, family)
                 EnqueueResult.of(true, family)
             }
             Family.FIFO -> {
@@ -133,12 +135,17 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
         if (currentMouse != null && (candidate == null || currentMouse.sequence < candidate.sequence)) {
             candidate = currentMouse
         }
+        val currentItemClick = itemClickPacket
+        if (currentItemClick != null && (candidate == null || currentItemClick.sequence < candidate.sequence)) {
+            candidate = currentItemClick
+        }
         candidate ?: return null
 
         when (candidate) {
             transactional -> transactionalPackets.removeFirst()
             currentWalk -> walkPacket = null
             currentMouse -> mousePacket = null
+            currentItemClick -> itemClickPacket = null
         }
         pendingCount--
         return PollResult.of(candidate.packet, candidate.family)
@@ -149,9 +156,15 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
 
     @Synchronized
     fun snapshotAndResetCounters(): MailboxCounters {
-        val counters = MailboxCounters.of(walkReplacedSinceSnapshot, mouseReplacedSinceSnapshot, fifoDroppedSinceSnapshot)
+        val counters = MailboxCounters.of(
+            walkReplacedSinceSnapshot,
+            mouseReplacedSinceSnapshot,
+            itemClickReplacedSinceSnapshot,
+            fifoDroppedSinceSnapshot,
+        )
         walkReplacedSinceSnapshot = 0
         mouseReplacedSinceSnapshot = 0
+        itemClickReplacedSinceSnapshot = 0
         fifoDroppedSinceSnapshot = 0
         return counters
     }
@@ -171,24 +184,37 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
             releaser.release(currentMouse.packet)
             mousePacket = null
         }
+        val currentItemClick = itemClickPacket
+        if (currentItemClick != null) {
+            releaser.release(currentItemClick.packet)
+            itemClickPacket = null
+        }
         pendingCount = 0
     }
 
-    private fun replaceSupersedingPacket(packet: SequencedPacket, walkFamily: Boolean) {
-        val previous = if (walkFamily) walkPacket else mousePacket
+    private fun replaceSupersedingPacket(packet: SequencedPacket, family: Family) {
+        val previous = when (family) {
+            Family.WALK -> walkPacket
+            Family.MOUSE -> mousePacket
+            Family.ITEM_CLICK -> itemClickPacket
+            Family.FIFO -> null
+        }
         if (previous == null) {
             pendingCount++
-        } else if (walkFamily) {
-            walkReplacedSinceSnapshot++
-            release(previous.packet)
         } else {
-            mouseReplacedSinceSnapshot++
+            when (family) {
+                Family.WALK -> walkReplacedSinceSnapshot++
+                Family.MOUSE -> mouseReplacedSinceSnapshot++
+                Family.ITEM_CLICK -> itemClickReplacedSinceSnapshot++
+                Family.FIFO -> Unit
+            }
             release(previous.packet)
         }
-        if (walkFamily) {
-            walkPacket = packet
-        } else {
-            mousePacket = packet
+        when (family) {
+            Family.WALK -> walkPacket = packet
+            Family.MOUSE -> mousePacket = packet
+            Family.ITEM_CLICK -> itemClickPacket = packet
+            Family.FIFO -> Unit
         }
     }
 
@@ -200,11 +226,15 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
     }
 
     companion object {
+        /** Opcode 122: first-click item action (e.g. bury bones, eat food, drink potion). */
+        private const val OPCODE_ITEM_CLICK = 122
+
         @JvmStatic
         fun familyOf(opcode: Int): Family =
             when (opcode) {
                 248, 164, 98 -> Family.WALK
                 241 -> Family.MOUSE
+                OPCODE_ITEM_CLICK -> Family.ITEM_CLICK
                 else -> Family.FIFO
             }
     }

@@ -124,8 +124,8 @@ object PacketMagicService {
      */
     @JvmStatic
     fun handleMagicOnItem(client: Client, castOnSlot: Int, castOnItem: Int, castSpell: Int) {
-        if (castOnSlot < 0 || castOnSlot > 28) {
-            client.disconnected = true
+        if (castOnSlot < 0 || castOnSlot >= client.playerItems.size) {
+            // Malformed slot = drop the packet, never disconnect (see PacketItemActionService).
             return
         }
 

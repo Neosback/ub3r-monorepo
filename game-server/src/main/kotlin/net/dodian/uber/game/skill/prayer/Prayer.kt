@@ -10,6 +10,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
+import net.dodian.uber.game.api.content.ContentInteraction
 
 object Prayer {
     @JvmStatic
@@ -22,6 +23,10 @@ object Prayer {
     fun buryBones(client: Client, itemId: Int, itemSlot: Int): Boolean {
         val bone = Bones.getBone(itemId) ?: return false
         if (!client.playerHasItem(itemId)) return false
+        // Bury takes roughly one game cycle; without this gate a rapid-click burst re-enters
+        // here once per dequeued packet, piling identical bury actions into the inbound queue
+        // faster than they're worth processing.
+        if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.BURY_BONES, 600L)) return false
         client.performAnimation(PrayerData.BURY_ANIMATION, 0)
         ProgressionService.addXp(client, bone.getExperience(), Skill.PRAYER)
         client.deleteItem(itemId, itemSlot, 1)

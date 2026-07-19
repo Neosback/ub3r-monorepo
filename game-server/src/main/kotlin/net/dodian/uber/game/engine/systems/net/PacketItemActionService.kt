@@ -29,16 +29,23 @@ object PacketItemActionService {
         client.wear(wearId, wearSlot, interfaceId)
     }
 
+    private val logger = org.slf4j.LoggerFactory.getLogger(PacketItemActionService::class.java)
+
     /**
-     * Validates that [slot] is within the legal inventory range (0–28).
-     * If out of bounds the client is disconnected.
+     * Validates that [slot] is within the legal inventory range (0–27).
+     * An out-of-range slot drops the packet with a log — it must never disconnect:
+     * historically a decode mismatch here silently killed sessions with no trace,
+     * which presented as "random disconnects" on ordinary item clicks.
      *
      * @return true when the slot is valid and the caller may proceed.
      */
     @JvmStatic
     fun validateInventorySlot(client: Client, slot: Int): Boolean {
-        if (slot < 0 || slot > 28) {
-            client.disconnected = true
+        if (slot < 0 || slot >= client.playerItems.size) {
+            logger.warn(
+                "Rejecting item packet with out-of-range inventory slot={} player={} (dropping packet, not disconnecting)",
+                slot, client.playerName,
+            )
             return false
         }
         return true
@@ -46,14 +53,17 @@ object PacketItemActionService {
 
     /**
      * Validates that [slot] is within the legal range for use-item-on-NPC (0–27).
-     * If out of bounds the client is disconnected.
+     * Same policy as [validateInventorySlot]: log and drop, never disconnect.
      *
      * @return true when the slot is valid and the caller may proceed.
      */
     @JvmStatic
     fun validateItemOnNpcSlot(client: Client, slot: Int): Boolean {
-        if (slot < 0 || slot > 27) {
-            client.disconnected = true
+        if (slot < 0 || slot >= client.playerItems.size) {
+            logger.warn(
+                "Rejecting item-on-npc packet with out-of-range slot={} player={} (dropping packet, not disconnecting)",
+                slot, client.playerName,
+            )
             return false
         }
         return true

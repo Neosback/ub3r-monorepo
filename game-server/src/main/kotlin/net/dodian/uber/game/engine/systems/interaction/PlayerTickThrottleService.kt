@@ -22,6 +22,7 @@ object PlayerTickThrottleService {
     const val YANILLE_CHEST: String = "object:yanille-chest"
     const val LEGENDS_CHEST: String = "object:legends-chest"
     const val THIEVING_GENERIC: String = "skill:thieving"
+    const val BURY_BONES: String = "skill:bury-bones"
 
     @JvmStatic
     @Deprecated(
