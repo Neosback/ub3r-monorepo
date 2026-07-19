@@ -54,7 +54,14 @@ class FileResponses {
             checksumsBuffer
                 .writeMedium(archives.size)
 
-            var responsesBuilt = 0
+            // Collect this index's archive payloads first, then write them into ONE
+            // shared direct slab and store per-archive slices. One direct buffer per
+            // index instead of one per archive keeps the zero-copy serving path but
+            // avoids tens of thousands of DirectByteBuffer/Cleaner objects and the
+            // off-heap fragmentation of ~64k tiny allocations.
+            val pendingPairs = ArrayList<FilePair>(archives.size)
+            val pendingData = ArrayList<ByteArray>(archives.size)
+            var slabSize = 0L
             for (archive in archives) {
                 val archiveId = archive.id
                 val filePair = FilePair(indexId, archiveId)
@@ -69,7 +76,7 @@ class FileResponses {
                 }
                 val data = sector?.data
                 val dataSize = data?.size ?: 0
-                if (dataSize < 1) {
+                if (data == null || dataSize < 1) {
                     emptyArchives++
                     if (emptySamples.size < 10) emptySamples += filePair
                     checksumsBuffer
@@ -77,25 +84,37 @@ class FileResponses {
                     continue
                 }
 
-                val byteBufSize = FilePair.SIZE_BYTES + 4 + dataSize
-                val byteBuf = directBuffer(byteBufSize, byteBufSize)
-                    .writeFilePair(filePair)
-                    .writeInt(dataSize)
-                    .writeBytes(data)
-
                 val crc = CRC32().apply { update(data) }.value.toInt()
                 checksumsBuffer.writeInt(crc)
 
-                bitpack2Response[filePair.bitpack] = byteBuf.asReadOnly()
-                if (print) {
-                    responsesBuilt++
+                pendingPairs += filePair
+                pendingData += data
+                slabSize += FilePair.SIZE_BYTES + 4 + dataSize
+            }
 
-                    var backspaces = "\b"
-                    if (responsesBuilt == 1) backspaces += "\b"
-                    else repeat((responsesBuilt - 1).toString().length) {
-                        backspaces += '\b'
+            if (pendingPairs.isNotEmpty()) {
+                val slabCapacity = slabSize.toInt()
+                val slab = directBuffer(slabCapacity, slabCapacity)
+                var responsesBuilt = 0
+                for (i in pendingPairs.indices) {
+                    val filePair = pendingPairs[i]
+                    val data = pendingData[i]
+                    val start = slab.writerIndex()
+                    slab.writeFilePair(filePair)
+                        .writeInt(data.size)
+                        .writeBytes(data)
+                    val length = slab.writerIndex() - start
+                    bitpack2Response[filePair.bitpack] = slab.slice(start, length).asReadOnly()
+                    if (print) {
+                        responsesBuilt++
+
+                        var backspaces = "\b"
+                        if (responsesBuilt == 1) backspaces += "\b"
+                        else repeat((responsesBuilt - 1).toString().length) {
+                            backspaces += '\b'
+                        }
+                        print("$backspaces${responsesBuilt}]")
                     }
-                    print("$backspaces${responsesBuilt}]")
                 }
             }
 

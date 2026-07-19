@@ -99,8 +99,13 @@ public class ObjectInteractionListener implements PacketListener {
             return;
         }
 
+        // Tarnish server (UseItemPacketListener.handleItemOnObject) decodes:
+        // interfaceType=BE, objectId=LE, y=LE+ADD, slot=LE, x=LE+ADD, itemId=BE.
+        // objectId was being read BE here, byte-swapping every object id sent this way
+        // (e.g. cooking range 26181 arrived as 17766) — this was the root cause of
+        // "use item on object" silently no-opping against a bogus object id.
         final int interfaceId = buf.readShort();
-        final int objectId = buf.readShort();
+        final int objectId = readLEShort(buf);
         final int objectY = readLEShortA(buf);
         final int itemSlot = readLEShort(buf);
         final int objectX = readLEShortA(buf);

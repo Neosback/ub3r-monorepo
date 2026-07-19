@@ -18,19 +18,16 @@ import org.slf4j.LoggerFactory;
 @net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {75})
 public class ClickItem3Listener implements PacketListener {
     private static final Logger logger = LoggerFactory.getLogger(ClickItem3Listener.class);
-    private static final int MIN_PAYLOAD_BYTES = 6;
-
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.ItemOption3 msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.ItemOption3.decode(packet.payload());
+        if (msg == null) {
             return;
         }
-
-        // Tarnish client (action==847) writes: LEShortA interfaceId, LEShort slot, ShortA itemId.
-        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        int itemSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
-        int itemId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int interfaceId = msg.interfaceId();
+        int itemSlot = msg.slot();
+        int itemId = msg.itemId();
 
         logger.debug("ClickItem3Listener: slot {} item {}", itemSlot, itemId);
 

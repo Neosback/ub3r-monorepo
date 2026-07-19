@@ -12577,13 +12577,18 @@ public class Client extends GameEngine
             }
         }
 
+        // SwiftFUP is created either way: `swiftFUP.getFileStore()`/`getFileRequests()` are
+        // used by loadData() for BOTH the network path and the local-only path (local mode
+        // reuses the library's own FileStore.decompress()/getDiskData() helpers instead of a
+        // duplicated decompression implementation). Only the network file-client/auto-processor
+        // and the blocking checksum handshake are specific to USE_UPDATE_SERVER.
+        drawLoadingText(11, "Initializing SwiftFUP...");
+        swiftFUP = SwiftFUP.create(this, this);
+
+        drawLoadingText(12, "Initializing SwiftFUP file requests...");
+        final FileRequests fileRequests = swiftFUP.initializeFileRequests();
+
         if (Configuration.USE_UPDATE_SERVER) {
-            drawLoadingText(11, "Initializing SwiftFUP...");
-            swiftFUP = SwiftFUP.create(this, this);
-
-            drawLoadingText(12, "Initializing SwiftFUP file requests...");
-            final FileRequests fileRequests = swiftFUP.initializeFileRequests();
-
             drawLoadingText(13, "Initializing SwiftFUP file client...");
 
             final SocketAddress swiftClientSocketAddress =
@@ -19915,7 +19920,21 @@ public class Client extends GameEngine
     public final boolean loadData(final int indexID,
                                   final int fileID,
                                   final boolean flush) {
-        swiftFUP.getFileRequests().file(indexID + 1, fileID);
+        if (Configuration.USE_UPDATE_SERVER) {
+            swiftFUP.getFileRequests().file(indexID + 1, fileID);
+            return true;
+        }
+        // Local-only mode: read straight from the on-disk cache (idx0..idx5) instead of
+        // requesting over the network, then run it through the exact same decompression
+        // (FileStore.decompress, the library's own default method) and completion path
+        // (decompressed -> processOnDemandQueue) a network response would have used.
+        final int filePair = FilePair.create(indexID + 1, fileID);
+        final byte[] raw = swiftFUP.getFileRequests().getDiskData(filePair);
+        if (raw != null) {
+            final FileResponse response = new FileResponse(filePair, raw);
+            response.setDecompressedData(this);
+            decompressed(response);
+        }
         return true;
     }
 

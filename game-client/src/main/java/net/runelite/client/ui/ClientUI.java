@@ -1159,4 +1159,24 @@ public class ClientUI
 			configManager.setConfiguration(CONFIG_GROUP, CONFIG_CLIENT_BOUNDS, bounds);
 		}
 	}
+
+	public void selectNavigation(final NavigationButton button)
+	{
+		SwingUtilities.invokeLater(() ->
+		{
+			if (currentNavButton == button)
+			{
+				return;
+			}
+
+			if (currentNavButton != null)
+			{
+				currentNavButton.setSelected(false);
+			}
+
+			currentNavButton = button;
+			currentNavButton.setSelected(true);
+			expand(button);
+		});
+	}
 }

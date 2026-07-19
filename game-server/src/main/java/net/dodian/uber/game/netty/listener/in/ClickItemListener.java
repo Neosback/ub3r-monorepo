@@ -25,16 +25,14 @@ public class ClickItemListener implements PacketListener {
     private static final Logger logger = LoggerFactory.getLogger(ClickItemListener.class);
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-
-        // Tarnish client (Client.java action==74) writes: LEShortA interfaceId,
-        // ShortA slot, LEShort itemId — decode must mirror that exactly.
-        int interfaceId = net.dodian.uber.game.netty.codec.ByteBufReader.readShortUnsigned(
-                buf, net.dodian.uber.game.netty.codec.ByteOrder.LITTLE, net.dodian.uber.game.netty.codec.ValueType.ADD);
-        int itemSlot = net.dodian.uber.game.netty.codec.ByteBufReader.readShortUnsigned(
-                buf, net.dodian.uber.game.netty.codec.ByteOrder.BIG, net.dodian.uber.game.netty.codec.ValueType.ADD);
-        int itemId = net.dodian.uber.game.netty.codec.ByteBufReader.readShortUnsigned(
-                buf, net.dodian.uber.game.netty.codec.ByteOrder.LITTLE, net.dodian.uber.game.netty.codec.ValueType.NORMAL);
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.ItemOption1 msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.ItemOption1.decode(packet.payload());
+        if (msg == null) {
+            return;
+        }
+        int interfaceId = msg.interfaceId();
+        int itemSlot = msg.slot();
+        int itemId = msg.itemId();
 
         logger.debug("ClickItem: [interface={}, slot={}, id={}] for player {}", interfaceId, itemSlot, itemId, client.getPlayerName());
 

@@ -19,19 +19,17 @@ public class WearItemListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.WearItem msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.WearItem.decode(packet.payload());
+        if (msg == null) {
             return;
         }
 
-        int wearId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.NORMAL);
-        int wearSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-
         if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
-            logger.info("[WEAR:PACKET] player={} item={} slot={} interface={}", client.getPlayerName(), wearId, wearSlot, interfaceId);
+            logger.info("[WEAR:PACKET] player={} item={} slot={} interface={}",
+                    client.getPlayerName(), msg.itemId(), msg.slot(), msg.interfaceId());
         }
 
-        PacketItemActionService.handleWear(client, wearId, wearSlot, interfaceId);
+        PacketItemActionService.handleWear(client, msg.itemId(), msg.slot(), msg.interfaceId());
     }
 }

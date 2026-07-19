@@ -92,7 +92,10 @@ public class NettyGameServer {
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .childHandler(new GameChannelInitializer())
                 .childOption(ChannelOption.TCP_NODELAY, true)
-                .childOption(ChannelOption.SO_KEEPALIVE, true);
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                // Pooled buffers: per-packet decode allocations reuse arena chunks instead
+                // of hitting the GC/OS per packet (rsprot uses pooled allocation the same way).
+                .childOption(ChannelOption.ALLOCATOR, io.netty.buffer.PooledByteBufAllocator.DEFAULT);
 
         logger.info("[Netty] Binding game server on port {}", port);
         ChannelFuture bindFuture = bootstrap.bind(port).syncUninterruptibly();

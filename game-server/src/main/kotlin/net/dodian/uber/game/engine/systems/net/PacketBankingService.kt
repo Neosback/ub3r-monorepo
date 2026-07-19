@@ -469,6 +469,10 @@ object PacketBankingService {
                     SmithingInterface.startFromPending(client, enteredAmount)
                     return
                 }
+                if (client.enterAmountId == net.dodian.uber.game.engine.systems.skills.SkillMultiButtonService.ENTER_AMOUNT_SKILL_MULTI) {
+                    net.dodian.uber.game.engine.systems.skills.SkillMultiButtonService.completeEnteredAmount(client, enteredAmount)
+                    return
+                }
             }
             when {
                 client.XinterfaceID == 5064 -> {

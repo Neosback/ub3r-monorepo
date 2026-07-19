@@ -83,7 +83,7 @@ public final class Configuration {
     /**
      * Whether to use Jire SwiftFUP update server.
      */
-    public static final boolean USE_UPDATE_SERVER = true;
+    public static final boolean USE_UPDATE_SERVER = false;
 
     public static final String UPDATE_SERVER_IP = CONNECTION.getCacheAddress();
     public static final int UPDATE_SERVER_PORT = CONNECTION.getCachePort();

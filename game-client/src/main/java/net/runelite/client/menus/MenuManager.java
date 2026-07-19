@@ -147,9 +147,9 @@ public class MenuManager
 		Preconditions.checkNotNull(menuText);
 
 		int playerMenuIndex = findEmptyPlayerMenuIndex();
-		if (playerMenuIndex == IDX_UPPER)
+		if (playerMenuIndex == -1 || playerMenuIndex == IDX_UPPER)
 		{
-			return; // no more slots
+			return; // no more slots or invalid index
 		}
 
 		addPlayerMenuItem(playerMenuIndex, menuText);
@@ -216,11 +216,15 @@ public class MenuManager
 		int index = IDX_LOWER;
 
 		String[] playerOptions = client.getPlayerOptions();
-		while (index < IDX_UPPER && playerOptions[index] != null)
+		if (playerOptions == null || playerOptions.length <= index)
+		{
+			return -1;
+		}
+		while (index < IDX_UPPER && index < playerOptions.length && playerOptions[index] != null)
 		{
 			index++;
 		}
 
-		return index;
+		return index >= playerOptions.length ? -1 : index;
 	}
 }
