@@ -6,6 +6,8 @@ import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.model.item.Item
+import net.dodian.uber.game.model.item.transaction.BankTransactions
+import net.dodian.uber.game.model.item.transaction.OfferTransactions
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -94,7 +96,7 @@ class ClientInventoryTransactionTest {
             bankItemsN[4] = 3
         }
 
-        assertTrue(EconomyTransaction.transferBankToInventory(client, 100, 4, 2))
+        assertTrue(BankTransactions.withdraw(client, 100, 4, 2))
 
         assertEquals(101, client.playerItems[0])
         assertEquals(1, client.playerItemsN[0])
@@ -114,7 +116,7 @@ class ClientInventoryTransactionTest {
             bankSlotTabs = IntArray(bankSize()).also { it[4] = 2 }
         }
 
-        assertTrue(EconomyTransaction.transferBankToInventory(client, 100, 4, 1, retainPlaceholder = true))
+        assertTrue(BankTransactions.withdraw(client, 100, 4, 1, retainPlaceholder = true))
 
         assertEquals(101, client.bankItems[4])
         assertEquals(0, client.bankItemsN[4])
@@ -128,7 +130,7 @@ class ClientInventoryTransactionTest {
             bankItemsN[4] = 1
         }
 
-        assertTrue(EconomyTransaction.transferBankToInventory(client, 100, 4, 1))
+        assertTrue(BankTransactions.withdraw(client, 100, 4, 1))
 
         assertEquals(0, client.bankItems[4])
         assertEquals(0, client.bankItemsN[4])
@@ -150,10 +152,10 @@ class ClientInventoryTransactionTest {
             bankItemsN[4] = 1
         }
 
-        assertTrue(EconomyTransaction.transferBankToInventory(client, 100, 3, 1, retainPlaceholder = true))
+        assertTrue(BankTransactions.withdraw(client, 100, 3, 1, retainPlaceholder = true))
         assertEquals(listOf(101 to 0, 201 to 1), snapshots.single())
 
-        assertTrue(EconomyTransaction.transferBankToInventory(client, 200, 4, 1, retainPlaceholder = true))
+        assertTrue(BankTransactions.withdraw(client, 200, 4, 1, retainPlaceholder = true))
         assertEquals(listOf(101 to 0, 201 to 0), snapshots.last())
         assertEquals(2, snapshots.size)
     }
@@ -169,7 +171,7 @@ class ClientInventoryTransactionTest {
             }
         }
 
-        assertFalse(EconomyTransaction.transferBankToInventory(client, 100, 4, 2, retainPlaceholder = true))
+        assertFalse(BankTransactions.withdraw(client, 100, 4, 2, retainPlaceholder = true))
 
         assertEquals(101, client.bankItems[4])
         assertEquals(2, client.bankItemsN[4])
@@ -184,7 +186,7 @@ class ClientInventoryTransactionTest {
             }
         }
 
-        assertTrue(EconomyTransaction.transferInventoryToBank(client, 100, 0, 2))
+        assertTrue(BankTransactions.deposit(client, 100, 0, 2))
 
         assertEquals(1, client.playerItems.count { it == 101 })
         assertEquals(2, client.bankItemsN.single { it > 0 })
@@ -197,7 +199,7 @@ class ClientInventoryTransactionTest {
             playerItemsN[0] = 100
         }
 
-        assertTrue(EconomyTransaction.transferInventoryToBank(client, 995, 0, 40))
+        assertTrue(BankTransactions.deposit(client, 995, 0, 40))
 
         assertEquals(60, client.playerItemsN[0])
         assertEquals(40, client.bankItemsN.single { it > 0 })
@@ -210,7 +212,7 @@ class ClientInventoryTransactionTest {
             playerItemsN[0] = 1
         }
 
-        assertFalse(EconomyTransaction.transferInventoryToBank(client, 100, 1, 1))
+        assertFalse(BankTransactions.deposit(client, 100, 1, 1))
 
         assertEquals(101, client.playerItems[0])
         assertTrue(client.bankItems.all { it == 0 })
@@ -223,7 +225,7 @@ class ClientInventoryTransactionTest {
             playerItemsN[0] = 12
         }
 
-        assertTrue(EconomyTransaction.transferInventoryToBank(client, 300, 0, 7, bankItemId = 100))
+        assertTrue(BankTransactions.deposit(client, 300, 0, 7, bankItemId = 100))
 
         assertEquals(5, client.playerItemsN[0])
         val bankSlot = client.bankItems.indexOf(101)
@@ -243,7 +245,7 @@ class ClientInventoryTransactionTest {
             }
         }
 
-        assertFalse(EconomyTransaction.transferInventoryToBank(client, 100, 0, 1))
+        assertFalse(BankTransactions.deposit(client, 100, 0, 1))
 
         assertEquals(101, client.playerItems[0])
         assertEquals(1, client.playerItemsN[0])
@@ -259,7 +261,7 @@ class ClientInventoryTransactionTest {
             bankItemsN[0] = maxItemAmount
         }
 
-        assertFalse(EconomyTransaction.transferInventoryToBank(client, 995, 0, 1))
+        assertFalse(BankTransactions.deposit(client, 995, 0, 1))
 
         assertEquals(1, client.playerItemsN[0])
         assertEquals(client.maxItemAmount, client.bankItemsN[0])
@@ -278,7 +280,7 @@ class ClientInventoryTransactionTest {
             offeredItems.add(GameItem(200, 1))
         }
 
-        assertFalse(EconomyTransaction.settleTrade(first, second))
+        assertFalse(OfferTransactions.settleTrade(first, second))
 
         assertEquals(1, first.offeredItems.size)
         assertEquals(100, first.offeredItems.single().id)

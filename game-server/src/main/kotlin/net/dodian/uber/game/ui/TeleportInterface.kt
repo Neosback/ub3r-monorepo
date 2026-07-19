@@ -113,7 +113,7 @@ object TeleportInterface : InterfaceButtonContent {
         client.send(SendScrollbar(58050, if (size <= 9) 225 else (size * 25)))
 
         // 5. Open Interface 58000
-        client.send(ShowInterface(INTERFACE_ID))
+        client.openInterface(INTERFACE_ID)
     }
 
     fun display(client: Client, tele: TeleportData?) {

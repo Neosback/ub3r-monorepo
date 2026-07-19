@@ -3,7 +3,6 @@ package net.dodian.uber.game.engine.systems.inventory
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 
 /**
@@ -14,21 +13,18 @@ import net.dodian.uber.game.persistence.player.PlayerSaveSegment
  */
 class EconomyTransaction private constructor() {
     private val arrays = linkedMapOf<ArrayKey, ArrayContainer>()
-    private val offers = linkedMapOf<Client, OfferContainer>()
     private var failed = false
 
     fun inventory(client: Client): Items = array(client, Container.INVENTORY)
     fun bank(client: Client): Items = array(client, Container.BANK)
     fun equipment(client: Client): Items = array(client, Container.EQUIPMENT)
-    fun offer(client: Client): OfferItems = offers.getOrPut(client) { OfferContainer(client) }
 
     fun failed(): Boolean = failed
 
     fun commit(): Boolean {
         GameThreadContext.validateGameThread("economy.transaction.commit")
-        if (failed || arrays.values.any { it.failed } || offers.values.any { it.failed }) return false
+        if (failed || arrays.values.any { it.failed }) return false
         arrays.values.forEach { it.commit() }
-        offers.values.forEach { it.commit() }
         return true
     }
 
@@ -48,16 +44,6 @@ class EconomyTransaction private constructor() {
         fun removeAt(slot: Int, itemId: Int, amount: Int = 1): Boolean
         fun add(itemId: Int, amount: Int = 1): Boolean
         fun replaceAt(slot: Int, removeItemId: Int, addItemId: Int, amount: Int = 1): Boolean
-    }
-
-    interface OfferItems {
-        fun amountOf(itemId: Int): Int
-        fun require(itemId: Int, amount: Int = 1): Boolean
-        fun remove(itemId: Int, amount: Int = 1): Boolean
-        fun removeAt(slot: Int, itemId: Int, amount: Int = 1): Boolean
-        fun add(itemId: Int, amount: Int = 1): Boolean
-        fun clear()
-        fun snapshot(): List<GameItem>
     }
 
     private class ArrayContainer(
@@ -180,89 +166,9 @@ class EconomyTransaction private constructor() {
         private fun decode(raw: Int) = if (raw <= 0) -1 else if (kind == Container.EQUIPMENT) raw else raw - 1
     }
 
-    private class OfferContainer(private val client: Client) : OfferItems {
-        private val staged = client.offeredItems.map { GameItem(it.id, it.amount) }.toMutableList()
-        private var changed = false
-        var failed = false
-            private set
-
-        override fun amountOf(itemId: Int): Int = staged.filter { it.id == itemId }.sumOf { it.amount.toLong() }
-            .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-
-        override fun require(itemId: Int, amount: Int): Boolean =
-            itemId >= 0 && amount > 0 && amountOf(itemId) >= amount || fail()
-
-        override fun removeAt(slot: Int, itemId: Int, amount: Int): Boolean {
-            if (slot !in staged.indices || staged[slot].id != itemId || amount <= 0 || staged[slot].amount < amount) return fail()
-            val item = staged[slot]
-            if (item.amount == amount) staged.removeAt(slot) else item.amount -= amount
-            changed = true
-            return true
-        }
-
-        override fun remove(itemId: Int, amount: Int): Boolean {
-            if (!require(itemId, amount)) return false
-            var remaining = amount
-            var index = 0
-            while (index < staged.size && remaining > 0) {
-                val item = staged[index]
-                if (item.id != itemId) {
-                    index++
-                    continue
-                }
-                val removed = minOf(item.amount, remaining)
-                item.amount -= removed
-                remaining -= removed
-                if (item.amount == 0) staged.removeAt(index) else index++
-            }
-            changed = true
-            return true
-        }
-
-        override fun add(itemId: Int, amount: Int): Boolean {
-            if (itemId < 0 || amount <= 0) return fail()
-            if (Server.itemManager.isStackable(itemId)) {
-                val existing = staged.firstOrNull { it.id == itemId }
-                if (existing != null) {
-                    if (existing.amount.toLong() + amount > client.maxItemAmount) return fail()
-                    existing.amount += amount
-                } else staged += GameItem(itemId, amount)
-            } else repeat(amount) { staged += GameItem(itemId, 1) }
-            changed = true
-            return true
-        }
-
-        override fun clear() {
-            if (staged.isNotEmpty()) {
-                staged.clear()
-                changed = true
-            }
-        }
-
-        override fun snapshot(): List<GameItem> = staged.map { GameItem(it.id, it.amount) }
-
-        fun commit() {
-            if (!changed) return
-            client.offeredItems.clear()
-            client.offeredItems.addAll(staged.map { GameItem(it.id, it.amount) })
-        }
-
-        private fun fail(): Boolean = false.also { failed = true }
-    }
-
     companion object {
         @JvmStatic
         fun run(block: EconomyTransaction.() -> Unit): Boolean = EconomyTransaction().apply(block).commit()
-
-        @JvmStatic
-        fun transferInventoryToBank(client: Client, itemId: Int, slot: Int, amount: Int, bankItemId: Int = itemId): Boolean = run {
-            if (slot !in client.playerItems.indices || client.playerItems[slot] != itemId + 1) {
-                inventory(client).removeAt(-1, itemId, amount)
-                return@run
-            }
-            inventory(client).remove(itemId, amount)
-            bank(client).add(bankItemId, amount)
-        }
 
         @JvmStatic
         fun addToInventory(client: Client, itemId: Int, amount: Int): Boolean = run {
@@ -280,57 +186,6 @@ class EconomyTransaction private constructor() {
             val current = client.playerItems.getOrNull(slot)?.minus(1) ?: -1
             if (current >= 0) inventory.removeAt(slot, current, client.playerItemsN[slot])
             inventory.add(itemId, amount)
-        }
-
-        @JvmStatic
-        fun transferBankToInventory(
-            client: Client,
-            itemId: Int,
-            slot: Int,
-            amount: Int,
-            receivedItemId: Int = itemId,
-            retainPlaceholder: Boolean = false,
-        ): Boolean = run {
-            array(client, Container.BANK).removeAt(slot, itemId, amount, retainIdOnZero = retainPlaceholder)
-            inventory(client).add(receivedItemId, amount)
-        }
-
-        @JvmStatic
-        fun moveInventoryToOffer(client: Client, itemId: Int, slot: Int, amount: Int): Boolean = run {
-            if (slot !in client.playerItems.indices || client.playerItems[slot] != itemId + 1) {
-                inventory(client).removeAt(-1, itemId, amount)
-                return@run
-            }
-            inventory(client).remove(itemId, amount)
-            offer(client).add(itemId, amount)
-        }
-
-        @JvmStatic
-        fun moveOfferToInventory(client: Client, itemId: Int, slot: Int, amount: Int): Boolean = run {
-            if (slot !in client.offeredItems.indices || client.offeredItems[slot].id != itemId) {
-                offer(client).removeAt(-1, itemId, amount)
-                return@run
-            }
-            offer(client).remove(itemId, amount)
-            inventory(client).add(itemId, amount)
-        }
-
-        /** Transfers both trade offers as one commit or leaves both players untouched. */
-        @JvmStatic
-        fun settleTrade(first: Client, second: Client): Boolean = run {
-            offer(first).snapshot().forEach { inventory(second).add(it.id, it.amount) }
-            offer(second).snapshot().forEach { inventory(first).add(it.id, it.amount) }
-            offer(first).clear()
-            offer(second).clear()
-        }
-
-        /** Returns every staged offer to its owner as one all-or-nothing commit. */
-        @JvmStatic
-        fun refundTrade(vararg clients: Client): Boolean = run {
-            clients.distinct().forEach { client ->
-                offer(client).snapshot().forEach { inventory(client).add(it.id, it.amount) }
-                offer(client).clear()
-            }
         }
     }
 }

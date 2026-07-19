@@ -582,34 +582,6 @@ object PlayerBankService {
         return false
     }
 
-    /**
-     * Directly deposits [itemId] x [amount] into the bank without going through inventory.
-     * Used by "Deposit worn items" so equipment can be banked even when inventory is full.
-     * Returns false if the bank is full and the deposit could not be completed.
-     */
-    @JvmStatic
-    fun depositItemToBank(client: Client, itemId: Int, amount: Int): Boolean {
-        if (itemId < 0 || amount <= 0) return true
-        ensureBankTabState(client)
-        val unnotedId = client.getUnnotedItem(itemId).takeIf { it != 0 } ?: itemId
-        var bankSlot = -1
-        for (i in 0 until client.bankSize()) {
-            if (client.bankItems[i] - 1 == unnotedId) { bankSlot = i; break }
-        }
-        if (bankSlot == -1) {
-            for (i in 0 until client.bankSize()) {
-                if (client.bankItems[i] <= 0) { bankSlot = i; break }
-            }
-        }
-        if (bankSlot == -1) return false
-        client.bankItems[bankSlot] = unnotedId + 1
-        client.bankItemsN[bankSlot] = (client.bankItemsN[bankSlot].toLong() + amount).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-        if (client.bankSlotTabs[bankSlot] == 0 && client.currentBankTab in 1..9 && !client.bankSearchActive) {
-            client.bankSlotTabs[bankSlot] = client.currentBankTab
-        }
-        return true
-    }
-
     @JvmStatic
     fun refreshBankHeader(client: Client) {
         var used = 0

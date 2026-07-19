@@ -16,7 +16,7 @@ object ExperienceCounterInterface : InterfaceButtonContent {
         // Toggle/Settings EXP button
         buttonBinding(-1, 0, "exp_counter.toggle_settings", intArrayOf(475)) { client, _ ->
             client.send(SendExpCounterSetting(0, 0))
-            client.send(ShowInterface(56500))
+            client.openInterface(56500)
             true
         },
         // Reset EXP counter

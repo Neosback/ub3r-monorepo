@@ -204,7 +204,7 @@ object UiInterface : InterfaceButtonContent {
                 true
             },
             buttonBinding(-1, 16, "ui.tab.items_kept_on_death", tabInterfaceDeathButtons) { client, _ ->
-                client.send(ShowInterface(17100))
+                client.openInterface(17100)
                 true
             },
             buttonBinding(-1, 17, "ui.tab.price_checker", tabInterfacePriceCheckerButtons) { client, _ ->
@@ -212,7 +212,7 @@ object UiInterface : InterfaceButtonContent {
                 true
             },
             buttonBinding(-1, 18, "ui.tab.override", tabInterfaceOverrideButtons) { client, _ ->
-                client.send(ShowInterface(60106))
+                client.openInterface(60106)
                 true
             }
         )

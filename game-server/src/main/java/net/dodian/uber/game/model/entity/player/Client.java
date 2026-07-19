@@ -71,6 +71,8 @@ import net.dodian.utilities.MD5;
 import net.dodian.utilities.Utils;
 import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.engine.systems.inventory.EconomyTransaction;
+import net.dodian.uber.game.model.item.transaction.OfferTransactions;
+import net.dodian.uber.game.model.item.transaction.BankTransactions;
 import net.dodian.uber.game.skill.agility.AgilityTicketExchangeService;
 
 import java.util.*;
@@ -101,6 +103,7 @@ public class Client extends Player implements Runnable {
 
     public Farming farming = new Farming();
     public FarmingState farmingJson = new FarmingState();
+    public final InterfaceManager interfaceManager = new InterfaceManager(this);
     public boolean immune = false, loadingDone = false, reloadHp = false;
     public boolean canPreformAction = true;
     public long lastDropTime = 0; //used for limiting drops per 600ms and logging out delayd 
@@ -536,13 +539,11 @@ public class Client extends Player implements Runnable {
     }
 
     public void openInterface(int interfaceid) {
-        resetAction();
-        send(new ShowInterface(interfaceid));
+        interfaceManager.open(interfaceid);
     }
 
     public void closeInterfaces() {
-        send(new RemoveInterfaces());
-        clearWalkableInterface();
+        interfaceManager.close();
     }
 
     public int ancients = 1;
@@ -1083,7 +1084,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void setSidebarInterface(int menuId, int form) {
-        send(new SetSidebarInterface(menuId, form));
+        interfaceManager.setSidebar(menuId, form);
     }
 
     public void updateAutoRetaliate() {
@@ -1222,7 +1223,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage(Server.itemManager.getName(itemID) + " can't be drawn as note."));
         }
         amount = Math.min(amount, bankItemsN[fromSlot]);
-        if (!EconomyTransaction.transferBankToInventory(this, itemID, fromSlot, amount, receivedItemId, bankPlaceholdersEnabled)) {
+        if (!BankTransactions.withdraw(this, itemID, fromSlot, amount, receivedItemId, bankPlaceholdersEnabled)) {
             send(new SendMessage("Not enough space in your inventory."));
         }
     }
@@ -1531,7 +1532,7 @@ public class Client extends Player implements Runnable {
             return true;
         }
         boolean newBankEntry = getBankSlot(bankItemId) < 0;
-        if (!EconomyTransaction.transferInventoryToBank(this, itemID, fromSlot, requested, bankItemId)) {
+        if (!BankTransactions.deposit(this, itemID, fromSlot, requested, bankItemId)) {
             send(new SendMessage("Bank full!"));
             return true;
         }
@@ -2672,7 +2673,7 @@ public class Client extends Player implements Runnable {
         // Set the right side details to the staff member's own info
         loadAndShowModcpDetails(playerName, true, connectedFrom);
 
-        send(new ShowInterface(36700));
+        openInterface(36700);
     }
 
     public void openModcp(String targetName) {
@@ -2692,7 +2693,7 @@ public class Client extends Player implements Runnable {
 
         managingName = targetName;
         loadAndShowModcpDetails(targetName, other != null, other != null ? other.connectedFrom : "Offline");
-        send(new ShowInterface(36700));
+        openInterface(36700);
     }
 
     public void handleModcpDialogue(int option) {
@@ -2926,7 +2927,7 @@ public class Client extends Player implements Runnable {
             } else
                 count = offeredItems.get(fromSlot).getAmount();
             amount = Math.min(amount, count);
-            if (!EconomyTransaction.moveOfferToInventory(this, itemID, fromSlot, amount)) {
+            if (!OfferTransactions.offerToInventory(this, itemID, fromSlot, amount)) {
                 return;
             }
             TradeDuelSessionService.offerChanged(this, other);
@@ -2965,7 +2966,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage(other.getPlayerName() + " already have the ring. Wait until after May!"));
             return;
         }
-        if (!EconomyTransaction.moveInventoryToOffer(this, itemID, fromSlot, amount)) {
+        if (!OfferTransactions.stakeToOffer(this, itemID, fromSlot, amount)) {
             return;
         }
         TradeDuelSessionService.offerChanged(this, other);
@@ -3711,7 +3712,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage(other.getPlayerName() + " already have the ring. Wait until after May!"));
             return;
         }
-        if (!EconomyTransaction.moveInventoryToOffer(this, itemID, fromSlot, amount)) {
+        if (!OfferTransactions.stakeToOffer(this, itemID, fromSlot, amount)) {
             return;
         }
         duelConfirmed = false;
@@ -3768,7 +3769,7 @@ public class Client extends Player implements Runnable {
         } else
             count = offeredItems.get(fromSlot).getAmount();
         amount = Math.min(amount, count);
-        if (!EconomyTransaction.moveOfferToInventory(this, itemID, fromSlot, amount)) {
+        if (!OfferTransactions.offerToInventory(this, itemID, fromSlot, amount)) {
             return;
         }
         duelConfirmed = false;
@@ -4318,18 +4319,10 @@ public class Client extends Player implements Runnable {
         duelConfirmed = false;
         duelConfirmed2 = false;
         duelFight = false;
-        for (GameItem item : offeredItems) {
-            if (item.getAmount() < 1) {
-                continue;
-            }
-            println("adding " + item.getId() + ", " + item.getAmount());
-            if (Server.itemManager.isStackable(item.getId()) || Server.itemManager.isNote(item.getId())) {
-                addItem(item.getId(), item.getAmount());
-            } else {
-                addItem(item.getId(), 1);
-            }
+        if (!OfferTransactions.refundOffers(this)) {
+            send(new SendMessage("Your staked items could not be returned safely. Please contact staff."));
+            return;
         }
-        offeredItems.clear();
         /*
          * Danno: Reset's duel options when duel declined to stop scammers.
          */
@@ -4915,19 +4908,10 @@ public class Client extends Player implements Runnable {
             for (GameItem item : offeredItems) {
                 offerCopy.add(new GameItem(item.getId(), item.getAmount()));
             }
-            for (GameItem item : otherOfferedItems) {
-                if (item.getId() > 0 && item.getAmount() > 0) {
-                    if (Server.itemManager.isStackable(item.getId())) {
-                        addItem(item.getId(), item.getAmount());
-                    } else {
-                        addItem(item.getId(), 1);
-                    }
-                }
-            }
-            for (GameItem item : offeredItems) {
-                if (item.getId() > 0 && item.getAmount() > 0) {
-                    addItem(item.getId(), item.getAmount());
-                }
+            if (!OfferTransactions.settleDuelPayout(this, other)) {
+                duelWin = true;
+                send(new SendMessage("Not enough inventory space to collect your winnings. Free up space and try again."));
+                return;
             }
             if (this.dbId > other.dbId)
                 TradeLog.recordTrade(dbId, otherdbId, offerCopy, otherOfferCopy, false);

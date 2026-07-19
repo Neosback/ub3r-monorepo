@@ -39,7 +39,7 @@ object DropDisplay {
     fun open(client: Client) {
         val randomName = DEFAULT.random()
         search(client, randomName, DropType.NPC)
-        client.send(ShowInterface(54500))
+        client.openInterface(54500)
     }
 
     @JvmStatic

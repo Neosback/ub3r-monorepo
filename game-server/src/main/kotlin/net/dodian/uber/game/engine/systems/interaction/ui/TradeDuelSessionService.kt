@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicLong
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.trade.TradeCompleteEvent
-import net.dodian.uber.game.engine.systems.inventory.EconomyTransaction
+import net.dodian.uber.game.model.item.transaction.OfferTransactions
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.persistence.audit.TradeLog
@@ -105,7 +105,7 @@ object TradeDuelSessionService {
 
         val firstOffer = copyOffer(first)
         val secondOffer = copyOffer(second)
-        if (!EconomyTransaction.settleTrade(first, second)) return reject("inventory-capacity")
+        if (!OfferTransactions.settleTrade(first, second)) return reject("inventory-capacity")
 
         first.tradeSettledSessionId = sessionId
         second.tradeSettledSessionId = sessionId
@@ -132,9 +132,9 @@ object TradeDuelSessionService {
         val firstOffer = copyOffer(first)
         val secondOffer = second?.let(::copyOffer) ?: emptyList()
         val refunded = if (second == null) {
-            EconomyTransaction.refundTrade(first)
+            OfferTransactions.refundOffers(first)
         } else {
-            EconomyTransaction.refundTrade(first, second)
+            OfferTransactions.refundOffers(first, second)
         }
         if (!refunded) {
             TradeSecurityAudit.record(sessionId, first, second, "rejected", "refund-capacity", firstOffer, secondOffer)

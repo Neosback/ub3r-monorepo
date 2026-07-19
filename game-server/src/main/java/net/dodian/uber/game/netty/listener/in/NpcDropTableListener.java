@@ -40,7 +40,7 @@ public final class NpcDropTableListener implements PacketListener {
         }
 
         if (DropDisplay.search(client, npcName, DropDisplay.DropType.NPC)) {
-            client.send(new ShowInterface(54500));
+            client.openInterface(54500);
         }
     }
 }

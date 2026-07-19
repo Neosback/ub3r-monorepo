@@ -35,7 +35,7 @@ object AccountServices {
         // Show player details initially
         showDefaultStatus(client)
 
-        client.send(ShowInterface(36700))
+        client.openInterface(36700)
     }
 
     @JvmStatic

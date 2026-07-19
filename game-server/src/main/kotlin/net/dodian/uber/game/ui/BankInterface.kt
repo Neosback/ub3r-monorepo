@@ -1,5 +1,6 @@
 package net.dodian.uber.game.ui
 
+import net.dodian.uber.game.engine.systems.inventory.EconomyTransaction
 import net.dodian.uber.game.netty.listener.out.SendEnterName
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.ui.bank.PlayerBankService
@@ -63,22 +64,32 @@ object BankInterface : InterfaceButtonContent {
                     requiredInterfaceId = INTERFACE_ID,
                 ) { client, _ ->
                     if (!client.IsBanking) return@buttonBinding true
-                    var deposited = false
-                    var bankFull = false
-                    for (slot in client.equipment.indices) {
-                        val id = client.equipment[slot]
-                        val amount = client.equipmentN[slot]
-                        if (id < 0 || amount <= 0) continue
-                        if (!PlayerBankService.depositItemToBank(client, id, amount)) {
-                            bankFull = true
-                            break
-                        }
-                        client.remove(slot, false)
-                        deposited = true
+                    val toDeposit = client.equipment.indices
+                        .filter { slot -> client.equipment[slot] >= 0 && client.equipmentN[slot] > 0 }
+                        .map { slot -> Triple(slot, client.equipment[slot], client.equipmentN[slot]) }
+                    if (toDeposit.isEmpty()) {
+                        client.checkItemUpdate()
+                        return@buttonBinding true
                     }
-                    if (bankFull) {
+                    PlayerBankService.ensureBankTabState(client)
+                    val newEntries = toDeposit.filter { (_, id, _) -> client.getBankSlot(id) < 0 }.map { it.second }
+                    // Bank and equipment are mutated as one atomic commit — either every worn
+                    // item moves to the bank, or none of them do (no half-deposited state).
+                    val committed = EconomyTransaction.run {
+                        toDeposit.forEach { (slot, id, amount) ->
+                            bank(client).add(id, amount)
+                            equipment(client).removeAt(slot, id, amount)
+                        }
+                    }
+                    if (!committed) {
                         client.sendMessage("Your bank is full!")
-                    } else if (deposited) {
+                    } else {
+                        newEntries.forEach { id ->
+                            val bankSlot = client.getBankSlot(id)
+                            if (bankSlot >= 0 && client.currentBankTab in 1..9 && !client.bankSearchActive) {
+                                client.bankSlotTabs[bankSlot] = client.currentBankTab
+                            }
+                        }
                         client.markSaveDirty(PlayerSaveSegment.EQUIPMENT.mask or PlayerSaveSegment.BANK.mask)
                         client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true)
                     }

@@ -53,7 +53,7 @@ object SkillGuide {
 
         client.sendQuestSomething(8717)
         if (switchingSkill) {
-            client.send(ShowInterface(8714))
+            client.openInterface(8714)
         }
         client.currentSkill = skillId
     }

@@ -36,7 +36,7 @@ object SettingsInterface : InterfaceButtonContent {
     override val bindings =
         listOf(
             buttonBinding(-1, 0, "settings.advanced_options_ack", advancedOptionsAckButtons) { client, _ ->
-                client.send(ShowInterface(28500))
+                client.openInterface(28500)
                 true
             },
             buttonBinding(-1, 2, "settings.pin_help", pinHelpButtons) { client, _ ->
@@ -113,7 +113,7 @@ object SettingsInterface : InterfaceButtonContent {
             // Keybinding Bindings
             buttonBinding(-1, 14, "settings.keybinding.open", keybindingOpen) { client, _ ->
                 client.sendMessage(":keybinding:")
-                client.send(ShowInterface(39300))
+                client.openInterface(39300)
                 true
             }
         )
