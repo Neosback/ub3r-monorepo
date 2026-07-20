@@ -3,6 +3,7 @@ package net.dodian.uber.game.netty.listener.out;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
 public class SendCamera implements OutgoingPacket {
 
@@ -38,30 +39,13 @@ public class SendCamera implements OutgoingPacket {
         ByteMessage message = null;
         switch (mode) {
             case "update":
-                message = ByteMessage.message(166);
-                message.put(x / 64);
-                message.put(y / 64);
-                message.putShort(z);
-                message.put(speed);
-                message.put(angle);
+            case "spin":
+                message = new TarnishOutboundPackets.CameraPosition(x / 64, y / 64, z, speed, angle).encode();
                 break;
             case "rotation":
-                message = ByteMessage.message(177);
-                message.put(x);
-                message.put(y);
-                message.putShort(z);
-                message.put(sp1);
-                message.put(sp2);
+                message = new TarnishOutboundPackets.CameraRotation(x, y, z, sp1, sp2).encode();
                 break;
             case "location":
-                break;
-            case "spin":
-                message = ByteMessage.message(166);
-                message.put(x / 64);
-                message.put(y / 64);
-                message.putShort(z);
-                message.put(speed);
-                message.put(angle);
                 break;
         }
 

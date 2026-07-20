@@ -15,9 +15,7 @@ public class SendSideTab implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(106);
-        message.put(tabId, ValueType.NEGATE);
-        client.send(message);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.SendSideTab(tabId).encode());
     }
 
 }

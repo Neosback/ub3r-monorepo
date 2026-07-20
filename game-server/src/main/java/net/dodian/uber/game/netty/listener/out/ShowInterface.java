@@ -19,9 +19,6 @@ public final class ShowInterface implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        //System.out.println("Show interface: " + interfaceId);
-        ByteMessage message = ByteMessage.message(97);
-        message.putInt(interfaceId);
-        client.send(message);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.ShowInterface(interfaceId).encode());
     }
 }

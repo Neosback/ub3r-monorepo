@@ -33,12 +33,6 @@ public class Animation2 implements OutgoingPacket {
         int localY = position.getY() - baseY;
         int offsetByte = (localX << 4) | localY;
 
-        ByteMessage message = ByteMessage.message(4, MessageType.FIXED);
-        message.put(offsetByte);     
-        message.putShort(animationId);
-        message.put(height);         
-        message.putShort(delay);     
-
-        client.send(message);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.Animation2(offsetByte, animationId, height, delay).encode());
     }
 }

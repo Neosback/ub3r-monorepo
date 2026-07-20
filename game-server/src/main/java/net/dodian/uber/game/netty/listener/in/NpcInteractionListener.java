@@ -80,6 +80,9 @@ public class NpcInteractionListener implements PacketListener {
 
     private void handleNpcAttack(Client client, GamePacket packet) {
         int npcIndex = decodeNpcIndex(packet);
+        if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+            logger.info("[W2-ATTACK-LISTENER] handleNpcAttack: opcode={}, decodedNpcIndex={}, raw_bytes={}", packet.opcode(), npcIndex, io.netty.buffer.ByteBufUtil.hexDump(packet.payload()));
+        }
         if (npcIndex < 0) {
             return;
         }
@@ -93,10 +96,16 @@ public class NpcInteractionListener implements PacketListener {
                 net.dodian.uber.game.netty.game.decode.TarnishPackets.NpcClick.decode(packet.opcode(), packet.payload());
         if (msg == null) {
             PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
+            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+                logger.info("[W2-ATTACK-LISTENER] decodeNpcIndex failed: msg is null");
+            }
             return -1;
         }
         if (!isKnownNpcIndex(msg.npcIndex())) {
             PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
+            if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+                logger.info("[W2-ATTACK-LISTENER] decodeNpcIndex failed: npcIndex={} is not known (containsKey={})", msg.npcIndex(), Server.npcManager != null && Server.npcManager.getNpcMap().containsKey(msg.npcIndex()));
+            }
             return -1;
         }
         return msg.npcIndex();

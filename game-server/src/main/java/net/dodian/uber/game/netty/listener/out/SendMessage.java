@@ -22,10 +22,7 @@ public class SendMessage implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(253, MessageType.VAR);
-        message.putString(this.message);
-        message.put(filtered ? 1 : 0);
-        client.send(message);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.SendMessage(this.message, this.filtered).encode());
     }
 
 }

@@ -4,7 +4,7 @@ import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.item.GameItem;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.*;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
 public class CreateGroundItem implements OutgoingPacket {
 
@@ -18,14 +18,8 @@ public class CreateGroundItem implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-       // System.out.println("CreateGroundItem: " + item.getId() + ", " + position.getX() + ", " + position.getY() + ", " + position.getZ());
         client.send(new SetMap(position));
-        ByteMessage message = ByteMessage.message(44);
-        message.putShort(item.getId(), ByteOrder.LITTLE, ValueType.ADD);
-        message.putLong(item.getAmount());
-        message.put(0); // normal ground-item type
-        message.put(0); // packed local coordinate
-        client.send(message);
+        client.send(new TarnishOutboundPackets.CreateGroundItem(item.getId(), item.getAmount()).encode());
     }
 
 }

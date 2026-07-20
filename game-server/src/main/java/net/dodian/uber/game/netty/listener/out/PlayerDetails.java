@@ -21,11 +21,6 @@ public class PlayerDetails implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage msg = ByteMessage.message(249);
-        msg.put(memberFlag, ValueType.ADD);
-
-        msg.putShort(slot, ByteOrder.LITTLE, ValueType.ADD);
-
-        client.send(msg);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.PlayerDetails(memberFlag, slot).encode());
     }
 }

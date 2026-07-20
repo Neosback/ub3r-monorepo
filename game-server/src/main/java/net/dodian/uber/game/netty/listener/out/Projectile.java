@@ -3,8 +3,7 @@ package net.dodian.uber.game.netty.listener.out;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.MessageType;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
 /**
  * This is used for various in-game projectiles like arrows, spells, etc.
@@ -24,9 +23,7 @@ public class Projectile implements OutgoingPacket {
     private final int initDistance;
     private Object targetObject = null;
 
-    public Projectile(Position casterPosition, int offsetY, int offsetX, int speed,
-                     int gfxMoving, int startHeight, int endHeight, int targetIndex,
-                     int begin, int slope, int initDistance) {
+    public Projectile(Position casterPosition, int offsetY, int offsetX, int speed, int gfxMoving, int startHeight, int endHeight, int targetIndex, int begin, int slope, int initDistance) {
         this.casterPosition = casterPosition;
         this.offsetY = offsetY;
         this.offsetX = offsetX;
@@ -40,13 +37,9 @@ public class Projectile implements OutgoingPacket {
         this.initDistance = initDistance;
     }
 
-    public Projectile(Position casterPosition, Object targetObject, int speed,
-                     int gfxMoving, int startHeight, int endHeight, int targetIndex,
-                     int begin, int slope, int initDistance) {
+    public Projectile(Position casterPosition, Object targetObject, int speed, int gfxMoving, int startHeight, int endHeight, int targetIndex, int begin, int slope, int initDistance) {
         this.casterPosition = casterPosition;
         this.targetObject = targetObject;
-        this.offsetY = 0;
-        this.offsetX = 0;
         this.speed = speed;
         this.gfxMoving = gfxMoving;
         this.startHeight = startHeight;
@@ -55,6 +48,8 @@ public class Projectile implements OutgoingPacket {
         this.begin = begin;
         this.slope = slope;
         this.initDistance = initDistance;
+        this.offsetY = 0;
+        this.offsetX = 0;
     }
 
     @Override
@@ -66,12 +61,15 @@ public class Projectile implements OutgoingPacket {
 
         int localX = casterPosition.getX() - baseX;
         int localY = casterPosition.getY() - baseY;
-        int offsetByte = (localX << 3) | localY;
+        int offsetByte = (localX << 4) | localY;
 
-        int finalOffsetX = this.offsetX;
-        int finalOffsetY = this.offsetY;
+        int finalOffsetX;
+        int finalOffsetY;
 
-        if (targetObject != null) {
+        if (targetObject == null) {
+            finalOffsetX = offsetX;
+            finalOffsetY = offsetY;
+        } else {
             Position targetPos;
             if (targetObject instanceof net.dodian.uber.game.model.entity.Entity) {
                 targetPos = ((net.dodian.uber.game.model.entity.Entity) targetObject).getPosition();
@@ -84,26 +82,9 @@ public class Projectile implements OutgoingPacket {
             finalOffsetY = targetPos.getY() - casterPosition.getY();
         }
 
-        ByteMessage message = ByteMessage.message(117, MessageType.FIXED);
-        message.put(offsetByte);       
-        message.put(finalOffsetX);
-        message.put(finalOffsetY);
-
-        message.putShort(targetIndex);
-
-        message.putShort(gfxMoving);   
-        message.put(startHeight);
-
-        message.put(endHeight);
-
-        message.putShort(begin);
-
-        message.putShort(speed);
-
-        message.put(slope);
-
-        message.put(initDistance);
-
-        client.send(message);
+        client.send(new TarnishOutboundPackets.Projectile(
+            offsetByte, finalOffsetX, finalOffsetY, targetIndex, gfxMoving,
+            startHeight, endHeight, begin, speed, slope, initDistance
+        ).encode());
     }
 }

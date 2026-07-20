@@ -844,6 +844,10 @@ public class Client extends Player implements Runnable {
 
     private void dispatchQueuedPacket(net.dodian.uber.game.netty.game.GamePacket packet) throws Exception {
         recordInboundPacket(packet);
+        if (debugPackets) {
+            String hex = io.netty.buffer.ByteBufUtil.hexDump(packet.payload());
+            logger.info("[Packet Debug] IN for {}: opcode={} size={} payload={}", getPlayerName(), packet.opcode(), packet.size(), hex);
+        }
         net.dodian.uber.game.netty.listener.PacketListener listener =
                 net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.opcode());
         if (listener != null) {
@@ -1012,6 +1016,10 @@ public class Client extends Player implements Runnable {
             message.release();
             return;
         }
+        if (debugPackets) {
+            String hex = io.netty.buffer.ByteBufUtil.hexDump(message.content());
+            logger.info("[Packet Debug] OUT for {}: opcode={} type={} payload={}", getPlayerName(), message.getOpcode(), message.getType(), hex);
+        }
         if (shouldQueueOutbound()) {
             outboundSessionQueue.enqueue(message);
             return;
@@ -1029,6 +1037,10 @@ public class Client extends Player implements Runnable {
         if (disconnected || channel == null || !channel.isActive()) {
             message.releaseAll();
             return false;
+        }
+        if (debugPackets) {
+            String hex = io.netty.buffer.ByteBufUtil.hexDump(message.content());
+            logger.info("[Packet Debug] OUT (Sync) for {}: opcode={} type={} payload={}", getPlayerName(), message.getOpcode(), message.getType(), hex);
         }
         if (shouldQueueOutbound()) {
             return outboundSessionQueue.enqueue(message);

@@ -24,14 +24,6 @@ public class PrivateMessage implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage msg = ByteMessage.message(196, MessageType.VAR);
-        msg.putLong(recipient);
-        msg.putInt(messageId);
-        msg.put(rights);
-        for (int i = 0; i < size; i++) {
-            msg.put(message[i]);
-        }
-        msg.put(10); 
-        client.send(msg);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.PrivateMessage(recipient, rights, message, size, messageId).encode());
     }
 }

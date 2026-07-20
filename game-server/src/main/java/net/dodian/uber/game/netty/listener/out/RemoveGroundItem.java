@@ -4,8 +4,7 @@ import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.item.GameItem;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
 public class RemoveGroundItem implements OutgoingPacket {
 
@@ -20,10 +19,7 @@ public class RemoveGroundItem implements OutgoingPacket {
     @Override
     public void send(Client client) {
         client.send(new SetMap(position));
-        ByteMessage message = ByteMessage.message(156);
-        message.put(0, ValueType.ADD);
-        message.putShort(item.getId());
-        client.send(message);
+        client.send(new TarnishOutboundPackets.RemoveGroundItem(item.getId()).encode());
     }
 
 }

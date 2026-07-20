@@ -6,9 +6,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.AfterAll
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
+import net.dodian.uber.game.engine.loop.GameThreadContext
 
 class RequirementTest {
 
@@ -38,6 +40,13 @@ class RequirementTest {
                 alchemy = 0
             )
             Server.itemManager = ItemManager({ mapOf(995 to coins) }, {})
+            GameThreadContext.bindCurrentThread()
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun tearDownAll() {
+            GameThreadContext.clearBindingForTests()
         }
     }
 

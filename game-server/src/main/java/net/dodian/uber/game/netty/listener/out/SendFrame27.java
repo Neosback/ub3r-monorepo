@@ -2,14 +2,8 @@ package net.dodian.uber.game.netty.listener.out;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
-/**
- * Sends opcode 27 (SEND_ENTER_AMOUNT) to prompt the client for a numeric input.
- * Tarnish packet structure: a string prompt followed by a short-ADD maximum length.
- */
 public class SendFrame27 implements OutgoingPacket {
 
     private final String title;
@@ -30,9 +24,7 @@ public class SendFrame27 implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(27, MessageType.VAR_SHORT);
-        message.putString(title);
-        message.putShort(inputLength, ValueType.ADD);
-        client.send(message);
+        client.send(new TarnishOutboundPackets.SendFrame27(title, inputLength).encode());
     }
+
 }

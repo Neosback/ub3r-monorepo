@@ -4,8 +4,7 @@ import net.dodian.cache.objects.GameObjectDef;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
 public class ObjectAnimation implements OutgoingPacket {
 
@@ -22,11 +21,8 @@ public class ObjectAnimation implements OutgoingPacket {
     @Override
     public void send(Client client) {
         client.send(new SetMap(position));
-        ByteMessage message = ByteMessage.message(160);
-        message.put(0, ValueType.SUBTRACT);
-        message.put((def.getType() << 2) + (def.getFace() & 3), ValueType.SUBTRACT);
-        message.putShort(animation, ValueType.ADD);
-        client.send(message);
+        int config = (def.getType() << 2) + (def.getFace() & 3);
+        client.send(new TarnishOutboundPackets.ObjectAnimation(config, animation).encode());
     }
 
 }

@@ -15,9 +15,8 @@ public class SetMap implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(85);
-        message.put(pos.getY() - (client.mapRegionY * 8), ValueType.NEGATE);
-        message.put(pos.getX() - (client.mapRegionX * 8), ValueType.NEGATE);
-        client.send(message);
+        int localX = pos.getX() - (client.mapRegionX * 8);
+        int localY = pos.getY() - (client.mapRegionY * 8);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.SetMap(localX, localY).encode());
     }
 }

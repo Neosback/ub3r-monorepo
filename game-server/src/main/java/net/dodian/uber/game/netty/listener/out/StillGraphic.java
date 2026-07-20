@@ -3,12 +3,8 @@ package net.dodian.uber.game.netty.listener.out;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.MessageType;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
-/**
- * This is used for various in-game effects like spell impacts, teleport effects, etc.
- */
 public class StillGraphic implements OutgoingPacket {
 
     private final int id;
@@ -17,7 +13,6 @@ public class StillGraphic implements OutgoingPacket {
     private final int time;
     private final boolean showAll;
 
-    
     public StillGraphic(int id, Position position, int height, int time, boolean showAll) {
         this.id = id;
         this.position = position;
@@ -37,12 +32,6 @@ public class StillGraphic implements OutgoingPacket {
         int localY = position.getY() - baseY;
         int offsetByte = (localX << 4) | localY;
 
-        ByteMessage message = ByteMessage.message(4, MessageType.FIXED);
-        message.put(offsetByte); 
-        message.putShort(id);    
-        message.put(height);     
-        message.putShort(time);
-
-        client.send(message);
+        client.send(new TarnishOutboundPackets.StillGraphic(offsetByte, id, height, time).encode());
     }
 }

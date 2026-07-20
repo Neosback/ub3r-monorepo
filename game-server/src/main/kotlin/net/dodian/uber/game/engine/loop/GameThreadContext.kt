@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import net.dodian.uber.game.engine.metrics.OperationalTelemetry
+import net.dodian.uber.game.engine.config.serverDebugMode
 import org.slf4j.LoggerFactory
 
 object GameThreadContext {
@@ -44,6 +45,14 @@ object GameThreadContext {
         OperationalTelemetry.incrementCounter("thread_ownership.$reason")
 
         val safeContext = context.ifBlank { "unknown" }
+        val debug = try { serverDebugMode } catch (_: Exception) { false }
+        if (debug) {
+            throw IllegalStateException(
+                "Game-thread ownership violation reason=$reason context=$safeContext " +
+                "expected=${expected?.name ?: "<unbound>"} actual=${current.name}"
+            )
+        }
+
         val nextLogAt = nextLogAtByContext.computeIfAbsent("$reason:$safeContext") { AtomicLong() }
         val now = System.currentTimeMillis()
         val allowedAt = nextLogAt.get()

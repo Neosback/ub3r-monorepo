@@ -20,7 +20,7 @@ object DevDebugCommands : CommandContent {
         commands {
             command(
                 "npca", "loot", "death", "damage", "dharok", "heal", "farm", "immune", "rehp",
-                "split", "party", "event", "gem", "rune", "boost_on", "boost_off", "wcor", "pcor", "ncor",
+                "split", "party", "event", "gem", "rune", "boost_on", "boost_off", "wcor", "pcor", "ncor", "packetdebug",
             ) {
                 handleDevDebug(this)
             }
@@ -51,6 +51,10 @@ private fun handleDevDebug(context: CommandContext): Boolean {
         "loot" -> {
             client.instaLoot = !client.instaLoot
             context.reply("You turned insta loot ${if (client.instaLoot) "on" else "off"}!")
+        }
+        "packetdebug" -> {
+            client.debugPackets = !client.debugPackets
+            context.reply("You turned packet debugging ${if (client.debugPackets) "on" else "off"}!")
         }
         "death" -> {
             val type = cmd[1].toInt()

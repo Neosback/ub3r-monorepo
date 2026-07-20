@@ -2,10 +2,7 @@ package net.dodian.uber.game.netty.listener.out;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.netty.codec.ByteOrder;
-import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
 public class SendScreenMode implements OutgoingPacket {
 
@@ -19,9 +16,7 @@ public class SendScreenMode implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(108, MessageType.FIXED);
-        message.putShort(width, ByteOrder.LITTLE, ValueType.ADD);
-        message.putInt(height);
-        client.send(message);
+        client.send(new TarnishOutboundPackets.SendScreenMode(width, height).encode());
     }
+
 }

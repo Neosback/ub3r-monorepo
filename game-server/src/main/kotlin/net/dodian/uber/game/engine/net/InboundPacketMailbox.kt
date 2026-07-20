@@ -125,30 +125,34 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
 
     @Synchronized
     fun pollNext(): PollResult? {
-        val transactional = transactionalPackets.peekFirst()
-        var candidate = transactional
-        val currentWalk = walkPacket
-        if (currentWalk != null && (candidate == null || currentWalk.sequence < candidate.sequence)) {
-            candidate = currentWalk
+        val transactional = transactionalPackets.pollFirst()
+        if (transactional != null) {
+            pendingCount--
+            return PollResult.of(transactional.packet, transactional.family)
         }
-        val currentMouse = mousePacket
-        if (currentMouse != null && (candidate == null || currentMouse.sequence < candidate.sequence)) {
-            candidate = currentMouse
-        }
-        val currentItemClick = itemClickPacket
-        if (currentItemClick != null && (candidate == null || currentItemClick.sequence < candidate.sequence)) {
-            candidate = currentItemClick
-        }
-        candidate ?: return null
 
-        when (candidate) {
-            transactional -> transactionalPackets.removeFirst()
-            currentWalk -> walkPacket = null
-            currentMouse -> mousePacket = null
-            currentItemClick -> itemClickPacket = null
+        val currentWalk = walkPacket
+        if (currentWalk != null) {
+            walkPacket = null
+            pendingCount--
+            return PollResult.of(currentWalk.packet, currentWalk.family)
         }
-        pendingCount--
-        return PollResult.of(candidate.packet, candidate.family)
+
+        val currentItemClick = itemClickPacket
+        if (currentItemClick != null) {
+            itemClickPacket = null
+            pendingCount--
+            return PollResult.of(currentItemClick.packet, currentItemClick.family)
+        }
+
+        val currentMouse = mousePacket
+        if (currentMouse != null) {
+            mousePacket = null
+            pendingCount--
+            return PollResult.of(currentMouse.packet, currentMouse.family)
+        }
+
+        return null
     }
 
     @Synchronized

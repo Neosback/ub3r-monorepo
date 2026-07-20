@@ -20,11 +20,14 @@ import net.dodian.uber.game.engine.systems.interaction.scheduler.InteractionTask
 import net.dodian.uber.game.engine.systems.interaction.scheduler.NpcInteractionTask
 import net.dodian.uber.game.engine.systems.interaction.scheduler.PlayerInteractionTask
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.config.gameWorldId
+import org.slf4j.LoggerFactory
 
 /**
  * of Netty inbound listeners.
  */
 object PacketInteractionService {
+    private val logger = LoggerFactory.getLogger(PacketInteractionService::class.java)
     /**
      * victim slot.
      */
@@ -108,26 +111,42 @@ object PacketInteractionService {
         if (client.deathStage >= 1) return
 
         val npc = Server.npcManager.npcMap[npcIndex]
+        if (gameWorldId == 2) {
+            logger.info("[W2-ATTACK] handleNpcAttack: player=${client.playerName}, opcode=$opcode, npcIndex=$npcIndex, npcFound=${npc != null}, npcId=${npc?.id}, npcAlive=${npc?.alive}, npcHealth=${npc?.currentHealth}")
+        }
         if (npc == null) {
             return
         }
         if (client.randomed || client.UsingAgility) {
+            if (gameWorldId == 2) {
+                logger.info("[W2-ATTACK] handleNpcAttack rejected: randomed=${client.randomed}, UsingAgility=${client.UsingAgility}")
+            }
             return
         }
-        when (AttackStartDedupeService.shouldAcceptAttackStart(
+        val dedupeDecision = AttackStartDedupeService.shouldAcceptAttackStart(
             player = client,
             intent = CombatIntent.ATTACK_NPC,
             targetType = Entity.Type.NPC,
             targetSlot = npcIndex,
             cycle = PlayerRegistry.cycle.toLong(),
-        )) {
+        )
+        if (gameWorldId == 2) {
+            logger.info("[W2-ATTACK] handleNpcAttack dedupe decision: $dedupeDecision")
+        }
+        when (dedupeDecision) {
             Decision.ACCEPT -> {
                 GameEventBus.post(PlayerAttackEvent(client, npcIndex, false))
                 if (NpcContentRegistry.hasAttackHandler(npc)) {
+                    if (gameWorldId == 2) {
+                        logger.info("[W2-ATTACK] handleNpcAttack: NPC has attack handler, scheduling interaction task")
+                    }
                     val intent = NpcInteractionIntent(opcode, PlayerRegistry.cycle.toLong(), npcIndex, 5)
                     InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
                 } else {
-                    CombatCommandService.requestAttack(client, npc, CombatIntent.ATTACK_NPC)
+                    val result = CombatCommandService.requestAttack(client, npc, CombatIntent.ATTACK_NPC)
+                    if (gameWorldId == 2) {
+                        logger.info("[W2-ATTACK] handleNpcAttack: requestAttack returned $result")
+                    }
                 }
             }
             Decision.DUPLICATE_PENDING,

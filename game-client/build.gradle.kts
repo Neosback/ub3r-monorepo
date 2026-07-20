@@ -132,10 +132,10 @@ tasks {
         enabled = false
     }
     named<CreateStartScripts>(SHADOW_SCRIPTS_TASK_NAME).configure {
-        enabled = false
+        enabled = true
     }
     named(SHADOW_INSTALL_TASK_NAME).configure {
-        enabled = false
+        enabled = true
     }
     named("shadowDistTar").configure {
         enabled = false

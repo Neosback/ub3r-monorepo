@@ -2,12 +2,8 @@ package net.dodian.uber.game.netty.listener.out;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.*;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
-/**
- * Emits the legacy opcodes 101 (remove/clear) and 151 (place) replicating
- * Stream.writeByteC / writeByteS semantics.
- */
 public class ReplaceObject implements OutgoingPacket {
 
     private final int newObjectId;
@@ -23,23 +19,9 @@ public class ReplaceObject implements OutgoingPacket {
     @Override
     public void send(Client client) {
         int config = (type << 2) + (face & 3);
-
-        // First packet (opcode 101)
-        ByteMessage remove = ByteMessage.message(101);
-        remove.put(config, ValueType.NEGATE);
-
-        remove.put(0);
-
-        client.send(remove);
-
-        // Second packet (opcode 151) if placing a new object
+        client.send(new TarnishOutboundPackets.ClearObject(config).encode());
         if (newObjectId != -1) {
-            ByteMessage place = ByteMessage.message(151);
-            place.put(0, ValueType.ADD);                     
-            place.putShort(newObjectId, ByteOrder.LITTLE);   
-            place.put(config, ValueType.SUBTRACT);
-
-            client.send(place);
+            client.send(new TarnishOutboundPackets.PlaceObject(newObjectId, config).encode());
         }
     }
 }

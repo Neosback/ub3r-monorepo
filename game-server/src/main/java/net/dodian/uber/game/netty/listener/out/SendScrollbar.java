@@ -2,8 +2,7 @@ package net.dodian.uber.game.netty.listener.out;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.MessageType;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
 public class SendScrollbar implements OutgoingPacket {
 
@@ -17,10 +16,7 @@ public class SendScrollbar implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(204, MessageType.FIXED);
-        message.putInt(scrollbar);
-        message.putInt(size);
-        client.send(message);
+        client.send(new TarnishOutboundPackets.SendScrollbar(scrollbar, size).encode());
     }
 
 }

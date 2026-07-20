@@ -2,9 +2,10 @@ package net.dodian.uber.game.netty.listener.out;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
-public final class SendExpCounterSetting implements OutgoingPacket {
+public class SendExpCounterSetting implements OutgoingPacket {
+
     private final int type;
     private final int modification;
 
@@ -15,9 +16,7 @@ public final class SendExpCounterSetting implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(103);
-        message.putInt(type);
-        message.putInt(modification);
-        client.send(message);
+        client.send(new TarnishOutboundPackets.SendExpCounterSetting(type, modification).encode());
     }
+
 }

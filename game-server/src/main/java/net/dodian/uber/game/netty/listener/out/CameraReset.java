@@ -8,8 +8,7 @@ public class CameraReset implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(107);
-        client.send(message);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.CameraReset().encode());
     }
 
 }

@@ -3,13 +3,8 @@ package net.dodian.uber.game.netty.listener.out;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.ByteOrder;
-import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
-/**
- * Updates a player's skill level and experience on the client.
- */
 public class RefreshSkill implements OutgoingPacket {
 
     private final Skill skill;
@@ -17,7 +12,6 @@ public class RefreshSkill implements OutgoingPacket {
     private final int maxLevel;
     private final int experience;
 
-    
     public RefreshSkill(Skill skill, int level, int maxLevel, int experience) {
         this.skill = skill;
         this.level = level;
@@ -27,11 +21,6 @@ public class RefreshSkill implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage out = ByteMessage.message(134);
-        out.put(skill.getId());
-        out.putInt(experience, ByteOrder.MIDDLE);
-        out.put(level);
-        client.send(out);
-       // System.out.println("Sending RefreshSkill packet for skill " + skill + " with level " + level + " and experience " + experience);
+        client.send(new TarnishOutboundPackets.RefreshSkill(skill.getId(), experience, level).encode());
     }
 }

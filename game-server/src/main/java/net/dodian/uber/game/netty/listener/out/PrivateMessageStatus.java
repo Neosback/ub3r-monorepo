@@ -18,8 +18,6 @@ public class PrivateMessageStatus implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(221, MessageType.FIXED);
-        message.put(status);
-        client.send(message);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.PrivateMessageStatus(status).encode());
     }
 }

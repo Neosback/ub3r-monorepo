@@ -12,6 +12,7 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
+import net.dodian.uber.game.engine.systems.action.PlayerActionController
 import net.dodian.uber.game.engine.systems.follow.FollowService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
@@ -148,14 +149,19 @@ object PacketWalkingService {
                 player.send(RemoveInterfaces())
             }
             player.rerequestAnim()
-            ContentActions.cancel(
-                player,
-                PlayerActionCancelReason.MOVEMENT,
-                true,
-                false,
-                false,
-                true,
-            )
+            if (request.opcode != 98) {
+                ContentActions.cancel(
+                    player,
+                    PlayerActionCancelReason.MOVEMENT,
+                    true,
+                    false,
+                    false,
+                    true,
+                )
+            } else {
+                PlayerActionController.cancel(player, PlayerActionCancelReason.MOVEMENT)
+                PlayerActionCancellationService.resetCompatibilityState(player, true)
+            }
             player.discord = false
             if (player.checkInv) {
                 player.checkInv = false

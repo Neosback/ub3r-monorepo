@@ -22,10 +22,6 @@ public final class SendChatboxInterface implements OutgoingPacket {
     
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(164, MessageType.FIXED);
-
-        message.putShort(frame, ByteOrder.LITTLE);
-
-        client.send(message);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.SendChatboxInterface(frame).encode());
     }
 }

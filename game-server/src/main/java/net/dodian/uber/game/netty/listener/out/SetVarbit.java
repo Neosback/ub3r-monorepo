@@ -2,10 +2,7 @@ package net.dodian.uber.game.netty.listener.out;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.netty.codec.ByteOrder;
-
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
 public class SetVarbit implements OutgoingPacket {
 
@@ -24,17 +21,9 @@ public class SetVarbit implements OutgoingPacket {
         }
 
         if (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE) {
-            ByteMessage msg = ByteMessage.message(87, MessageType.FIXED);
-            msg.putShort(id, ByteOrder.LITTLE);
-            msg.putInt(value, ByteOrder.MIDDLE);
-
-            client.send(msg);
+            client.send(new TarnishOutboundPackets.SetVarbitInt(id, value).encode());
         } else {
-            ByteMessage msg = ByteMessage.message(36, MessageType.FIXED);
-            msg.putShort(id, ByteOrder.LITTLE);
-            msg.put(value);
-
-            client.send(msg);
+            client.send(new TarnishOutboundPackets.SetVarbitByte(id, value).encode());
         }
     }
 }

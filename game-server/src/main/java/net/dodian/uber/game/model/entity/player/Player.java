@@ -69,7 +69,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public abstract class Player extends Entity {
     private static final AtomicLong NEXT_SESSION_GENERATION = new AtomicLong(1L);
     private static final Logger logger = LoggerFactory.getLogger(Player.class);
-    public boolean yellOn = true, genie = false, antique = false, instaLoot = false, autoRetaliate = false;
+    public boolean yellOn = true, genie = false, antique = false, instaLoot = false, autoRetaliate = false, debugPackets = false;
     public long toleranceTimer = 0L;
     public Position toleranceCenter = null;
     public long longName = 0;

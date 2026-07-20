@@ -11,10 +11,7 @@ public class RemoveInterfaces implements OutgoingPacket {
         client.checkBankInterface = false;
         client.clearBankStyleView();
         client.currentSkill = -1;
-        ByteMessage bm = ByteMessage.message(219);
-        bm.put(1);
-        client.send(bm);
-       // System.out.println("RemoveInterfaces packet sent");
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.RemoveInterfaces().encode());
     }
 
 }
