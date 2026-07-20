@@ -1,8 +1,10 @@
 package net.dodian.uber.game.engine.systems.skills
 
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.api.content.ContentEconomy
 import net.dodian.uber.game.api.content.ContentAttributeKey
 import net.dodian.uber.game.api.content.ContentAttributes
+import net.dodian.uber.game.api.content.ContentInteraction
 import net.dodian.uber.game.api.content.ContentFeatures
 import net.dodian.uber.game.api.content.ContentSocial
 import net.dodian.uber.game.api.plugin.skills.SkillActions
@@ -135,6 +137,13 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int) {
             client.ReplaceObject(target.position.x, target.position.y, replacementId, target.face, target.type)
         }
+        override fun withinObjectBoundary(target: SkillObjectRef): Boolean =
+            ContentInteraction.withinNearestBoundaryCardinal(
+                client,
+                target.id,
+                target.position.toPosition(),
+                GameObjectData.forId(target.id),
+            )
     }
     override val production = object : SkillProduction {
         override fun open(config: SkillMultiConfig, onSelected: (SkillMultiSelection) -> Unit): Boolean {

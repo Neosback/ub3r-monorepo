@@ -43,6 +43,8 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     val itemModels = mutableListOf<Triple<Int, Int, Int>>()
     val varbits = mutableMapOf<Int, Int>()
     val replacedObjects = mutableListOf<Pair<SkillObjectRef, Int>>()
+    /** No real cache/object-shape data in tests; tests toggle this to simulate moving out of range. */
+    var withinBoundaryOverride = true
     var anchor: SkillPosition? = null
     var prayerRestored = 0
     var damageTaken = 0
@@ -167,6 +169,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun face(position: SkillPosition) = Unit
         override fun graphic(id: Int, height: Int) = Unit
         override fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int) { replacedObjects += target to replacementId }
+        override fun withinObjectBoundary(target: SkillObjectRef): Boolean = withinBoundaryOverride
     }
     override val production = object : SkillProduction {
         override fun open(config: SkillMultiConfig, onSelected: (SkillMultiSelection) -> Unit): Boolean {

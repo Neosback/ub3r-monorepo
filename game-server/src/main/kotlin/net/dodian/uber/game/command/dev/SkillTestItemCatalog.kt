@@ -9,11 +9,11 @@ import net.dodian.uber.game.skill.farming.FarmingData
 import net.dodian.uber.skills.fishing.FishingModule
 import net.dodian.uber.game.skill.fletching.FletchingData
 import net.dodian.uber.game.skill.herblore.HerbloreData
-import net.dodian.uber.game.skill.mining.MiningData
+import net.dodian.uber.skills.mining.MiningModule
 import net.dodian.uber.game.skill.smithing.SmithingFrameDefinitions
 import net.dodian.uber.game.skill.smithing.SmithingData
 import net.dodian.uber.game.skill.thieving.Thieving
-import net.dodian.uber.game.skill.woodcutting.WoodcuttingData
+import net.dodian.uber.skills.woodcutting.WoodcuttingModule
 
 object SkillTestItemCatalog {
     private val categories: LinkedHashMap<String, List<Int>> =
@@ -68,17 +68,17 @@ object SkillTestItemCatalog {
 
     private fun woodcuttingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        WoodcuttingData.axesDescending.forEach { addIfValid(items, it.itemId) }
-        WoodcuttingData.treeByObjectId.values.forEach { addIfValid(items, it.logItemId) }
+        WoodcuttingModule.axes.forEach { addIfValid(items, it.itemId) }
+        WoodcuttingModule.trees.forEach { addIfValid(items, it.logItemId) }
         addAll(items, 590, 946)
         return items.toList()
     }
 
     private fun miningItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        MiningData.pickaxesDescending.forEach { addIfValid(items, it.itemId) }
-        MiningData.rocks.forEach { addIfValid(items, it.oreItemId) }
-        MiningData.randomGemDropTable.forEach { addIfValid(items, it) }
+        MiningModule.pickaxes.forEach { addIfValid(items, it.itemId) }
+        MiningModule.rocks.forEach { addIfValid(items, it.oreItemId) }
+        MiningModule.randomGemDropTable.forEach { addIfValid(items, it) }
         addAll(items, 1755, 1436)
         return items.toList()
     }
@@ -92,7 +92,7 @@ object SkillTestItemCatalog {
                 addIfValid(items, entry.itemId)
             }
         }
-        MiningData.rocks.forEach { addIfValid(items, it.oreItemId) }
+        MiningModule.rocks.forEach { addIfValid(items, it.oreItemId) }
         addAll(items, 436, 438, 440, 444, 447, 449, 451, 453)
         return items.toList()
     }
@@ -146,7 +146,7 @@ object SkillTestItemCatalog {
     private fun firemakingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addIfValid(items, 590)
-        WoodcuttingData.treeByObjectId.values.forEach { addIfValid(items, it.logItemId) }
+        WoodcuttingModule.trees.forEach { addIfValid(items, it.logItemId) }
         return items.toList()
     }
 

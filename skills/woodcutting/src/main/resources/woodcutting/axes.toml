@@ -1,0 +1,67 @@
+# Axe tiers, best first (resolveBestAxe picks the first tier the player both owns
+# and meets the level for).
+
+[[axe]]
+name = "third_age"
+itemId = 20011
+requiredLevel = 61
+speedBonus = 0.8
+animationId = 2846
+dragonTierBoostEligible = true
+
+[[axe]]
+name = "dragon"
+itemId = 6739
+requiredLevel = 61
+speedBonus = 0.8
+animationId = 2846
+dragonTierBoostEligible = true
+
+[[axe]]
+name = "rune"
+itemId = 1359
+requiredLevel = 41
+speedBonus = 0.42
+animationId = 867
+
+[[axe]]
+name = "adamant"
+itemId = 1357
+requiredLevel = 31
+speedBonus = 0.33
+animationId = 869
+
+[[axe]]
+name = "mithril"
+itemId = 1355
+requiredLevel = 21
+speedBonus = 0.24
+animationId = 871
+
+[[axe]]
+name = "black"
+itemId = 1361
+requiredLevel = 11
+speedBonus = 0.15
+animationId = 875
+
+[[axe]]
+name = "steel"
+itemId = 1353
+requiredLevel = 6
+speedBonus = 0.1
+animationId = 875
+
+[[axe]]
+name = "iron"
+itemId = 1349
+requiredLevel = 1
+speedBonus = 0.065
+animationId = 877
+
+[[axe]]
+name = "bronze"
+itemId = 1351
+requiredLevel = 1
+speedBonus = 0.04
+animationId = 879

@@ -1,0 +1,67 @@
+# Pickaxe tiers, best first (resolveBestPickaxe picks the first tier the player
+# both owns and meets the level for).
+
+[[pickaxe]]
+name = "3rd_age"
+itemId = 20014
+requiredLevel = 61
+speedBonus = 0.8
+animationId = 7139
+dragonTierBoostEligible = true
+
+[[pickaxe]]
+name = "dragon"
+itemId = 11920
+requiredLevel = 61
+speedBonus = 0.8
+animationId = 7139
+dragonTierBoostEligible = true
+
+[[pickaxe]]
+name = "rune"
+itemId = 1275
+requiredLevel = 41
+speedBonus = 0.42
+animationId = 624
+
+[[pickaxe]]
+name = "iron"
+itemId = 1271
+requiredLevel = 31
+speedBonus = 0.33
+animationId = 628
+
+[[pickaxe]]
+name = "steel"
+itemId = 1273
+requiredLevel = 21
+speedBonus = 0.24
+animationId = 629
+
+[[pickaxe]]
+name = "black"
+itemId = 12297
+requiredLevel = 11
+speedBonus = 0.15
+animationId = 629
+
+[[pickaxe]]
+name = "mithril"
+itemId = 1269
+requiredLevel = 6
+speedBonus = 0.1
+animationId = 627
+
+[[pickaxe]]
+name = "adamant"
+itemId = 1267
+requiredLevel = 1
+speedBonus = 0.065
+animationId = 626
+
+[[pickaxe]]
+name = "bronze"
+itemId = 1265
+requiredLevel = 1
+speedBonus = 0.04
+animationId = 625

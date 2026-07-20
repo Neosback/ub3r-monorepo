@@ -31,6 +31,8 @@ object SkillMigrationCatalog {
         this[Skill.FLETCHING] = SkillMigrationState.STABLE
         this[Skill.COOKING] = SkillMigrationState.STABLE
         this[Skill.FISHING] = SkillMigrationState.STABLE
+        this[Skill.WOODCUTTING] = SkillMigrationState.STABLE
+        this[Skill.MINING] = SkillMigrationState.STABLE
     }
     fun state(skill: Skill): SkillMigrationState = states.getValue(skill)
     fun requiredCoverage(): Set<Skill> = states.filterValues { it != SkillMigrationState.LEGACY }.keys

@@ -143,6 +143,8 @@ interface SkillWorld {
     fun face(position: SkillPosition)
     fun graphic(id: Int, height: Int = 0)
     fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int = 0)
+    /** Whether the player is still within interaction range of [target]'s nearest boundary tile (accounts for object size/shape, not just Chebyshev tile distance). */
+    fun withinObjectBoundary(target: SkillObjectRef): Boolean
 }
 
 interface SkillProduction {

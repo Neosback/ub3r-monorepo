@@ -56,8 +56,6 @@ object PlayerActionCancellationService {
         Cooking.stopFromReset(player, fullResetAnimation)
         player.clearFletchingState()
         player.resourcesGathered = 0
-        player.clearMiningState()
-        player.clearWoodcuttingState()
         if (player.activeSmithingSelection != null || player.IsAnvil) {
             SmithingInterface.resetRuntimeState(player)
             player.send(RemoveInterfaces())

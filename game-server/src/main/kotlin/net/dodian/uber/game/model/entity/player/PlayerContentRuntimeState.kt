@@ -17,13 +17,11 @@ import net.dodian.uber.game.engine.systems.interaction.InteractionIntent
 import net.dodian.uber.game.engine.tasking.GameTaskSet
 import net.dodian.uber.game.skill.crafting.CraftingState
 import net.dodian.uber.game.skill.fletching.FletchingState
-import net.dodian.uber.game.skill.mining.MiningState
 import net.dodian.uber.game.skill.prayer.PrayerOfferingState
 import net.dodian.uber.game.skill.runecrafting.RunecraftingState
 import net.dodian.uber.game.skill.smithing.ActiveSmithingSelection
 import net.dodian.uber.game.skill.smithing.SmeltingSelection
 import net.dodian.uber.game.skill.thieving.PyramidPlunderPlayerState
-import net.dodian.uber.game.skill.woodcutting.WoodcuttingState
 import net.dodian.uber.game.api.plugin.skills.PendingSkillMulti
 
 /**
@@ -38,8 +36,6 @@ class PlayerContentRuntimeState {
     @Volatile private var interactionEarliestCycle = 0L
     @Volatile private var interactionTaskHandle: QueueTaskHandle? = null
     @Volatile private var farmDebugTaskHandle: QueueTaskHandle? = null
-    @Volatile private var miningTaskHandle: QueueTaskHandle? = null
-    @Volatile private var woodcuttingTaskHandle: QueueTaskHandle? = null
     @Volatile private var activeActionHandle: QueueTaskHandle? = null
     @Volatile private var activeActionType: PlayerActionType? = null
     @Volatile private var actionStartedCycle = 0L
@@ -60,8 +56,6 @@ class PlayerContentRuntimeState {
     @Volatile private var pendingProductionSelection: PendingProductionSelection? = null
     @Volatile private var activeProductionSelection: ActiveProductionSelection? = null
     @Volatile private var playerTaskSet: GameTaskSet<*>? = null
-    @Volatile private var miningState: MiningState? = null
-    @Volatile private var woodcuttingState: WoodcuttingState? = null
     @Volatile private var fletchingState: FletchingState? = null
     @Volatile private var craftingState: CraftingState? = null
     @Volatile private var prayerOfferingState: PrayerOfferingState? = null
@@ -96,19 +90,6 @@ class PlayerContentRuntimeState {
     fun getFarmDebugTaskHandle() = farmDebugTaskHandle
     fun setFarmDebugTaskHandle(value: QueueTaskHandle?) { farmDebugTaskHandle = value }
     fun cancelFarmDebugTask() { farmDebugTaskHandle.cancelAndClear { farmDebugTaskHandle = null } }
-    fun getMiningTaskHandle() = miningTaskHandle
-    fun setMiningTaskHandle(value: QueueTaskHandle?) { miningTaskHandle = value }
-    fun cancelMiningTask() { miningTaskHandle.cancelAndClear { miningTaskHandle = null } }
-    fun getWoodcuttingTaskHandle() = woodcuttingTaskHandle
-    fun setWoodcuttingTaskHandle(value: QueueTaskHandle?) { woodcuttingTaskHandle = value }
-    fun cancelWoodcuttingTask() { woodcuttingTaskHandle.cancelAndClear { woodcuttingTaskHandle = null } }
-
-    fun getMiningState() = miningState
-    fun setMiningState(value: MiningState?) { miningState = value }
-    fun clearMiningState() { miningState = null }
-    fun getWoodcuttingState() = woodcuttingState
-    fun setWoodcuttingState(value: WoodcuttingState?) { woodcuttingState = value }
-    fun clearWoodcuttingState() { woodcuttingState = null }
     fun getFletchingState() = fletchingState
     fun setFletchingState(value: FletchingState?) { fletchingState = value }
     fun clearFletchingState() { fletchingState = null }

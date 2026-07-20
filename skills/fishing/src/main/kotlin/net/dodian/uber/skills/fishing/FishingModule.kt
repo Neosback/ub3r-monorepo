@@ -84,7 +84,7 @@ object FishingModule : SkillPlugin {
     )
 
     fun attempt(player: SkillPlayer, npcId: Int, clickOption: Int) {
-        val builder = spotBuilders.firstOrNull { it.npcId == npcId && it.clickOption == clickOption } ?: return
+        val builder = spotBuilders.firstOrNull { it.targetId == npcId && it.clickOption == clickOption } ?: return
         builder.start(player, ACTION_NAME)
     }
 

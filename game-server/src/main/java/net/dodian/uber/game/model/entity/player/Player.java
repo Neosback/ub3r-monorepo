@@ -29,8 +29,6 @@ import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons;
 import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
-import net.dodian.uber.game.skill.mining.MiningState;
-import net.dodian.uber.game.skill.woodcutting.WoodcuttingState;
 import net.dodian.uber.game.skill.fletching.FletchingState;
 import net.dodian.uber.game.skill.crafting.CraftingState;
 import net.dodian.uber.game.skill.prayer.PrayerOfferingState;
@@ -346,10 +344,6 @@ public abstract class Player extends Entity {
     void destruct() {
         clearDamageAttribution();
         updateState.releaseCachedUpdateBlock();
-        cancelMiningTask();
-        clearMiningState();
-        cancelWoodcuttingTask();
-        clearWoodcuttingState();
         interactionState.terminatePlayerTasks();
         interactionState.clearPluginAttributes();
         removeFromChunk();
@@ -1022,54 +1016,6 @@ public abstract class Player extends Entity {
 
     public void cancelFarmDebugTask() {
         interactionState.cancelFarmDebugTask();
-    }
-
-    public QueueTaskHandle getMiningTaskHandle() {
-        return interactionState.getMiningTaskHandle();
-    }
-
-    public void setMiningTaskHandle(QueueTaskHandle miningTaskHandle) {
-        interactionState.setMiningTaskHandle(miningTaskHandle);
-    }
-
-    public void cancelMiningTask() {
-        interactionState.cancelMiningTask();
-    }
-
-    public MiningState getMiningState() {
-        return interactionState.getMiningState();
-    }
-
-    public void setMiningState(MiningState miningState) {
-        interactionState.setMiningState(miningState);
-    }
-
-    public void clearMiningState() {
-        interactionState.clearMiningState();
-    }
-
-    public QueueTaskHandle getWoodcuttingTaskHandle() {
-        return interactionState.getWoodcuttingTaskHandle();
-    }
-
-    public void setWoodcuttingTaskHandle(QueueTaskHandle woodcuttingTaskHandle) {
-        interactionState.setWoodcuttingTaskHandle(woodcuttingTaskHandle);
-    }
-
-    public void cancelWoodcuttingTask() {
-        interactionState.cancelWoodcuttingTask();
-    }
-
-    public WoodcuttingState getWoodcuttingState() {
-        return interactionState.getWoodcuttingState();
-    }
-
-    public void setWoodcuttingState(WoodcuttingState woodcuttingState) {
-        interactionState.setWoodcuttingState(woodcuttingState);
-    }
-
-    public void clearWoodcuttingState() {
-        interactionState.clearWoodcuttingState();
     }
 
     public FletchingState getFletchingState() {

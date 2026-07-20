@@ -11,6 +11,8 @@ private const val TICK_MS = 600L
 
 private fun toTicks(ms: Long): Int = if (ms <= 0L) 1 else ((ms + TICK_MS - 1) / TICK_MS).toInt().coerceAtLeast(1)
 
+internal enum class GatheringTargetKind { NPC, OBJECT }
+
 /**
  * Attribute keys for one gathering pipeline instance, namespaced by [actionName] so
  * multiple gathering skills (fishing, mining, woodcutting, ...) built on this same
@@ -22,6 +24,7 @@ private class GatheringKeys(actionName: String) {
     val ticksUntilYield = ContentAttributeKey<Int>(owner, "ticksUntilYield")
     val ticksUntilAnimation = ContentAttributeKey<Int>(owner, "ticksUntilAnimation")
     val activeAction = ContentAttributeKey<SkillActionHandle>(owner, "activeAction")
+    val targetRef = ContentAttributeKey<SkillObjectRef>(owner, "targetRef")
 }
 
 /**
@@ -32,11 +35,13 @@ private class GatheringKeys(actionName: String) {
  * `attempt()` guard clause AND an inner per-tick loop.
  */
 class GatheringSpotBuilder<T> internal constructor(val spot: T) {
-    var npcId: Int = -1
+    internal var targetKind: GatheringTargetKind = GatheringTargetKind.NPC
+    var targetId: Int = -1
         private set
     var clickOption: Int = 1
         private set
     internal var preset: PolicyPreset = PolicyPreset.GATHERING
+    internal var trackBoundary: Boolean = false
 
     internal var animationId: Int = -1
     internal var animationIntervalMs: Long = 1800L
@@ -51,9 +56,24 @@ class GatheringSpotBuilder<T> internal constructor(val spot: T) {
 
     /** Which npc + click option (e.g. "Net", "Bait") starts this spot. */
     fun npcOption(npcId: Int, clickOption: Int, preset: PolicyPreset = PolicyPreset.GATHERING) {
-        this.npcId = npcId
+        targetKind = GatheringTargetKind.NPC
+        this.targetId = npcId
         this.clickOption = clickOption
         this.preset = preset
+    }
+
+    /**
+     * Which object + click option (e.g. tree/rock, option 1) starts this spot. Unlike
+     * npc spots, object spots are automatically re-validated every cycle against
+     * [SkillWorld.withinObjectBoundary] — walking away from the specific tree/rock
+     * clicked stops the action, matching how object-anchored gathering always worked.
+     */
+    fun objectOption(objectId: Int, clickOption: Int, preset: PolicyPreset = PolicyPreset.GATHERING) {
+        targetKind = GatheringTargetKind.OBJECT
+        this.targetId = objectId
+        this.clickOption = clickOption
+        this.preset = preset
+        trackBoundary = true
     }
 
     fun requireLevel(skill: Skill, level: Int, message: (SkillPlayer) -> String) {
@@ -125,8 +145,12 @@ class GatheringSpotBuilder<T> internal constructor(val spot: T) {
         return true
     }
 
-    /** Validates and, if successful, starts this spot's gathering action for [player]. */
-    fun start(player: SkillPlayer, actionName: String) {
+    /**
+     * Validates and, if successful, starts this spot's gathering action for [player].
+     * [targetRef] is required for object spots (the specific instance clicked, used
+     * for the automatic boundary check) and ignored for npc spots.
+     */
+    fun start(player: SkillPlayer, actionName: String, targetRef: SkillObjectRef? = null) {
         if (!validate(player)) return
         val keys = GatheringKeys(actionName)
         player.attributes.get(keys.activeAction)?.cancel(ActionStopReason.USER_INTERRUPT)
@@ -137,6 +161,9 @@ class GatheringSpotBuilder<T> internal constructor(val spot: T) {
             player.attributes.put(keys.ticksUntilAnimation, toTicks(animationIntervalMs))
             player.actions.animate(animationId, 0)
         }
+        if (trackBoundary && targetRef != null) {
+            player.attributes.put(keys.targetRef, targetRef)
+        }
         startHandler?.invoke(player)
 
         val handle = gatheringAction(actionName) {
@@ -146,6 +173,7 @@ class GatheringSpotBuilder<T> internal constructor(val spot: T) {
                 player.attributes.remove(keys.gathered)
                 player.attributes.remove(keys.ticksUntilYield)
                 player.attributes.remove(keys.ticksUntilAnimation)
+                player.attributes.remove(keys.targetRef)
                 player.attributes.remove(keys.activeAction)
             }
         }.start(player)
@@ -154,12 +182,18 @@ class GatheringSpotBuilder<T> internal constructor(val spot: T) {
             player.attributes.remove(keys.gathered)
             player.attributes.remove(keys.ticksUntilYield)
             player.attributes.remove(keys.ticksUntilAnimation)
+            player.attributes.remove(keys.targetRef)
             return
         }
         player.attributes.put(keys.activeAction, handle)
     }
 
     private fun cycleOnce(player: SkillPlayer, keys: GatheringKeys): CycleSignal {
+        val trackedTarget = player.attributes.get(keys.targetRef)
+        if (trackedTarget != null && !player.world.withinObjectBoundary(trackedTarget)) {
+            player.ui.message("You moved too far away.")
+            return CycleSignal.stop()
+        }
         if (!validate(player)) return CycleSignal.stop()
 
         if (animationId >= 0) {
@@ -200,9 +234,10 @@ class GatheringSpotBuilder<T> internal constructor(val spot: T) {
 
 /**
  * Registers one [GatheringSpotBuilder] per entry in [spots] and auto-binds the
- * resulting npc clicks, grouped by click option so spots sharing an option (e.g.
- * every "Net" fishing spot) share a single [SkillPluginBuilder.npcClick] binding —
- * the same shape every gathering skill previously hand-wrote with groupBy/distinct.
+ * resulting npc/object clicks, grouped by (target kind, click option) so spots
+ * sharing an option (e.g. every "Net" fishing spot, every tree tier) share a single
+ * [SkillPluginBuilder] binding — the same shape every gathering skill previously
+ * hand-wrote with groupBy/distinct.
  */
 fun <T> SkillPluginBuilder.gatheringSpots(
     spots: List<T>,
@@ -210,14 +245,24 @@ fun <T> SkillPluginBuilder.gatheringSpots(
     configure: GatheringSpotBuilder<T>.(T) -> Unit,
 ): List<GatheringSpotBuilder<T>> {
     val builders = spots.map { spot -> GatheringSpotBuilder(spot).apply { configure(spot) } }
-    for ((option, group) in builders.groupBy { it.clickOption }) {
+    for ((key, group) in builders.groupBy { it.targetKind to it.clickOption }) {
+        val (kind, option) = key
         val preset = group.first().preset
-        val npcIds = group.map { it.npcId }.distinct().toIntArray()
-        if (npcIds.isEmpty()) continue
-        npcClick(preset = preset, option = option, *npcIds) { interaction ->
-            val builder = group.firstOrNull { it.npcId == interaction.npc.id } ?: return@npcClick false
-            builder.start(interaction.player, actionName)
-            true
+        val ids = group.map { it.targetId }.distinct().toIntArray()
+        if (ids.isEmpty()) continue
+        when (kind) {
+            GatheringTargetKind.NPC ->
+                npcClick(preset = preset, option = option, *ids) { interaction ->
+                    val builder = group.firstOrNull { it.targetId == interaction.npc.id } ?: return@npcClick false
+                    builder.start(interaction.player, actionName)
+                    true
+                }
+            GatheringTargetKind.OBJECT ->
+                objectClick(preset = preset, option = option, *ids) { interaction ->
+                    val builder = group.firstOrNull { it.targetId == interaction.objectId } ?: return@objectClick false
+                    builder.start(interaction.player, actionName, interaction.target)
+                    true
+                }
         }
     }
     return builders
