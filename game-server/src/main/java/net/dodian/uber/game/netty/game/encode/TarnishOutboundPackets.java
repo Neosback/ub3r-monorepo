@@ -15,6 +15,19 @@ public final class TarnishOutboundPackets {
 
     private TarnishOutboundPackets() {}
 
+    /**
+     * VAR_SHORT packets carry a 2-byte length prefix (max 0xffff). A payload that overflows it
+     * would silently truncate/wrap the length the client reads, corrupting the frame boundary
+     * for every packet that follows on the connection — so this must throw, not clamp. The
+     * buffer is released before throwing to avoid leaking it (callers won't get to release it).
+     */
+    private static void validateVarShortPayloadSize(ByteMessage message) {
+        if (message.getBuffer().writerIndex() > 0xffff) {
+            message.releaseAll();
+            throw new IllegalArgumentException("Tarnish VAR_SHORT payload exceeds variable-short limit");
+        }
+    }
+
     /** Opcode 253 - Send message. Client: reads String, then 1-byte filter boolean. */
     public static final class SendMessage {
         public static final int OPCODE = 253;
@@ -390,6 +403,7 @@ public final class TarnishOutboundPackets {
                     message.putInt(amount);
                 }
             }
+            validateVarShortPayloadSize(message);
             return message;
         }
     }
@@ -430,6 +444,7 @@ public final class TarnishOutboundPackets {
             } else {
                 message.put(val);
             }
+            validateVarShortPayloadSize(message);
             return message;
         }
     }

@@ -61,7 +61,11 @@ public class Projectile implements OutgoingPacket {
 
         int localX = casterPosition.getX() - baseX;
         int localY = casterPosition.getY() - baseY;
-        int offsetByte = (localX << 4) | localY;
+        // Tarnish client reads opcode 117's offset byte as (offset>>3)&0x7 for x and offset&7
+        // for y (Client.java method137, `if (j == 117)`) — a 3-bit shift. Other opcodes in the
+        // same client dispatch method (84/105/215/156) use a 4-bit shift instead; don't conflate
+        // them — using <<4 here sends every projectile at the wrong origin offset.
+        int offsetByte = (localX << 3) | localY;
 
         int finalOffsetX;
         int finalOffsetY;
