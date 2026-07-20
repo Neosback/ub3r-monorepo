@@ -3,10 +3,10 @@ package net.dodian.uber.game.command.dev
 import net.dodian.uber.game.engine.systems.interaction.commands.*
 
 import java.util.LinkedHashSet
-import net.dodian.uber.game.skill.cooking.CookingData
+import net.dodian.uber.skills.cooking.CookingModule
 import net.dodian.uber.game.skill.crafting.CraftingData
 import net.dodian.uber.game.skill.farming.FarmingData
-import net.dodian.uber.game.skill.fishing.FishingData
+import net.dodian.uber.skills.fishing.FishingModule
 import net.dodian.uber.game.skill.fletching.FletchingData
 import net.dodian.uber.game.skill.herblore.HerbloreData
 import net.dodian.uber.game.skill.mining.MiningData
@@ -120,11 +120,11 @@ object SkillTestItemCatalog {
 
     private fun fishingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        FishingData.fishingSpots.forEach {
+        FishingModule.spots.forEach {
             addIfValid(items, it.toolItemId)
             addIfValid(items, it.fishItemId)
         }
-        CookingData.recipes.forEach {
+        CookingModule.recipes.forEach {
             addIfValid(items, it.rawItemId)
             addIfValid(items, it.cookedItemId)
             addIfValid(items, it.burntItemId)
@@ -135,7 +135,7 @@ object SkillTestItemCatalog {
 
     private fun cookingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        CookingData.recipes.forEach {
+        CookingModule.recipes.forEach {
             addIfValid(items, it.rawItemId)
             addIfValid(items, it.cookedItemId)
             addIfValid(items, it.burntItemId)

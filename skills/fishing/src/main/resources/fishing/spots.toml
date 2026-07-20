@@ -1,0 +1,99 @@
+# Fishing spot definitions. Spots are NPCs (npcId), clicked via clickOption (1 or 2).
+# bigCatch* fields are optional: when set, there's a chance to land bigCatchItemId
+# instead of fishItemId once the player meets bigCatchRequiredLevel.
+
+[[spot]]
+index = 0
+npcId = 1510
+clickOption = 1
+fishItemId = 317
+animationId = 621
+requiredLevel = 1
+baseDelayMs = 1350
+toolItemId = 303
+experience = 110
+
+[[spot]]
+index = 1
+npcId = 1510
+clickOption = 2
+fishItemId = 335
+animationId = 622
+requiredLevel = 20
+baseDelayMs = 1660
+toolItemId = 309
+experience = 200
+featherConsumed = true
+bigCatchItemId = 331
+bigCatchRequiredLevel = 30
+bigCatchBonusXp = 100
+
+[[spot]]
+index = 2
+npcId = 1511
+clickOption = 1
+fishItemId = 377
+animationId = 619
+requiredLevel = 40
+baseDelayMs = 2480
+toolItemId = 301
+experience = 440
+
+[[spot]]
+index = 3
+npcId = 1511
+clickOption = 2
+fishItemId = 371
+animationId = 618
+requiredLevel = 50
+baseDelayMs = 3300
+toolItemId = 311
+experience = 650
+
+[[spot]]
+index = 4
+npcId = 1514
+clickOption = 1
+fishItemId = 7944
+animationId = 621
+requiredLevel = 60
+baseDelayMs = 2480
+toolItemId = 303
+experience = 780
+premiumOnly = true
+
+[[spot]]
+index = 5
+npcId = 1514
+clickOption = 2
+fishItemId = 383
+animationId = 618
+requiredLevel = 70
+baseDelayMs = 4900
+toolItemId = 311
+experience = 1100
+premiumOnly = true
+
+[[spot]]
+index = 6
+npcId = 1517
+clickOption = 1
+fishItemId = 395
+animationId = 619
+requiredLevel = 85
+baseDelayMs = 5800
+toolItemId = 301
+experience = 1450
+premiumOnly = true
+
+[[spot]]
+index = 7
+npcId = 1517
+clickOption = 2
+fishItemId = 389
+animationId = 618
+requiredLevel = 95
+baseDelayMs = 6650
+toolItemId = 311
+experience = 1900
+premiumOnly = true

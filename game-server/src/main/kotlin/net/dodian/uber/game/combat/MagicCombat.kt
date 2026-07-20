@@ -22,39 +22,6 @@ import net.dodian.utilities.Utils
 import kotlin.math.min
 
 
-data class AncientSpellGfx(
-    val castGfx: String? = null,
-    val projectileGfx: String? = null,
-    val impactGfx: String? = null,
-    val castAnim: Int = 1979
-)
-
-private val ANCIENT_SPELLS_GFX = mapOf(
-    // Rush spells
-    0 to AncientSpellGfx(projectileGfx = "smoke_rush_travel", impactGfx = "smoke_rush_impact"),
-    1 to AncientSpellGfx(projectileGfx = "shadow_rush_travel", impactGfx = "shadow_rush_impact"),
-    2 to AncientSpellGfx(projectileGfx = "blood_rush_travel", impactGfx = "blood_rush_impact"),
-    3 to AncientSpellGfx(projectileGfx = "ice_rush_travel", impactGfx = "ice_rush_impact"),
-    
-    // Burst spells
-    4 to AncientSpellGfx(projectileGfx = "smoke_burst_travel", impactGfx = "smoke_burst_impact"),
-    5 to AncientSpellGfx(impactGfx = "shadow_burst_impact"),
-    6 to AncientSpellGfx(impactGfx = "spell_blood_burst_impact"),
-    7 to AncientSpellGfx(projectileGfx = "ice_burst_travel", impactGfx = "ice_burst_impact"),
-    
-    // Blitz spells
-    8 to AncientSpellGfx(castGfx = "smoke_blitz_travel", projectileGfx = "smoke_blitz_travel", impactGfx = "smoke_blitz_impact", castAnim = 1978),
-    9 to AncientSpellGfx(castGfx = "shadow_blitz_travel", projectileGfx = "shadow_blitz_travel", impactGfx = "shadow_blitz_impact", castAnim = 1978),
-    10 to AncientSpellGfx(castGfx = "blood_blitz_travel", projectileGfx = "blood_blitz_travel", impactGfx = "blood_blitz_impact", castAnim = 1978),
-    11 to AncientSpellGfx(castGfx = "ice_blitz_travel", projectileGfx = "ice_blitz_travel", impactGfx = "ice_blitz_impact", castAnim = 1978),
-    
-    // Barrage spells
-    12 to AncientSpellGfx(projectileGfx = "smoke_barrage_travel", impactGfx = "smoke_barrage_impact"),
-    13 to AncientSpellGfx(impactGfx = "shadow_barrage_impact"),
-    14 to AncientSpellGfx(impactGfx = "spell_blood_barrage_impact"),
-    15 to AncientSpellGfx(castGfx = "ice_burst_travel", impactGfx = "ice_barrage_impact") // Ice Barrage (casts directly)
-)
-
 fun Client.handleMagicAttack(): CombatAttackResult? {
     if (stunTimer > 0 || target == null)
         return null
@@ -67,7 +34,7 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         type = autocast_spellIndex%4
     else {
         if(ancients == 1) {
-            for (checkSlot in 0..ancientId.size)
+            for (checkSlot in ancientId.indices)
                 if (magicId == ancientId[checkSlot]) {
                     slot = checkSlot
                     type = checkSlot % 4
@@ -113,7 +80,7 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
     if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
     val landCrit = Math.random() * 100 <= criticalChance
 
-    val gfx = ANCIENT_SPELLS_GFX[slot]
+    val gfx = AncientSpellRegistry.gfx(slot)
     if (gfx != null) {
         PlayerAnimationService.requestAttack(this, gfx.castAnim)
         if (gfx.castGfx != null) {

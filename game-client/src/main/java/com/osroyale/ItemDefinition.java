@@ -44,7 +44,7 @@ public final class ItemDefinition implements RSItemComposition {
         itemDef.readValues(dataBuffer);
         /* Customs added here? */
 
-        switch (i) {
+        if (false) switch (i) {
             case 2399://keepsake key - originally silverlight key
                 itemDef.name = "Keepsake key";
                 itemDef.itemActions = new String[]{null, null, null, null, "Drop"};

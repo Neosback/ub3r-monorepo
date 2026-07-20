@@ -1,0 +1,115 @@
+# Cooking range/fire recipes.
+# burnRollBase is the raw "chance to burn" roll before subtracting the player's
+# cooking level and any burn-reducing equipment (see CookingModule.cookOnce).
+
+[[recipe]]
+rawItemId = 317
+cookedItemId = 315
+burntItemId = 323
+requiredLevel = 1
+experience = 150
+burnRollBase = 30
+
+[[recipe]]
+rawItemId = 2134
+cookedItemId = 2142
+burntItemId = 2146
+requiredLevel = 1
+experience = 100
+burnRollBase = 30
+
+[[recipe]]
+rawItemId = 2132
+cookedItemId = 2142
+burntItemId = 2146
+requiredLevel = 1
+experience = 100
+burnRollBase = 30
+
+[[recipe]]
+rawItemId = 2138
+cookedItemId = 2140
+burntItemId = 2144
+requiredLevel = 1
+experience = 50
+burnRollBase = 36
+
+[[recipe]]
+rawItemId = 2307
+cookedItemId = 2309
+burntItemId = 2311
+requiredLevel = 10
+experience = 170
+burnRollBase = 36
+
+[[recipe]]
+rawItemId = 3363
+cookedItemId = 3369
+burntItemId = 3375
+requiredLevel = 15
+experience = 200
+burnRollBase = 42
+
+[[recipe]]
+rawItemId = 335
+cookedItemId = 333
+burntItemId = 343
+requiredLevel = 20
+experience = 250
+burnRollBase = 50
+
+[[recipe]]
+rawItemId = 331
+cookedItemId = 329
+burntItemId = 343
+requiredLevel = 30
+experience = 350
+burnRollBase = 60
+
+[[recipe]]
+rawItemId = 377
+cookedItemId = 379
+burntItemId = 381
+requiredLevel = 40
+experience = 500
+burnRollBase = 70
+
+[[recipe]]
+rawItemId = 371
+cookedItemId = 373
+burntItemId = 375
+requiredLevel = 50
+experience = 720
+burnRollBase = 80
+
+[[recipe]]
+rawItemId = 7944
+cookedItemId = 7946
+burntItemId = 7948
+requiredLevel = 60
+experience = 870
+burnRollBase = 90
+
+[[recipe]]
+rawItemId = 383
+cookedItemId = 385
+burntItemId = 387
+requiredLevel = 70
+experience = 1220
+burnRollBase = 100
+
+[[recipe]]
+rawItemId = 395
+cookedItemId = 397
+burntItemId = 399
+requiredLevel = 85
+experience = 1600
+burnRollBase = 110
+
+[[recipe]]
+rawItemId = 389
+cookedItemId = 391
+burntItemId = 393
+requiredLevel = 95
+experience = 2100
+burnRollBase = 120

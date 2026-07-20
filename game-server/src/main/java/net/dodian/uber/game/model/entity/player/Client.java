@@ -1,6 +1,7 @@
 package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.api.content.ContentInteraction;
 import net.dodian.uber.game.api.content.ContentActions;
+import net.dodian.uber.game.combat.AncientSpellRegistry;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.engine.event.GameEventBus;
@@ -210,17 +211,12 @@ public class Client extends Player implements Runnable {
     public java.util.List<Integer> getDropDisplayKey() { return dropDisplayKey; }
     public void setDropDisplayKey(java.util.List<Integer> key) { this.dropDisplayKey = key; }
 
-    public int[] requiredLevel = {1, 10, 20, 30, 40, 50, 60, 70, 74, 76, 80, 82, 86, 88, 92,
-            94, 96};
-
-    public int[] baseDamage = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32};
-    public String[] spellName = {"Smoke Rush", "Shadow Rush", "Blood Rush", "Ice Rush",
-            "Smoke Burst", "Shadow Burst", "Blood Burst", "Ice Burst",
-            "Smoke Blitz", "Shadow Blitz", "Blood Blitz", "Ice Blitz",
-            "Smoke Barrage", "Shadow Barrage", "Blood Barrage", "Ice Barrage"};
-    public int[] ancientId = {12939, 12987, 12901, 12861, 12963, 13011, 12919, 12881, 12951, 12999, 12911, 12871, 12975, 13023, 12929, 12891};
-    public int[] coolDown = {5, 5, 6, 6};
-    public int[] ancientButton = {51133, 51185, 51091, 24018, 51159, 51211, 51111, 51069, 51146, 51198, 51102, 51058, 51172, 51224, 51122, 51080};
+    public int[] requiredLevel = AncientSpellRegistry.requiredLevel();
+    public int[] baseDamage = AncientSpellRegistry.baseDamage();
+    public String[] spellName = AncientSpellRegistry.spellName();
+    public int[] ancientId = AncientSpellRegistry.ancientId();
+    public int[] coolDown = AncientSpellRegistry.coolDown();
+    public int[] ancientButton = AncientSpellRegistry.ancientButton();
     public String properName = "";
     public int actionButtonId = 0;
     public int skillX = 0, skillY = 0;

@@ -120,6 +120,8 @@ interface SkillActions {
     fun endSession(key: String)
     fun activeSessionKey(): String?
     fun triggerRandomEvent(experience: Int)
+    /** Records an audited resource-gathering event (fishing/mining/woodcutting/thieving loot, etc.). */
+    fun logGathering(itemId: Int, amount: Int, reason: String)
 }
 
 interface SkillUi {

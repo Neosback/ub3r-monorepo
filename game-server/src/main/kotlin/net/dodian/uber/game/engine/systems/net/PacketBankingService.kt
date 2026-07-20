@@ -3,7 +3,6 @@ package net.dodian.uber.game.engine.systems.net
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
-import net.dodian.uber.game.skill.cooking.Cooking
 import net.dodian.uber.game.skill.herblore.Herblore
 import net.dodian.uber.game.skill.slayer.Slayer
 import net.dodian.uber.game.skill.smithing.SmithingInterface
@@ -456,14 +455,6 @@ object PacketBankingService {
             }
             if (client.enterAmountId > 0) {
                 client.send(RemoveInterfaces())
-                if (client.enterAmountId == 1) {
-                    if (client.inTrade || client.inDuel) {
-                        client.send(SendMessage("Cannot cook in duel or trade"))
-                        return
-                    }
-                    Cooking.startFromEnteredAmount(client, enteredAmount)
-                    return
-                }
                 if (client.enterAmountId == 2) {
                     client.send(RemoveInterfaces())
                     SmithingInterface.startFromPending(client, enteredAmount)

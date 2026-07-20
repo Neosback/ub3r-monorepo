@@ -27,6 +27,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.skill.runtime.action.SkillStateCoordinator
 import net.dodian.uber.game.skill.runtime.action.ActionSpec
 import net.dodian.uber.game.skill.runtime.action.ActionStopReason
@@ -81,6 +82,8 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun endSession(key: String) = SkillStateCoordinator.endSession(client, key)
         override fun activeSessionKey(): String? = client.activeSkillSessionKey
         override fun triggerRandomEvent(experience: Int) = SkillingRandomEventService.trigger(client, experience)
+        override fun logGathering(itemId: Int, amount: Int, reason: String) =
+            ItemLog.playerGathering(client, itemId, amount, client.position.copy(), reason)
         override fun queue(spec: ActionSpec, beforeStart: () -> Unit): SkillActionHandle? {
             val player = this@ClientSkillPlayerAdapter
             val task = object : GatheringTask(

@@ -55,9 +55,7 @@ object PlayerActionCancellationService {
         Fishing.stopFromReset(player, fullResetAnimation)
         Cooking.stopFromReset(player, fullResetAnimation)
         player.clearFletchingState()
-        player.clearFishingState()
         player.resourcesGathered = 0
-        player.clearCookingState()
         player.clearMiningState()
         player.clearWoodcuttingState()
         if (player.activeSmithingSelection != null || player.IsAnvil) {

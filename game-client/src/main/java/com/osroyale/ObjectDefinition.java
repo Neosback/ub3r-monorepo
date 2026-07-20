@@ -45,7 +45,7 @@ public final class ObjectDefinition {
 		objectDefinition.decode(stream, i);
 
 		/* Custom/Modified Objects */
-		switch (i) {
+		if (false) switch (i) {
 
 			case 10081: /* Dead Ore */
 			case 2194: /* Dead Ore */
@@ -250,7 +250,7 @@ public final class ObjectDefinition {
 				break;
 		}
 
-		if (objectDefinition.name != null && objectDefinition.interactions != null && (objectDefinition.name.equals("Bank booth") || objectDefinition.name.equals("Bank chest"))) {
+		if (false && objectDefinition.name != null && objectDefinition.interactions != null && (objectDefinition.name.equals("Bank booth") || objectDefinition.name.equals("Bank chest"))) {
 			objectDefinition.interactions = new String[]{"Bank", "Presets", null, null, null};
 		}
 

@@ -32,8 +32,6 @@ import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.skill.mining.MiningState;
 import net.dodian.uber.game.skill.woodcutting.WoodcuttingState;
 import net.dodian.uber.game.skill.fletching.FletchingState;
-import net.dodian.uber.game.skill.fishing.FishingState;
-import net.dodian.uber.game.skill.cooking.CookingState;
 import net.dodian.uber.game.skill.crafting.CraftingState;
 import net.dodian.uber.game.skill.prayer.PrayerOfferingState;
 import net.dodian.uber.game.skill.runecrafting.RunecraftingState;
@@ -1084,30 +1082,6 @@ public abstract class Player extends Entity {
 
     public void clearFletchingState() {
         interactionState.clearFletchingState();
-    }
-
-    public FishingState getFishingState() {
-        return interactionState.getFishingState();
-    }
-
-    public void setFishingState(FishingState fishingState) {
-        interactionState.setFishingState(fishingState);
-    }
-
-    public void clearFishingState() {
-        interactionState.clearFishingState();
-    }
-
-    public CookingState getCookingState() {
-        return interactionState.getCookingState();
-    }
-
-    public void setCookingState(CookingState cookingState) {
-        interactionState.setCookingState(cookingState);
-    }
-
-    public void clearCookingState() {
-        interactionState.clearCookingState();
     }
 
     public CraftingState getCraftingState() {

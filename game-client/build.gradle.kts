@@ -116,7 +116,7 @@ tasks {
     }
 
     shadowJar {
-        archiveBaseName.set("Tarnish")
+        archiveBaseName.set("Dodian")
         archiveClassifier.set("")
         archiveVersion.set("")
         isZip64 = true

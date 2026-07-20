@@ -15,9 +15,7 @@ import net.dodian.uber.game.engine.systems.interaction.ActiveInteraction
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState
 import net.dodian.uber.game.engine.systems.interaction.InteractionIntent
 import net.dodian.uber.game.engine.tasking.GameTaskSet
-import net.dodian.uber.game.skill.cooking.CookingState
 import net.dodian.uber.game.skill.crafting.CraftingState
-import net.dodian.uber.game.skill.fishing.FishingState
 import net.dodian.uber.game.skill.fletching.FletchingState
 import net.dodian.uber.game.skill.mining.MiningState
 import net.dodian.uber.game.skill.prayer.PrayerOfferingState
@@ -65,8 +63,6 @@ class PlayerContentRuntimeState {
     @Volatile private var miningState: MiningState? = null
     @Volatile private var woodcuttingState: WoodcuttingState? = null
     @Volatile private var fletchingState: FletchingState? = null
-    @Volatile private var fishingState: FishingState? = null
-    @Volatile private var cookingState: CookingState? = null
     @Volatile private var craftingState: CraftingState? = null
     @Volatile private var prayerOfferingState: PrayerOfferingState? = null
     @Volatile private var runecraftingState: RunecraftingState? = null
@@ -116,12 +112,6 @@ class PlayerContentRuntimeState {
     fun getFletchingState() = fletchingState
     fun setFletchingState(value: FletchingState?) { fletchingState = value }
     fun clearFletchingState() { fletchingState = null }
-    fun getFishingState() = fishingState
-    fun setFishingState(value: FishingState?) { fishingState = value }
-    fun clearFishingState() { fishingState = null }
-    fun getCookingState() = cookingState
-    fun setCookingState(value: CookingState?) { cookingState = value }
-    fun clearCookingState() { cookingState = null }
     fun getCraftingState() = craftingState
     fun setCraftingState(value: CraftingState?) { craftingState = value }
     fun clearCraftingState() { craftingState = null }

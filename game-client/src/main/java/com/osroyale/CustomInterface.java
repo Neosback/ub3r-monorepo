@@ -803,10 +803,11 @@ public class CustomInterface extends RSInterface {
     private static void bankVault(TextDrawingArea[] tda) {
         RSInterface rsint = addInterface(56300);
         addSprite(56301, 862);
-        addText(56302, "Tarnish Bank Vault", tda, 2, 0xFFA500, true, true);
+        addText(56302, "Dodian Bank Vault", tda, 2, 0xFFA500, true, true);
         addHoverButton(56303, 252, 21, 21, "Close", 250, 56304, 3);
         addHoveredButton(56304, 253, 21, 21, 56305);
         addText(56306, "This is your bank vault, here you can deposit", tda, 0, 0xFFA500, true, true);
+        //TODO probably remove blood money?
         addText(56307, "and withdraw both coins and blood money", tda, 0, 0xFFA500, true, true);
         addText(56308, "which can exceed the 2.147M limit. ", tda, 0, 0xFFA500, true, true);
         addText(56309, "Gold Coins:", tda, 3, 0xFFA500, false, true);
@@ -846,7 +847,7 @@ public class CustomInterface extends RSInterface {
     private static void achievementInterface(TextDrawingArea[] tda) {
         RSInterface rsint = addInterface(56800);
         addSprite(56801, 861);
-        addText(56802, "Tarnish Achievements", tda, 2, 0xFFA500, true, true);
+        addText(56802, "Dodian Achievements", tda, 2, 0xFFA500, true, true);
         addHoverButton(56803, 252, 21, 21, "Close", -1, 56804, 1);
         addHoveredButton(56804, 253, 21, 21, 56805);
         addText(56806, "Desciption:", tda, 3, 0xFFA500, true, true);
@@ -1125,13 +1126,13 @@ public class CustomInterface extends RSInterface {
         addHoveredButton(21308, 780, 172, 28, 21309);
         //addHead(21310, 35, 35, 2500);
         addHead(21342, 2, 306, 588, 35, 35, 900);
-        addText(21311, "WELCOME TO TARNISH!", 0xE9EBC5, true, true, 52, TDA, 3);
+        addText(21311, "WELCOME TO Dodian!", 0xE9EBC5, true, true, 52, TDA, 3);
         addText(21312, "CLICK HERE TO PLAY", 0xFF4545, true, true, 52, TDA, 3);
         addText(21313, "View Latest Announcement", 0xC9C2BF, true, true, 52, TDA, 1);
         addText(21314, "View Latest Update", 0xC9C2BF, true, true, 52, TDA, 1);
-        addText(21315, "Tarnish welcomes you!", 0x000000, true, false, 52, TDA, 0);
-        addText(21316, "Tarnish welcomes you!", 0x000000, true, false, 52, TDA, 0);
-        addText(21317, "Tarnish welcomes you!", 0x000000, true, false, 52, TDA, 0);
+        addText(21315, "Dodian welcomes you!", 0x000000, true, false, 52, TDA, 0);
+        addText(21316, "Dodian welcomes you!", 0x000000, true, false, 52, TDA, 0);
+        addText(21317, "Dodian welcomes you!", 0x000000, true, false, 52, TDA, 0);
         addText(21318, "You last logged in from 127.0.0.1", 0xEBCD96, true, true, 52, TDA, 0);
         addMarqueeText(21319, 0xEBCD96, true, 52, 3, TDA);
         addText(21320, "Bank pin line 1", 0xC9C2BF, false, true, 52, TDA, 0);
@@ -1209,7 +1210,7 @@ public class CustomInterface extends RSInterface {
         addConfigButton(50005, 50000, 140, 141, 40, 40, "View extra settings", 3, 5, 980, false);
         addConfigButton(50006, 50000, 127, 126, 40, 40, "Toggle accept aid", 0, 5, 427, false);
         addConfigButton(50007, 50000, 129, 128, 40, 40, "Toggle run", 0, 5, 152, true);
-        addConfigButton(50008, 50000, 731, 732, 40, 40, "View donator tab", 4, 5, 980, false);
+        addConfigButton(50008, 50000, 731, 732, 40, 40, "View spellbook tab", 4, 5, 980, false);
         tab.totalChildren(9);
         tab.child(0, 50001, 3, 48);
         tab.child(1, 50002, 5, 4);
@@ -1330,29 +1331,27 @@ public class CustomInterface extends RSInterface {
         scrollInterface.contentType = 0;
         scrollInterface.width = 165;
         scrollInterface.height = 155;
-        scrollInterface.scrollMax = 300;
-        int y = 5;
+        scrollInterface.scrollMax = 155;
+        int y = 15;
         scrollInterface.totalChildren(6);
 
-        addHoverButton(50421, 391, 118, 32, "Teleport to Donator Zone", 0, 50422, 1);
-        addHoveredButton(50422, 392, 118, 32, 50423);
-        addText(50424, "Donator Zone", TDA, 1, 0xFF9900, true, true);
+        addConfigButton(50425, 50420, 234, 235, 15, 15, "Select Ancient Magic", 1, 5, 981, false);
+        addText(50424, "Ancient Magic", TDA, 1, 0xFF9900, false, true);
 
-        addHoverButton(50425, 391, 118, 32, "Manage donator titles", 0, 50426, 1);
-        addHoveredButton(50426, 392, 118, 32, 50427);
-        addText(50428, "Donator Titles", TDA, 1, 0xFF9900, true, true);
+        addConfigButton(50421, 50420, 234, 235, 15, 15, "Select Normal Magic", 0, 5, 981, false);
+        addText(50428, "Normal Magic", TDA, 1, 0xFF9900, false, true);
 
+        addConfigButton(50429, 50420, 234, 235, 15, 15, "Select Lunar Magic", 2, 5, 981, false);
+        addText(50430, "Lunar Magic", TDA, 1, 0xFF9900, false, true);
 
-        scrollInterface.child(0, 50421, 30, y);
-        scrollInterface.child(1, 50422, 30, y);
-        scrollInterface.child(2, 50424, 88, y + 7);
+        scrollInterface.child(0, 50425, 15, y);
+        scrollInterface.child(1, 50424, 38, y + 1);
 
-        y = 45;
-        scrollInterface.child(3, 50425, 30, y);
-        scrollInterface.child(4, 50426, 30, y);
-        scrollInterface.child(5, 50428, 88, y + 7);
+        scrollInterface.child(2, 50421, 15, y + 35);
+        scrollInterface.child(3, 50428, 38, y + 36);
 
-
+        scrollInterface.child(4, 50429, 15, y + 70);
+        scrollInterface.child(5, 50430, 38, y + 71);
     }
 
     public static void settings(TextDrawingArea[] tda) {
@@ -4601,7 +4600,7 @@ public class CustomInterface extends RSInterface {
         addSprite(29401, 63);
         addSprite(29402, 64);
         addText(29403, Configuration.NAME, tda, 2, 0xC47423, false, true);
-        addHoverText(29404, "www.tarnishps.com", "Visit website", tda, 3, 0xC47423, true, true, 168);
+        addHoverText(29404, "www.Dodian.net", "Visit website", tda, 3, 0xC47423, true, true, 168);
         addHoverButton(29408, 292, 18, 18, "View Achievements Tab", -1, 29409, 1);
         addHoveredButton(29409, 293, 18, 18, 29410);
         addHoverButton(29411, 71, 16, 16, "Refresh Quest Tab", -1, 29412, 1);

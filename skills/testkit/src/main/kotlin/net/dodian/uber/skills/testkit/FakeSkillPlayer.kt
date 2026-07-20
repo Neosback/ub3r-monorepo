@@ -36,6 +36,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         private set
     var randomEventChecks = 0
         private set
+    val gatheringLogs = mutableListOf<Triple<Int, Int, String>>()
     var positionValue = SkillPosition(3200, 3200, 0)
     val openedInterfaces = mutableListOf<Int>()
     val chatboxInterfaces = mutableListOf<Int>()
@@ -130,6 +131,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun endSession(key: String) { if (sessionKey == key) sessionKey = null }
         override fun activeSessionKey(): String? = sessionKey
         override fun triggerRandomEvent(experience: Int) { if (experience > 0) randomEventChecks++ }
+        override fun logGathering(itemId: Int, amount: Int, reason: String) { gatheringLogs += Triple(itemId, amount, reason) }
         override fun queue(spec: ActionSpec, beforeStart: () -> Unit): SkillActionHandle? {
             val failure = spec.requirements.asSequence()
                 .map { it.validate(this@FakeSkillPlayer) }
