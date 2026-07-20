@@ -236,9 +236,9 @@ object RscmGenerator {
     }
 
     private fun buildItemEntries(gson: Gson): List<String> {
-        var sourceFile = File("data/def/item/item_definitions.json")
+        var sourceFile = File("content/items/item_definitions.json")
         if (!sourceFile.exists()) {
-            sourceFile = File("game-server/data/def/item/item_definitions.json")
+            sourceFile = File("game-server/content/items/item_definitions.json")
         }
         if (!sourceFile.exists()) {
             println("Warning: Item definitions not found")

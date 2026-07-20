@@ -5,7 +5,7 @@ import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.engine.systems.inventory.EconomyTransaction
 import net.dodian.uber.game.item.ItemDefBase
 import net.dodian.uber.game.item.ItemManager
-import net.dodian.uber.game.item.TarnishEquipmentAppearanceType
+import net.dodian.uber.game.item.EquipmentAppearanceType
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.item.Item
@@ -38,16 +38,16 @@ class EquipmentAppearanceSynchronizationTest {
     @Test
     fun `dynamic appearance overrides resolve correct types`() {
         val baseHelm = ItemDefBase(id = 1153, name = "Iron full helm", equipmentSlot = "head")
-        val itemHelm = Item.fromDefs(baseHelm, null, TarnishEquipmentAppearanceType.MASK)
-        assertEquals(TarnishEquipmentAppearanceType.HELM, itemHelm.tarnishAppearanceType)
+        val itemHelm = Item.fromDefs(baseHelm, null, EquipmentAppearanceType.MASK)
+        assertEquals(EquipmentAppearanceType.HELM, itemHelm.appearanceType)
 
         val baseHood = ItemDefBase(id = 11663, name = "Ahrim's hood", equipmentSlot = "head")
-        val itemHood = Item.fromDefs(baseHood, null, TarnishEquipmentAppearanceType.HAT)
-        assertEquals(TarnishEquipmentAppearanceType.FACE, itemHood.tarnishAppearanceType)
+        val itemHood = Item.fromDefs(baseHood, null, EquipmentAppearanceType.HAT)
+        assertEquals(EquipmentAppearanceType.FACE, itemHood.appearanceType)
 
         val baseMed = ItemDefBase(id = 1137, name = "Iron med helm", equipmentSlot = "head")
-        val itemMed = Item.fromDefs(baseMed, null, TarnishEquipmentAppearanceType.HAT)
-        assertEquals(TarnishEquipmentAppearanceType.FACE, itemMed.tarnishAppearanceType)
+        val itemMed = Item.fromDefs(baseMed, null, EquipmentAppearanceType.HAT)
+        assertEquals(EquipmentAppearanceType.FACE, itemMed.appearanceType)
     }
 
     @Test

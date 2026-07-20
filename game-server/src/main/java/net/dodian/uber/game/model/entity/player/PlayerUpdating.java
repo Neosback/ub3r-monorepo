@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.item.Equipment;
-import net.dodian.uber.game.item.TarnishEquipmentAppearanceType;
+import net.dodian.uber.game.item.EquipmentAppearanceType;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -318,7 +318,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 } else {
                     playerProps.put(0);
                 }
-                TarnishEquipmentAppearanceType chestAppearance = Server.itemManager.getTarnishAppearanceType(
+                EquipmentAppearanceType chestAppearance = Server.itemManager.getAppearanceType(
                         visualEquipment[Equipment.Slot.CHEST.getId()]);
                 if (chestAppearance.getShowArms()) {
                     playerProps.putShort(0x100 + visualLook[4]);
@@ -330,7 +330,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 } else {
                     playerProps.putShort(0x100 + visualLook[6]);
                 }
-                TarnishEquipmentAppearanceType headAppearance = Server.itemManager.getTarnishAppearanceType(
+                EquipmentAppearanceType headAppearance = Server.itemManager.getAppearanceType(
                         visualEquipment[Equipment.Slot.HEAD.getId()]);
                 if (headAppearance.getShowHead()) {
                     playerProps.putShort(0x100 + visualLook[1]); // head

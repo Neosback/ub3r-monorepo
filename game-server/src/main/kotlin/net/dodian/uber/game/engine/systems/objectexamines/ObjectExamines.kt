@@ -16,7 +16,7 @@ object ObjectExamines {
 
     @JvmStatic
     fun load() {
-        val file = File("data/def/object_examines.json")
+        val file = File("content/objects/object_examines.json")
         if (!file.exists()) {
             logger.warn("Object examines file not found at: {}", file.absolutePath)
             return

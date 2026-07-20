@@ -12540,6 +12540,8 @@ public class Client extends GameEngine
         Settings.load();
         Ping.runPing();
 
+        CacheDownloader.checkAndDownload();
+
         try {
             cache_dat = new RandomAccessFile(Utility.findcachedir() + "main_file_cache.dat", "rw");
             for (int j = 0; j < cache_idx.length; j++) {

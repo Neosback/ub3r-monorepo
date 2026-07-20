@@ -6,7 +6,7 @@ import net.dodian.uber.game.item.ItemEquipmentDef
 import net.dodian.uber.game.item.ItemRequirement
 import net.dodian.uber.game.item.ItemWeaponDef
 import net.dodian.uber.game.item.ItemWeaponStance
-import net.dodian.uber.game.item.TarnishEquipmentAppearanceType
+import net.dodian.uber.game.item.EquipmentAppearanceType
 import net.dodian.uber.game.item.toRequiredArray
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.engine.systems.animation.AttackAnimationService
@@ -44,7 +44,7 @@ class Item(
     val requirements: IntArray = IntArray(23),
     val attackAnimations: IntArray? = null,
     val blockAnimation: Int = 0,
-    val tarnishAppearanceType: TarnishEquipmentAppearanceType = TarnishEquipmentAppearanceType.DEFAULT,
+    val appearanceType: EquipmentAppearanceType = EquipmentAppearanceType.DEFAULT,
 ) {
     private val flags: Int = run {
         var f = 0
@@ -185,7 +185,7 @@ class Item(
         fun fromDefs(
             base: ItemDefBase,
             json: ItemDefJson?,
-            tarnishAppearanceType: TarnishEquipmentAppearanceType = TarnishEquipmentAppearanceType.DEFAULT,
+            appearanceType: EquipmentAppearanceType = EquipmentAppearanceType.DEFAULT,
         ): Item {
             val itemName = json?.name ?: base.name
             val nameLower = itemName.lowercase()
@@ -252,18 +252,18 @@ class Item(
             val derivedAppearanceType = if (effectiveSlot == 0) {
                 val name = itemName.lowercase()
                 when {
-                    name.startsWith("hood") || name.endsWith("hood") -> TarnishEquipmentAppearanceType.FACE
-                    name.contains("full helm") || name == "masori mask" || name == "masori mask (f)" || name == "gas mask" -> TarnishEquipmentAppearanceType.HELM
-                    name.contains("bloodbark helm") -> TarnishEquipmentAppearanceType.HAT
-                    name.contains("med helm") -> TarnishEquipmentAppearanceType.FACE
+                    name.startsWith("hood") || name.endsWith("hood") -> EquipmentAppearanceType.FACE
+                    name.contains("full helm") || name == "masori mask" || name == "masori mask (f)" || name == "gas mask" -> EquipmentAppearanceType.HELM
+                    name.contains("bloodbark helm") -> EquipmentAppearanceType.HAT
+                    name.contains("med helm") -> EquipmentAppearanceType.FACE
                     name.contains("helm") -> {
-                        if (name.startsWith("dharok")) TarnishEquipmentAppearanceType.FACE else TarnishEquipmentAppearanceType.HELM
+                        if (name.startsWith("dharok")) EquipmentAppearanceType.FACE else EquipmentAppearanceType.HELM
                     }
-                    name.contains("mask") -> TarnishEquipmentAppearanceType.MASK
-                    else -> tarnishAppearanceType
+                    name.contains("mask") -> EquipmentAppearanceType.MASK
+                    else -> appearanceType
                 }
             } else {
-                tarnishAppearanceType
+                appearanceType
             }
 
             return Item(
@@ -298,7 +298,7 @@ class Item(
                 requirements = requirements,
                 attackAnimations = attackAnimationsArray,
                 blockAnimation = jsonBlockAnimation,
-                tarnishAppearanceType = derivedAppearanceType,
+                appearanceType = derivedAppearanceType,
             )
         }
     }

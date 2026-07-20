@@ -32,9 +32,7 @@ import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.dodian.uber.game.engine.systems.cache.CacheBootstrapService;
-import net.dodian.uber.game.engine.systems.cache.CacheManifestValidator;
 import net.dodian.uber.game.engine.systems.interaction.ObjectClipService;
-import org.jire.swiftfup.server.SwiftFupCache;
 
 
 import net.dodian.uber.game.netty.bootstrap.NettyGameServer;
@@ -72,7 +70,7 @@ public class Server {
 
 
     private static NettyGameServer nettyServer;
-    private static org.jire.swiftfup.server.net.FileServer fileServer;
+
     private static final GameLoopService gameLoopService = new GameLoopService();
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean(false);
     private static final String STARTUP_BANNER = String.join("\n",
@@ -126,7 +124,6 @@ public class Server {
         // Verifies the cache both CacheBootstrapService (below) and SwiftFUP (further down) read
         // from matches its known-good fingerprint, so a substituted or corrupted cache directory
         // fails loudly at boot instead of silently serving bad terrain/objects to clients.
-        CacheManifestValidator.validateIfPresent();
         new CacheBootstrapService().bootstrap();
         loadObjects();
         new DoorRegistry();
@@ -140,16 +137,6 @@ public class Server {
         ObjectClipService.bootstrapStartupOverlays(objects);
         EnginePluginBootstrap.bootstrap();
 
-        logger.info("Starting SwiftFUP server...");
-        org.jire.swiftfup.server.net.FileResponses fileResponses = new org.jire.swiftfup.server.net.FileResponses();
-        fileResponses.load(SwiftFupCache.path().toString(), false);
-        org.jire.swiftfup.server.net.FileServerProtectionConfig swiftFupProtection =
-                new org.jire.swiftfup.server.net.FileServerProtectionConfig(
-                        DotEnvKt.getSwiftFupConnectionsPerIp(),
-                        DotEnvKt.getSwiftFupReadTimeoutSeconds(),
-                        DotEnvKt.getSwiftFupMaxTrackedIps());
-        fileServer = new org.jire.swiftfup.server.net.FileServer(3, fileResponses, swiftFupProtection);
-        fileServer.start(DotEnvKt.getSwiftFupPort());
 
         System.gc();
 
@@ -280,13 +267,6 @@ public class Server {
             logger.warn("Failed to shutdown netty server", exception);
         }
 
-        try {
-            if (fileServer != null) {
-                fileServer.shutdown();
-            }
-        } catch (Exception exception) {
-            logger.warn("Failed to shutdown SwiftFUP server", exception);
-        }
 
         try {
             WebApi.stop();

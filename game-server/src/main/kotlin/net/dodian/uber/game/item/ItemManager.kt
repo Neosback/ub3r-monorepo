@@ -43,17 +43,49 @@ fun parseItemDefsFile(filePath: String): List<ItemDefBase> {
     }
 }
 
-fun parseTarnishAppearanceTypes(filePath: String): Map<Int, TarnishEquipmentAppearanceType> {
+fun parseAppearanceTypes(filePath: String): Map<Int, EquipmentAppearanceType> {
     val file = File(filePath)
     if (!file.exists()) return emptyMap()
-    return file.useLines { lines ->
-        lines.filter { it.isNotBlank() && !it.startsWith("#") }
-            .associate { line ->
-                val parts = line.split(',', limit = 2)
-                require(parts.size == 2) { "Invalid Tarnish appearance type row: $line" }
-                parts[0].trim().toInt() to TarnishEquipmentAppearanceType.valueOf(parts[1].trim())
-            }
+    val result = LinkedHashMap<Int, EquipmentAppearanceType>()
+    var id = -1
+    var type: EquipmentAppearanceType? = null
+    var inEntry = false
+
+    fun flush() {
+        if (inEntry && id != -1 && type != null) {
+            result[id] = type!!
+        }
+        id = -1
+        type = null
+        inEntry = false
     }
+
+    file.forEachLine { line ->
+        val trimmed = line.trim()
+        if (trimmed.startsWith("#") || trimmed.isEmpty()) return@forEachLine
+
+        if (trimmed == "[[equipment]]") {
+            flush()
+            inEntry = true
+            return@forEachLine
+        }
+
+        if (inEntry && trimmed.contains("=")) {
+            val parts = trimmed.split("=", limit = 2)
+            val key = parts[0].trim()
+            val value = parts[1].trim().replace("#.*".toRegex(), "").trim().trim('"')
+            try {
+                when (key) {
+                    "id" -> id = value.toInt()
+                    "type" -> type = EquipmentAppearanceType.valueOf(value)
+                }
+            } catch (_: Exception) {
+                // Ignore malformed lines or unknown enum values
+            }
+        }
+    }
+    flush()
+    return result
 }
 
 open class ItemManager @JvmOverloads constructor(
@@ -110,8 +142,8 @@ open class ItemManager @JvmOverloads constructor(
         val startTime = System.currentTimeMillis()
         val loaded = LinkedHashMap<Int, Item>()
 
-        val baseDefs = parseItemDefsFile("data/def/item/item_definitions.json")
-        val tarnishAppearanceTypes = parseTarnishAppearanceTypes("data/def/item/tarnish_equipment_appearance.csv")
+        val baseDefs = parseItemDefsFile("content/items/item_definitions.json")
+        val appearanceTypes = parseAppearanceTypes("content/items/equipment_appearance.toml")
         val baseMap = LinkedHashMap<Int, ItemDefBase>()
         for (base in baseDefs) {
             baseMap[base.id] = base
@@ -163,7 +195,7 @@ open class ItemManager @JvmOverloads constructor(
                 loaded[json.id] = Item.fromDefs(
                     base,
                     json,
-                    tarnishAppearanceTypes[json.id] ?: TarnishEquipmentAppearanceType.DEFAULT,
+                    appearanceTypes[json.id] ?: EquipmentAppearanceType.DEFAULT,
                 )
             }
             processedIds.add(json.id)
@@ -174,7 +206,7 @@ open class ItemManager @JvmOverloads constructor(
                 loaded[id] = Item.fromDefs(
                     base,
                     null,
-                    tarnishAppearanceTypes[id] ?: TarnishEquipmentAppearanceType.DEFAULT,
+                    appearanceTypes[id] ?: EquipmentAppearanceType.DEFAULT,
                 )
             }
         }
@@ -286,8 +318,8 @@ open class ItemManager @JvmOverloads constructor(
         return item != null && item.slot == 0 && item.mask
     }
 
-    fun getTarnishAppearanceType(id: Int): TarnishEquipmentAppearanceType =
-        getItem(id)?.tarnishAppearanceType ?: TarnishEquipmentAppearanceType.DEFAULT
+    fun getAppearanceType(id: Int): EquipmentAppearanceType =
+        getItem(id)?.appearanceType ?: EquipmentAppearanceType.DEFAULT
 
     fun getShopSellValue(id: Int): Int = getItem(id)?.getShopSellValue() ?: 1
 

@@ -1,0 +1,78 @@
+# Global Object Removals Configuration
+#
+# Format:
+# [[remove]]
+# x = Coordinate X (or "from..to" range)
+# y = Coordinate Y (or "from..to" range)
+# z = Height level
+# type = (Optional) The specific object type to remove.
+#        If omitted, all objects at the tile are removed from both the client's view and server collision map.
+# Common Types:
+# - 0: Wall Straight (e.g., standard walls, doors)
+# - 9: Wall Diagonal
+# - 10, 11: Main interactable objects (e.g., gates, chests, bookcases)
+# - 22: Floor decoration
+
+schemaVersion = 1
+
+# Yanille custom portal area / gate removal
+[[remove]]
+x = 2669
+y = 2713
+z = 0
+type = 11
+
+# Seers Village bank area door removals (making path walkable/open)
+[[remove]]
+x = 2713
+y = 3483
+z = 0
+type = 0
+
+[[remove]]
+x = 2716
+y = 3472
+z = 0
+type = 0
+
+# Yanille house door removal
+[[remove]]
+x = 2594
+y = 3102
+z = 0
+type = 0
+
+# Catherby boundary/shortcut gate removal
+[[remove]]
+x = 2816
+y = 3438
+z = 0
+type = 0
+
+# Falador / Custom shop entrance door removal
+[[remove]]
+x = 2726
+y = 3368
+z = 0
+type = 0
+
+# Yanille wizard guild door/boundary removal
+[[remove]]
+x = 2542
+y = 3097
+z = 0
+type = 10
+
+# Nightmare Zone boxed-off area (Custom space boundary cleanup)
+[[remove]]
+x = "2600..2609"
+y = "3111..3119"
+z = 0
+type = 10
+
+# Magic Guild staircase room boundary/door cleanup
+[[remove]]
+x = "2602..2604"
+y = "3078..3079"
+z = 0
+type = 0

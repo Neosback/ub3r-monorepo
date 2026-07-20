@@ -1,7 +1,7 @@
 package net.dodian.uber.game.item
 
 /** Controls which identity-kit body parts remain visible around equipped items. */
-enum class TarnishEquipmentAppearanceType(
+enum class EquipmentAppearanceType(
     val showHead: Boolean = true,
     val showBeard: Boolean = true,
     val showArms: Boolean = true,

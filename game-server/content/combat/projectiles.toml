@@ -1,0 +1,214 @@
+# Projectiles override and configuration file.
+# Contains both graphic ID mapping and stats overrides for projectiles.
+
+[[projectile]]
+name = "bronze_arrow_travel"
+id = 10
+slope = 10
+
+[[projectile]]
+name = "bronze_arrow_launch"
+id = 19
+
+[[projectile]]
+name = "iron_arrow_travel"
+id = 9
+slope = 10
+
+[[projectile]]
+name = "iron_arrow_launch"
+id = 18
+
+[[projectile]]
+name = "steel_arrow_travel"
+id = 11
+slope = 10
+
+[[projectile]]
+name = "steel_arrow_launch"
+id = 20
+
+[[projectile]]
+name = "mithril_arrow_travel"
+id = 12
+slope = 10
+
+[[projectile]]
+name = "mithril_arrow_launch"
+id = 21
+
+[[projectile]]
+name = "adamant_arrow_travel"
+id = 13
+slope = 10
+
+[[projectile]]
+name = "adamant_arrow_launch"
+id = 22
+
+[[projectile]]
+name = "rune_arrow_travel"
+id = 15
+slope = 10
+
+[[projectile]]
+name = "rune_arrow_launch"
+id = 24
+
+[[projectile]]
+name = "ii_dragon_arrow_normal_projanim"
+id = 1120
+slope = 10
+
+[[projectile]]
+name = "dragon_arrow_launch"
+id = 1116
+
+[[projectile]]
+name = "crossbowbolt_travel"
+id = 27
+
+# Magic - Rush Spells
+[[projectile]]
+name = "smoke_rush_travel"
+id = 384
+startHeight = 43
+endHeight = 31
+delay = 51
+
+[[projectile]]
+name = "smoke_rush_impact"
+id = 385
+
+[[projectile]]
+name = "shadow_rush_travel"
+id = 378
+startHeight = 43
+endHeight = 31
+delay = 51
+
+[[projectile]]
+name = "shadow_rush_impact"
+id = 379
+
+[[projectile]]
+name = "blood_rush_travel"
+id = 372
+startHeight = 43
+endHeight = 31
+delay = 51
+
+[[projectile]]
+name = "blood_rush_impact"
+id = 373
+
+[[projectile]]
+name = "ice_rush_travel"
+id = 360
+startHeight = 43
+endHeight = 31
+delay = 51
+
+[[projectile]]
+name = "ice_rush_impact"
+id = 361
+
+# Magic - Burst Spells
+[[projectile]]
+name = "smoke_burst_travel"
+id = 388
+startHeight = 43
+endHeight = 31
+delay = 51
+
+[[projectile]]
+name = "smoke_burst_impact"
+id = 389
+
+[[projectile]]
+name = "shadow_burst_impact"
+id = 382
+
+[[projectile]]
+name = "spell_blood_burst_impact"
+id = 376
+
+[[projectile]]
+name = "ice_burst_travel"
+id = 366
+startHeight = 43
+endHeight = 31
+delay = 51
+
+[[projectile]]
+name = "ice_burst_impact"
+id = 367
+
+# Magic - Blitz Spells
+[[projectile]]
+name = "smoke_blitz_travel"
+id = 386
+startHeight = 43
+endHeight = 31
+delay = 51
+
+[[projectile]]
+name = "smoke_blitz_impact"
+id = 387
+
+[[projectile]]
+name = "shadow_blitz_travel"
+id = 380
+startHeight = 43
+endHeight = 31
+delay = 51
+
+[[projectile]]
+name = "shadow_blitz_impact"
+id = 381
+
+[[projectile]]
+name = "blood_blitz_travel"
+id = 374
+startHeight = 43
+endHeight = 31
+delay = 51
+
+[[projectile]]
+name = "blood_blitz_impact"
+id = 375
+
+[[projectile]]
+name = "ice_blitz_travel"
+id = 362
+startHeight = 43
+endHeight = 31
+delay = 51
+
+[[projectile]]
+name = "ice_blitz_impact"
+id = 363
+
+# Magic - Barrage Spells
+[[projectile]]
+name = "smoke_barrage_travel"
+id = 390
+startHeight = 43
+endHeight = 31
+delay = 51
+
+[[projectile]]
+name = "smoke_barrage_impact"
+id = 391
+
+[[projectile]]
+name = "shadow_barrage_impact"
+id = 383
+
+[[projectile]]
+name = "spell_blood_barrage_impact"
+id = 377
+
+[[projectile]]
+name = "ice_barrage_impact"
+id = 369

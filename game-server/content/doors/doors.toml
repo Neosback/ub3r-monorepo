@@ -1,0 +1,334 @@
+# All door definitions migrated from SQL uber3_doors table.
+# Format: [[door]] with x, y, id, faceOpen, faceClosed, face, state, height
+# faceOpen/faceClosed: face values when open (-2=north, -1=east, 0=south, -3=west)
+# state: 0=closed, 1=open on startup
+
+[[door]]
+x = 2635
+y = 3321
+id = 2706
+faceOpen = -1
+faceClosed = 0
+face = 0
+state = 1
+height = 0
+
+[[door]]
+x = 2636
+y = 3307
+id = 1558
+faceOpen = -1
+faceClosed = -2
+face = -2
+state = 1
+height = 0
+
+[[door]]
+x = 2635
+y = 3307
+id = 1557
+faceOpen = -1
+faceClosed = 0
+face = 0
+state = 1
+height = 0
+
+[[door]]
+x = 3230
+y = 3291
+id = 1530
+faceOpen = -2
+faceClosed = -3
+face = -3
+state = 1
+height = 0
+
+[[door]]
+x = 3236
+y = 3295
+id = 1553
+faceOpen = -2
+faceClosed = -3
+face = -3
+state = 1
+height = 0
+
+[[door]]
+x = 2603
+y = 3082
+id = 1732
+faceOpen = -2
+faceClosed = -1
+face = -1
+state = 0
+height = 0
+
+[[door]]
+x = 2601
+y = 9482
+id = 335
+faceOpen = -2
+faceClosed = -2
+face = -2
+state = 1
+height = 0
+
+[[door]]
+x = 2597
+y = 3087
+id = 1732
+faceOpen = -1
+faceClosed = 0
+face = 0
+state = 0
+height = 0
+
+[[door]]
+x = 2597
+y = 3088
+id = 1733
+faceOpen = -3
+faceClosed = 0
+face = 0
+state = 0
+height = 0
+
+[[door]]
+x = 2584
+y = 3088
+id = 1732
+faceOpen = -3
+faceClosed = -2
+face = -2
+state = 1
+height = 0
+
+[[door]]
+x = 2584
+y = 3087
+id = 1733
+faceOpen = -1
+faceClosed = -2
+face = -2
+state = 1
+height = 0
+
+[[door]]
+x = 2728
+y = 3373
+id = 2896
+faceOpen = 0
+faceClosed = -3
+face = -3
+state = 1
+height = 0
+
+[[door]]
+x = 2729
+y = 3373
+id = 2897
+faceOpen = -2
+faceClosed = -3
+face = -3
+state = 1
+height = 0
+
+[[door]]
+x = 3320
+y = 3467
+id = 1598
+faceOpen = 0
+faceClosed = 0
+face = 0
+state = 1
+height = 0
+
+[[door]]
+x = 3320
+y = 3468
+id = 1599
+faceOpen = -3
+faceClosed = 0
+face = 0
+state = 1
+height = 0
+
+[[door]]
+x = 3405
+y = 9895
+id = 3444
+faceOpen = -2
+faceClosed = -3
+face = -3
+state = 1
+height = 0
+
+[[door]]
+x = 3431
+y = 9897
+id = 3445
+faceOpen = -3
+faceClosed = -2
+face = -2
+state = 1
+height = 0
+
+[[door]]
+x = 3238
+y = 3210
+id = 1533
+faceOpen = -2
+faceClosed = -1
+face = -1
+state = 1
+height = 0
+
+[[door]]
+x = 3253
+y = 3267
+id = 1553
+faceOpen = -1
+faceClosed = -1
+face = -1
+state = 1
+height = 0
+
+[[door]]
+x = 3253
+y = 3266
+id = 1551
+faceOpen = -3
+faceClosed = -3
+face = -3
+state = 1
+height = 0
+
+[[door]]
+x = 2564
+y = 3310
+id = 1530
+faceOpen = -1
+faceClosed = -1
+face = -1
+state = 1
+height = 0
+
+[[door]]
+x = 3201
+y = 3856
+id = 1597
+faceOpen = 0
+faceClosed = 0
+face = 0
+state = 1
+height = 0
+
+[[door]]
+x = 3202
+y = 3856
+id = 1596
+faceOpen = -2
+faceClosed = -2
+face = -2
+state = 1
+height = 0
+
+[[door]]
+x = 2900
+y = 3473
+id = 2861
+faceOpen = -3
+faceClosed = -2
+face = -2
+state = 0
+height = 0
+
+[[door]]
+x = 2611
+y = 3398
+id = 1530
+faceOpen = -1
+faceClosed = 0
+face = 0
+state = 1
+height = 0
+
+[[door]]
+x = 2736
+y = 3477
+id = 1519
+faceOpen = 0
+faceClosed = -1
+face = -1
+state = 0
+height = 0
+
+[[door]]
+x = 2737
+y = 3477
+id = 1516
+faceOpen = -2
+faceClosed = -1
+face = -1
+state = 0
+height = 0
+
+[[door]]
+x = 2648
+y = 9857
+id = 92
+faceOpen = 4
+faceClosed = 4
+face = 4
+state = 0
+height = 0
+
+[[door]]
+x = 2646
+y = 9870
+id = 93
+faceOpen = 4
+faceClosed = 4
+face = 4
+state = 0
+height = 0
+
+[[door]]
+x = 2728
+y = 3349
+id = 2391
+faceOpen = 0
+faceClosed = -3
+face = -3
+state = 1
+height = 0
+
+[[door]]
+x = 2729
+y = 3349
+id = 2392
+faceOpen = -2
+faceClosed = -3
+face = -3
+state = 1
+height = 0
+
+[[door]]
+x = 2661
+y = 9803
+id = 90
+faceOpen = -4
+faceClosed = -4
+face = -4
+state = 0
+height = 0
+
+[[door]]
+x = 2662
+y = 9803
+id = 89
+faceOpen = -2
+faceClosed = -2
+face = -2
+state = 0
+height = 0

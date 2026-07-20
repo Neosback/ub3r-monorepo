@@ -11,7 +11,7 @@ data class ProjectileConfigEntry(
 
 object TomlProjectileLoader {
     @JvmStatic
-    fun load(path: String = "data/combat/projectiles.toml"): List<ProjectileConfigEntry> {
+    fun load(path: String = "content/combat/projectiles.toml"): List<ProjectileConfigEntry> {
         val file = Path.of(path)
         if (!Files.isRegularFile(file)) {
             return emptyList()

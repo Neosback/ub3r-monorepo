@@ -12,7 +12,7 @@ data class RemovedObjectEntry(
 
 object TomlRemovedObjectLoader {
     @JvmStatic
-    fun load(path: String = "data/objects/removed.toml"): List<RemovedObjectEntry> {
+    fun load(path: String = "content/objects/removed.toml"): List<RemovedObjectEntry> {
         val file = Path.of(path)
         if (!Files.isRegularFile(file)) {
             return emptyList()

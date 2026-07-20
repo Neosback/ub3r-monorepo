@@ -48,8 +48,6 @@ class Login {
     }
 
     companion object {
-        private const val UUID_BANS_PATH = "./data/UUIDBans.txt"
-
         @JvmField
         val bannedUid: MutableSet<String> = LinkedHashSet()
 
@@ -76,26 +74,7 @@ class Login {
 
         @JvmStatic
         fun banUid() {
-            val file = File(UUID_BANS_PATH)
-            if (!file.exists()) {
-                file.parentFile?.mkdirs()
-                try {
-                    file.createNewFile()
-                } catch (exception: IOException) {
-                    logger.warn("Could not initialize UUID ban file.", exception)
-                }
-                return
-            }
-            try {
-                file.forEachLine { line ->
-                    val value = line.trim()
-                    if (value.isNotEmpty()) {
-                        bannedUid.add(value)
-                    }
-                }
-            } catch (exception: IOException) {
-                logger.error("Failed reading UUID bans.", exception)
-            }
+            // UUIDBans.txt has been deprecated and removed. A database-backed ban system will be implemented later.
         }
 
         @JvmStatic
@@ -103,21 +82,10 @@ class Login {
             if (UUID == null || UUID.isEmpty()) {
                 return
             }
-            try {
-                File(UUID_BANS_PATH).parentFile?.mkdirs()
-                FileWriter(UUID_BANS_PATH, true).use { writer ->
-                    for (value in UUID) {
-                        if (value.isBlank() || isUidBanned(value)) {
-                            continue
-                        }
-                        bannedUid.add(value)
-                        writer.write(value)
-                        writer.write(System.lineSeparator())
-                    }
+            for (value in UUID) {
+                if (value.isNotBlank() && !isUidBanned(value)) {
+                    bannedUid.add(value)
                 }
-            } catch (_: FileNotFoundException) {
-            } catch (exception: IOException) {
-                logger.error("Failed appending UUID bans.", exception)
             }
         }
 

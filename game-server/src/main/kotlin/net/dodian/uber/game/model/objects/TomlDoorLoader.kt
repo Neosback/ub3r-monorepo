@@ -6,7 +6,7 @@ import java.nio.file.Path
 object TomlDoorLoader : DoorDefinitionLoader {
 
     private val DOOR_PATHS = listOf(
-        Path.of("data", "doors", "doors.toml"),
+        Path.of("content", "doors", "doors.toml"),
     )
 
     override fun load(): List<DoorDefinition> {

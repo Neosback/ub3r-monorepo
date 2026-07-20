@@ -88,4 +88,9 @@ public final class Configuration {
     public static final String UPDATE_SERVER_IP = CONNECTION.getCacheAddress();
     public static final int UPDATE_SERVER_PORT = CONNECTION.getCachePort();
 
+    /**
+     * The HTTP URL from which to download the cache zip if not present locally.
+     */
+    public static final String CACHE_DOWNLOAD_URL = "http://localhost:8080/cache.zip";
+
 }
