@@ -1,20 +1,19 @@
 package net.dodian.uber.skills.fishing
 
-import net.dodian.uber.game.api.content.ContentAttributeKey
 import net.dodian.uber.game.api.plugin.ContentMaturity
 import net.dodian.uber.game.api.plugin.ContentModuleManifest
-import net.dodian.uber.game.api.plugin.skills.SkillActionHandle
+import net.dodian.uber.game.api.plugin.skills.GatheringSpotBuilder
 import net.dodian.uber.game.api.plugin.skills.SkillEquipmentSlot
 import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.SkillPluginDefinition
+import net.dodian.uber.game.api.plugin.skills.gatheringSpots
 import net.dodian.uber.game.api.plugin.skills.manifest
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
+import net.dodian.uber.game.api.plugin.skills.stopGathering
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skill.runtime.action.ActionStopReason
-import net.dodian.uber.game.skill.runtime.action.CycleSignal
-import net.dodian.uber.game.skill.runtime.action.gatheringAction
 import net.dodian.uber.skills.api.SkillModuleDescriptor
 import net.dodian.uber.skills.runtime.TomlRecordReader
 
@@ -35,40 +34,45 @@ data class FishingSpotDef(
     val bigCatchBonusXp: Int = 0,
 )
 
-/** Complete plugin-owned reference implementation for fishing spots. */
+/**
+ * Plugin-owned reference implementation for fishing spots, built on the shared
+ * [gatheringSpots] pipeline (`:skills:runtime`). Content is unchanged from the
+ * hand-written version this replaced: still one fish per spot/option, still just
+ * spots.toml — the pipeline is generic so a future content pass (multiple catches
+ * per option, separate tool/fish tables, etc.) is a data + `onYield` change, not a
+ * new engine.
+ */
 object FishingModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.fishing", "Fishing")
 
-    private const val TICK_MS = 600L
-    private const val ANIMATION_REAPPLY_MS = 1800L
+    private const val ACTION_NAME = "fishing"
     private const val HARPOON_ITEM_ID = 21028
     private const val HARPOON_LEVEL = 61
     private const val FEATHER_ITEM_ID = 314
     private const val REST_THRESHOLD = 4
-
-    private val gatheredKey = ContentAttributeKey<Int>("skill.fishing", "gathered")
-    private val ticksUntilCatchKey = ContentAttributeKey<Int>("skill.fishing", "ticksUntilCatch")
-    private val ticksUntilAnimationKey = ContentAttributeKey<Int>("skill.fishing", "ticksUntilAnimation")
-    private val activeActionKey = ContentAttributeKey<SkillActionHandle>("skill.fishing", "activeAction")
+    private const val REST_CHANCE_ONE_IN = 20
 
     val spots: List<FishingSpotDef> by lazy { loadSpots() }
 
-    override val definition: SkillPluginDefinition = skillPlugin("Fishing", Skill.FISHING) {
-        val byOption = spots.groupBy { it.clickOption }
-        val firstNpcIds = byOption[1].orEmpty().map { it.npcId }.distinct().toIntArray()
-        val secondNpcIds = byOption[2].orEmpty().map { it.npcId }.distinct().toIntArray()
+    private lateinit var spotBuilders: List<GatheringSpotBuilder<FishingSpotDef>>
 
-        if (firstNpcIds.isNotEmpty()) {
-            npcClick(preset = PolicyPreset.GATHERING, option = 1, *firstNpcIds) { interaction ->
-                attempt(interaction.player, interaction.npc.id, 1)
-                true
-            }
-        }
-        if (secondNpcIds.isNotEmpty()) {
-            npcClick(preset = PolicyPreset.GATHERING, option = 2, *secondNpcIds) { interaction ->
-                attempt(interaction.player, interaction.npc.id, 2)
-                true
-            }
+    override val definition: SkillPluginDefinition = skillPlugin("Fishing", Skill.FISHING) {
+        spotBuilders = gatheringSpots(spots, ACTION_NAME) { spot ->
+            npcOption(spot.npcId, spot.clickOption, PolicyPreset.GATHERING)
+
+            requireFreeInventory("Not enough inventory space.")
+            requireLevel(Skill.FISHING, spot.requiredLevel) { "You need level ${spot.requiredLevel} fishing to fish here." }
+            requireTool(spot.toolItemId) { player -> "You need a ${player.inventory.itemName(spot.toolItemId).lowercase()} to fish here." }
+            altTool { player -> hasHarpoon(player) }
+            requirePremium(spot.premiumOnly) { "You need to be premium to fish from this spot!" }
+            requireConsumable(FEATHER_ITEM_ID, enabled = spot.featherConsumed) { "You do not have any feathers." }
+
+            repeatAnimation(spot.animationId, intervalMs = 1800L)
+            calculateDelayMs { player -> catchDelayMs(player, spot) }
+            restPolicy(minGathered = REST_THRESHOLD, chanceOneIn = REST_CHANCE_ONE_IN)
+
+            onStart { player -> player.ui.message("You start fishing...") }
+            onYield { player -> catchFish(player, spot) }
         }
     }
 
@@ -80,57 +84,12 @@ object FishingModule : SkillPlugin {
     )
 
     fun attempt(player: SkillPlayer, npcId: Int, clickOption: Int) {
-        val spot = spots.firstOrNull { it.npcId == npcId && it.clickOption == clickOption } ?: return
-        if (player.inventory.freeSlots() <= 0) {
-            player.ui.message("Not enough inventory space.")
-            return
-        }
-        if (player.skills.current(Skill.FISHING) < spot.requiredLevel) {
-            player.ui.message("You need level ${spot.requiredLevel} fishing to fish here.")
-            return
-        }
-        if (!player.inventory.contains(spot.toolItemId) && !hasHarpoon(player)) {
-            player.ui.message("You need a ${player.inventory.itemName(spot.toolItemId).lowercase()} to fish here.")
-            return
-        }
-        if (spot.premiumOnly && !player.profile.premium) {
-            player.ui.message("You need to be premium to fish from this spot!")
-            return
-        }
-        if (spot.featherConsumed && !player.inventory.contains(FEATHER_ITEM_ID)) {
-            player.ui.message("You do not have any feathers.")
-            return
-        }
-
-        stopAction(player)
-        player.attributes.put(gatheredKey, 0)
-        player.attributes.put(ticksUntilCatchKey, toTicks(catchDelayMs(player, spot)))
-        player.attributes.put(ticksUntilAnimationKey, toTicks(ANIMATION_REAPPLY_MS))
-        player.actions.animate(spot.animationId, 0)
-        player.ui.message("You start fishing...")
-
-        val handle = gatheringAction("fishing") {
-            delay(1)
-            onCycleSignal { fishOnce(this, spot) }
-            onStop {
-                player.attributes.remove(gatheredKey)
-                player.attributes.remove(ticksUntilCatchKey)
-                player.attributes.remove(ticksUntilAnimationKey)
-                player.attributes.remove(activeActionKey)
-            }
-        }.start(player)
-        if (handle == null) {
-            player.attributes.remove(gatheredKey)
-            player.attributes.remove(ticksUntilCatchKey)
-            player.attributes.remove(ticksUntilAnimationKey)
-            return
-        }
-        player.attributes.put(activeActionKey, handle)
+        val builder = spotBuilders.firstOrNull { it.npcId == npcId && it.clickOption == clickOption } ?: return
+        builder.start(player, ACTION_NAME)
     }
 
     fun stopAction(player: SkillPlayer, reason: ActionStopReason = ActionStopReason.USER_INTERRUPT) {
-        player.attributes.get(activeActionKey)?.cancel(reason)
-        player.attributes.remove(activeActionKey)
+        stopGathering(player, ACTION_NAME, reason)
     }
 
     private fun hasHarpoon(player: SkillPlayer): Boolean =
@@ -146,60 +105,18 @@ object FishingModule : SkillPlugin {
         return (timer / bonus).toLong()
     }
 
-    private fun toTicks(ms: Long): Int = if (ms <= 0L) 1 else ((ms + TICK_MS - 1) / TICK_MS).toInt().coerceAtLeast(1)
-
-    private fun fishOnce(player: SkillPlayer, spot: FishingSpotDef): CycleSignal {
-        if (!player.inventory.contains(spot.toolItemId) && !hasHarpoon(player)) {
-            player.ui.message("You need a ${player.inventory.itemName(spot.toolItemId).lowercase()} to fish here.")
-            return CycleSignal.stop()
-        }
-        if (player.inventory.freeSlots() <= 0) {
-            player.ui.message("Not enough inventory space.")
-            return CycleSignal.stop()
-        }
-        if (spot.featherConsumed && !player.inventory.contains(FEATHER_ITEM_ID)) {
-            player.ui.message("You do not have any feathers.")
-            return CycleSignal.stop()
-        }
-
-        val ticksUntilAnimation = (player.attributes.get(ticksUntilAnimationKey) ?: 0) - 1
-        if (ticksUntilAnimation <= 0) {
-            player.actions.animate(spot.animationId, 0)
-            player.attributes.put(ticksUntilAnimationKey, toTicks(ANIMATION_REAPPLY_MS))
-        } else {
-            player.attributes.put(ticksUntilAnimationKey, ticksUntilAnimation)
-        }
-
-        val ticksUntilCatch = (player.attributes.get(ticksUntilCatchKey) ?: 0) - 1
-        if (ticksUntilCatch > 0) {
-            player.attributes.put(ticksUntilCatchKey, ticksUntilCatch)
-            return CycleSignal.continueWithoutSuccess()
-        }
-
+    private fun catchFish(player: SkillPlayer, spot: FishingSpotDef) {
         val bigCatch = spot.bigCatchItemId >= 0 &&
             player.skills.current(Skill.FISHING) >= spot.bigCatchRequiredLevel &&
             player.random.between(0, 6) < 3
         val itemId = if (bigCatch) spot.bigCatchItemId else spot.fishItemId
         val experience = if (bigCatch) spot.experience + spot.bigCatchBonusXp else spot.experience
 
-        if (spot.featherConsumed) player.inventory.transaction { remove(FEATHER_ITEM_ID, 1) }
         player.inventory.add(itemId, 1)
         player.actions.logGathering(itemId, 1, "Fishing")
         player.skills.gainXp(experience, Skill.FISHING)
-        player.actions.animate(spot.animationId, 0)
         player.actions.triggerRandomEvent(experience)
         player.ui.message("You fish up some ${player.inventory.itemName(itemId).lowercase().replace("raw ", "")}.")
-
-        val gathered = (player.attributes.get(gatheredKey) ?: 0) + 1
-        player.attributes.put(gatheredKey, gathered)
-        player.attributes.put(ticksUntilCatchKey, toTicks(catchDelayMs(player, spot)))
-        player.attributes.put(ticksUntilAnimationKey, toTicks(ANIMATION_REAPPLY_MS))
-
-        if (gathered >= REST_THRESHOLD && player.random.chance(1, 20)) {
-            player.ui.message("You take a rest after gathering $gathered resources.")
-            return CycleSignal.stop(ActionStopReason.COMPLETED)
-        }
-        return CycleSignal.success()
     }
 
     private fun loadSpots(): List<FishingSpotDef> =
