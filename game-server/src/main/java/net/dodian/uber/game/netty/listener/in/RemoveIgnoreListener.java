@@ -16,7 +16,11 @@ public class RemoveIgnoreListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
-        long ign = buf.readLong();
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.EncodedName msg = net.dodian.uber.game.netty.game.decode.TarnishPackets.EncodedName.decode(buf);
+        if (msg == null) {
+            return;
+        }
+        long ign = msg.name();
         logger.debug("RemoveIgnoreListener: {} unignores {}", client.getPlayerName(), ign);
         PacketSocialService.handleRemoveIgnore(client, ign);
     }

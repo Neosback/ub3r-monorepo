@@ -17,10 +17,13 @@ public class PickUpGroundItemListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        int itemY  = buf.readUnsignedShortLE();
-        int itemId = buf.readUnsignedShort();
-        int itemX  = buf.readUnsignedShortLE();
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.PickupGroundItem msg = net.dodian.uber.game.netty.game.decode.TarnishPackets.PickupGroundItem.decode(packet.payload());
+        if (msg == null) {
+            return;
+        }
+        int itemY  = msg.y();
+        int itemId = msg.itemId();
+        int itemX  = msg.x();
 
         if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.PICKUP_GROUND_ITEM, 600L) ||
                 (client.attemptGround != null

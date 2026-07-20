@@ -20,11 +20,12 @@ public class AttackPlayerListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < 2) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.PlayerMenuClick msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.PlayerMenuClick.decode(packet.opcode(), packet.payload());
+        if (msg == null) {
             return;
         }
-        int victimSlot = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
+        int victimSlot = msg.playerIndex();
 
         if (logger.isTraceEnabled()) {
             logger.trace("AttackPlayer from={} victimSlot={}", client.getPlayerName(), victimSlot);

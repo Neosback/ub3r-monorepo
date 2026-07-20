@@ -9,13 +9,12 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 public class DropdownMenuListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < 5) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.DropdownSelect msg = net.dodian.uber.game.netty.game.decode.TarnishPackets.DropdownSelect.decode(packet.payload());
+        if (msg == null) {
             return;
         }
-
-        int identification = buf.readInt();
-        int value = buf.readByte() & 0xFF;
+        int identification = msg.componentId();
+        int value = msg.value() & 0xFF;
 
         if (identification < 0 || value < 0) {
             return;

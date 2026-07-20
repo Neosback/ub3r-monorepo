@@ -20,11 +20,15 @@ public class FollowPlayerListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < 2) {
+        // NOTE: the Tarnish client sends opcode 39 for the "Follow" menu action, but this
+        // server's 139/128/39 handlers are deliberately cross-wired as a compensating set
+        // (139=Follow, 128=Trade, 39=Trade) — confirmed working in-game. See TradeListener.
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.PlayerMenuClick msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.PlayerMenuClick.decode(packet.opcode(), packet.payload());
+        if (msg == null) {
             return;
         }
-        int followId = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
+        int followId = msg.playerIndex();
 
         if (logger.isTraceEnabled()) {
             logger.trace("Trade request from={} targetSlot={}", client.getPlayerName(), followId);

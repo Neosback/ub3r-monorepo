@@ -99,17 +99,18 @@ public class ObjectInteractionListener implements PacketListener {
             return;
         }
 
-        // Tarnish server (UseItemPacketListener.handleItemOnObject) decodes:
-        // interfaceType=BE, objectId=LE, y=LE+ADD, slot=LE, x=LE+ADD, itemId=BE.
-        // objectId was being read BE here, byte-swapping every object id sent this way
-        // (e.g. cooking range 26181 arrived as 17766) — this was the root cause of
-        // "use item on object" silently no-opping against a bogus object id.
-        final int interfaceId = buf.readShort();
-        final int objectId = readLEShort(buf);
-        final int objectY = readLEShortA(buf);
-        final int itemSlot = readLEShort(buf);
-        final int objectX = readLEShortA(buf);
-        final int itemId = buf.readShort();
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.ItemOnObject msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.ItemOnObject.decode(buf);
+        if (msg == null) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
+            return;
+        }
+        final int interfaceId = msg.interfaceId();
+        final int objectId = msg.objectId();
+        final int objectY = msg.objectY();
+        final int itemSlot = msg.slot();
+        final int objectX = msg.objectX();
+        final int itemId = msg.itemId();
         if (!isValidObjectClick(objectId, objectX, objectY)) {
             PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.INVALID_COORDINATE);
             logger.debug(
@@ -156,10 +157,16 @@ public class ObjectInteractionListener implements PacketListener {
             return;
         }
 
-        final int objectX = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
-        final int spellId = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        final int objectY = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        final int objectId = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD) - 128;
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.MagicOnObject msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.MagicOnObject.decode(buf);
+        if (msg == null) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
+            return;
+        }
+        final int objectX = msg.x();
+        final int spellId = msg.spellId();
+        final int objectY = msg.y();
+        final int objectId = msg.objectId();
         if (!isValidObjectClick(objectId, objectX, objectY)) {
             PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.INVALID_COORDINATE);
             logger.debug(
@@ -188,95 +195,12 @@ public class ObjectInteractionListener implements PacketListener {
     }
 
     private DecodedObjectClick decodeClickPacket(GamePacket packet, int option) {
-        switch (option) {
-            case 1:
-                return decodeFirstClick(packet.payload());
-            case 2:
-                return decodeSecondClick(packet.payload());
-            case 3:
-                return decodeThirdClick(packet.payload());
-            case 4:
-                return decodeFourthClick(packet.payload());
-            case 5:
-                return decodeFifthClick(packet.payload());
-            default:
-                return null;
-        }
-    }
-
-    private DecodedObjectClick decodeFirstClick(ByteBuf buf) {
-        if (buf.readableBytes() < 6) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.ObjectClick click =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.ObjectClick.decode(packet.opcode(), packet.payload());
+        if (click == null) {
             return null;
         }
-        if (buf.readableBytes() > 6) {
-            return null;
-        }
-        int objectX = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        int objectID = buf.readUnsignedShort();
-        int objectY = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        return new DecodedObjectClick(objectID, objectX, objectY);
-    }
-
-    private DecodedObjectClick decodeSecondClick(ByteBuf buf) {
-        if (buf.readableBytes() < 6) {
-            return null;
-        }
-        if (buf.readableBytes() > 6) {
-            return null;
-        }
-        int objectID = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        int objectY = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
-        int objectX = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        return new DecodedObjectClick(objectID, objectX, objectY);
-    }
-
-    private DecodedObjectClick decodeThirdClick(ByteBuf buf) {
-        if (buf.readableBytes() < 6) {
-            return null;
-        }
-        if (buf.readableBytes() > 6) {
-            return null;
-        }
-        int objectX = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
-        int objectY = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.NORMAL);
-        int objectID = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        return new DecodedObjectClick(objectID, objectX, objectY);
-    }
-
-    private DecodedObjectClick decodeFourthClick(ByteBuf buf) {
-        if (buf.readableBytes() < 6) {
-            return null;
-        }
-        if (buf.readableBytes() > 6) {
-            return null;
-        }
-        int objectX = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        int objectId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int objectY = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        return new DecodedObjectClick(objectId, objectX, objectY);
-    }
-
-    private DecodedObjectClick decodeFifthClick(ByteBuf buf) {
-        if (buf.readableBytes() < 6) {
-            return null;
-        }
-        if (buf.readableBytes() > 6) {
-            return null;
-        }
-        int objectId = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int objectY = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int objectX = buf.readShort();
-        return new DecodedObjectClick(objectId, objectX, objectY);
-    }
-
-    private static int readLEShort(ByteBuf buf) {
-        return buf.readUnsignedByte() | (buf.readUnsignedByte() << 8);
-    }
-
-    private static int readLEShortA(ByteBuf buf) {
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readUnsignedByte();
-        return (high << 8) | low;
+        return new DecodedObjectClick(click.objectId(), click.x(), click.y());
     }
 
     private static boolean isValidObjectClick(int objectId, int objectX, int objectY) {

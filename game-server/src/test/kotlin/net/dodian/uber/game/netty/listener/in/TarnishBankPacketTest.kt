@@ -36,17 +36,20 @@ class TarnishBankPacketTest {
             writeLittleShortAdd(five, 5382)
             writeLittleShortAdd(five, 995)
             writeLittleShort(five, 17)
-            assertArrayEquals(intArrayOf(5382, 995, 17), Bank5Listener.decode(five))
+            val fiveMsg = net.dodian.uber.game.netty.game.decode.TarnishPackets.BankPresetAction.decode(117, five)!!
+            assertArrayEquals(intArrayOf(5382, 995, 17), intArrayOf(fiveMsg.interfaceId(), fiveMsg.itemId(), fiveMsg.slot()))
 
             writeLittleShort(ten, 5382)
             writeShortAdd(ten, 995)
             writeShortAdd(ten, 17)
-            assertArrayEquals(intArrayOf(5382, 995, 17), Bank10Listener.decode(ten))
+            val tenMsg = net.dodian.uber.game.netty.game.decode.TarnishPackets.BankPresetAction.decode(43, ten)!!
+            assertArrayEquals(intArrayOf(5382, 995, 17), intArrayOf(tenMsg.interfaceId(), tenMsg.itemId(), tenMsg.slot()))
 
             writeLittleShort(all, 5382)
             writeShortAdd(all, 995)
             writeShortAdd(all, 17)
-            assertArrayEquals(intArrayOf(5382, 995, 17), BankAllListener.decode(all))
+            val allMsg = net.dodian.uber.game.netty.game.decode.TarnishPackets.BankPresetAction.decode(129, all)!!
+            assertArrayEquals(intArrayOf(5382, 995, 17), intArrayOf(allMsg.interfaceId(), allMsg.itemId(), allMsg.slot()))
         } finally {
             five.release()
             ten.release()
@@ -62,7 +65,8 @@ class TarnishBankPacketTest {
             payload.writeByte(254) // writeNegatedByte(2)
             writeLittleShortAdd(payload, 8)
             writeLittleShort(payload, 3)
-            assertArrayEquals(intArrayOf(5382, 2, 8, 3), MoveItemsListener.decode(payload))
+            val moveMsg = net.dodian.uber.game.netty.game.decode.TarnishPackets.MoveItems.decode(payload)!!
+            assertArrayEquals(intArrayOf(5382, 2, 8, 3), intArrayOf(moveMsg.interfaceId(), moveMsg.mode(), moveMsg.fromSlot(), moveMsg.toSlot()))
             assertEquals(0, payload.readableBytes())
         } finally {
             payload.release()

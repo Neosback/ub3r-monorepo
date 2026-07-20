@@ -125,7 +125,9 @@ class WorldSynchronizationService {
 
     private fun encodePlayers(activePlayers: List<Client>) {
         val readyPlayers = activePlayers.filter(Client::isSynchronizationReady)
-        readyPlayers.forEach { player ->
+        // Per-viewer encode is independent by construction (PREP caches frozen, thread-local
+        // scratch, viewer-own commit state, MPSC outbound enqueue) — see SyncWorker contract.
+        SyncWorker.forEachViewer(readyPlayers) { player ->
             try {
                 val result = stagedPlayerSynchronization.synchronize(player)
                 if (!result.accepted) {
@@ -133,7 +135,7 @@ class WorldSynchronizationService {
                     player.noteDisconnectReason("sync-outbound-rejected")
                     player.setSynchronizationReady(false)
                     player.disconnected = true
-                    return@forEach
+                    return@forEachViewer
                 }
                 SynchronizationContext.recordPlayerPacketBuilt(result.committedCount)
                 SynchronizationContext.recordViewer(result.committedCount, player.localNpcSize)
@@ -145,8 +147,8 @@ class WorldSynchronizationService {
     }
 
     private fun encodeNpcs(activePlayers: List<Client>) {
-        activePlayers.forEach { player ->
-            if (!player.isSynchronizationReady) return@forEach
+        SyncWorker.forEachViewer(activePlayers) { player ->
+            if (!player.isSynchronizationReady) return@forEachViewer
             try {
                 val result = stagedNpcSynchronization.synchronize(player)
                 if (!result.accepted) {
@@ -154,7 +156,7 @@ class WorldSynchronizationService {
                     player.noteDisconnectReason("sync-outbound-rejected")
                     player.setSynchronizationReady(false)
                     player.disconnected = true
-                    return@forEach
+                    return@forEachViewer
                 }
                 SynchronizationContext.recordNpcPacketBuilt(result.committedCount)
                 SynchronizationContext.recordViewer(player.playerListSize, result.committedCount)

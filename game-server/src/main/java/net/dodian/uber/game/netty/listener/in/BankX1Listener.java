@@ -23,18 +23,14 @@ public class BankX1Listener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.BankPresetAction msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.BankPresetAction.decode(packet.opcode(), packet.payload());
+        if (msg == null) {
             return;
         }
-
-        // Client wire layout (Client.java action 53):
-        //   writeLEShort(slot)        -> LITTLE endian, normal
-        //   writeShortA(interfaceId)  -> BIG endian, +128 on low byte (ValueType.ADD)
-        //   writeLEShort(itemId)      -> LITTLE endian, normal
-        int slot = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
-        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int itemId = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
+        int slot = msg.slot();
+        int interfaceId = msg.interfaceId();
+        int itemId = msg.itemId();
 
         if (logger.isTraceEnabled()) {
             logger.trace("BankX1 slot={} interface={} item={} player={}", slot, interfaceId, itemId, client.getPlayerName());

@@ -18,11 +18,15 @@ public class FocusChangeListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) {
         try {
-            int focusState = packet.payload().readByte() & 0xFF;
-            if (logger.isDebugEnabled()) {
-                logger.debug("Client {} focus state changed to: {}", client.getPlayerName(), focusState);
+            net.dodian.uber.game.netty.game.decode.TarnishPackets.FocusChange msg =
+                    net.dodian.uber.game.netty.game.decode.TarnishPackets.FocusChange.decode(packet.payload());
+            if (msg == null) {
+                return;
             }
-            PacketConnectionService.handleFocusChange(client, focusState == 1);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Client {} focus state changed to: {}", client.getPlayerName(), msg.focused());
+            }
+            PacketConnectionService.handleFocusChange(client, msg.focused());
         } catch (Exception e) {
             logger.error("Error handling focus change packet for " + client.getPlayerName(), e);
         }

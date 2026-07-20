@@ -15,12 +15,12 @@ import net.dodian.uber.game.engine.systems.net.PacketBankingService;
 public class SyntaxInputListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < 8) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.EncodedName msg = net.dodian.uber.game.netty.game.decode.TarnishPackets.EncodedName.decode(packet.payload());
+        if (msg == null) {
             return;
         }
 
-        long nameLong = buf.readLong();
+        long nameLong = msg.name();
         String input = net.dodian.utilities.Names.longToPlayerName(nameLong).trim();
 
         if (client.accountPasswordState == 1) {

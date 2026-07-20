@@ -16,19 +16,12 @@ public class BankWithdrawRememberedXListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.BankWithdrawRememberedX msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.BankWithdrawRememberedX.decode(packet.payload());
+        if (msg == null || msg.amount() < 1) {
             return;
         }
 
-        int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.NORMAL);
-        int removeId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int amount = buf.readInt();
-        if (amount < 1) {
-            return;
-        }
-
-        PacketBankingService.handleFixedAmountDecoded(client, interfaceId, removeId, removeSlot, amount);
+        PacketBankingService.handleFixedAmountDecoded(client, msg.interfaceId(), msg.itemId(), msg.slot(), msg.amount());
     }
 }

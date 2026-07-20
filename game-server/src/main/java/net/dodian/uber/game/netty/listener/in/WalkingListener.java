@@ -45,10 +45,12 @@ public final class WalkingListener implements PacketListener {
     }
 
     static WalkRequest decodeTarnishDestination(int opcode, ByteBuf buf) {
-        int targetX = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
-        int targetY = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        boolean running = ByteBufReader.readSignedByte(buf, ValueType.NEGATE) == 1;
-        return new WalkRequest(opcode, targetX, targetY, running, new int[]{0}, new int[]{0});
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.Walk walk =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.Walk.decode(buf);
+        if (walk == null) {
+            return new WalkRequest(opcode, -1, -1, false, new int[]{0}, new int[]{0});
+        }
+        return new WalkRequest(opcode, walk.targetX(), walk.targetY(), walk.running(), new int[]{0}, new int[]{0});
     }
 
     private static boolean isValidWorldCoordinate(int value) {

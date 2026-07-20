@@ -16,15 +16,12 @@ public class BankAllButOneListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.BankPresetAction msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.BankPresetAction.decode(packet.opcode(), packet.payload());
+        if (msg == null) {
             return;
         }
 
-        int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.NORMAL);
-        int removeId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-
-        PacketBankingService.handleAllButOneDecoded(client, interfaceId, removeSlot, removeId);
+        PacketBankingService.handleAllButOneDecoded(client, msg.interfaceId(), msg.slot(), msg.itemId());
     }
 }

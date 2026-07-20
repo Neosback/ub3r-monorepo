@@ -19,15 +19,11 @@ public class BankX2Listener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.EnteredAmount msg = net.dodian.uber.game.netty.game.decode.TarnishPackets.EnteredAmount.decode(packet.payload());
+        if (msg == null || msg.amount() < 1) {
             return;
         }
-
-        int enteredAmount = buf.readInt();
-        if (enteredAmount < 1) {
-            return;
-        }
+        int enteredAmount = msg.amount();
 
         if (logger.isTraceEnabled()) {
             logger.trace("BankX2 amount={} iface={} removeId={} slot={} player={}", enteredAmount,

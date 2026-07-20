@@ -37,10 +37,14 @@ public final class ExamineListener implements PacketListener {
                 return;
             }
 
-            int type = buf.readUnsignedByte();
-            int id = buf.readUnsignedShort();
-            int param1 = buf.readUnsignedShort();
-            int param2 = buf.readUnsignedShort();
+            net.dodian.uber.game.netty.game.decode.TarnishPackets.Examine msg = net.dodian.uber.game.netty.game.decode.TarnishPackets.Examine.decode(buf);
+            if (msg == null) {
+                return;
+            }
+            int type = msg.type();
+            int id = msg.id();
+            int param1 = msg.param1();
+            int param2 = msg.param2();
 
             if (getGameWorldId() > 1) {
                 logger.debug("Examine: Type={}, Id={}, param1={}, param2={}", type, id, param1, param2);

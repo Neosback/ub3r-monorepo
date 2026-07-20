@@ -18,13 +18,13 @@ public class MagicOnNpcListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < 4) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.MagicOnNpc msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.MagicOnNpc.decode(packet.payload());
+        if (msg == null) {
             return;
         }
-
-        int npcIndex = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        int magicId = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int npcIndex = msg.npcIndex();
+        int magicId = msg.spellId();
 
         logger.debug("MagicOnNpcListener: magic {} on npc {}", magicId, npcIndex);
 

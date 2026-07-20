@@ -14,8 +14,12 @@ public class MouseClicksListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        int clickId = buf.readInt(); // same as readDWord
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.MouseClick msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.MouseClick.decode(packet.payload());
+        if (msg == null) {
+            return;
+        }
+        int clickId = msg.packed();
 
         String env = System.getenv().getOrDefault("SERVER_ENV", "");
         if ("dev".equalsIgnoreCase(env)) {

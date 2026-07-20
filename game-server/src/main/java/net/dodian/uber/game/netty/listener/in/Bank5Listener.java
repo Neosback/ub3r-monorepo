@@ -16,24 +16,13 @@ public class Bank5Listener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() != PAYLOAD_BYTES) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.BankPresetAction msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.BankPresetAction.decode(packet.opcode(), packet.payload());
+        if (msg == null) {
             return;
         }
 
-        int[] decoded = decode(buf);
-        int interfaceId = decoded[0];
-        int removeId = decoded[1];
-        int removeSlot = decoded[2];
-
-        PacketBankingService.handleFixedAmountDecoded(client, interfaceId, removeId, removeSlot, 5);
+        PacketBankingService.handleFixedAmountDecoded(client, msg.interfaceId(), msg.itemId(), msg.slot(), 5);
     }
 
-    static int[] decode(ByteBuf buf) {
-        return new int[] {
-                ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD),
-                ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD),
-                ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL)
-        };
-    }
 }

@@ -149,11 +149,26 @@ public class PlayerUpdating extends EntityUpdating<Player> {
      */
     public void writeStagedLocalAddWithoutAppearance(Player viewer, Player other, ByteMessage stream,
                                                      ByteMessage updateBlock) {
+        writeStagedLocalAddWithoutAppearance(viewer, other, stream, updateBlock, null);
+    }
+
+    /**
+     * Add-with-position for a subject whose appearance this viewer has already seen. The block
+     * payload is UPDATE_LOCAL — identical bytes to the shared per-tick cache — so callers pass
+     * {@code sharedUpdateBlock} when available and only fall back to a per-viewer re-encode on
+     * a cache miss (mirrors rsprot's observer-independent block sharing).
+     */
+    public void writeStagedLocalAddWithoutAppearance(Player viewer, Player other, ByteMessage stream,
+                                                     ByteMessage updateBlock, byte[] sharedUpdateBlock) {
         stream.putBits(11, other.getSlot());
         boolean hasBlock = other.getUpdateFlags().isUpdateRequired();
         stream.putBits(1, hasBlock ? 1 : 0);
         if (hasBlock) {
-            appendBlockUpdate(other, updateBlock, UpdatePhase.UPDATE_LOCAL);
+            if (sharedUpdateBlock != null) {
+                updateBlock.putBytes(sharedUpdateBlock);
+            } else {
+                appendBlockUpdate(other, updateBlock, UpdatePhase.UPDATE_LOCAL);
+            }
         }
         stream.putBits(1, 1);
         int delta = other.getPosition().getY() - viewer.getPosition().getY();

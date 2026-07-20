@@ -23,11 +23,14 @@ public class MoveItemsListener implements PacketListener {
             return;
         }
 
-        int[] decoded = decode(buf);
-        int interfaceId = decoded[0];
-        int mode = decoded[1];
-        int itemFrom = decoded[2];
-        int itemTo = decoded[3];
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.MoveItems msg = net.dodian.uber.game.netty.game.decode.TarnishPackets.MoveItems.decode(buf);
+        if (msg == null) {
+            return;
+        }
+        int interfaceId = msg.interfaceId();
+        int mode = msg.mode();
+        int itemFrom = msg.fromSlot();
+        int itemTo = msg.toSlot();
 
         if (client.playerRights >= 2) {
             client.println_debug("MoveItems: iface=" + interfaceId + " mode=" + mode + " from=" + itemFrom + " to=" + itemTo);
@@ -43,11 +46,4 @@ public class MoveItemsListener implements PacketListener {
         PacketBankingService.handleMoveItems(client, interfaceId, itemFrom, itemTo, mode);
     }
 
-    static int[] decode(ByteBuf buf) {
-        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        int mode = (-buf.readUnsignedByte()) & 0xFF;
-        int itemFrom = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        int itemTo = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
-        return new int[] {interfaceId, mode, itemFrom, itemTo};
-    }
 }

@@ -15,11 +15,15 @@ public class TradeRequestListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < 2) {
+        // NOTE: the Tarnish client sends opcode 128 for duel-request clicks, but this server's
+        // 139/128/39 handlers are deliberately cross-wired as a compensating set (139=Follow,
+        // 128=Trade, 39=Trade) — confirmed working in-game. See TradeListener.
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.PlayerMenuClick msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.PlayerMenuClick.decode(packet.opcode(), packet.payload());
+        if (msg == null) {
             return;
         }
-        int targetSlot = buf.readUnsignedShort();
+        int targetSlot = msg.playerIndex();
         Client other = client.getClient(targetSlot);
         if (!client.validClient(targetSlot) || client.getSlot() == targetSlot) {
             return;

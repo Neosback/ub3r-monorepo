@@ -16,7 +16,11 @@ public class RemoveFriendListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
-        long friend = buf.readLong();
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.EncodedName msg = net.dodian.uber.game.netty.game.decode.TarnishPackets.EncodedName.decode(buf);
+        if (msg == null) {
+            return;
+        }
+        long friend = msg.name();
         logger.debug("RemoveFriendListener: {} removes {}", client.getPlayerName(), friend);
         PacketSocialService.handleRemoveFriend(client, friend);
     }

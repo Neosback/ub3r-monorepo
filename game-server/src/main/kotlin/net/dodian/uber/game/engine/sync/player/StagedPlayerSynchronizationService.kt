@@ -132,7 +132,9 @@ class StagedPlayerSynchronizationService {
         for (index in 0 until plan.additionCount) {
             val addition = plan.additions[index]!!
             if (viewer.hasSeenCurrentAppearance(addition)) {
-                updating.writeStagedLocalAddWithoutAppearance(viewer, addition, stream, updateBlock)
+                val sharedUpdate = SynchronizationContext.getSharedPlayerBlock(addition, "UPDATE_LOCAL")
+                SynchronizationContext.recordPlayerBlockCacheHit(sharedUpdate != null)
+                updating.writeStagedLocalAddWithoutAppearance(viewer, addition, stream, updateBlock, sharedUpdate)
             } else {
                 val sharedBlock = SynchronizationContext.getSharedPlayerBlock(addition, "ADD_LOCAL")
                 updating.writeStagedLocalAdd(viewer, addition, stream, updateBlock, sharedBlock)

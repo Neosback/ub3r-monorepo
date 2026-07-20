@@ -47,95 +47,59 @@ public class NpcInteractionListener implements PacketListener {
     }
 
     private void handleNpcClick1(Client client, GamePacket packet) {
-        ByteBuf payload = packet.payload();
-        if (payload.readableBytes() < 2) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
-            return;
-        }
-        if (payload.readableBytes() > 2) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
-            return;
-        }
-        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.LITTLE, ValueType.NORMAL);
-        if (!isKnownNpcIndex(npcIndex)) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
+        int npcIndex = decodeNpcIndex(packet);
+        if (npcIndex < 0) {
             return;
         }
         PacketInteractionService.handleNpcClick(client, packet.opcode(), 1, npcIndex);
     }
 
     private void handleNpcClick3(Client client, GamePacket packet) {
-        ByteBuf payload = packet.payload();
-        if (payload.readableBytes() < 2) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
-            return;
-        }
-        if (payload.readableBytes() > 2) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
-            return;
-        }
-        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.LITTLE, ValueType.ADD);
-        if (!isKnownNpcIndex(npcIndex)) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
+        int npcIndex = decodeNpcIndex(packet);
+        if (npcIndex < 0) {
             return;
         }
         PacketInteractionService.handleNpcClick(client, packet.opcode(), 3, npcIndex);
     }
 
     private void handleNpcClick4(Client client, GamePacket packet) {
-        ByteBuf payload = packet.payload();
-        if (payload.readableBytes() < 2) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
-            return;
-        }
-        if (payload.readableBytes() > 2) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
-            return;
-        }
-        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.BIG, ValueType.NORMAL);
-        if (!isKnownNpcIndex(npcIndex)) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
+        int npcIndex = decodeNpcIndex(packet);
+        if (npcIndex < 0) {
             return;
         }
         PacketInteractionService.handleNpcClick(client, packet.opcode(), 4, npcIndex);
     }
 
     private void handleNpcClick4LegacySlot(Client client, GamePacket packet) {
-        ByteBuf payload = packet.payload();
-        if (payload.readableBytes() < 2) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
-            return;
-        }
-        if (payload.readableBytes() > 2) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
-            return;
-        }
-        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.LITTLE, ValueType.NORMAL);
-        if (!isKnownNpcIndex(npcIndex)) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
+        int npcIndex = decodeNpcIndex(packet);
+        if (npcIndex < 0) {
             return;
         }
         PacketInteractionService.handleNpcClick(client, packet.opcode(), 4, npcIndex);
     }
 
     private void handleNpcAttack(Client client, GamePacket packet) {
-        ByteBuf payload = packet.payload();
-        if (payload.readableBytes() < 2) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
+        int npcIndex = decodeNpcIndex(packet);
+        if (npcIndex < 0) {
             return;
         }
-        if (payload.readableBytes() > 2) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
-            return;
-        }
-        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.BIG, ValueType.ADD);
-        if (!isKnownNpcIndex(npcIndex)) {
-            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
-            return;
-        }
-
         logger.debug("Npc attack opcode={} npcIndex={} player={}", packet.opcode(), npcIndex, client.getPlayerName());
         PacketInteractionService.handleNpcAttack(client, packet.opcode(), npcIndex);
+    }
+
+    /** Decodes via the per-opcode typed table; returns -1 for malformed payload or unknown npc. */
+    private int decodeNpcIndex(GamePacket packet) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.NpcClick msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.NpcClick.decode(packet.opcode(), packet.payload());
+        if (msg == null) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
+            return -1;
+        }
+        if (!isKnownNpcIndex(msg.npcIndex())) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
+            return -1;
+        }
+        return msg.npcIndex();
     }
 
     private static boolean isKnownNpcIndex(int npcIndex) {
