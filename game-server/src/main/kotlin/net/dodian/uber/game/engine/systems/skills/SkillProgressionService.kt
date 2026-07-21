@@ -9,6 +9,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.RefreshSkill
+import net.dodian.uber.game.netty.listener.out.SendExpCounter
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 
 object SkillProgressionService {
@@ -103,6 +104,10 @@ object SkillProgressionService {
 
         client.addExperience(applied, request.skill)
         client.markSaveDirty(PlayerSaveSegment.STATS.mask)
+        // Drives the exp-tracker HUD (floating "+X skill" text + orb glow) — a separate
+        // client-side feature from the skill-tab update below; the client only animates
+        // it in response to this packet (opcode 127), never from RefreshSkill (opcode 134).
+        client.send(SendExpCounter(request.skill.id, applied, true))
 
         val newXp = client.getExperience(request.skill)
         val newLevel = Skills.getLevelForExperience(newXp)

@@ -229,8 +229,12 @@ public class WidgetOverlay extends Overlay
 				return super.getPosition();
 			}
 
-
-			return null;
+			// No xptracker-specific config is vendored in this client, so there's no dynamic
+			// location to compute here — fall back to the position set in the constructor
+			// (WidgetInfo.EXPERIENCE_TRACKER_WIDGET, OverlayPosition.TOP_RIGHT) instead of null.
+			// Returning null here (with no preferred position set either) crashes
+			// OverlayManager's sort comparator the first time the overlay list is rebuilt.
+			return super.getPosition();
 		}
 	}
 }

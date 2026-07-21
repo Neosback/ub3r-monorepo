@@ -219,7 +219,6 @@ class StagedPlayerSynchronizationService {
         val retainPrevious = BooleanArray(capacity)
         val additions = arrayOfNulls<Player>(capacity)
         val next = arrayOfNulls<Player>(capacity)
-        val nextSlots = IntArray(capacity)
         val nextGenerations = LongArray(capacity)
         var previousCount = 0
         var additionCount = 0
@@ -240,7 +239,6 @@ class StagedPlayerSynchronizationService {
         fun addNext(player: Player) {
             check(!frozen)
             next[nextCount] = player
-            nextSlots[nextCount] = player.slot
             nextGenerations[nextCount] = player.synchronizationSessionGeneration
             nextCount++
         }
@@ -249,11 +247,6 @@ class StagedPlayerSynchronizationService {
             check(!frozen)
             additions[additionCount++] = player
             addNext(player)
-        }
-
-        fun containsSlot(slot: Int): Boolean {
-            for (index in 0 until nextCount) if (nextSlots[index] == slot) return true
-            return false
         }
 
         fun freeze() { frozen = true }
@@ -283,7 +276,6 @@ class StagedPlayerSynchronizationService {
             candidate ?: return
             if (!PlayerVisibilityRules.isVisibleTo(viewer, candidate)) return
             if (candidate.slot !in membership.indices || membership[candidate.slot]) return
-            if (plan.containsSlot(candidate.slot)) return
             markMember(candidate.slot)
             val distance = maxOf(
                 kotlin.math.abs(viewer.position.x - candidate.position.x),

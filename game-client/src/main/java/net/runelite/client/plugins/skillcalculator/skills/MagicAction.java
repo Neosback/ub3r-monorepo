@@ -211,7 +211,7 @@ public enum MagicAction implements SkillAction
 	VENGEANCE("Vengeance", 94, 112, SpriteID.SPELL_VENGEANCE, true),
 	HEAL_GROUP("Heal Group", 95, 124, SpriteID.SPELL_HEAL_GROUP, true),
 	FIRE_SURGE("Fire Surge", 95, 51, SpriteID.SPELL_FIRE_SURGE, true),
-	GHORROCK_TELEPORT("Ghorrock Teleport", 96, 106, SpriteID.SPELL_GHORROCK_TELEPORT, true),
+	GHORROCK_TELEPORT("Yanille Teleport", 96, 106, SpriteID.SPELL_GHORROCK_TELEPORT, true),
 	SPELLBOOK_SWAP("Spellbook Swap", 96, 130, SpriteID.SPELL_SPELLBOOK_SWAP, true),
 	;
 

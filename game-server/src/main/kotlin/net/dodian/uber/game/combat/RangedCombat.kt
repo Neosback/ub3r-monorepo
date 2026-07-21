@@ -83,16 +83,16 @@ fun Client.handleRangedAttack(): CombatAttackResult? {
             maxHit *= 1.2
     }
     var hit = Utils.random(maxHit.toInt())
-    val criticalChance = getLevel(Skill.AGILITY) / 9
+    var criticalChance = getLevel(Skill.AGILITY) / 9
     val extra = getLevel(Skill.RANGED) * 0.195
-    if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
+    if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance = (criticalChance * 1.5).toInt()
     val landCrit = Math.random() * 100 <= criticalChance
     val landHit = landHitRanged(this, target)
     if(landHit && hit < 1) hit = 1 //Osrs style of hit, max hit is 1 or 1 - maxHit if you land a hit!
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
         if (landCrit && landHit)
-            hit + Utils.dRandom2(extra).toInt()
+            hit += Utils.dRandom2(extra).toInt()
         else if(!landHit) hit = 0
         CombatHitQueueService.enqueue(
             currentGameCycle + hitDelay,
@@ -138,7 +138,7 @@ fun Client.handleRangedAttack(): CombatAttackResult? {
     if (target is Player) {
         val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(getbattleTimer(equipment[Equipment.Slot.WEAPON.id]))
         if (landCrit && landHit)
-            hit + Utils.dRandom2(extra).toInt()
+            hit += Utils.dRandom2(extra).toInt()
         else if (!landHit) hit = 0
         CombatHitQueueService.enqueue(
             currentGameCycle + hitDelay,

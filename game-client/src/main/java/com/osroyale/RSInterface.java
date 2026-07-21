@@ -544,6 +544,9 @@ public class RSInterface {
 		};
 
 		for(int index = 0; index < boxText.length; index++) {
+			if (AncientsSpellData.values()[index].spellType == SpellType.TELEPORT) {
+				continue;
+			}
 			for(int index2 = 0; index2 < boxText[index].length; index2++) {
 				RSInterface hoverText = interfaceCache[boxText[index][index2]];
 
@@ -551,9 +554,21 @@ public class RSInterface {
 			}
 		}
 
+		int teleportHoverId = 22500;
 		for(int index = 0; index < oldSpells.length; index++) {
 			RSInterface widget = interfaceCache[oldSpells[index]];
 			AncientsSpellData spellData = AncientsSpellData.values()[index];
+
+			if (spellData.spellType == SpellType.TELEPORT) {
+				widget.disabledSprite = widget.enabledSprite;
+				widget.valueCompareType = null;
+				widget.requiredValues = null;
+				widget.scripts = null;
+				addTextBoxAncient(archive, teleportHoverId, spellData.level, spellData.spellName, spellData.description, tda);
+				widget.hoverType = teleportHoverId;
+				teleportHoverId += 5;
+				continue;
+			}
 
 			if (spellData.runes_data.length == 2) {
 				int runes_amount = 2;
@@ -767,8 +782,8 @@ public class RSInterface {
 
 	private static void repositionModernSpells() {
 		interfaceCache[19210].tooltip = "</col>Teleport @gre@Home";
-		interfaceCache[19220].disabledMessage = "Teleport to Edgeville";
-		interfaceCache[19222].disabledMessage = "Teleports you to Edgeville";
+		interfaceCache[19220].disabledMessage = "Teleport to Yanille";
+		interfaceCache[19222].disabledMessage = "Teleports you to Yanille";
 
 		RSInterface rsi = RSInterface.interfaceCache[12424];
 		for (int index = 0; index < rsi.children.length; index++) {
@@ -3280,6 +3295,24 @@ public class RSInterface {
 		setBounds(id+4, 90, id == 40110 ? 20 : 34, 2, black_box);
 	}
 
+	public static int addTextBoxAncient(StreamLoader archive, int id, int spellLevel, String spellName, String description, TextDrawingArea[] TDA) {
+		RSInterface black_box = addInterface(id);
+		black_box.isMouseoverTriggered = true;
+		black_box.hoverType = -1;
+		black_box.width = 182;
+		black_box.height = 80;
+
+		addSprite(id+1, 3517);
+		addText(id+2, "Level "+(spellLevel+1)+": "+spellName, 0xFF981F, true, true, 52, TDA, 1);
+		addText(id+3, description, 0xAF6A1A, true, true, 52, TDA, 0);
+
+		setChildren(3, black_box);
+		setBounds(id+1, 0, 0, 0, black_box);
+		setBounds(id+2, 90, 4, 1, black_box);
+		setBounds(id+3, 90, 34, 2, black_box);
+		return 3;
+	}
+
 	public static void addBoxWithText(StreamLoader archive, int id, int spellLevel, String top, String spellName, String description, TextDrawingArea[] TDA, int spriteId, int spellUsable, int actionType){
 		RSInterface widget = addInterface(id);
 		widget.interfaceId = id;
@@ -4008,33 +4041,33 @@ public class RSInterface {
 	public enum AncientsSpellData {
 		SMOKE_RUSH("Smoke Rush", "A single target smoke attack", 49, new int[][] { { 562, 1, CHAOS }, { 560, 1, DEATH }, { 554, 0, FIRE }, { 556, 0, AIR } }, 10, 2, SpellType.COMBAT),
 		SHADOW_RUSH("Shadow Rush", "A single target shadow attack", 51, new int[][] { { 562, 1, CHAOS }, { 560, 1, DEATH }, { 556, 0, AIR }, { 566, 0, SOUL } }, 10, 2, SpellType.COMBAT),
-		PADDEWWA_TELEPORT("Paddewwa Teleport", "A teleportation spell", 53, new int[][] { { 563, 1, LAW }, { 554, 0, FIRE }, { 556, 0, AIR } }, 0, 5, SpellType.TELEPORT),
+		PADDEWWA_TELEPORT("Seers' Village Teleport", "Teleports you to Seers' Village.\\nRequires no runes.", 53, new int[][] { { 563, 1, LAW }, { 554, 0, FIRE }, { 556, 0, AIR } }, 0, 5, SpellType.TELEPORT),
 		BLOOD_RUSH("Blood Rush", "A single target blood attack", 55, new int[][] { { 562, 1, CHAOS }, { 560, 1, DEATH }, { 565, 0, BLOOD } }, 10, 2, SpellType.COMBAT),
 
 		ICE_RUSH("Ice Rush", "A single target ice attack", 57, new int[][] { { 562, 1, CHAOS }, { 560, 1, DEATH }, { 555, 1, WATER } }, 10, 2, SpellType.COMBAT),
-		SENNTISTEN_TELEPORT("Senntisten Teleport", "A teleportation spell", 59, new int[][] { { 566, 0, SOUL }, { 563, 1, LAW } }, 0, 5, SpellType.TELEPORT),
+		SENNTISTEN_TELEPORT("Ardougne Teleport", "Teleports you to Ardougne.\\nRequires no runes.", 59, new int[][] { { 566, 0, SOUL }, { 563, 1, LAW } }, 0, 5, SpellType.TELEPORT),
 		SMOKE_BURST("Smoke Burst", "A multi-target smoke attack", 61, new int[][] { { 562, 3, CHAOS }, { 560, 1, DEATH }, { 554, 1, FIRE }, { 556, 1, AIR } }, 10, 2, SpellType.COMBAT),
 		SHADOW_BURST("Shadow Burst", "A multi-target shadow attack", 63, new int[][] { { 562, 3, CHAOS }, { 560, 1, DEATH }, { 556, 0, AIR }, { 566, 1, SOUL } }, 10, 2, SpellType.COMBAT),
 
-		KHARYRLL_TELEPORT("Kharyrll Teleport", "A teleportation spell", 65, new int[][] { { 565, 0, BLOOD }, { 563, 1, LAW } }, 0, 5, SpellType.TELEPORT),
+		KHARYRLL_TELEPORT("Catherby Teleport", "Teleports you to Catherby.\\nRequires no runes.", 65, new int[][] { { 565, 0, BLOOD }, { 563, 1, LAW } }, 0, 5, SpellType.TELEPORT),
 		BLOOD_BURST("Blood Burst", "A multi-target blood attack", 67, new int[][] { { 562, 3, CHAOS }, { 560, 1, DEATH }, { 565, 1, BLOOD } }, 10, 2, SpellType.COMBAT),
 		ICE_BURST("Ice Burst", "A multi-target ice attack", 69, new int[][] { { 562, 3, CHAOS }, { 560, 1, DEATH }, { 555, 3, WATER } }, 10, 2, SpellType.COMBAT),
-		LASSAR_TELEPORT("Lassar Teleport", "A teleportation spell", 71, new int[][] { { 563, 1, LAW }, { 555, 3, WATER } }, 0, 5, SpellType.TELEPORT),
+		LASSAR_TELEPORT("Legends' Guild Teleport", "Teleports you to Legends' Guild.\\nRequires no runes.", 71, new int[][] { { 563, 1, LAW }, { 555, 3, WATER } }, 0, 5, SpellType.TELEPORT),
 
 		SMOKE_BLITZ("Smoke Blitz", "A single target smoke attack", 73, new int[][] { { 560, 1, DEATH }, { 565, 1, BLOOD }, { 554, 1, FIRE }, { 556, 1, AIR } }, 10, 2, SpellType.COMBAT),
 		SHADOW_BLITZ("Shadow Blitz", "A single target shadow attack", 75, new int[][] { { 565, 1, BLOOD }, { 560, 1, DEATH }, { 556, 1, AIR }, { 566, 1, SOUL } }, 10, 2, SpellType.COMBAT),
-		DAREEYAK_TELEPORT("Dareeyak Teleport", "A teleportation spell", 77, new int[][] { { 563, 1, LAW }, { 554, 2, FIRE }, { 556, 1, AIR } }, 0, 5, SpellType.TELEPORT),
+		DAREEYAK_TELEPORT("Taverley Teleport", "Teleports you to Taverley.\\nRequires no runes.", 77, new int[][] { { 563, 1, LAW }, { 554, 2, FIRE }, { 556, 1, AIR } }, 0, 5, SpellType.TELEPORT),
 		BLOOD_BLITZ("Blood Blitz", "A single target blood attack", 79, new int[][] { { 560, 1, DEATH }, { 565, 3, BLOOD } }, 10, 2, SpellType.COMBAT),
 
 		ICE_BLITZ("Ice Blitz", "A single target ice attack", 81, new int[][] { { 565, 1, BLOOD}, { 560, 1, DEATH }, { 555, 2, WATER } }, 10, 2, SpellType.COMBAT),
-		CARRALLANGAR_TELEPORT("Carrallangar Teleport", "A teleportation spell", 83, new int[][] { { 566, 1, SOUL }, { 563, 1, LAW } }, 0, 5, SpellType.TELEPORT),
+		CARRALLANGAR_TELEPORT("Fishing Guild Teleport", "Teleports you to Fishing Guild.\\nRequires no runes.", 83, new int[][] { { 566, 1, SOUL }, { 563, 1, LAW } }, 0, 5, SpellType.TELEPORT),
 		SMOKE_BARRAGE("Smoke Barrage", "A multi-target smoke attack", 85, new int[][] { { 560, 3, DEATH }, { 565, 1, BLOOD }, { 554, 3, FIRE }, { 556, 3, AIR } }, 10, 2, SpellType.COMBAT),
 		SHADOW_BARRAGE("Shadow Barrage", "A multi-target shadow attack", 87, new int[][] { { 565, 1, BLOOD }, { 560, 3, DEATH }, { 556, 3, AIR }, { 566, 2, SOUL } }, 10, 2, SpellType.COMBAT),
 
-		ANNAKARL_TELEPORT("Annakarl Teleport", "A teleportation spell", 89, new int[][] { { 565, 1, BLOOD }, { 563, 1, LAW } }, 0, 5, SpellType.TELEPORT),
+		ANNAKARL_TELEPORT("Gnome Village Teleport", "Teleports you to Gnome Village.\\nRequires no runes.", 89, new int[][] { { 565, 1, BLOOD }, { 563, 1, LAW } }, 0, 5, SpellType.TELEPORT),
 		BLOOD_BARRAGE("Blood Barrage", "A multi-target blood attack", 91, new int[][] { { 560, 3, DEATH }, { 565, 3, BLOOD }, { 566, 0, SOUL } }, 10, 2, SpellType.COMBAT),
 		ICE_BARRAGE("Ice Barrage", "A multi-target ice attack", 93, new int[][] { { 565, 1, BLOOD }, { 560, 3, DEATH }, { 555, 5, WATER } }, 10, 2, SpellType.COMBAT),
-		GHORROCK_TELEPORT("Ghorrock Teleport", "A teleportation spell", 95, new int[][] { { 563, 1, LAW }, { 555, 7, WATER } }, 0, 5, SpellType.TELEPORT),
+		GHORROCK_TELEPORT("Yanille Teleport", "Teleports you to Yanille.\\nRequires no runes.", 95, new int[][] { { 563, 1, LAW }, { 555, 7, WATER } }, 0, 5, SpellType.TELEPORT),
 		;
 
 		public String spellName, description;

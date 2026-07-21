@@ -5,6 +5,7 @@ import net.dodian.uber.game.engine.systems.interaction.commands.*
 import java.util.LinkedHashSet
 import net.dodian.uber.skills.cooking.CookingModule
 import net.dodian.uber.game.skill.crafting.CraftingData
+import net.dodian.uber.skills.firemaking.FiremakingModule
 import net.dodian.uber.game.skill.farming.FarmingData
 import net.dodian.uber.skills.fishing.FishingModule
 import net.dodian.uber.game.skill.fletching.FletchingData
@@ -146,7 +147,7 @@ object SkillTestItemCatalog {
     private fun firemakingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addIfValid(items, 590)
-        WoodcuttingModule.trees.forEach { addIfValid(items, it.logItemId) }
+        FiremakingModule.logs.forEach { addIfValid(items, it.itemId) }
         return items.toList()
     }
 

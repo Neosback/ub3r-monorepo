@@ -2,6 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher;
+import net.dodian.uber.game.skill.runecrafting.Runecrafting;
 import net.dodian.uber.game.skill.slayer.Slayer;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
@@ -35,6 +36,10 @@ public class ClickItem2Listener implements PacketListener {
         if (!PacketItemActionService.validateInventorySlot(client, itemSlot)) return;
         if (client.playerItems[itemSlot] - 1 != itemId) return;
         if (client.randomed || client.UsingAgility) return;
+
+        if (Runecrafting.checkPouch(client, itemId)) {
+            return;
+        }
 
         if (ItemDispatcher.tryHandle(client, 2, itemId, itemSlot, interfaceId)) {
             return;

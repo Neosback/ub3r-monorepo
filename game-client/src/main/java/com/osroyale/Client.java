@@ -19707,7 +19707,7 @@ public class Client extends GameEngine
 
     private final int[] modeNamesX = {26, 86, 150, 212, 286, 349, 412}, modeNamesY = {158, 153, 153, 153, 153, 153, 159}, channelButtonsX = {5, 71, 137, 203, 269, 335, 404};
 
-    private final String[] modeNames = {"All", "Game", "Public", "Private", "Clan", "Trade", "Report a bug"};
+    private final String[] modeNames = {"All", "Game", "Public", "Private", "Clan", "Trade", "Report a abuse"};
 
     private static final String text[] = {"On", "Friends", "Off", "Hide"};
     private static final int textColor[] = {65280, 0xffff00, 0xff0000, 65535};

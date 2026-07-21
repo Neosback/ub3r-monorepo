@@ -4,7 +4,6 @@ import net.dodian.uber.game.item.admin.PotatoItemInteractionState
 import net.dodian.uber.game.item.cosmetic.NoveltyItemCombinations
 import net.dodian.uber.game.item.equipment.RepairPlaceholderItemCombinations
 import net.dodian.uber.game.skill.farming.SaplingItemCombinations
-import net.dodian.uber.game.skill.firemaking.FiremakingItemCombinations
 import net.dodian.uber.game.skill.herblore.HerbloreItemCombinations
 import net.dodian.uber.game.skill.crafting.CraftingItemCombinations
 import net.dodian.uber.game.skill.slayer.EquipmentAssemblyItemCombinations
@@ -81,10 +80,6 @@ object ItemCombinationService {
         }
 
         if (CraftingItemCombinations.handle(client, itemUsed, otherItem, itemUsedSlot, usedWithSlot)) {
-            return
-        }
-
-        if (FiremakingItemCombinations.handle(client, itemUsed, useWith)) {
             return
         }
 

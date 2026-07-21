@@ -24,9 +24,14 @@ import net.dodian.uber.game.api.plugin.skills.SkillProfile
 import net.dodian.uber.game.api.plugin.skills.SkillRandom
 import net.dodian.uber.game.api.plugin.skills.SkillVitals
 import net.dodian.uber.game.engine.config.FeatureStateService
+import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.engine.systems.inventory.inventoryTransaction
+import net.dodian.uber.game.engine.systems.world.item.Ground
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.item.GroundItem
+import net.dodian.uber.game.model.objects.GlobalObject
+import net.dodian.uber.game.model.objects.WorldObject
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.persistence.audit.ItemLog
@@ -144,6 +149,18 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
                 target.position.toPosition(),
                 GameObjectData.forId(target.id),
             )
+        override fun spawnTemporaryObject(objectId: Int, durationTicks: Int, onExpire: () -> Unit) {
+            val pos = client.position
+            val worldObject = WorldObject(objectId, pos.x, pos.y, pos.z, 10, 0, 0)
+            val durationMs = durationTicks * 600
+            GlobalObject.addGlobalObject(worldObject, durationMs)
+            GameEventScheduler.runLaterMs(durationMs) {
+                if (!client.disconnected) onExpire()
+            }
+        }
+        override fun dropItem(itemId: Int, amount: Int) {
+            Ground.addItem(GroundItem(client.position, itemId, amount, client.slot, -1))
+        }
     }
     override val production = object : SkillProduction {
         override fun open(config: SkillMultiConfig, onSelected: (SkillMultiSelection) -> Unit): Boolean {

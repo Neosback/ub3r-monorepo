@@ -83,11 +83,6 @@ object PacketWalkingService {
             player.checkInv = false
             player.resetItems(3214)
         }
-        if (GroundItemIntentStateAdapter.wantsPickup(player)) {
-            GroundItemIntentStateAdapter.clearPickup(player)
-            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(player)
-        }
-
         val stepCount = request.deltasX.size
         if (stepCount <= 0 || stepCount > Player.WALKING_QUEUE_SIZE || request.deltasY.size != stepCount) {
             player.resetWalkingQueue()
@@ -104,6 +99,21 @@ object PacketWalkingService {
             return
         }
         val eventDestination = routeDecision.destination
+        // The client sends the walk-to-item request and the pickup-item request together
+        // from the same click; only treat this as "the player changed their mind and is
+        // walking elsewhere" if the new destination isn't the tile they're already trying
+        // to pick up from — otherwise this walk request (which is what carries them TO the
+        // item) cancels the pickup intent before they ever arrive, forcing a second click.
+        if (GroundItemIntentStateAdapter.wantsPickup(player)) {
+            val pendingTarget = GroundItemIntentStateAdapter.target(player)
+            val walkingTowardPendingTarget = pendingTarget != null &&
+                eventDestination.x == pendingTarget.x &&
+                eventDestination.y == pendingTarget.y
+            if (!walkingTowardPendingTarget) {
+                GroundItemIntentStateAdapter.clearPickup(player)
+                PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(player)
+            }
+        }
         val firstStepX = request.firstStepXAbs - player.mapRegionX * 8
         val firstStepY = request.firstStepYAbs - player.mapRegionY * 8
         if (routeDecision.useClientRoute) {

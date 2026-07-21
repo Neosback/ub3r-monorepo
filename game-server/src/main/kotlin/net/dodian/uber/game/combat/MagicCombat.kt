@@ -75,9 +75,9 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         }
     }
     var hit = Utils.random(maxHit.toInt())
-    val criticalChance = getLevel(Skill.AGILITY) / 9
+    var criticalChance = getLevel(Skill.AGILITY) / 9
     val extra = getLevel(Skill.MAGIC) * 0.195
-    if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
+    if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance = (criticalChance * 1.5).toInt()
     val landCrit = Math.random() * 100 <= criticalChance
 
     val gfx = AncientSpellRegistry.gfx(slot)
@@ -104,7 +104,7 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
     }
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
-        if (landCrit) hit + Utils.dRandom2(extra).toInt()
+        if (landCrit) hit += Utils.dRandom2(extra).toInt()
         CombatHitQueueService.enqueue(
             currentGameCycle + hitDelay,
             this,
@@ -132,7 +132,7 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
     }
     if (target is Player) {
         val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(coolDown[type])
-        if (landCrit) hit + Utils.dRandom2(extra).toInt()
+        if (landCrit) hit += Utils.dRandom2(extra).toInt()
         CombatHitQueueService.enqueue(
             currentGameCycle + hitDelay,
             this,

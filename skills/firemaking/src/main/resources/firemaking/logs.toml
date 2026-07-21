@@ -1,0 +1,44 @@
+# Log tiers burnable with a tinderbox. durationTicks is how long the fire
+# object stays lit (ticks * 600ms) before burning out and leaving ashes.
+
+[[log]]
+name = "logs"
+itemId = 1511
+requiredLevel = 1
+experience = 160
+durationTicks = 60
+
+[[log]]
+name = "oak logs"
+itemId = 1521
+requiredLevel = 15
+experience = 240
+durationTicks = 70
+
+[[log]]
+name = "willow logs"
+itemId = 1519
+requiredLevel = 30
+experience = 360
+durationTicks = 80
+
+[[log]]
+name = "maple logs"
+itemId = 1517
+requiredLevel = 45
+experience = 540
+durationTicks = 85
+
+[[log]]
+name = "yew logs"
+itemId = 1515
+requiredLevel = 60
+experience = 812
+durationTicks = 90
+
+[[log]]
+name = "magic logs"
+itemId = 1513
+requiredLevel = 75
+experience = 1216
+durationTicks = 100

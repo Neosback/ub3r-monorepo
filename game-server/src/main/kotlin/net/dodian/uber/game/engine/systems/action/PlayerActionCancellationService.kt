@@ -1,6 +1,7 @@
 package net.dodian.uber.game.engine.systems.action
 
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.skill.cooking.Cooking
 import net.dodian.uber.game.skill.fishing.Fishing
 import net.dodian.uber.game.skill.fletching.Fletching
@@ -11,6 +12,8 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.skill.smithing.SmithingInterface
 import net.dodian.uber.game.engine.systems.combat.CombatPreemptionPolicy
+import net.dodian.uber.skills.mining.MiningModule
+import net.dodian.uber.skills.woodcutting.WoodcuttingModule
 
 object PlayerActionCancellationService {
     @JvmStatic
@@ -54,6 +57,8 @@ object PlayerActionCancellationService {
         Fletching.stopFromReset(player, fullResetAnimation)
         Fishing.stopFromReset(player, fullResetAnimation)
         Cooking.stopFromReset(player, fullResetAnimation)
+        WoodcuttingModule.stopAction(player.asSkillPlayer())
+        MiningModule.stopAction(player.asSkillPlayer())
         player.clearFletchingState()
         player.resourcesGathered = 0
         if (player.activeSmithingSelection != null || player.IsAnvil) {

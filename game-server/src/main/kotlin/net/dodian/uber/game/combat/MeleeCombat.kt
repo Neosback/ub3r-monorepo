@@ -62,9 +62,9 @@ fun Client.handleMeleeAttack(): CombatAttackResult? {
              if(keris) maxHit *= 2
          }
         hit = Utils.random(maxHit.toInt())
-        val criticalChance = getLevel(Skill.AGILITY) / 9
+        var criticalChance = getLevel(Skill.AGILITY) / 9
         val extra = getLevel(Skill.STRENGTH) * 0.195
-        if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
+        if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance = (criticalChance * 1.5).toInt()
         val landCrit = Math.random() * 100 <= criticalChance
         val landHit = landHit(this, target)
         if(landHit && hit < 1) hit = 1 //Osrs style of hit, max hit is 1 or 1 - maxHit if you land a hit!
@@ -83,7 +83,7 @@ fun Client.handleMeleeAttack(): CombatAttackResult? {
                 name.lowercase().contains("spider") -> true
                 else -> false
             }
-            if (landCrit && landHit) hit + Utils.dRandom2(extra).toInt()
+            if (landCrit && landHit) hit += Utils.dRandom2(extra).toInt()
             else if(!landHit) hit = 0
             if(wolfBane && Misc.chance(8) == 1) {
                 hit *= 2
@@ -133,9 +133,9 @@ fun Client.handleMeleeAttack(): CombatAttackResult? {
         }
         if (target is Player) {
             val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(getbattleTimer(equipment[Equipment.Slot.WEAPON.id]))
-            if (landCrit && landHit) hit + Utils.dRandom2(extra).toInt()
+            if (landCrit && landHit) hit += Utils.dRandom2(extra).toInt()
             else if(!landHit) hit = 0
-            if (player.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MELEE)) (hit * 0.6).toInt()
+            if (player.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MELEE)) hit = (hit * 0.6).toInt()
             if(!handleSpecial(landCrit)) { //Do stuff here!
                 if(hit >= player.currentHealth) hit = player.currentHealth
                 player.dealDamage(this, hit, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)

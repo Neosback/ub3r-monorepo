@@ -43,6 +43,8 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     val itemModels = mutableListOf<Triple<Int, Int, Int>>()
     val varbits = mutableMapOf<Int, Int>()
     val replacedObjects = mutableListOf<Pair<SkillObjectRef, Int>>()
+    val spawnedObjects = mutableListOf<Pair<Int, Int>>()
+    val groundItems = mutableListOf<Pair<Int, Int>>()
     /** No real cache/object-shape data in tests; tests toggle this to simulate moving out of range. */
     var withinBoundaryOverride = true
     var anchor: SkillPosition? = null
@@ -57,6 +59,8 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     private var activeAction: FakeAction? = null
     private var pendingProduction: Pair<SkillMultiConfig, (SkillMultiSelection) -> Unit>? = null
     private val attributesByKey = mutableMapOf<String, Any>()
+    private class PendingExpiry(var ticksRemaining: Int, val onExpire: () -> Unit)
+    private val pendingExpiries = mutableListOf<PendingExpiry>()
 
     private inner class FakeAction(val spec: ActionSpec) : SkillActionHandle {
         var ticksUntilCycle = 0
@@ -170,6 +174,11 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun graphic(id: Int, height: Int) = Unit
         override fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int) { replacedObjects += target to replacementId }
         override fun withinObjectBoundary(target: SkillObjectRef): Boolean = withinBoundaryOverride
+        override fun spawnTemporaryObject(objectId: Int, durationTicks: Int, onExpire: () -> Unit) {
+            spawnedObjects += objectId to durationTicks
+            pendingExpiries += PendingExpiry(durationTicks, onExpire)
+        }
+        override fun dropItem(itemId: Int, amount: Int) { groundItems += itemId to amount }
     }
     override val production = object : SkillProduction {
         override fun open(config: SkillMultiConfig, onSelected: (SkillMultiSelection) -> Unit): Boolean {
@@ -224,6 +233,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     fun activeActionName(): String? = activeAction?.spec?.name
     fun advanceTicks(ticks: Int = 1) {
         repeat(ticks.coerceAtLeast(0)) {
+            tickPendingExpiries()
             val action = activeAction ?: return@repeat
             if (action.stopped) return@repeat
             if (action.ticksUntilCycle > 0) {
@@ -246,6 +256,17 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
                 return@repeat
             }
             action.ticksUntilCycle = (action.spec.delayCalculator(this) - 1).coerceAtLeast(0)
+        }
+    }
+    private fun tickPendingExpiries() {
+        val iterator = pendingExpiries.iterator()
+        while (iterator.hasNext()) {
+            val pending = iterator.next()
+            pending.ticksRemaining--
+            if (pending.ticksRemaining <= 0) {
+                iterator.remove()
+                pending.onExpire()
+            }
         }
     }
     private fun setAmount(itemId: Int, amount: Int) { if (amount <= 0) itemAmounts.remove(itemId) else itemAmounts[itemId] = amount }

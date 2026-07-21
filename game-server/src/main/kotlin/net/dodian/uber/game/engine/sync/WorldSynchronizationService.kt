@@ -97,7 +97,10 @@ class WorldSynchronizationService {
             }
         }
         activePlayerBuffer.sortBy(Client::getSlot)
-        return activePlayerBuffer.toList()
+        // Safe to return the live buffer: it's only read within this same tick's run(),
+        // and SyncWorker.forEachViewer is a synchronous submit-and-join barrier, so any
+        // parallel fan-out over this list has completed before the next tick clears it.
+        return activePlayerBuffer
     }
 
     private fun buildPlayerRootCache(activePlayers: List<Client>, rootCache: RootSynchronizationCache) {

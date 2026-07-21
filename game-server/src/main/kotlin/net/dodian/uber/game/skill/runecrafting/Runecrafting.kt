@@ -1,18 +1,15 @@
 package net.dodian.uber.game.skill.runecrafting
 
-import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.engine.systems.action.PolicyPreset
-import net.dodian.uber.game.engine.systems.skills.ProgressionService
-import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
-import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.skillPlugin
-import net.dodian.uber.game.engine.util.Misc
+import net.dodian.uber.skills.runecrafting.RunecraftingModule
 import org.slf4j.LoggerFactory
 
+/**
+ * Rune pouches (fill/empty/check) only: wired directly from raw item-click packet
+ * listeners rather than the skill plugin registry, and key off Player-scoped pouch
+ * arrays. Altar crafting itself lives in [RunecraftingModule].
+ */
 object Runecrafting {
     private val logger = LoggerFactory.getLogger(Runecrafting::class.java)
 
@@ -28,15 +25,15 @@ object Runecrafting {
             return true
         }
         val now = System.currentTimeMillis()
-        val lastAltarAt = client.runecraftingState?.lastAltarCraftAtMillis ?: 0L
+        val lastAltarAt: Long = client.contentRuntimeState.getPluginAttribute(RunecraftingModule.LAST_ALTAR_CRAFT_KEY.id) ?: 0L
         if (now - lastAltarAt <= 1200L) {
             logger.warn("Rapid pouch fill after altar craft player={} pouchId={} deltaMs={}", client.playerName, pouchId, now - lastAltarAt)
         }
         val max = client.runePouchesMaxAmount[slot] - client.runePouchesAmount[slot]
-        val amount = minOf(client.getInvAmt(RunecraftingData.RUNE_ESSENCE_ID), max)
+        val amount = minOf(client.getInvAmt(RunecraftingModule.RUNE_ESSENCE_ID), max)
         if (amount > 0) {
             repeat(amount) {
-                client.deleteItem(RunecraftingData.RUNE_ESSENCE_ID, 1)
+                client.deleteItem(RunecraftingModule.RUNE_ESSENCE_ID, 1)
             }
             client.runePouchesAmount[slot] += amount
             client.checkItemUpdate()
@@ -61,7 +58,7 @@ object Runecrafting {
         amount = minOf(amount, client.runePouchesAmount[slot])
         if (amount > 0) {
             repeat(amount) {
-                client.addItem(RunecraftingData.RUNE_ESSENCE_ID, 1)
+                client.addItem(RunecraftingModule.RUNE_ESSENCE_ID, 1)
             }
             client.runePouchesAmount[slot] -= amount
             client.checkItemUpdate()
@@ -78,73 +75,8 @@ object Runecrafting {
         return true
     }
 
-    @JvmStatic
-    fun start(client: Client, request: RunecraftingRequest): Boolean {
-        if (!client.contains(RunecraftingData.RUNE_ESSENCE_ID)) {
-            client.sendMessage("You do not have any rune essence!")
-            return false
-        }
-        if (client.getLevel(Skill.RUNECRAFTING) < request.requiredLevel) {
-            client.send(
-                SendMessage(
-                    "You must have ${request.requiredLevel} runecrafting to craft ${client.getItemName(request.runeId).lowercase()}",
-                ),
-            )
-            return false
-        }
-
-        val essenceCount = client.getInvAmt(RunecraftingData.RUNE_ESSENCE_ID)
-        if (essenceCount <= 0) {
-            client.sendMessage("You do not have any rune essence!")
-            return false
-        }
-
-        var extra = 0
-        repeat(essenceCount) {
-            client.deleteItem(RunecraftingData.RUNE_ESSENCE_ID, 1)
-            val chance = (client.getLevel(Skill.RUNECRAFTING) + 1) / 2
-            val roll = 1 + Misc.random(99)
-            if (roll <= chance) {
-                extra++
-            }
-        }
-
-        val crafted = essenceCount + extra
-        client.sendMessage("You craft $crafted ${client.getItemName(request.runeId).lowercase()}s")
-        client.addItem(request.runeId, crafted)
-        client.checkItemUpdate()
-        val xp = request.experiencePerEssence * essenceCount
-        ProgressionService.addXp(client, xp, Skill.RUNECRAFTING)
-        SkillingRandomEventService.trigger(client, xp)
-        client.runecraftingState = RunecraftingState(lastAltarCraftAtMillis = System.currentTimeMillis())
-        return true
-    }
-
     private fun resolvePouchSlot(pouchId: Int): Int? {
         val slot = if (pouchId == 5509) 0 else (pouchId - 5508) / 2
         return if (slot in 0..3) slot else null
     }
-}
-
-object RunecraftingSkillPlugin : SkillPlugin {
-    override val definition =
-        skillPlugin(name = "Runecrafting", skill = Skill.RUNECRAFTING) {
-            objectClick(preset = PolicyPreset.GATHERING, option = 1, *RunecraftingData.altarObjectIds) { interaction ->
-                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
-                val objectId = interaction.objectId
-                val position = interaction.position
-                val obj = interaction.definition
-                val altar = RunecraftingData.byObjectId(objectId)
-                if (altar != null) Runecrafting.start(client, altar.request) else false
-            }
-
-            val pouchIds = intArrayOf(5508, 5509, 5510, 5511, 5512, 5513, 5514, 5515)
-            itemClick(preset = PolicyPreset.GATHERING, option = 2, *pouchIds) { interaction ->
-                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
-                val itemId = interaction.itemId
-                val itemSlot = interaction.itemSlot
-                val interfaceId = interaction.interfaceId
-                Runecrafting.checkPouch(client, itemId)
-            }
-        }
 }

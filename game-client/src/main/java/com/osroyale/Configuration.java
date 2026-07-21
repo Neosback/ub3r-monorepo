@@ -34,7 +34,7 @@ public final class Configuration {
     /**
      * Display client data.
      */
-    static boolean CLIENT_DATA = true;
+    static boolean CLIENT_DATA = false;
 
     /**
      * Debug the interfaces.

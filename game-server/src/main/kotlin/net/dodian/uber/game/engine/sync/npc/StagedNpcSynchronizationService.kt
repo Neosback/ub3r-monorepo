@@ -59,7 +59,7 @@ class StagedNpcSynchronizationService {
         }
 
         val nearby = SynchronizationContext.getViewportSnapshot(viewer)?.npcs
-            ?: net.dodian.uber.game.Server.npcManager.getNpcs().toList()
+            ?: net.dodian.uber.game.Server.npcManager.getNpcs()
         var estimatedBytes = BASE_PACKET_BUDGET
         for (npc in nearby) {
             if (plan.additionCount >= MAX_ADDITIONS_PER_CYCLE || plan.nextCount >= MAX_LOCALS) break

@@ -18,7 +18,6 @@ import net.dodian.uber.game.engine.tasking.GameTaskSet
 import net.dodian.uber.game.skill.crafting.CraftingState
 import net.dodian.uber.game.skill.fletching.FletchingState
 import net.dodian.uber.game.skill.prayer.PrayerOfferingState
-import net.dodian.uber.game.skill.runecrafting.RunecraftingState
 import net.dodian.uber.game.skill.smithing.ActiveSmithingSelection
 import net.dodian.uber.game.skill.smithing.SmeltingSelection
 import net.dodian.uber.game.skill.thieving.PyramidPlunderPlayerState
@@ -59,7 +58,6 @@ class PlayerContentRuntimeState {
     @Volatile private var fletchingState: FletchingState? = null
     @Volatile private var craftingState: CraftingState? = null
     @Volatile private var prayerOfferingState: PrayerOfferingState? = null
-    @Volatile private var runecraftingState: RunecraftingState? = null
     @Volatile private var interactionAnchorState: InteractionAnchorState? = null
     @Volatile private var pyramidPlunderState: PyramidPlunderPlayerState? = null
     @Volatile private var movementLockState: MovementLockState? = null
@@ -99,9 +97,6 @@ class PlayerContentRuntimeState {
     fun getPrayerOfferingState() = prayerOfferingState
     fun setPrayerOfferingState(value: PrayerOfferingState?) { prayerOfferingState = value }
     fun clearPrayerOfferingState() { prayerOfferingState = null }
-    fun getRunecraftingState() = runecraftingState
-    fun setRunecraftingState(value: RunecraftingState?) { runecraftingState = value }
-    fun clearRunecraftingState() { runecraftingState = null }
     fun getInteractionAnchorState() = interactionAnchorState
     fun setInteractionAnchorState(value: InteractionAnchorState?) { interactionAnchorState = value }
     fun clearInteractionAnchorState() { interactionAnchorState = null }

@@ -245,16 +245,20 @@ public class CustomInterface extends RSInterface {
         int index = 0;
         ArrayList<Integer> spellSprites = new ArrayList<>();
         for(AncientSpellData data : ancients) {
-            if (data.spell.runes_data.length == 2)
-                add2Runes(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.spellName, data.spell.description, font, data.spriteOff, data.spriteOn, data.spell.spellUseable, 5);
-            else if (data.spell.runes_data.length == 3)
-                add3Runes(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description,font, data.spriteOff, data.spriteOn, data.spell.spellUseable, 5);
-            else if (data.spell.runes_data.length == 4)
-                add4Runes(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description,font, data.spriteOff, data.spriteOn, data.spell.spellUseable, 5);
+            boolean isTeleport = data.spell.spellType == RSInterface.SpellType.TELEPORT;
+            int sidOff = isTeleport ? data.spriteOn : data.spriteOff;
+            int sidOn = data.spriteOn;
 
+            if (data.spell.runes_data.length == 2)
+                add2Runes(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.spellName, data.spell.description, font, sidOff, sidOn, data.spell.spellUseable, 5);
+            else if (data.spell.runes_data.length == 3)
+                add3Runes(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description,font, sidOff, sidOn, data.spell.spellUseable, 5);
+            else if (data.spell.runes_data.length == 4)
+                add4Runes(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description,font, sidOff, sidOn, data.spell.spellUseable, 5);
+ 
             spellSprites.add(interfaceId);
             widget.child(childIndex++, interfaceId++, startX, startY);
-
+ 
             startX += 40;
             index++;
             if(index % 4 == 0) {
@@ -262,19 +266,23 @@ public class CustomInterface extends RSInterface {
                 startY += regularStaff.length > 20 ? 25 : 31; //25 - staff of the dead
             }
         }
-
+ 
         index = 0;
         for(AncientSpellData data : ancients) {
             int extraIds = 0;
-            if(data.spell.runes_data.length == 2)
-                extraIds = build2RunesBoxSmall2(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description, font);
-            if(data.spell.runes_data.length == 3)
-                extraIds = build3RunesBoxSmall2(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description, font);
-            else if(data.spell.runes_data.length == 4)
-                extraIds = build4RunesBoxSmall2(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description, font);
-
+            if (data.spell.spellType == RSInterface.SpellType.TELEPORT) {
+                extraIds = RSInterface.addTextBoxAncient(archive, interfaceId, data.spell.level, data.spell.spellName, data.spell.description, font);
+            } else {
+                if(data.spell.runes_data.length == 2)
+                    extraIds = build2RunesBoxSmall2(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description, font);
+                else if(data.spell.runes_data.length == 3)
+                    extraIds = build3RunesBoxSmall2(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description, font);
+                else if(data.spell.runes_data.length == 4)
+                    extraIds = build4RunesBoxSmall2(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description, font);
+            }
+ 
             interfaceCache[spellSprites.get(index++).intValue()].hoverType = interfaceId;
-
+ 
             widget.child(childIndex++, interfaceId++, 5, 174);
             interfaceId += extraIds;
         }

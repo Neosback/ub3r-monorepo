@@ -145,6 +145,10 @@ interface SkillWorld {
     fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int = 0)
     /** Whether the player is still within interaction range of [target]'s nearest boundary tile (accounts for object size/shape, not just Chebyshev tile distance). */
     fun withinObjectBoundary(target: SkillObjectRef): Boolean
+    /** Spawns [objectId] at the player's current position for [durationTicks] ticks, then removes it and invokes [onExpire]. */
+    fun spawnTemporaryObject(objectId: Int, durationTicks: Int, onExpire: () -> Unit = {})
+    /** Drops [amount] of [itemId] on the ground at the player's current position, initially visible only to them. */
+    fun dropItem(itemId: Int, amount: Int = 1)
 }
 
 interface SkillProduction {

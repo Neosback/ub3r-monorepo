@@ -5,6 +5,7 @@ import java.util.WeakHashMap
 import java.util.function.BooleanSupplier
 import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.engine.state.GroundItemIntentStateAdapter
+import net.dodian.uber.game.engine.systems.follow.FollowRouting
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GroundItem
 import net.dodian.uber.game.persistence.player.PlayerSaveReason
@@ -22,6 +23,9 @@ object PlayerDeferredLifecycleService {
         var periodicProgressSaveTask: TaskHandle? = null,
         var dailyResetTask: TaskHandle? = null,
         var dailyResetStartAtMs: Long = 0L,
+        var pickupRouteTargetX: Int = Int.MIN_VALUE,
+        var pickupRouteTargetY: Int = Int.MIN_VALUE,
+        var pickupRouteTargetZ: Int = Int.MIN_VALUE,
     )
 
     private val states = Collections.synchronizedMap(WeakHashMap<Client, PlayerDeferredState>())
@@ -59,6 +63,9 @@ object PlayerDeferredLifecycleService {
             return
         }
         val state = stateFor(player)
+        state.pickupRouteTargetX = Int.MIN_VALUE
+        state.pickupRouteTargetY = Int.MIN_VALUE
+        state.pickupRouteTargetZ = Int.MIN_VALUE
         state.pickupWatchTask =
             GameEventScheduler.runRepeating(
                 delayTicks = 1,
@@ -81,6 +88,25 @@ object PlayerDeferredLifecycleService {
                             if (!GroundItemIntentStateAdapter.wantsPickup(player)) {
                                 state.pickupWatchTask = null
                                 return@BooleanSupplier false
+                            }
+                            return@BooleanSupplier true
+                        }
+                        // Not there yet. The client's own walk request is what got the player
+                        // moving, but it's computed locally by the client and doesn't reliably
+                        // route around obstacles (unlike object interaction, which is always
+                        // server-routed via FollowRouting). Once per new destination, replace
+                        // whatever's queued with a real collision-aware server route — mirrors
+                        // ObjectApproachRoutingService/InteractionProcessor's lastRoutePosition
+                        // guard so we don't re-path every tick while our own route is draining.
+                        val alreadyRoutedHere = state.pickupRouteTargetX == attempt.x &&
+                            state.pickupRouteTargetY == attempt.y &&
+                            state.pickupRouteTargetZ == attempt.z
+                        val walkInProgress = player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr
+                        if (!alreadyRoutedHere || !walkInProgress) {
+                            if (FollowRouting.routeToExactTile(player, attempt.x, attempt.y, attempt.z)) {
+                                state.pickupRouteTargetX = attempt.x
+                                state.pickupRouteTargetY = attempt.y
+                                state.pickupRouteTargetZ = attempt.z
                             }
                         }
                         true

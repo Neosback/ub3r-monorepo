@@ -32,7 +32,6 @@ import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.skill.fletching.FletchingState;
 import net.dodian.uber.game.skill.crafting.CraftingState;
 import net.dodian.uber.game.skill.prayer.PrayerOfferingState;
-import net.dodian.uber.game.skill.runecrafting.RunecraftingState;
 import net.dodian.uber.game.engine.systems.interaction.ActiveInteraction;
 import net.dodian.uber.game.engine.systems.interaction.StaticObjectOverrides;
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
@@ -1052,18 +1051,6 @@ public abstract class Player extends Entity {
 
     public void clearPrayerOfferingState() {
         interactionState.clearPrayerOfferingState();
-    }
-
-    public RunecraftingState getRunecraftingState() {
-        return interactionState.getRunecraftingState();
-    }
-
-    public void setRunecraftingState(RunecraftingState runecraftingState) {
-        interactionState.setRunecraftingState(runecraftingState);
-    }
-
-    public void clearRunecraftingState() {
-        interactionState.clearRunecraftingState();
     }
 
     public InteractionAnchorState getInteractionAnchorState() {
