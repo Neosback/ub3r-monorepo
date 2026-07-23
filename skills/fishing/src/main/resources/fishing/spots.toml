@@ -1,3 +1,5 @@
+schema_version = 1
+
 # Fishing spot definitions. Spots are NPCs (npcId), clicked via clickOption (1 or 2).
 # bigCatch* fields are optional: when set, there's a chance to land bigCatchItemId
 # instead of fishItemId once the player meets bigCatchRequiredLevel.

@@ -1,0 +1,105 @@
+schema_version = 1
+
+[[ammunition]]
+key = "bronze_arrow"
+kind = "arrow"
+material_id = 39
+product_id = 882
+level = 1
+experience = 7
+
+[[ammunition]]
+key = "iron_arrow"
+kind = "arrow"
+material_id = 40
+product_id = 884
+level = 15
+experience = 13
+
+[[ammunition]]
+key = "steel_arrow"
+kind = "arrow"
+material_id = 41
+product_id = 886
+level = 30
+experience = 25
+
+[[ammunition]]
+key = "mithril_arrow"
+kind = "arrow"
+material_id = 42
+product_id = 888
+level = 45
+experience = 38
+
+[[ammunition]]
+key = "adamant_arrow"
+kind = "arrow"
+material_id = 43
+product_id = 890
+level = 60
+experience = 50
+
+[[ammunition]]
+key = "rune_arrow"
+kind = "arrow"
+material_id = 44
+product_id = 892
+level = 75
+experience = 63
+
+[[ammunition]]
+key = "dragon_arrow"
+kind = "arrow"
+material_id = 11237
+product_id = 11212
+level = 90
+experience = 75
+
+[[ammunition]]
+key = "bronze_dart"
+kind = "dart"
+material_id = 819
+product_id = 806
+level = 1
+experience = 18
+
+[[ammunition]]
+key = "iron_dart"
+kind = "dart"
+material_id = 820
+product_id = 807
+level = 22
+experience = 38
+
+[[ammunition]]
+key = "steel_dart"
+kind = "dart"
+material_id = 821
+product_id = 808
+level = 37
+experience = 75
+
+[[ammunition]]
+key = "mithril_dart"
+kind = "dart"
+material_id = 822
+product_id = 809
+level = 52
+experience = 112
+
+[[ammunition]]
+key = "adamant_dart"
+kind = "dart"
+material_id = 823
+product_id = 810
+level = 67
+experience = 150
+
+[[ammunition]]
+key = "rune_dart"
+kind = "dart"
+material_id = 824
+product_id = 811
+level = 81
+experience = 188

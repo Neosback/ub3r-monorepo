@@ -243,6 +243,9 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         }
     }
     override val vitals = object : SkillVitals {
+        override val currentPrayer: Int get() = client.currentPrayer
+        override val maximumPrayer: Int get() = client.maxPrayer
+        override fun setPrayer(amount: Int) { client.currentPrayer = amount.coerceIn(0, client.maxPrayer) }
         override fun damage(amount: Int) { if (amount > 0) client.dealDamage(null, amount, Entity.hitType.STANDARD) }
         override fun restorePrayer(amount: Int) { client.currentPrayer = (client.currentPrayer + amount).coerceAtMost(client.maxPrayer) }
         override fun stun(ticks: Int) { client.stunTimer = ticks.coerceAtLeast(0) }

@@ -49,6 +49,8 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     var withinBoundaryOverride = true
     var anchor: SkillPosition? = null
     var prayerRestored = 0
+    var currentPrayerValue = 1
+    var maximumPrayerValue = 99
     var damageTaken = 0
     var stunTicks = 0
     private val itemAmounts = initialItems.filterValues { it > 0 }.toMutableMap()
@@ -216,8 +218,15 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun chance(numerator: Int, denominator: Int) = numerator > 0
     }
     override val vitals = object : SkillVitals {
+        override val currentPrayer: Int get() = currentPrayerValue
+        override val maximumPrayer: Int get() = maximumPrayerValue
+        override fun setPrayer(amount: Int) { currentPrayerValue = amount.coerceIn(0, maximumPrayerValue) }
         override fun damage(amount: Int) { damageTaken += amount.coerceAtLeast(0) }
-        override fun restorePrayer(amount: Int) { prayerRestored += amount.coerceAtLeast(0) }
+        override fun restorePrayer(amount: Int) {
+            val restored = amount.coerceAtLeast(0).coerceAtMost(maximumPrayerValue - currentPrayerValue)
+            currentPrayerValue += restored
+            prayerRestored += restored
+        }
         override fun stun(ticks: Int) { stunTicks = ticks.coerceAtLeast(0) }
     }
     override val attributes = object : ContentAttributes {

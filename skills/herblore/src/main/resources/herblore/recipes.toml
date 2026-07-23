@@ -1,0 +1,183 @@
+schema_version = 1
+
+[[herb]]
+key = "guam"
+grimy_id = 199
+clean_id = 249
+unfinished_id = 91
+level = 1
+cleaning_xp = 24
+
+[[herb]]
+key = "marrentill"
+grimy_id = 203
+clean_id = 253
+unfinished_id = 95
+level = 10
+cleaning_xp = 40
+
+[[herb]]
+key = "tarromin"
+grimy_id = 207
+clean_id = 257
+unfinished_id = 99
+level = 25
+cleaning_xp = 56
+
+[[herb]]
+key = "harralander"
+grimy_id = 209
+clean_id = 259
+unfinished_id = 101
+level = 40
+cleaning_xp = 72
+premium_only = true
+
+[[herb]]
+key = "ranarr"
+grimy_id = 213
+clean_id = 263
+unfinished_id = 105
+level = 54
+cleaning_xp = 88
+premium_only = true
+
+[[herb]]
+key = "toadflax"
+grimy_id = 3051
+clean_id = 3000
+unfinished_id = 3004
+level = 59
+cleaning_xp = 96
+premium_only = true
+
+[[herb]]
+key = "irit"
+grimy_id = 215
+clean_id = 265
+unfinished_id = 107
+level = 65
+cleaning_xp = 104
+premium_only = true
+
+[[herb]]
+key = "avantoe"
+grimy_id = 217
+clean_id = 267
+unfinished_id = 109
+level = 70
+cleaning_xp = 120
+premium_only = true
+
+[[herb]]
+key = "kwuarm"
+grimy_id = 219
+clean_id = 269
+unfinished_id = 111
+level = 75
+cleaning_xp = 136
+premium_only = true
+
+[[potion]]
+key = "attack"
+unfinished_id = 91
+secondary_id = 221
+product_id = 121
+level = 3
+experience = 200
+
+[[potion]]
+key = "antipoison"
+unfinished_id = 95
+secondary_id = 225
+product_id = 115
+level = 14
+experience = 480
+
+[[potion]]
+key = "strength"
+unfinished_id = 99
+secondary_id = 239
+product_id = 133
+level = 25
+experience = 560
+
+[[potion]]
+key = "restore"
+unfinished_id = 99
+secondary_id = 231
+product_id = 139
+level = 38
+experience = 700
+
+[[potion]]
+key = "defence"
+unfinished_id = 101
+secondary_id = 221
+product_id = 145
+level = 46
+experience = 840
+premium_only = true
+
+[[potion]]
+key = "energy"
+unfinished_id = 105
+secondary_id = 225
+product_id = 157
+level = 55
+experience = 1000
+premium_only = true
+
+[[potion]]
+key = "agility"
+unfinished_id = 3004
+secondary_id = 223
+product_id = 3026
+level = 60
+experience = 1120
+premium_only = true
+
+[[potion]]
+key = "super_attack"
+unfinished_id = 107
+secondary_id = 239
+product_id = 163
+level = 65
+experience = 1200
+premium_only = true
+
+[[potion]]
+key = "fishing"
+unfinished_id = 109
+secondary_id = 245
+product_id = 169
+level = 75
+experience = 1350
+premium_only = true
+
+[[potion]]
+key = "antifire"
+unfinished_id = 111
+secondary_id = 6045
+product_id = 2454
+level = 79
+experience = 1425
+premium_only = true
+
+[[supply]]
+key = "vial_pack"
+item_id = 11877
+product_id = 230
+amount = 100
+
+[[supply]]
+key = "water_vial_pack"
+item_id = 11879
+product_id = 228
+amount = 100
+
+[[supply]]
+key = "eye_of_newt_pack"
+item_id = 12859
+product_id = 222
+amount = 100

@@ -3,6 +3,7 @@ package net.dodian.uber.game.api.plugin
 import com.google.common.reflect.ClassPath
 import net.dodian.uber.game.api.plugin.dsl.PluginMetadata as DslPluginMetadata
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
+import net.dodian.uber.game.api.plugin.skills.SkillContentModule
 import net.dodian.uber.game.api.plugin.skills.routeKeys
 import net.dodian.uber.game.item.ItemContent
 import net.dodian.uber.game.npc.NpcContentDefinition
@@ -82,7 +83,10 @@ object ContentModuleIndex {
 
     init {
         val classPath = ClassPath.from(Thread.currentThread().contextClassLoader)
-        val scannedClasses = discoverClasses(classPath)
+        val descriptorClasses = discoverSkillModuleClasses(classPath)
+        val scannedClasses = (discoverClasses(classPath) + descriptorClasses)
+            .distinctBy { it.name }
+            .sortedBy { it.name }
 
         lifecycle = IndexLifecycle.DISCOVER
         val discoveredButtons = mutableListOf<Pair<String, InterfaceButtonContent>>()
@@ -261,6 +265,47 @@ object ContentModuleIndex {
             }
         }
         return loadedByName.values.sortedBy { it.name }
+    }
+
+    /**
+     * Gradle skill modules publish unique descriptors so packaged JARs can be
+     * verified without relying solely on a manually maintained package list.
+     * Legacy modules remain classpath-scanned until their migration completes.
+     */
+    private fun discoverSkillModuleClasses(classPath: ClassPath): List<Class<*>> {
+        val prefix = "META-INF/ub3r/skill-modules/"
+        val descriptors = classPath.resources
+            .filter { it.resourceName.startsWith(prefix) && it.resourceName.endsWith(".toml") }
+            .sortedBy { it.resourceName }
+        val ids = mutableSetOf<String>()
+        val classes = mutableListOf<Class<*>>()
+        descriptors.forEach { resource ->
+            val values = resource.asByteSource().openStream().bufferedReader().useLines { lines ->
+                lines.map(String::trim)
+                    .filter { line -> line.isNotEmpty() && !line.startsWith("#") && line.contains('=') }
+                    .associate { line ->
+                        val (key, rawValue) = line.split('=', limit = 2)
+                        key.trim() to rawValue.trim().trim('"')
+                    }
+            }
+            require(values["schema_version"] == "1") { "Unsupported skill module descriptor ${resource.resourceName}" }
+            val moduleId = requireNotNull(values["module_id"]) { "Missing module_id in ${resource.resourceName}" }
+            val implementationClass = requireNotNull(values["implementation_class"]) {
+                "Missing implementation_class in ${resource.resourceName}"
+            }
+            val kind = values["kind"]
+            require(kind in setOf("gameplay", "support")) { "Invalid kind in ${resource.resourceName}" }
+            require(ids.add(moduleId)) { "Duplicate Gradle skill module descriptor id $moduleId" }
+            val loaded = runCatching { Class.forName(implementationClass) }.getOrElse { cause ->
+                throw IllegalStateException("Unable to load $implementationClass from ${resource.resourceName}", cause)
+            }
+            require(
+                (kind == "gameplay" && SkillPlugin::class.java.isAssignableFrom(loaded)) ||
+                    (kind == "support" && SkillContentModule::class.java.isAssignableFrom(loaded)),
+            ) { "Descriptor ${resource.resourceName} declares $kind but $implementationClass does not implement its contract" }
+            classes += loaded
+        }
+        return classes
     }
 
     private fun resolveMetadata(instance: Any, clazz: Class<*>): PluginModuleMetadata {

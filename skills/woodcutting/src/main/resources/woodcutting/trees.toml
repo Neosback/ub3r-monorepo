@@ -1,3 +1,5 @@
+schema_version = 1
+
 # Tree tiers. objectIds is a comma-separated list since many world objects (stumps,
 # rotations, variants) share one tier's stats.
 

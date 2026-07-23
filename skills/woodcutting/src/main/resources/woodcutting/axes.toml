@@ -1,3 +1,5 @@
+schema_version = 1
+
 # Axe tiers, best first (resolveBestAxe picks the first tier the player both owns
 # and meets the level for).
 

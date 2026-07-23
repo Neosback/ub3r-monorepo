@@ -1,3 +1,5 @@
+schema_version = 1
+
 # Pickaxe tiers, best first (resolveBestPickaxe picks the first tier the player
 # both owns and meets the level for).
 

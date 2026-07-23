@@ -17,12 +17,11 @@ subprojects {
     }
 }
 
-val liveSkillModules = setOf(
-    "agility", "cooking", "crafting", "farming", "firemaking", "fishing", "fletching", "herblore",
-    "mining", "prayer", "runecrafting", "skillguide", "slayer", "smithing", "thieving", "woodcutting",
-)
+val skillModuleProjects = subprojects.filter {
+    it.parent?.path == ":skills" && it.name !in setOf("api", "runtime", "testkit")
+}
 
-subprojects.filter { it.parent?.path == ":skills" && it.name in liveSkillModules }.forEach { skillProject ->
+skillModuleProjects.forEach { skillProject ->
     skillProject.dependencies {
         add("testImplementation", "org.junit.jupiter:junit-jupiter-api:5.9.3")
         add("testRuntimeOnly", "org.junit.jupiter:junit-jupiter-engine:5.9.3")
@@ -42,15 +41,8 @@ subprojects.filter { it.parent?.path == ":skills" && it.name in liveSkillModules
 tasks.register("skillsCheck") {
     group = "verification"
     description = "Verifies the shared skill platform and every independently compiled skill module."
-    dependsOn(
-        ":skills:api:check", ":skills:runtime:check", ":skills:testkit:check",
-        ":skills:agility:check", ":skills:cooking:check", ":skills:crafting:check",
-        ":skills:farming:check", ":skills:firemaking:check", ":skills:fishing:check",
-        ":skills:fletching:check", ":skills:herblore:check", ":skills:mining:check",
-        ":skills:prayer:check", ":skills:runecrafting:check", ":skills:skillguide:check",
-        ":skills:slayer:check", ":skills:smithing:check", ":skills:thieving:check",
-        ":skills:woodcutting:check",
-    )
+    dependsOn(":skills:api:check", ":skills:runtime:check", ":skills:testkit:check")
+    dependsOn(skillModuleProjects.map { "${it.path}:check" })
 }
 
 tasks.register("verifySkillModuleDependencies") {

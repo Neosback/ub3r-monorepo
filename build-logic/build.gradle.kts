@@ -1,0 +1,21 @@
+plugins {
+    `kotlin-dsl`
+}
+
+repositories {
+    gradlePluginPortal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10")
+}
+
+gradlePlugin {
+    plugins {
+        create("ub3rSkillPlugin") {
+            id = "ub3r.skill-plugin"
+            implementationClass = "net.dodian.uber.buildlogic.Ub3rSkillPlugin"
+        }
+    }
+}

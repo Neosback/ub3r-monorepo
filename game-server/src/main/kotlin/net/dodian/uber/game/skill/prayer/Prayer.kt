@@ -7,9 +7,6 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.engine.systems.action.PolicyPreset
-import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.api.content.ContentInteraction
 
 object Prayer {
@@ -81,49 +78,4 @@ object Prayer {
 
     @JvmStatic
     fun startAltarOfferingAction(client: Client) = PrayerActions.startAltarOfferingAction(client)
-}
-
-object PrayerSkillPlugin : SkillPlugin {
-    override val definition =
-        skillPlugin(name = "Prayer", skill = Skill.PRAYER) {
-            objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *PrayerRouteIds.ALTAR_OBJECT_IDS) { interaction ->
-                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
-                val objectId = interaction.objectId
-                val position = interaction.position
-                val obj = interaction.definition
-                if (client.currentPrayer < client.maxPrayer) {
-                    client.pray(client.maxPrayer)
-                    client.sendMessage("You restore your prayer points!")
-                } else {
-                    client.sendMessage("You are at maximum prayer points!")
-                }
-                true
-            }
-
-            itemOnObject(preset = PolicyPreset.PRODUCTION, objectIds = intArrayOf(PrayerRouteIds.MAIN_ALTAR_OBJECT_ID), itemIds = PrayerRouteIds.BONE_ITEM_IDS) { interaction ->
-                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
-                val objectId = interaction.objectId
-                val position = interaction.position
-                val obj = interaction.definition
-                val itemId = interaction.itemId
-                val itemSlot = interaction.itemSlot
-                val interfaceId = interaction.interfaceId
-                if (Bones.getBone(itemId) == null || !client.playerHasItem(itemId) || client.skillingEventState.isRandomEventOpen) {
-                    client.resetAction()
-                    false
-                } else {
-                    client.setInteractionAnchor(position.x, position.y, position.z)
-                    Prayer.startOffering(client, PrayerOfferingRequest(itemId, position.x, position.y))
-                    true
-                }
-            }
-
-            itemClick(preset = PolicyPreset.PRODUCTION, option = 1, *PrayerRouteIds.BONE_ITEM_IDS) { interaction ->
-                val client = net.dodian.uber.game.engine.systems.skills.SkillEngineAccess.client(interaction.player)
-                val itemId = interaction.itemId
-                val itemSlot = interaction.itemSlot
-                val interfaceId = interaction.interfaceId
-                Prayer.attempt(client, itemId, itemSlot)
-            }
-        }
 }

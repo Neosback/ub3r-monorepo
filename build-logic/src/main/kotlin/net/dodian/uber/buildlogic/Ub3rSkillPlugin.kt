@@ -1,0 +1,135 @@
+package net.dodian.uber.buildlogic
+
+import org.gradle.api.DefaultTask
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.testing.Test
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.named
+import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.withType
+import org.gradle.language.jvm.tasks.ProcessResources
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.io.File
+
+enum class SkillModuleKind { GAMEPLAY, SUPPORT }
+
+abstract class SkillModuleExtension {
+    abstract val moduleId: Property<String>
+    abstract val implementationClass: Property<String>
+    abstract val kind: Property<SkillModuleKind>
+}
+
+abstract class GenerateSkillModuleDescriptor : DefaultTask() {
+    @get:Input abstract val moduleId: Property<String>
+    @get:Input abstract val implementationClass: Property<String>
+    @get:Input abstract val kind: Property<SkillModuleKind>
+    @get:OutputDirectory abstract val outputDirectory: DirectoryProperty
+
+    @TaskAction
+    fun generate() {
+        val id = moduleId.get()
+        require(Regex("skill\\.[a-z][a-z0-9-]{1,63}").matches(id)) { "Invalid skill module id '$id'" }
+        val output = outputDirectory.file("META-INF/ub3r/skill-modules/$id.toml").get().asFile
+        output.parentFile.mkdirs()
+        output.writeText(
+            """
+            schema_version = 1
+            module_id = "$id"
+            implementation_class = "${implementationClass.get()}"
+            kind = "${kind.get().name.lowercase()}"
+            """.trimIndent() + "\n",
+        )
+    }
+}
+
+abstract class VerifySkillModule : DefaultTask() {
+    @get:Input abstract val moduleId: Property<String>
+    @get:Input abstract val implementationClass: Property<String>
+    @get:Input abstract val kind: Property<SkillModuleKind>
+
+    @TaskAction
+    fun verify() {
+        val projectRoot = project.projectDir
+        val resources = projectRoot.resolve("src/main/resources")
+        val sourceRoot = projectRoot.resolve("src/main/kotlin")
+        val testRoot = projectRoot.resolve("src/test/kotlin")
+        val source = sourceRoot.walkTopDown().filter { it.isFile && it.extension == "kt" }.joinToString("\n") { it.readText() }
+        val tests = testRoot.walkTopDown().filter { it.isFile && it.extension == "kt" }.toList()
+
+        check(tests.isNotEmpty() && tests.any { it.readText().contains("@Test") }) {
+            "${project.path} must contain at least one JUnit runtime test."
+        }
+        check(!source.contains("project(\":game-server\")") && !source.contains("net.dodian.uber.game.model.entity.player.Client")) {
+            "${project.path} must remain independent of :game-server and Client."
+        }
+        check(source.contains(implementationClass.get().substringAfterLast('.'))) {
+            "${project.path} does not contain ${implementationClass.get()}."
+        }
+        val requiredContract = if (kind.get() == SkillModuleKind.GAMEPLAY) "SkillPlugin" else "SkillContentModule"
+        check(source.contains(requiredContract)) {
+            "${project.path} ${implementationClass.get()} must implement $requiredContract."
+        }
+        if (kind.get() == SkillModuleKind.GAMEPLAY) {
+            val routeRegistration = Regex("""\b(objectClick|npcClick|itemClick|itemOnItem|itemOnObject|magicOnObject|button)\s*\(""")
+            check(routeRegistration.containsMatchIn(source)) {
+                "${project.path} is descriptor-only: gameplay modules must register at least one route."
+            }
+        }
+        check(resources.walkTopDown().any { it.isFile && it.extension == "toml" }) {
+            "${project.path} must bundle at least one validated skill TOML file."
+        }
+    }
+}
+
+class Ub3rSkillPlugin : Plugin<Project> {
+    override fun apply(project: Project) {
+        with(project) {
+        pluginManager.apply("org.jetbrains.kotlin.jvm")
+        pluginManager.apply("java-library")
+
+        val extension = extensions.create<SkillModuleExtension>("skillModule")
+        extension.moduleId.convention("skill.${project.name}")
+        extension.kind.convention(SkillModuleKind.GAMEPLAY)
+
+        dependencies {
+            add("implementation", project(":skills:api"))
+            add("implementation", project(":skills:runtime"))
+            add("testImplementation", project(":skills:testkit"))
+            add("testImplementation", "org.junit.jupiter:junit-jupiter-api:5.9.3")
+            add("testRuntimeOnly", "org.junit.jupiter:junit-jupiter-engine:5.9.3")
+        }
+
+        tasks.withType<JavaCompile>().configureEach { options.release.set(11) }
+        tasks.withType<KotlinCompile>().configureEach { kotlinOptions.jvmTarget = "11" }
+        tasks.withType<Test>().configureEach { useJUnitPlatform() }
+
+        val generate = tasks.register<GenerateSkillModuleDescriptor>("generateSkillModuleDescriptor") {
+            moduleId.set(extension.moduleId)
+            implementationClass.set(extension.implementationClass)
+            kind.set(extension.kind)
+            outputDirectory.set(layout.buildDirectory.dir("generated/skill-module-descriptor"))
+        }
+        extensions.getByType<org.gradle.api.plugins.JavaPluginExtension>().sourceSets.named("main") {
+            resources.srcDir(generate.map { it.outputDirectory })
+        }
+        tasks.withType<ProcessResources>().configureEach { dependsOn(generate) }
+
+        val verify = tasks.register<VerifySkillModule>("verifySkillModule") {
+            moduleId.set(extension.moduleId)
+            implementationClass.set(extension.implementationClass)
+            kind.set(extension.kind)
+            dependsOn("test")
+        }
+        tasks.named("check") { dependsOn(verify) }
+        }
+    }
+}

@@ -16,6 +16,7 @@ import net.dodian.uber.skills.api.SkillMultiConfig
 import net.dodian.uber.skills.api.SkillMultiEntry
 import net.dodian.uber.skills.api.SkillRecipe
 import net.dodian.uber.skills.api.skillRecipe
+import net.dodian.uber.skills.runtime.TomlRecordReader
 
 data class FletchingLogDefinition(
     val logItemId: Int,
@@ -37,24 +38,9 @@ data class FletchingAmmoDefinition(val materialId: Int, val productId: Int, val 
 object FletchingModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.fletching", "Fletching")
     val knifeIds: IntArray = intArrayOf(946, 5605)
-    val bowLogs: List<FletchingLogDefinition> = listOf(
-        FletchingLogDefinition(1521, 54, 56, 843, 845, 20, 25, 102, 150, 6679, 6685),
-        FletchingLogDefinition(1519, 60, 58, 849, 847, 35, 40, 198, 252, 6680, 6686),
-        FletchingLogDefinition(1517, 64, 62, 853, 851, 50, 55, 300, 348, 6681, 6687),
-        FletchingLogDefinition(1515, 68, 66, 857, 855, 65, 70, 408, 450, 6682, 6688),
-        FletchingLogDefinition(1513, 72, 70, 861, 859, 80, 85, 504, 552, 6683, 6689),
-    )
-    private val arrowHeads = listOf(
-        FletchingAmmoDefinition(39, 882, 1, 7), FletchingAmmoDefinition(40, 884, 15, 13),
-        FletchingAmmoDefinition(41, 886, 30, 25), FletchingAmmoDefinition(42, 888, 45, 38),
-        FletchingAmmoDefinition(43, 890, 60, 50), FletchingAmmoDefinition(44, 892, 75, 63),
-        FletchingAmmoDefinition(11237, 11212, 90, 75),
-    )
-    private val dartTips = listOf(
-        FletchingAmmoDefinition(819, 806, 1, 18), FletchingAmmoDefinition(820, 807, 22, 38),
-        FletchingAmmoDefinition(821, 808, 37, 75), FletchingAmmoDefinition(822, 809, 52, 112),
-        FletchingAmmoDefinition(823, 810, 67, 150), FletchingAmmoDefinition(824, 811, 81, 188),
-    )
+    val bowLogs: List<FletchingLogDefinition> by lazy { loadBows() }
+    private val arrowHeads: List<FletchingAmmoDefinition> by lazy { loadAmmunition("arrow") }
+    private val dartTips: List<FletchingAmmoDefinition> by lazy { loadAmmunition("dart") }
 
     override val definition: SkillPluginDefinition = skillPlugin("Fletching", Skill.FLETCHING) {
         knifeIds.forEach { knifeId ->
@@ -177,4 +163,37 @@ object FletchingModule : SkillPlugin {
             success("You string the bow.")
         }
     }
+
+    private fun loadBows(): List<FletchingLogDefinition> =
+        TomlRecordReader.readRecords("fletching/bows.toml", "bow").mapIndexed { index, row ->
+            FletchingLogDefinition(
+                logItemId = row.int("log_item_id", index),
+                unstrungShortbowId = row.int("unstrung_shortbow_id", index),
+                unstrungLongbowId = row.int("unstrung_longbow_id", index),
+                shortbowId = row.int("shortbow_id", index),
+                longbowId = row.int("longbow_id", index),
+                shortLevelRequired = row.int("short_level_required", index),
+                longLevelRequired = row.int("long_level_required", index),
+                shortExperience = row.int("short_experience", index),
+                longExperience = row.int("long_experience", index),
+                shortStringAnimationId = row.int("short_string_animation_id", index),
+                longStringAnimationId = row.int("long_string_animation_id", index),
+            )
+        }.also { rows -> require(rows.map { it.logItemId }.distinct().size == rows.size) { "fletching/bows.toml contains duplicate log_item_id" } }
+
+    private fun loadAmmunition(kind: String): List<FletchingAmmoDefinition> =
+        TomlRecordReader.readRecords("fletching/ammunition.toml", "ammunition")
+            .filter { it["kind"] == kind }
+            .mapIndexed { index, row ->
+                FletchingAmmoDefinition(
+                    materialId = row.int("material_id", index),
+                    productId = row.int("product_id", index),
+                    level = row.int("level", index),
+                    experience = row.int("experience", index),
+                )
+            }.also { rows -> require(rows.isNotEmpty()) { "fletching/ammunition.toml has no $kind records" } }
+
+    private fun Map<String, String>.int(field: String, index: Int): Int =
+        get(field)?.toIntOrNull()?.takeIf { it >= 0 }
+            ?: error("Invalid fletching TOML field $field at record $index")
 }

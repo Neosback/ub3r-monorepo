@@ -1,4 +1,6 @@
 pluginManagement {
+    includeBuild("build-logic")
+
     repositories {
         gradlePluginPortal()
         mavenCentral()
@@ -15,24 +17,7 @@ include(":game-server")
 include(":game-client")
 include(":routefinder")
 
-include(
-    ":skills:api",
-    ":skills:runtime",
-    ":skills:testkit",
-    ":skills:agility",
-    ":skills:cooking",
-    ":skills:crafting",
-    ":skills:farming",
-    ":skills:firemaking",
-    ":skills:fishing",
-    ":skills:fletching",
-    ":skills:herblore",
-    ":skills:mining",
-    ":skills:prayer",
-    ":skills:runecrafting",
-    ":skills:skillguide",
-    ":skills:slayer",
-    ":skills:smithing",
-    ":skills:thieving",
-    ":skills:woodcutting",
-)
+file("skills").listFiles()
+    ?.filter { candidate -> candidate.isDirectory && candidate.resolve("build.gradle.kts").isFile }
+    ?.sortedBy { it.name }
+    ?.forEach { candidate -> include(":skills:${candidate.name}") }

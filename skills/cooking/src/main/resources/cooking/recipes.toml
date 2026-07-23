@@ -1,3 +1,5 @@
+schema_version = 1
+
 # Cooking range/fire recipes.
 # burnRollBase is the raw "chance to burn" roll before subtracting the player's
 # cooking level and any burn-reducing equipment (see CookingModule.cookOnce).

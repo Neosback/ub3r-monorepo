@@ -160,7 +160,14 @@ interface SkillProduction {
 
 interface SkillProfile { val name: String; val premium: Boolean }
 interface SkillRandom { fun between(minInclusive: Int, maxInclusive: Int): Int; fun chance(numerator: Int, denominator: Int): Boolean }
-interface SkillVitals { fun damage(amount: Int); fun restorePrayer(amount: Int); fun stun(ticks: Int) }
+interface SkillVitals {
+    val currentPrayer: Int
+    val maximumPrayer: Int
+    fun setPrayer(amount: Int)
+    fun damage(amount: Int)
+    fun restorePrayer(amount: Int)
+    fun stun(ticks: Int)
+}
 
 class SkillObjectInteraction(val player: SkillPlayer, val option: Int, val target: SkillObjectRef) {
     val objectId get() = target.id

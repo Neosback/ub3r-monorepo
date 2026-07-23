@@ -1,7 +1,12 @@
 package net.dodian.uber.skills.runtime
 
+import com.fasterxml.jackson.core.StreamReadFeature
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.dataformat.toml.TomlMapper
+
 /**
- * Minimal array-of-tables TOML reader for classpath-bundled skill data.
+ * Strict array-of-tables TOML reader for classpath-bundled skill data.
  *
  * Skill modules are compiled independently of :game-server and run merged onto
  * one classpath alongside every other skill module's resources, so data files
@@ -14,6 +19,11 @@ package net.dodian.uber.skills.runtime
  * :game-server side (see TomlProjectileLoader, TomlAncientSpellLoader).
  */
 object TomlRecordReader {
+    private val mapper: TomlMapper = TomlMapper.builder()
+        .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
+        .enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY)
+        .build()
+
     @JvmStatic
     @JvmOverloads
     fun readRecords(
@@ -21,32 +31,36 @@ object TomlRecordReader {
         table: String,
         classLoader: ClassLoader = TomlRecordReader::class.java.classLoader,
     ): List<Map<String, String>> {
-        val stream = classLoader.getResourceAsStream(resource) ?: return emptyList()
-        val marker = "[[$table]]"
-        val records = mutableListOf<Map<String, String>>()
-        var current: MutableMap<String, String>? = null
+        require(resource.endsWith(".toml")) { "Skill data resource must be a TOML file: $resource" }
+        require(table.matches(Regex("[a-z][a-z0-9_]*"))) { "Invalid TOML table '$table' in $resource" }
+        val root = classLoader.getResourceAsStream(resource)?.use { stream ->
+            runCatching { mapper.readTree(stream) }.getOrElse { cause ->
+                throw IllegalStateException("Unable to parse skill TOML $resource: ${cause.message}", cause)
+            }
+        } ?: throw IllegalStateException("Missing required skill TOML resource: $resource")
 
-        stream.bufferedReader().useLines { lines ->
-            for (line in lines) {
-                val trimmed = line.trim()
-                if (trimmed.startsWith("#") || trimmed.isEmpty()) continue
-
-                if (trimmed.startsWith("[[") && trimmed.endsWith("]]")) {
-                    current?.let { records += it.toMap() }
-                    current = if (trimmed == marker) linkedMapOf() else null
-                    continue
+        val records = root.path(table)
+        require(records.isArray) { "Skill TOML $resource must declare [[$table]] records" }
+        require(records.size() > 0) { "Skill TOML $resource has no [[$table]] records" }
+        return records.mapIndexed { index, node ->
+            require(node.isObject) { "Skill TOML $resource [$table][$index] must be an object" }
+            node.fields().asSequence().associate { (key, value) ->
+                require(!value.isContainerNode || value.isArray) {
+                    "Skill TOML $resource [$table][$index].$key must be a scalar or array"
                 }
-
-                val record = current ?: continue
-                if (!trimmed.contains("=")) continue
-                val parts = trimmed.split("=", limit = 2)
-                val key = parts[0].trim()
-                val value = parts[1].trim().substringBefore("#").trim().trim('"')
-                if (value.isEmpty()) continue
-                record[key] = value
+                key to value.asRecordValue(resource, table, index, key)
             }
         }
-        current?.let { records += it.toMap() }
-        return records
+    }
+
+    private fun JsonNode.asRecordValue(resource: String, table: String, index: Int, key: String): String = when {
+        isTextual || isNumber || isBoolean -> asText()
+        isArray -> joinToString(",") { element ->
+            require(element.isTextual || element.isNumber || element.isBoolean) {
+                "Skill TOML $resource [$table][$index].$key may only contain scalar array values"
+            }
+            element.asText()
+        }
+        else -> error("Skill TOML $resource [$table][$index].$key has an unsupported value")
     }
 }

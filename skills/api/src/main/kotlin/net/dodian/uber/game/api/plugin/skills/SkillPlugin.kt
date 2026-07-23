@@ -4,7 +4,13 @@ import net.dodian.uber.game.api.plugin.*
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.model.player.skills.Skill
 
-interface SkillPlugin : PluginModuleMetadataProvider, ContentModuleManifestProvider {
+/**
+ * Common contract for Gradle-owned skill content.  A module may expose route
+ * bindings without representing a trainable skill (for example Skill Guide).
+ */
+interface SkillContentModule : PluginModuleMetadataProvider, ContentModuleManifestProvider
+
+interface SkillPlugin : SkillContentModule {
     val definition: SkillPluginDefinition
     override val pluginMetadata get() = PluginModuleMetadata(definition.name, "Skill plugin for ${definition.skill.name.lowercase()}", owner = "gameplay")
     override val contentManifest get() = definition.manifest("skill.${definition.skill.name.lowercase()}", "gameplay")
