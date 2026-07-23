@@ -78,7 +78,7 @@ object RunecraftingModule : SkillPlugin {
         val xp = altar.experiencePerEssence * essenceCount
         player.skills.gainXp(xp, Skill.RUNECRAFTING)
         player.actions.triggerRandomEvent(xp)
-        player.attributes.put(LAST_ALTAR_CRAFT_KEY, System.currentTimeMillis())
+        player.attributes.put(LAST_ALTAR_CRAFT_KEY, player.clock.nowMillis())
         return true
     }
 

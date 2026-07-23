@@ -30,6 +30,7 @@ interface SkillPlayer {
     val production: SkillProduction
     val profile: SkillProfile
     val random: SkillRandom
+    val clock: SkillClock
     val vitals: SkillVitals
     /** Plugin-owned temporary state; cleared when the player logs out. */
     val attributes: ContentAttributes
@@ -131,9 +132,13 @@ interface SkillUi {
     fun close()
     fun chatbox(interfaceId: Int)
     fun itemModel(componentId: Int, zoom: Int, itemId: Int)
+    /** Renders an item/amount grid into a legacy component without exposing packets to content modules. */
+    fun itemGrid(componentId: Int, entries: List<SkillItemGridEntry>)
     fun npcDialogue(dialogueId: Int, npcId: Int)
     fun varbit(id: Int, value: Int)
 }
+
+data class SkillItemGridEntry(val itemId: Int, val amount: Int)
 
 interface SkillWorld {
     val position: SkillPosition
@@ -160,6 +165,8 @@ interface SkillProduction {
 
 interface SkillProfile { val name: String; val premium: Boolean }
 interface SkillRandom { fun between(minInclusive: Int, maxInclusive: Int): Int; fun chance(numerator: Int, denominator: Int): Boolean }
+/** Deterministic module clock; adapters map this to the game/server clock. */
+fun interface SkillClock { fun nowMillis(): Long }
 interface SkillVitals {
     val currentPrayer: Int
     val maximumPrayer: Int

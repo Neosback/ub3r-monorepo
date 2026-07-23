@@ -22,6 +22,7 @@ import net.dodian.uber.game.api.plugin.skills.SkillPosition
 import net.dodian.uber.game.api.plugin.skills.SkillObjectRef
 import net.dodian.uber.game.api.plugin.skills.SkillProfile
 import net.dodian.uber.game.api.plugin.skills.SkillRandom
+import net.dodian.uber.game.api.plugin.skills.SkillClock
 import net.dodian.uber.game.api.plugin.skills.SkillVitals
 import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.engine.event.GameEventScheduler
@@ -34,6 +35,7 @@ import net.dodian.uber.game.model.objects.GlobalObject
 import net.dodian.uber.game.model.objects.WorldObject
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.netty.listener.out.SetSmithing
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.skill.runtime.action.SkillStateCoordinator
 import net.dodian.uber.game.skill.runtime.action.ActionSpec
@@ -129,6 +131,8 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun close() = client.send(RemoveInterfaces())
         override fun chatbox(interfaceId: Int) = client.sendChatboxInterface(interfaceId)
         override fun itemModel(componentId: Int, zoom: Int, itemId: Int) = client.sendInterfaceModel(componentId, zoom, itemId)
+        override fun itemGrid(componentId: Int, entries: List<net.dodian.uber.game.api.plugin.skills.SkillItemGridEntry>) =
+            client.send(SetSmithing(componentId, entries.map { intArrayOf(it.itemId, it.amount) }.toTypedArray()))
         override fun npcDialogue(dialogueId: Int, npcId: Int) = client.startNpcDialogue(dialogueId, npcId)
         override fun varbit(id: Int, value: Int) = client.varbit(id, value)
     }
@@ -242,6 +246,7 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
             return numerator > 0 && Misc.random(denominator - 1) < numerator
         }
     }
+    override val clock = SkillClock { System.currentTimeMillis() }
     override val vitals = object : SkillVitals {
         override val currentPrayer: Int get() = client.currentPrayer
         override val maximumPrayer: Int get() = client.maxPrayer

@@ -16,7 +16,9 @@ import net.dodian.uber.game.api.plugin.skills.SkillPosition
 import net.dodian.uber.game.api.plugin.skills.SkillObjectRef
 import net.dodian.uber.game.api.plugin.skills.SkillProfile
 import net.dodian.uber.game.api.plugin.skills.SkillRandom
+import net.dodian.uber.game.api.plugin.skills.SkillClock
 import net.dodian.uber.game.api.plugin.skills.SkillVitals
+import net.dodian.uber.game.api.plugin.skills.SkillItemGridEntry
 import net.dodian.uber.game.api.plugin.skills.SkillValidationResult
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skill.runtime.action.ActionSpec
@@ -41,6 +43,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     val openedInterfaces = mutableListOf<Int>()
     val chatboxInterfaces = mutableListOf<Int>()
     val itemModels = mutableListOf<Triple<Int, Int, Int>>()
+    val itemGrids = mutableMapOf<Int, List<SkillItemGridEntry>>()
     val varbits = mutableMapOf<Int, Int>()
     val replacedObjects = mutableListOf<Pair<SkillObjectRef, Int>>()
     val spawnedObjects = mutableListOf<Pair<Int, Int>>()
@@ -53,6 +56,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     var maximumPrayerValue = 99
     var damageTaken = 0
     var stunTicks = 0
+    var nowMillis = 1L
     private val itemAmounts = initialItems.filterValues { it > 0 }.toMutableMap()
     private val xp = mutableMapOf<Skill, Int>()
     private val levels = mutableMapOf<Skill, Int>()
@@ -164,6 +168,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun close() = Unit
         override fun chatbox(interfaceId: Int) { chatboxInterfaces += interfaceId }
         override fun itemModel(componentId: Int, zoom: Int, itemId: Int) { itemModels += Triple(componentId, zoom, itemId) }
+        override fun itemGrid(componentId: Int, entries: List<SkillItemGridEntry>) { itemGrids[componentId] = entries }
         override fun npcDialogue(dialogueId: Int, npcId: Int) = Unit
         override fun varbit(id: Int, value: Int) { varbits[id] = value }
     }
@@ -217,6 +222,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun between(minInclusive: Int, maxInclusive: Int) = minInclusive
         override fun chance(numerator: Int, denominator: Int) = numerator > 0
     }
+    override val clock = SkillClock { nowMillis }
     override val vitals = object : SkillVitals {
         override val currentPrayer: Int get() = currentPrayerValue
         override val maximumPrayer: Int get() = maximumPrayerValue
