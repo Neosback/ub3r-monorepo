@@ -32,4 +32,3 @@ object CapeShop : ShopPlugin {
             item(9765, 1)
         }.definition
 }
-

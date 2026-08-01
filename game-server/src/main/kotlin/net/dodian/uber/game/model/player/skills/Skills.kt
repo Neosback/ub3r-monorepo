@@ -1,22 +1,40 @@
 package net.dodian.uber.game.model.player.skills
 
 object Skills {
+    private const val MAX_LEVEL = 99
+
+    /**
+     * XP required to reach each level. Index zero is level one, so it also
+     * preserves the legacy level-one requirement of zero XP.
+     */
+    private val xpForLevel =
+        IntArray(MAX_LEVEL).apply {
+            var points = 0.0
+            for (level in 1 until size) {
+                points += kotlin.math.floor(level + 300.0 * Math.pow(2.0, level.toDouble() / 7.0))
+                this[level] = kotlin.math.floor(points / 4).toInt()
+            }
+        }
+
     @JvmStatic
     fun getLevelForExperience(exp: Int): Int {
         val safeExp = exp.coerceAtLeast(0)
-        var points = 0.0
-        for (level in 1..99) {
-            points += kotlin.math.floor(level + 300.0 * Math.pow(2.0, level.toDouble() / 7.0))
-            val xpForLevel = kotlin.math.floor(points / 4).toInt()
-            if (safeExp < xpForLevel) {
-                return level
-            }
+        val searchResult = xpForLevel.binarySearch(safeExp)
+        return if (searchResult >= 0) {
+            searchResult + 1
+        } else {
+            (-searchResult - 1).coerceIn(1, MAX_LEVEL)
         }
-        return 99
     }
 
     @JvmStatic
     fun getXPForLevel(level: Int): Int {
+        if (level in 1..MAX_LEVEL) {
+            return xpForLevel[level - 1]
+        }
+
+        // Preserve the legacy behavior for callers outside the trainable
+        // level range instead of silently changing an admin/tooling request.
         var points = 0.0
         var output = 0
         for (lvl in 1 until level) {

@@ -26,10 +26,6 @@ public class SetSidebarInterface implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(71, MessageType.FIXED);
-        message.putShort(form);                // form interface id
-        message.put(menuId, ValueType.ADD);    // menu id + 128
-        client.send(message);
-        //System.out.println("Set sidebar interface: " + menuId + ", " + form);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.SetSidebarInterface(menuId, form).encode());
     }
 }

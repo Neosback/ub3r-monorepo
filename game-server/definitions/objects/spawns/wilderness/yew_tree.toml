@@ -1,0 +1,11 @@
+schemaVersion = 1
+region = "wilderness"
+
+[[object]]
+id = 10822
+name = "Yew Tree"
+x = 1809
+y = 3573
+z = 0
+type = 10
+rotation = "NORTH"

@@ -3,7 +3,7 @@ package net.dodian.uber.game.social.chat
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
-/** Broadcasts alert messages to all online staff members. */
+
 object YellSystem {
     @JvmStatic
     fun alertStaff(message: String) {
@@ -17,4 +17,3 @@ object YellSystem {
         }
     }
 }
-

@@ -7,9 +7,10 @@ import net.dodian.uber.game.ui.buttons.buttonBinding
 
 import net.dodian.uber.game.ui.combat.CombatStyleService
 import net.dodian.uber.game.engine.util.Misc
+import net.dodian.uber.game.combat.AncientSpellRegistry
 
 object MagicInterface : InterfaceButtonContent {
-    private const val NORMAL_INTERFACE_ID = 1151
+    private const val NORMAL_INTERFACE_ID = 40000
     private const val ANCIENT_INTERFACE_ID = 12855
 
     private val spellbookToggleButtons = intArrayOf(74212, 49047, 49046, 23024)
@@ -30,7 +31,7 @@ object MagicInterface : InterfaceButtonContent {
 
     private val teleports =
         listOf(
-            TeleportBinding(0, "magic.teleport.yanille", intArrayOf(21741, 75010, 84237), 2604, 6, 3101, 3, false),
+            TeleportBinding(0, "magic.teleport.yanille", intArrayOf(21741, 75010, 84237, 40100), 2604, 6, 3101, 3, false),
             TeleportBinding(1, "magic.teleport.seers", intArrayOf(13035, 4143, 50235), 2722, 6, 3484, 2, false),
             TeleportBinding(2, "magic.teleport.ardougne", intArrayOf(13045, 4146, 50245), 2660, 4, 3306, 4, false),
             TeleportBinding(3, "magic.teleport.catherby", intArrayOf(13053, 4150, 50253), 2802, 4, 3432, 3, false),
@@ -50,14 +51,18 @@ object MagicInterface : InterfaceButtonContent {
                     componentKey = "magic.spellbook_toggle",
                     rawButtonIds = spellbookToggleButtons,
                 ) { client, _ ->
-                    if (client.ancients == 1) {
-                        client.setSidebarInterface(6, 1151)
-                        client.ancients = 0
-                        client.sendMessage("Normal magic enabled")
-                    } else {
-                        client.setSidebarInterface(6, 12855)
+                    if (client.ancients == 0) {
+                        client.setSidebarInterface(6, ANCIENT_INTERFACE_ID)
                         client.ancients = 1
                         client.sendMessage("Ancient magic enabled")
+                    } else if (client.ancients == 1) {
+                        client.setSidebarInterface(6, 29999)
+                        client.ancients = 2
+                        client.sendMessage("Lunar magic enabled")
+                    } else {
+                        client.setSidebarInterface(6, NORMAL_INTERFACE_ID)
+                        client.ancients = 0
+                        client.sendMessage("Normal magic enabled")
                     }
                     true
                 },
@@ -81,8 +86,8 @@ object MagicInterface : InterfaceButtonContent {
                     componentKey = "magic.autocast.select",
                     rawButtonIds = autocastSelectButtons,
                 ) { client, request ->
-                    for (index in client.ancientButton.indices) {
-                        if (client.autocast_spellIndex == -1 && request.rawButtonId == client.ancientButton[index]) {
+                    for (index in AncientSpellRegistry.ancientButton().indices) {
+                        if (client.autocast_spellIndex == -1 && request.rawButtonId == AncientSpellRegistry.ancientButton()[index]) {
                             client.autocast_spellIndex = index
                         }
                     }

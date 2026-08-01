@@ -12,14 +12,17 @@ import net.dodian.uber.game.events.skilling.SkillingActionStartedEvent
 import net.dodian.uber.game.events.skilling.SkillingActionStoppedEvent
 import net.dodian.uber.game.events.skilling.SkillingActionSucceededEvent
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.skill.runtime.requirements.Requirement
 import net.dodian.uber.game.skill.runtime.requirements.ValidationResult
+import net.dodian.uber.game.api.plugin.skills.SkillValidationResult
 
 abstract class GatheringTask(
     private val actionName: String,
     private val client: Client,
-    private val delayCalculator: (Client) -> Int,
+    private val player: SkillPlayer,
+    private val delayCalculator: SkillPlayer.() -> Int,
     private val requirements: List<Requirement>,
     private val priority: TaskPriority = TaskPriority.STANDARD,
 ) {
@@ -33,7 +36,7 @@ abstract class GatheringTask(
         beforeStart: () -> Unit = {},
     ): Boolean {
         val validation = validateRequirements()
-        if (validation is ValidationResult.Failed) {
+        if (validation is SkillValidationResult.Failed) {
             client.sendMessage(validation.message)
             return false
         }
@@ -54,7 +57,7 @@ abstract class GatheringTask(
                         return@queuePlayer
                     }
                     val check = validateRequirements()
-                    if (check is ValidationResult.Failed) {
+                    if (check is SkillValidationResult.Failed) {
                         client.sendMessage(check.message)
                         stop(ActionStopReason.REQUIREMENT_FAILED)
                         return@queuePlayer
@@ -65,7 +68,7 @@ abstract class GatheringTask(
                         }
                         return@queuePlayer
                     }
-                    wait(delayCalculator(client).coerceAtLeast(1))
+                    wait(player.delayCalculator().coerceAtLeast(1))
                 }
             }
         return true
@@ -95,8 +98,8 @@ abstract class GatheringTask(
 
     private fun validateRequirements(): ValidationResult {
         for (requirement in requirements) {
-            val result = requirement.validate(client)
-            if (result is ValidationResult.Failed) {
+            val result = requirement.validate(player)
+            if (result is SkillValidationResult.Failed) {
                 return result
             }
         }

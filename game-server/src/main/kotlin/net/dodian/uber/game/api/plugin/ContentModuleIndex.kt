@@ -3,6 +3,14 @@ package net.dodian.uber.game.api.plugin
 import com.google.common.reflect.ClassPath
 import net.dodian.uber.game.api.plugin.dsl.PluginMetadata as DslPluginMetadata
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
+import net.dodian.uber.game.api.plugin.skills.SkillContentModule
+import net.dodian.uber.game.api.plugin.skills.SkillSupportModule
+import net.dodian.uber.game.api.plugin.skills.routeKeys as supportRouteKeys
+import net.dodian.uber.game.api.plugin.skills.routeKeys
+import net.dodian.uber.game.api.plugin.quests.QuestPlugin
+import net.dodian.uber.game.api.plugin.quests.routeKeys as questRouteKeys
+import net.dodian.uber.game.api.plugin.social.SocialPlugin
+import net.dodian.uber.game.api.plugin.social.routeKeys as socialRouteKeys
 import net.dodian.uber.game.item.ItemContent
 import net.dodian.uber.game.npc.NpcContentDefinition
 import net.dodian.uber.game.npc.NpcModule
@@ -18,6 +26,7 @@ data class PluginCatalogEntry(
     val moduleClass: String,
     val kind: String,
     val metadata: PluginModuleMetadata,
+    val manifest: ContentModuleManifest,
 )
 
 /**
@@ -32,7 +41,7 @@ object ContentModuleIndex {
         FROZEN,
     }
 
-    /** Canonical roots for adapted-Luna packaging. */
+    
     private val CANONICAL_SCAN_PACKAGES = listOf(
         "net.dodian.uber.game.api.plugin",
         "net.dodian.uber.game.skill",
@@ -47,11 +56,18 @@ object ContentModuleIndex {
         "net.dodian.uber.game.shop",
         "net.dodian.uber.game.world",
         "net.dodian.uber.game.player",
+        "net.dodian.uber.social",
         "net.dodian.uber.game.engine.event.bootstrap",
         "net.dodian.uber.game.engine.systems.interaction.commands",
         "net.dodian.uber.game.engine.systems.interaction.items",
         "net.dodian.uber.game.engine.systems.interaction.npcs",
         "net.dodian.uber.game.engine.systems.interaction.objects",
+        "net.dodian.uber.skills.agility", "net.dodian.uber.skills.cooking", "net.dodian.uber.skills.crafting",
+        "net.dodian.uber.skills.farming", "net.dodian.uber.skills.firemaking", "net.dodian.uber.skills.fishing",
+        "net.dodian.uber.skills.fletching", "net.dodian.uber.skills.herblore", "net.dodian.uber.skills.mining",
+        "net.dodian.uber.skills.prayer", "net.dodian.uber.skills.runecrafting", "net.dodian.uber.skills.slayer",
+        "net.dodian.uber.skills.skillguide", "net.dodian.uber.skills.smithing", "net.dodian.uber.skills.thieving",
+        "net.dodian.uber.skills.woodcutting",
     )
     private val SCAN_PACKAGES = CANONICAL_SCAN_PACKAGES.distinct()
 
@@ -65,15 +81,24 @@ object ContentModuleIndex {
     @JvmField val itemContents: List<ItemContent>
     @JvmField val commandContents: List<CommandContent>
     @JvmField val npcContents: List<NpcContentDefinition>
+    @JvmField val npcModules: List<NpcModule>
     @JvmField val skillPlugins: List<SkillPlugin>
+    @JvmField val skillSupportModules: List<SkillSupportModule>
+    @JvmField val questPlugins: List<QuestPlugin>
+    @JvmField val socialPlugins: List<SocialPlugin>
     @JvmField val shopPlugins: List<ShopPlugin>
     @JvmField val eventBootstraps: List<() -> Unit>
     @JvmField val contentBootstraps: List<ContentBootstrap>
+    @JvmField val contentPlugins: List<ContentPlugin>
     @JvmField val pluginCatalog: List<PluginCatalogEntry>
 
     init {
         val classPath = ClassPath.from(Thread.currentThread().contextClassLoader)
-        val scannedClasses = discoverClasses(classPath)
+        val descriptorClasses = discoverSkillModuleClasses(classPath) + discoverQuestModuleClasses(classPath) +
+            discoverContentModuleClasses(classPath)
+        val scannedClasses = (discoverClasses(classPath) + descriptorClasses)
+            .distinctBy { it.name }
+            .sortedBy { it.name }
 
         lifecycle = IndexLifecycle.DISCOVER
         val discoveredButtons = mutableListOf<Pair<String, InterfaceButtonContent>>()
@@ -81,57 +106,119 @@ object ContentModuleIndex {
         val discoveredItems = mutableListOf<Pair<String, ItemContent>>()
         val discoveredCommands = mutableListOf<Pair<String, CommandContent>>()
         val discoveredNpcs = mutableListOf<Pair<String, NpcContentDefinition>>()
+        val discoveredNpcModules = mutableListOf<Pair<String, NpcModule>>()
         val discoveredSkills = mutableListOf<Pair<String, SkillPlugin>>()
+        val discoveredSkillSupport = mutableListOf<Pair<String, SkillSupportModule>>()
+        val discoveredQuests = mutableListOf<Pair<String, QuestPlugin>>()
+        val discoveredSocial = mutableListOf<Pair<String, SocialPlugin>>()
         val discoveredShops = mutableListOf<Pair<String, ShopPlugin>>()
         val discoveredEvents = mutableListOf<Pair<String, () -> Unit>>()
         val discoveredBootstraps = mutableListOf<Pair<String, ContentBootstrap>>()
+        val discoveredContentPlugins = mutableListOf<Pair<String, ContentPlugin>>()
         val discoveredCatalog = mutableListOf<PluginCatalogEntry>()
+        val discoveredManifests = mutableListOf<ContentModuleManifest>()
 
         for (clazz in scannedClasses) {
             val instance = try {
                 clazz.kotlin.objectInstance ?: continue
-            } catch (_: Throwable) {
-                continue
+            } catch (reflectionFailure: Throwable) {
+                // Kotlin file facades are part of package scanning but cannot have an object
+                // instance. Private Kotlin objects are valid modules, though, and reflection's
+                // objectInstance accessor cannot read them on recent JVMs.
+                if (clazz.name.endsWith("Kt")) continue
+                try {
+                    clazz.getDeclaredField("INSTANCE").apply { isAccessible = true }.get(null)
+                } catch (instanceFailure: Throwable) {
+                    throw IllegalStateException("Failed to initialize content module ${clazz.name}", instanceFailure)
+                }
             }
 
             val className = clazz.name
             val simpleName = clazz.simpleName
+            val manifest = resolveManifest(instance, clazz)
+            if (instance is SkillPlugin) {
+                val actualRoutes = instance.definition.routeKeys()
+                require(manifest.declaredRouteKeys == actualRoutes) {
+                    "Content module ${manifest.id} declared routes ${manifest.declaredRouteKeys.sorted()} " +
+                        "but registry routes are ${actualRoutes.sorted()}"
+                }
+            }
+            if (instance is SkillSupportModule) {
+                val actualRoutes = instance.definition.supportRouteKeys()
+                require(manifest.declaredRouteKeys == actualRoutes) {
+                    "Content module ${manifest.id} declared routes ${manifest.declaredRouteKeys.sorted()} but registry routes are ${actualRoutes.sorted()}"
+                }
+            }
+            if (instance is QuestPlugin) {
+                val actualRoutes = instance.definition.questRouteKeys()
+                require(manifest.declaredRouteKeys == actualRoutes) {
+                    "Content module ${manifest.id} declared routes ${manifest.declaredRouteKeys.sorted()} but registry routes are ${actualRoutes.sorted()}"
+                }
+            }
+            if (instance is SocialPlugin) {
+                val actualRoutes = instance.definition.socialRouteKeys()
+                require(manifest.declaredRouteKeys == actualRoutes) {
+                    "Content module ${manifest.id} declared routes ${manifest.declaredRouteKeys.sorted()} but registry routes are ${actualRoutes.sorted()}"
+                }
+            }
+            val enabled = ContentModuleFeatureState.isEnabled(manifest)
+            discoveredManifests += manifest
 
             var pluginKind: String? = null
             when (instance) {
                 is InterfaceButtonContent -> {
-                    discoveredButtons += className to instance
+                    if (enabled) discoveredButtons += className to instance
                     pluginKind = "interface-button"
                 }
                 is ObjectContent -> {
-                    discoveredObjects += (simpleName to instance)
+                    if (enabled) discoveredObjects += (simpleName to instance)
                     pluginKind = "object-content"
                 }
                 is ItemContent -> {
-                    discoveredItems += className to instance
+                    if (enabled) discoveredItems += className to instance
                     pluginKind = "item-content"
                 }
                 is CommandContent -> {
-                    discoveredCommands += className to instance
+                    if (enabled) discoveredCommands += className to instance
                     pluginKind = "command-content"
                 }
                 is SkillPlugin -> {
-                    discoveredSkills += className to instance
+                    if (enabled) discoveredSkills += className to instance
                     pluginKind = "skill-plugin"
                 }
+                is SkillSupportModule -> {
+                    if (enabled) discoveredSkillSupport += className to instance
+                    pluginKind = "skill-support"
+                }
+                is QuestPlugin -> {
+                    if (enabled) discoveredQuests += className to instance
+                    pluginKind = "quest-plugin"
+                }
+                is SocialPlugin -> {
+                    if (enabled) discoveredSocial += className to instance
+                    pluginKind = "social-plugin"
+                }
                 is ShopPlugin -> {
-                    discoveredShops += className to instance
+                    if (enabled) discoveredShops += className to instance
                     pluginKind = "shop-plugin"
                 }
                 is ContentBootstrap -> {
-                    discoveredBootstraps += className to instance
+                    if (enabled) discoveredBootstraps += className to instance
                     pluginKind = "bootstrap"
                 }
             }
 
             if (instance is NpcModule) {
-                discoveredNpcs += className to instance.definition
+                if (enabled) {
+                    discoveredNpcs += className to instance.definition
+                    discoveredNpcModules += className to instance
+                }
                 pluginKind = pluginKind ?: "npc-module"
+            }
+
+            if (instance is ContentPlugin) {
+                if (enabled) discoveredContentPlugins += className to instance
+                pluginKind = pluginKind ?: "content-plugin"
             }
 
             if (clazz.name.startsWith("net.dodian.uber.game.engine.event.bootstrap") &&
@@ -143,7 +230,7 @@ object ContentModuleIndex {
                 } catch (_: NoSuchMethodException) {
                     null
                 }
-                if (method != null) {
+                if (method != null && enabled) {
                     discoveredEvents += className to { method.invoke(instance) }
                     pluginKind = pluginKind ?: "event-bootstrap"
                 }
@@ -154,6 +241,7 @@ object ContentModuleIndex {
                     moduleClass = className,
                     kind = pluginKind,
                     metadata = resolveMetadata(instance, clazz),
+                    manifest = manifest,
                 )
             }
         }
@@ -162,34 +250,48 @@ object ContentModuleIndex {
         validateItemOwnership(discoveredItems)
         validateShopOwnership(discoveredShops)
         validateInterfaceButtonOwnership(discoveredButtons)
+        validateSocialOwnership(discoveredSocial)
 
         interfaceButtons = discoveredButtons.sortedBy { it.first }.map { it.second }
         objectContents = discoveredObjects.sortedBy { it.first }
         itemContents = discoveredItems.sortedBy { it.first }.map { it.second }
         commandContents = discoveredCommands.sortedBy { it.first }.map { it.second }
         npcContents = discoveredNpcs.sortedBy { it.first }.map { it.second }
+        npcModules = discoveredNpcModules.sortedBy { it.first }.map { it.second }
         skillPlugins = discoveredSkills.sortedBy { it.first }.map { it.second }
+        skillSupportModules = discoveredSkillSupport.sortedBy { it.first }.map { it.second }
+        questPlugins = discoveredQuests.sortedBy { it.first }.map { it.second }
+        socialPlugins = discoveredSocial.sortedBy { it.first }.map { it.second }
         shopPlugins = discoveredShops.sortedBy { it.first }.map { it.second }
         eventBootstraps = discoveredEvents.sortedBy { it.first }.map { it.second }
         contentBootstraps = discoveredBootstraps.sortedBy { it.first }.map { it.second }
+        contentPlugins = discoveredContentPlugins.sortedBy { it.first }.map { it.second }
         pluginCatalog = discoveredCatalog.sortedBy { it.moduleClass }
+        ContentPlatformCatalog.publish(discoveredManifests)
+        val platformSnapshot = ContentPlatformCatalog.snapshot()
+        logger.debug(
+            "Content manifest modules enabled=[{}] disabled=[{}]",
+            platformSnapshot.modules.filter { it.id in platformSnapshot.enabledModuleIds }.joinToString { it.id },
+            platformSnapshot.modules.filter { it.id !in platformSnapshot.enabledModuleIds }.joinToString { it.id },
+        )
         lifecycle = IndexLifecycle.FROZEN
 
+        // commands/npcs/skills/shops are intentionally omitted here - CommandContentRegistry,
+        // NpcContentRegistry, SkillPluginRegistry, and ShopCatalogRegistry each already log their
+        // own count. buttons/objects/items below count content-module classes, a different axis
+        // from those subsystems' binding counts, so they're not duplicates.
         logger.info(
-            "Plugin index {}: buttons={}, objects={}, items={}, commands={}, npcs={}, skills={}, shops={}, events={}, bootstraps={}, catalog={}, canonicalRoots={}, legacyRoots={}",
+            "Plugin index {}: buttons={}, objects={}, items={}, events={}, bootstraps={}, catalog={}, enabledModules={}, disabledModules={}, fingerprint={}",
             lifecycle.name.lowercase(),
             interfaceButtons.size,
             objectContents.size,
             itemContents.size,
-            commandContents.size,
-            npcContents.size,
-            skillPlugins.size,
-            shopPlugins.size,
             eventBootstraps.size,
             contentBootstraps.size,
             pluginCatalog.size,
-            CANONICAL_SCAN_PACKAGES.size,
-            0,
+            platformSnapshot.enabledCount,
+            platformSnapshot.disabledCount,
+            platformSnapshot.fingerprint.take(12),
         )
     }
 
@@ -211,6 +313,115 @@ object ContentModuleIndex {
             }
         }
         return loadedByName.values.sortedBy { it.name }
+    }
+
+    /**
+     * Gradle skill modules publish unique descriptors so packaged JARs can be
+     * verified without relying solely on a manually maintained package list.
+     * Legacy modules remain classpath-scanned until their migration completes.
+     */
+    private fun discoverSkillModuleClasses(classPath: ClassPath): List<Class<*>> {
+        val prefix = "META-INF/ub3r/skill-modules/"
+        val descriptors = classPath.resources
+            .filter { it.resourceName.startsWith(prefix) && it.resourceName.endsWith(".toml") }
+            .sortedBy { it.resourceName }
+        val ids = mutableSetOf<String>()
+        val classes = mutableListOf<Class<*>>()
+        descriptors.forEach { resource ->
+            val values = resource.asByteSource().openStream().bufferedReader().useLines { lines ->
+                lines.map(String::trim)
+                    .filter { line -> line.isNotEmpty() && !line.startsWith("#") && line.contains('=') }
+                    .associate { line ->
+                        val (key, rawValue) = line.split('=', limit = 2)
+                        key.trim() to rawValue.trim().trim('"')
+                    }
+            }
+            require(values["schema_version"] == "1") { "Unsupported skill module descriptor ${resource.resourceName}" }
+            val moduleId = requireNotNull(values["module_id"]) { "Missing module_id in ${resource.resourceName}" }
+            val implementationClass = requireNotNull(values["implementation_class"]) {
+                "Missing implementation_class in ${resource.resourceName}"
+            }
+            val kind = values["kind"]
+            require(kind in setOf("gameplay", "support")) { "Invalid kind in ${resource.resourceName}" }
+            require(ids.add(moduleId)) { "Duplicate Gradle skill module descriptor id $moduleId" }
+            val loaded = runCatching { Class.forName(implementationClass) }.getOrElse { cause ->
+                throw IllegalStateException("Unable to load $implementationClass from ${resource.resourceName}", cause)
+            }
+            require(
+                (kind == "gameplay" && SkillPlugin::class.java.isAssignableFrom(loaded)) ||
+                    (kind == "support" && SkillContentModule::class.java.isAssignableFrom(loaded)),
+            ) { "Descriptor ${resource.resourceName} declares $kind but $implementationClass does not implement its contract" }
+            classes += loaded
+        }
+        return classes
+    }
+
+    /** Descriptor-based discovery for `ub3r.quest-plugin` modules - mirrors [discoverSkillModuleClasses]. */
+    private fun discoverQuestModuleClasses(classPath: ClassPath): List<Class<*>> {
+        val prefix = "META-INF/ub3r/quest-modules/"
+        val descriptors = classPath.resources
+            .filter { it.resourceName.startsWith(prefix) && it.resourceName.endsWith(".toml") }
+            .sortedBy { it.resourceName }
+        val ids = mutableSetOf<String>()
+        val classes = mutableListOf<Class<*>>()
+        descriptors.forEach { resource ->
+            val values = resource.asByteSource().openStream().bufferedReader().useLines { lines ->
+                lines.map(String::trim)
+                    .filter { line -> line.isNotEmpty() && !line.startsWith("#") && line.contains('=') }
+                    .associate { line ->
+                        val (key, rawValue) = line.split('=', limit = 2)
+                        key.trim() to rawValue.trim().trim('"')
+                    }
+            }
+            require(values["schema_version"] == "1") { "Unsupported quest module descriptor ${resource.resourceName}" }
+            val moduleId = requireNotNull(values["module_id"]) { "Missing module_id in ${resource.resourceName}" }
+            val implementationClass = requireNotNull(values["implementation_class"]) {
+                "Missing implementation_class in ${resource.resourceName}"
+            }
+            require(ids.add(moduleId)) { "Duplicate Gradle quest module descriptor id $moduleId" }
+            val loaded = runCatching { Class.forName(implementationClass) }.getOrElse { cause ->
+                throw IllegalStateException("Unable to load $implementationClass from ${resource.resourceName}", cause)
+            }
+            require(QuestPlugin::class.java.isAssignableFrom(loaded)) {
+                "Descriptor ${resource.resourceName} declares $implementationClass which does not implement QuestPlugin"
+            }
+            classes += loaded
+        }
+        return classes
+    }
+
+    private fun discoverContentModuleClasses(classPath: ClassPath): List<Class<*>> {
+        val prefix = "META-INF/ub3r/content-modules/"
+        val descriptors = classPath.resources
+            .filter { it.resourceName.startsWith(prefix) && it.resourceName.endsWith(".toml") }
+            .sortedBy { it.resourceName }
+        val ids = mutableSetOf<String>()
+        return descriptors.map { resource ->
+            val values = resource.asByteSource().openStream().bufferedReader().useLines { lines ->
+                lines.map(String::trim)
+                    .filter { it.isNotEmpty() && !it.startsWith("#") && it.contains('=') }
+                    .associate { line ->
+                        val (key, rawValue) = line.split('=', limit = 2)
+                        key.trim() to rawValue.trim().trim('"')
+                    }
+            }
+            require(values["schema_version"] == "1") { "Unsupported content module descriptor ${resource.resourceName}" }
+            val moduleId = requireNotNull(values["module_id"]) { "Missing module_id in ${resource.resourceName}" }
+            val implementationClass = requireNotNull(values["implementation_class"]) {
+                "Missing implementation_class in ${resource.resourceName}"
+            }
+            require(values["family"]?.matches(Regex("[a-z][a-z0-9-]{1,31}")) == true) {
+                "Invalid family in ${resource.resourceName}"
+            }
+            require(ids.add(moduleId)) { "Duplicate generic content module descriptor id $moduleId" }
+            runCatching { Class.forName(implementationClass) }.getOrElse { cause ->
+                throw IllegalStateException("Unable to load $implementationClass from ${resource.resourceName}", cause)
+            }.also { loaded ->
+                require(ContentModuleManifestProvider::class.java.isAssignableFrom(loaded)) {
+                    "$implementationClass does not implement ContentModuleManifestProvider"
+                }
+            }
+        }
     }
 
     private fun resolveMetadata(instance: Any, clazz: Class<*>): PluginModuleMetadata {
@@ -246,6 +457,18 @@ object ContentModuleIndex {
             description = "Undocumented plugin module.",
             version = "1.0.0",
             owner = "unspecified",
+        )
+    }
+
+    private fun resolveManifest(instance: Any, clazz: Class<*>): ContentModuleManifest {
+        if (instance is ContentModuleManifestProvider) return instance.contentManifest
+        val metadata = resolveMetadata(instance, clazz)
+        // Existing modules remain bootable during the staged platform rollout.
+        return ContentModuleManifest(
+            id = clazz.name.lowercase(),
+            owner = metadata.owner,
+            version = metadata.version,
+            maturity = ContentMaturity.LEGACY,
         )
     }
 
@@ -285,6 +508,18 @@ object ContentModuleIndex {
         for ((module, content) in buttons) {
             for (binding in content.bindings) {
                 validateButtonBinding(module, binding, routeOwners, semanticOwners)
+            }
+        }
+    }
+
+    private fun validateSocialOwnership(plugins: List<Pair<String, SocialPlugin>>) {
+        val owners = HashMap<String, String>()
+        for ((module, plugin) in plugins) {
+            for (route in plugin.definition.socialRouteKeys()) {
+                val existing = owners.putIfAbsent(route, module)
+                require(existing == null) {
+                    "Duplicate social route ownership route=$route existing=$existing new=$module"
+                }
             }
         }
     }

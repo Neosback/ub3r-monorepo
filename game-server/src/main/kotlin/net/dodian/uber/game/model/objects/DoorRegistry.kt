@@ -1,11 +1,10 @@
 package net.dodian.uber.game.model.objects
 
 import net.dodian.uber.game.model.objects.DoorDefinitionLoader
-import net.dodian.uber.game.model.objects.DoorDefinitionRepository
 import org.slf4j.LoggerFactory
 
 class DoorRegistry @JvmOverloads constructor(
-    private val loader: DoorDefinitionLoader = DoorDefinitionRepository,
+    private val loader: DoorDefinitionLoader = TomlDoorLoader,
 ) {
     init {
         loadDefinitions()
@@ -15,7 +14,8 @@ class DoorRegistry @JvmOverloads constructor(
         try {
             val definitions = loader.load()
             applyDefinitions(definitions)
-            logger.info("Loaded {} doors...", definitions.size)
+            // ObjectClipService's "Applied startup collision overlays" line reports doors=N too.
+            logger.debug("Loaded {} doors...", definitions.size)
         } catch (exception: Exception) {
             logger.error("Failed to load door definitions.", exception)
         }
@@ -74,4 +74,3 @@ class DoorRegistry @JvmOverloads constructor(
         var doorState: IntArray = IntArray(DEFAULT_CAPACITY)
     }
 }
-

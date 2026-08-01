@@ -1,9 +1,10 @@
 package net.dodian.uber.game.engine.lifecycle
+import net.dodian.uber.game.api.content.ContentActions
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.Player.positions
+import net.dodian.uber.game.model.entity.player.PlayerCore.positions
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.util.Misc
@@ -11,7 +12,8 @@ import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationServic
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
-import net.dodian.uber.game.skill.thieving.PyramidPlunder
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
+import net.dodian.uber.skills.thieving.ThievingModule
 
 object PlayerLifecycleTickService {
     data class TimerSnapshot(
@@ -19,11 +21,6 @@ object PlayerLifecycleTickService {
         val combatTimer: Int,
         val stunTimer: Int,
         val snareTimer: Int,
-    )
-
-    data class PrayerDrainStep(
-        val nextCurrentDrainRate: Double,
-        val shouldDrainPrayer: Boolean,
     )
 
     data class PostCombatOutcome(
@@ -43,24 +40,6 @@ object PlayerLifecycleTickService {
             stunTimer = maxOf(stunTimer - 1, 0),
             snareTimer = maxOf(snareTimer - 1, 0),
         )
-
-    internal fun nextPrayerDrainStep(
-        currentDrainRate: Double,
-        drainRate: Double,
-    ): PrayerDrainStep {
-        if (currentDrainRate <= 0.0 && drainRate <= 0.0) {
-            return PrayerDrainStep(0.0, false)
-        }
-        if (drainRate <= 0.0) {
-            return PrayerDrainStep(0.0, false)
-        }
-        val updated = currentDrainRate + 0.6
-        return if (updated >= drainRate) {
-            PrayerDrainStep(0.0, true)
-        } else {
-            PrayerDrainStep(updated, false)
-        }
-    }
 
     internal fun shouldPersistActiveEffects(
         effects: List<Int?>,
@@ -102,7 +81,7 @@ object PlayerLifecycleTickService {
     @JvmStatic
     fun processBeforeCombat(player: Client) {
         if (player.disconnected) {
-            PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.DISCONNECTED, false, false, false, true)
+            ContentActions.cancel(player, PlayerActionCancelReason.DISCONNECTED, false, false, false, true)
         }
         val decremented =
             decrementTimers(
@@ -117,12 +96,13 @@ object PlayerLifecycleTickService {
         player.snareTimer = decremented.snareTimer
 
         player.changeEffectTime()
+        tickPlayerPoison(player)
         if (player.genieCombatFlag && !player.isInCombat) {
             player.genieCombatFlag = false
             SkillingRandomEventService.show(player)
         }
 
-        PyramidPlunder.tick(player)
+        ThievingModule.tick(player.asSkillPlayer())
 
         if (player.getPositionName(player.position) == positions.DESERT && !player.effects.isEmpty() && player.effects[0] == -1) {
             player.addEffectTime(0, 30 + Misc.random(40))
@@ -161,20 +141,15 @@ object PlayerLifecycleTickService {
 
     @JvmStatic
     fun processEffectsPeriodicPersistence(player: Client, wallClockNow: Long) {
-        if (!shouldPersistActiveEffects(player.effects, player.lastEffectsPeriodicDirtyAtMs, wallClockNow)) {
+        if (!shouldPersistActiveEffects(player.effects, player.contentRuntimeState.getEffectsPeriodicDirtyAtMillis(), wallClockNow)) {
             return
         }
         player.markSaveDirty(PlayerSaveSegment.EFFECTS.mask)
-        player.lastEffectsPeriodicDirtyAtMs = wallClockNow
+        player.contentRuntimeState.setEffectsPeriodicDirtyAtMillis(wallClockNow)
     }
 
     private fun handlePrayerDrain(player: Client) {
-        val prayers = player.prayerManager
-        val step = nextPrayerDrainStep(prayers.getCurrentDrainRate(), prayers.getDrainRate())
-        prayers.setCurrentDrainRate(step.nextCurrentDrainRate)
-        if (step.shouldDrainPrayer) {
-            player.drainPrayer(1)
-        }
+        net.dodian.uber.skills.prayer.PrayerModule.tickDrain(player.asSkillPlayer())
     }
 
     private fun handleBrimhavenDungeon(player: Client) {
@@ -195,6 +170,22 @@ object PlayerLifecycleTickService {
                 player.iconTimer = 6
             }
             else -> player.iconTimer = 6
+        }
+    }
+
+    private fun tickPlayerPoison(player: Client) {
+        if (player.poisonDamage <= 0) {
+            return
+        }
+        if (player.poisonTimer > 0) {
+            player.poisonTimer--
+            return
+        }
+        player.poisonTimer = 30
+        player.dealDamage(null, player.poisonDamage, Entity.hitType.POISON)
+        player.poisonDamage--
+        if (player.poisonDamage <= 0) {
+            player.sendMessage("You have been cured of the poison.")
         }
     }
 }

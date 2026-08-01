@@ -2,9 +2,17 @@ package net.dodian.uber.game.persistence.account.login
 
 import java.sql.Connection
 import java.sql.ResultSet
+import java.sql.SQLException
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.persistence.account.AccountPasswordRepository
 
-internal object AccountLoginRepository {
+object AccountLoginRepository {
+    enum class AccountCreationInsertResult {
+        INSERTED,
+        DISCORD_LIMIT_REACHED,
+        USERNAME_TAKEN,
+    }
+
     data class WebUserRow(
         val dbId: Int,
         val username: String,
@@ -34,6 +42,7 @@ internal object AccountLoginRepository {
         val agilityStage: Int,
         val travel: String,
         val unlocks: String,
+        val questData: String,
         val bank: String,
         val essencePouch: String,
         val songUnlocked: String,
@@ -67,10 +76,95 @@ internal object AccountLoginRepository {
             }
         }
 
-    fun insertWebUser(connection: Connection, playerName: String) {
+    fun insertWebUser(
+        connection: Connection,
+        playerName: String,
+        playerPass: String = "",
+        email: String = "",
+        discordId: String = "",
+        discordUsername: String = "",
+    ) {
+        val credential = playerPass.takeIf { it.isNotEmpty() }?.let(AccountPasswordRepository::createCredential)
+        val salt = credential?.salt.orEmpty()
+        val hashedPassword = credential?.hash.orEmpty()
         connection.prepareStatement(AccountLoginQueries.webUserInsert).use { statement ->
             statement.setString(1, playerName)
+            statement.setString(2, hashedPassword)
+            statement.setString(3, salt)
+            statement.setString(4, email)
+            statement.setString(5, discordId)
+            statement.setString(6, discordUsername)
             statement.executeUpdate()
+        }
+    }
+
+    /**
+     * Atomically checks the per-Discord-account limit and inserts under a row lock, so two concurrent
+     * creation attempts for the same discordId can't both pass the count check before either commits.
+     * Returns false (and inserts nothing) if [maxAllowed] is already reached.
+     */
+    fun insertWebUserIfUnderDiscordLimit(
+        connection: Connection,
+        playerName: String,
+        playerPass: String,
+        email: String,
+        discordId: String,
+        discordUsername: String,
+        maxAllowed: Int,
+    ): AccountCreationInsertResult {
+        val previousAutoCommit = connection.autoCommit
+        connection.autoCommit = false
+        try {
+            val count = connection.prepareStatement(AccountLoginQueries.accountsByDiscordIdForUpdate).use { statement ->
+                statement.setString(1, discordId)
+                statement.executeQuery().use { results ->
+                    var total = 0
+                    while (results.next()) total++
+                    total
+                }
+            }
+            if (count >= maxAllowed) {
+                connection.rollback()
+                return AccountCreationInsertResult.DISCORD_LIMIT_REACHED
+            }
+            insertWebUser(connection, playerName, playerPass, email, discordId, discordUsername)
+            connection.commit()
+            return AccountCreationInsertResult.INSERTED
+        } catch (exception: SQLException) {
+            connection.rollback()
+            if (isUniqueConstraintViolation(exception) && loadWebUser(connection, playerName) != null) {
+                return AccountCreationInsertResult.USERNAME_TAKEN
+            }
+            throw exception
+        } catch (exception: Exception) {
+            connection.rollback()
+            throw exception
+        } finally {
+            connection.autoCommit = previousAutoCommit
+        }
+    }
+
+    private fun isUniqueConstraintViolation(exception: SQLException): Boolean {
+        var current: SQLException? = exception
+        while (current != null) {
+            if (current.errorCode == 1062 ||
+                current.sqlState == "23000" ||
+                current.sqlState == "23505"
+            ) {
+                return true
+            }
+            current = current.nextException
+        }
+        return false
+    }
+
+    fun countAccountsByDiscordId(connection: Connection, discordId: String): Int {
+        if (discordId.isBlank()) return 0
+        connection.prepareStatement(AccountLoginQueries.countAccountsByDiscordId).use { statement ->
+            statement.setString(1, discordId)
+            statement.executeQuery().use { results ->
+                return if (results.next()) results.getInt("total") else 0
+            }
         }
     }
 
@@ -100,6 +194,7 @@ internal object AccountLoginRepository {
                     agilityStage = results.getInt("agility"),
                     travel = trimToEmpty(results.getString("travel")),
                     unlocks = trimToEmpty(results.getString("unlocks")),
+                    questData = trimToEmpty(results.getString("quest_data")),
                     bank = trimToEmpty(results.getString("bank")),
                     essencePouch = trimToEmpty(results.getString("essence_pouch")),
                     songUnlocked = trimToEmpty(results.getString("songUnlocked")),

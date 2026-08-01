@@ -8,10 +8,13 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.PendingHitBuffer;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.skill.prayer.PrayerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.engine.systems.combat.CombatDefenderReaction;
 import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService;
+import net.dodian.uber.game.engine.systems.combat.CombatStartService;
+import net.dodian.uber.game.engine.systems.combat.CombatIntent;
+import net.dodian.uber.game.engine.systems.combat.CombatReachService;
+import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.engine.util.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,12 +45,11 @@ class PlayerCombatState {
             mitigationBranch = "clamped_to_current_hp";
         }
         double rolledChance = Math.random();
-        double level = ((owner.getLevel(Skill.PRAYER) + 1) / 8D) / 100D;
-        double chance = level + 0.025;
+        double chance = net.dodian.uber.skills.prayer.PrayerCombatService.damageNeglectChance(owner.getLevel(Skill.PRAYER));
         double damageNeglect = player.neglectDmg() / 10D;
         double reduceDamage = 1.0 - (damageNeglect / 100);
         int oldDamage = amt;
-        if (!(player.inDuel && player.duelRule[5]) && rolledChance <= chance && owner.playerBonus[11] > 0 && oldDamage > 0) {
+        if (!(player.getInDuel() && player.getDuelRule()[5]) && rolledChance <= chance && player.playerBonus[13] > 0 && oldDamage > 0) {
             amt = reduceDamage <= 0 ? 0 : (int) (amt * reduceDamage);
             mitigationBranch = "neglect";
             if (amt != oldDamage) {
@@ -62,49 +64,108 @@ class PlayerCombatState {
                     mitigationBranch,
                     originalAmt,
                     amt,
-                    player.inDuel,
-                    player.inDuel && player.duelRule[5]
+                    player.getInDuel(),
+                    player.getInDuel() && player.getDuelRule()[5]
             );
         }
         CombatLogoutLockService.refreshInteraction(attacker, owner);
         maybePlayDefenderReaction(amt, inferDamageType(attacker));
         applyDamage(attacker, amt, type);
+        if (attacker != null && player.autoRetaliate && player.target == null && player.getCurrentHealth() > 0) {
+            if (attacker.getType() == Entity.Type.NPC) {
+                CombatStartService.startNpcAttack(player, (Npc) attacker, CombatIntent.ATTACK_NPC);
+            } else if (attacker.getType() == Entity.Type.PLAYER) {
+                CombatStartService.startPlayerAttack(player, (Client) attacker, CombatIntent.ATTACK_PLAYER);
+            }
+        }
     }
 
     void dealDamage(int amt, Entity.hitType type, Entity attacker, Entity.damageType damageType) {
+        dealDamage(amt, type, attacker, damageType, false);
+    }
+
+    void dealDamageAfterProjectileLaunch(int amt, Entity.hitType type, Entity attacker, Entity.damageType damageType) {
+        dealDamage(amt, type, attacker, damageType, true);
+    }
+
+    private void dealDamage(int amt, Entity.hitType type, Entity attacker, Entity.damageType damageType,
+                            boolean projectileAlreadyValidated) {
         Client player = (Client) owner;
-        Npc npc = (Npc) attacker;
+        net.dodian.uber.game.api.plugin.skills.SkillPlayer skillPlayer =
+                net.dodian.uber.game.engine.systems.skills.SkillPlayerBridge.of(player);
+        if (owner.isDeathSequenceActive() || owner.getCurrentHealth() < 1) {
+            return;
+        }
+        if (!projectileAlreadyValidated && attacker != null && requiresProjectileLineOfSight(damageType)
+                && !CombatReachService.hasProjectileLineOfSight(attacker, owner)) {
+            return;
+        }
+        Npc npc = attacker instanceof Npc ? (Npc) attacker : null;
         int originalAmt = amt;
         String mitigationBranch = "none";
         if (damageType.equals(Entity.damageType.FIRE_BREATH)) {
-            boolean gotAntiEffect = player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 1540
-                    || player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284
-                    || owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)
-                    || owner.antiFireEffect();
-            if (npc != null && npc.getId() == 239 && gotAntiEffect) {
-                amt /= 2;
-                mitigationBranch = "fire_breath_kbd_half";
-            } else if (npc != null && npc.getId() != 239 && gotAntiEffect) {
-                amt *= 3;
-                amt /= 10;
-                mitigationBranch = "fire_breath_reduced";
+            boolean hasShield = player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 1540
+                    || player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284;
+            boolean hasProtect = net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromMagic(skillPlayer);
+            boolean hasAntifire = owner.antiFireEffect();
+            boolean hasSuperAntifire = owner.superAntifireEffect();
+            if (npc != null && npc.getId() == 239) {
+                if (hasSuperAntifire) {
+                    amt = 0;
+                    mitigationBranch = "kbd_superantifire";
+                } else if (hasAntifire && hasShield) {
+                    amt = 0;
+                    mitigationBranch = "kbd_antifire_shield";
+                } else if (hasAntifire && hasProtect) {
+                    amt = 0;
+                    mitigationBranch = "kbd_antifire_protect";
+                } else if (hasShield && hasProtect) {
+                    amt = 0;
+                    mitigationBranch = "kbd_shield_protect";
+                } else if (hasShield) {
+                    amt = Math.min(amt, 5);
+                    mitigationBranch = "kbd_shield";
+                } else if (hasProtect) {
+                    amt = Math.min(amt, 10);
+                    mitigationBranch = "kbd_protect";
+                } else if (hasAntifire) {
+                    amt = Math.max(amt - 15, 0);
+                    mitigationBranch = "kbd_antifire";
+                } else {
+                    mitigationBranch = "kbd_full";
+                }
+                if (amt == 0 && originalAmt > 0) {
+                    player.send(new SendMessage("You are protected against the dragonfire breath."));
+                }
             } else {
-                player.send(new SendMessage("You are badly burnt by the dragon fire!"));
-                mitigationBranch = "fire_breath_full";
+                boolean gotAntiEffect = hasShield || hasProtect || hasAntifire;
+                if (gotAntiEffect) {
+                    amt *= 3;
+                    amt /= 10;
+                    mitigationBranch = "fire_breath_reduced";
+                } else {
+                    player.send(new SendMessage("You are badly burnt by the dragon fire!"));
+                    mitigationBranch = "fire_breath_full";
+                }
             }
-        } else if (damageType.equals(Entity.damageType.MELEE) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MELEE)) {
+        } else if (damageType.equals(Entity.damageType.MELEE)
+                && net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromMelee(skillPlayer)) {
             amt /= 2;
             mitigationBranch = "protect_melee";
-        } else if (damageType.equals(Entity.damageType.RANGED) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_RANGE)) {
+        } else if (damageType.equals(Entity.damageType.RANGED)
+                && net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromRange(skillPlayer)) {
             amt /= 2;
             mitigationBranch = "protect_range";
-        } else if (damageType.equals(Entity.damageType.MAGIC) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)) {
+        } else if (damageType.equals(Entity.damageType.MAGIC)
+                && net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromMagic(skillPlayer)) {
             amt /= 2;
             mitigationBranch = "protect_magic";
-        } else if (damageType.equals(Entity.damageType.JAD_RANGED) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_RANGE)) {
+        } else if (damageType.equals(Entity.damageType.JAD_RANGED)
+                && net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromRange(skillPlayer)) {
             amt = 0;
             mitigationBranch = "protect_jad_range";
-        } else if (damageType.equals(Entity.damageType.JAD_MAGIC) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)) {
+        } else if (damageType.equals(Entity.damageType.JAD_MAGIC)
+                && net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromMagic(skillPlayer)) {
             amt = 0;
             mitigationBranch = "protect_jad_magic";
         }
@@ -117,21 +178,34 @@ class PlayerCombatState {
                     mitigationBranch,
                     originalAmt,
                     amt,
-                    owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MELEE),
-                    owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_RANGE),
-                    owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)
+                    net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromMelee(skillPlayer),
+                    net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromRange(skillPlayer),
+                    net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromMagic(skillPlayer)
             );
         }
         CombatLogoutLockService.refreshInteraction(attacker, owner);
         maybePlayDefenderReaction(amt, damageType);
         applyDamage(attacker, amt, type);
+        if (attacker != null && player.autoRetaliate && player.target == null && player.getCurrentHealth() > 0) {
+            if (attacker.getType() == Entity.Type.NPC) {
+                CombatStartService.startNpcAttack(player, (Npc) attacker, CombatIntent.ATTACK_NPC);
+            } else if (attacker.getType() == Entity.Type.PLAYER) {
+                CombatStartService.startPlayerAttack(player, (Client) attacker, CombatIntent.ATTACK_PLAYER);
+            }
+        }
+    }
+
+    private static boolean requiresProjectileLineOfSight(Entity.damageType type) {
+        return type == Entity.damageType.RANGED || type == Entity.damageType.MAGIC ||
+                type == Entity.damageType.JAD_RANGED || type == Entity.damageType.JAD_MAGIC ||
+                type == Entity.damageType.FIRE_BREATH;
     }
 
     private void applyDamage(Entity attacker, int amt, Entity.hitType type) {
         Client player = (Client) owner;
         appendHit(amt, type);
         owner.setCurrentHealth(Math.max(owner.getCurrentHealth() - amt, 0));
-        player.refreshSkill(Skill.HITPOINTS);
+        ProgressionService.refresh(player, Skill.HITPOINTS);
         player.debug("Dealing " + amt + " damage to you (hp=" + owner.currentHealth + ")");
         if (attacker instanceof Player) {
             int totalDamage;
@@ -228,7 +302,8 @@ class PlayerCombatState {
     }
 
     private Entity.damageType inferDamageType(Entity attacker) {
-        if (attacker instanceof Client player) {
+        if (attacker instanceof Client) {
+            Client player = (Client) attacker;
             int style = PlayerAttackCombatKt.getAttackStyle(player);
             if (style == 1) {
                 return Entity.damageType.RANGED;

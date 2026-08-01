@@ -1,6 +1,5 @@
 package net.dodian.uber.game.model.entity.npc;
 
-import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
@@ -9,14 +8,12 @@ import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
-import net.dodian.uber.game.engine.sync.SynchronizationContext;
 import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
-import net.dodian.uber.game.engine.sync.viewport.ViewportSnapshot;
+import net.dodian.uber.game.engine.sync.protocol.PackedUpdateBlock;
+import net.dodian.uber.game.engine.sync.protocol.PackedBitSlice;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Iterator;
 
 
 /**
@@ -25,105 +22,19 @@ import java.util.Iterator;
 public class NpcUpdating extends EntityUpdating<Npc> {
 
     private static final Logger logger = LoggerFactory.getLogger(NpcUpdating.class);
-    private static final boolean DEBUG_NPC_MOVEMENT_WRITES = false;
-    private static final int MAX_LOCAL_NPC_ADDS_PER_TICK = 15;
-    private static final int MAX_LOCAL_NPC_CAP = 255;
+    public static final int NPC_SLOT_BITS = 16;
+    static final int NPC_DEFINITION_BITS = 16;
+    public static final int NPC_SLOT_TERMINATOR = (1 << NPC_SLOT_BITS) - 1;
+    static final int MAX_CLIENT_NPC_SLOT = 16_383;
+    static final int MAX_NPC_DEFINITION_ID = (1 << NPC_DEFINITION_BITS) - 1;
+    /** Local-list entry type marking a slot as removed from the viewer's local set. */
+    private static final int LOCAL_REMOVE_TYPE = 3;
     private static final NpcUpdateBlockSet BLOCK_SET = new NpcUpdateBlockSet();
 
     private static final NpcUpdating instance = new NpcUpdating();
 
     public static NpcUpdating getInstance() {
         return instance;
-    }
-
-    @Override
-    public void update(Player player, ByteMessage stream) {
-        ByteMessage updateBlock = withUpdateBlock();
-        ByteMessage buf = stream;
-        int movementWrites = 0;
-        try {
-            stream.startBitAccess();
-
-            pruneLocalNpcsToProtocolCap(player);
-            stream.putBits(8, player.getLocalNpcs().size());
-            for (Iterator<Npc> i = player.getLocalNpcs().iterator(); i.hasNext(); ) {
-                Npc npc = i.next();
-                boolean exceptions = removeNpc(player, npc);
-                if (player.withinDistance(npc) && npc.isVisible() && !exceptions) {
-                    updateNPCMovement(npc, stream);
-                    movementWrites++;
-                    appendBlockUpdate(npc, updateBlock);
-                } else {
-                    buf.putBits(1, 1);
-                    stream.putBits(2, 3); // tells client to remove this npc from list
-                    i.remove();
-                    player.bumpLocalNpcMembershipRevision();
-                }
-            }
-
-            int npcsAdded = 0;
-            for (Npc npc : findNearbyNpcs(player)) {
-                if (npcsAdded >= MAX_LOCAL_NPC_ADDS_PER_TICK || player.getLocalNpcs().size() >= MAX_LOCAL_NPC_CAP) {
-                    break;
-                }
-                boolean exceptions = removeNpc(player, npc);
-                if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
-                if (player.getLocalNpcs().add(npc)) {
-                    player.bumpLocalNpcMembershipRevision();
-                    if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
-                        npc.setId(player.getGender() == 0 ? 1306 : 1307);
-                    addNpc(player, npc, stream);
-                    appendBlockUpdate(npc, updateBlock);
-                    SynchronizationContext.recordNpcAdd();
-                    npcsAdded++;
-                }
-            }
-            if (updateBlock.getBuffer().writerIndex() > 0) {
-                stream.putBits(14, 16383);
-                stream.endBitAccess();
-                stream.putBytes(updateBlock);
-            } else {
-                stream.endBitAccess();
-            }
-            // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
-
-            if (DEBUG_NPC_MOVEMENT_WRITES && movementWrites > 0 && logger.isDebugEnabled()) {
-                logger.debug("npcMovementWrites viewer={} count={}", player.getPlayerName(), movementWrites);
-            }
-        } finally {
-            releaseScratch(updateBlock);
-        }
-    }
-
-    private java.util.Collection<Npc> findNearbyNpcs(Player player) {
-        ViewportSnapshot snapshot = SynchronizationContext.getViewportSnapshot(player);
-        if (snapshot != null) {
-            return snapshot.getNpcs();
-        }
-        if (Server.chunkManager == null) {
-            return Server.npcManager.getNpcs();
-        }
-        java.util.ArrayList<Npc> candidates = new java.util.ArrayList<>();
-        Server.chunkManager.forEachUpdateNpcCandidate(player, 16, candidates::add);
-        return candidates;
-    }
-
-    private void pruneLocalNpcsToProtocolCap(Player player) {
-        if (player.getLocalNpcs().size() <= MAX_LOCAL_NPC_CAP) {
-            return;
-        }
-
-        Iterator<Npc> iterator = player.getLocalNpcs().iterator();
-        int keep = 0;
-        while (iterator.hasNext()) {
-            iterator.next();
-            keep++;
-            if (keep <= MAX_LOCAL_NPC_CAP) {
-                continue;
-            }
-            iterator.remove();
-            player.bumpLocalNpcMembershipRevision();
-        }
     }
 
     public static boolean removeNpc(Player player, Npc npc) {
@@ -135,10 +46,20 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         return c.quests[1] > 0 && npc.getId() == 999 && npc.getPosition().getX() == 2 && npc.getPosition().getY() == 2;
     }
 
+    public void writeLocalRemoval(ByteMessage stream) {
+        stream.putBits(1, 1);
+        stream.putBits(2, LOCAL_REMOVE_TYPE);
+    }
+
 
     public void addNpc(Player player, Npc npc, ByteMessage buf) {
+        addNpc(player, npc, buf, npc.getUpdateFlags().isUpdateRequired());
+    }
 
-        buf.putBits(14, npc.getSlot());
+    public void addNpc(Player player, Npc npc, ByteMessage buf, boolean updateRequired) {
+
+        validateNpcSlot(npc.getSlot());
+        buf.putBits(NPC_SLOT_BITS, npc.getSlot());
         /* Position */
         Position npcPos = npc.getPosition(), plrPos = player.getPosition();
         int z = npcPos.getY() - plrPos.getY();
@@ -150,32 +71,54 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             z += 32;
         buf.putBits(5, z); // y coordinate relative to thisPlayer
 
-        buf.putBits(1, 1); // discard client walking queue on add-local
-        buf.putBits(14, npc.getId());
-        buf.putBits(1, npc.getUpdateFlags().isUpdateRequired() ? 1 : 0);
+        buf.putBits(1, 0); // Tarnish preserves the walking queue on add-local.
+        int displayId = displayIdFor(player, npc);
+        validateNpcDefinitionId(displayId);
+        buf.putBits(NPC_DEFINITION_BITS, displayId);
+        buf.putBits(1, updateRequired ? 1 : 0);
     }
 
-    @Override
-    public void appendBlockUpdate(Npc npc, ByteMessage buf) {
-        BLOCK_SET.encode(this, npc, buf);
+    private int displayIdFor(Player player, Npc npc) {
+        int id = npc.getId();
+        if (id == 1306 || id == 1307) {
+            return player.getGender() == 0 ? 1306 : 1307;
+        }
+        // appendAppearanceUpdate (below) already prefers getTransformedNpcId() when set - this
+        // add-local path didn't, so a player entering range after an NPC transformed (or after it
+        // respawned still transformed) would render the base id instead, while a player already
+        // present would see the transformed id from their existing UPDATE_LOCAL blocks. Two
+        // players standing together would disagree on what the NPC looks like.
+        int transformedNpcId = npc.getTransformedNpcId();
+        return transformedNpcId >= 0 ? transformedNpcId : id;
     }
 
-    public byte[] buildSharedBlock(Npc npc) {
-        ByteMessage block = withSharedBlock();
-        try {
-            appendBlockUpdate(npc, block);
-            return block.toByteArray();
-        } finally {
-            releaseScratch(block);
+    static void validateNpcSlot(int slot) {
+        if (slot < 0 || slot > MAX_CLIENT_NPC_SLOT) {
+            throw new IllegalArgumentException("NPC slot cannot be encoded: " + slot);
         }
     }
 
-    private ByteMessage withUpdateBlock() {
-        return ThreadLocalSyncScratch.npcUpdateBlock();
+    static void validateNpcDefinitionId(int id) {
+        if (id < 0 || id > MAX_NPC_DEFINITION_ID) {
+            throw new IllegalArgumentException("NPC definition id cannot be encoded: " + id);
+        }
     }
 
-    private ByteMessage withSharedBlock() {
-        return ThreadLocalSyncScratch.sharedBlock();
+    public PackedUpdateBlock buildSharedBlock(Npc npc) {
+        return buildPackedBlock(npc);
+    }
+
+    public PackedUpdateBlock buildPackedBlock(Npc npc) {
+        return BLOCK_SET.encode(this, npc);
+    }
+
+    public PackedBitSlice buildLocalMovement(Npc npc) {
+        ByteMessage movement = ThreadLocalSyncScratch.packedFixedBlock();
+        movement.startBitAccess();
+        updateNPCMovement(npc, movement, NpcUpdateMaskCalculator.computeMask(npc) != 0);
+        int bitCount = movement.getBitIndex();
+        movement.endBitAccess();
+        return new PackedBitSlice(movement.toByteArray(), bitCount);
     }
 
     private static void releaseScratch(ByteMessage message) {
@@ -187,76 +130,28 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     public void appendGfxUpdate(Npc npc, ByteMessage buf) {
-        buf.putShort(npc.getGfxId());
-        buf.putInt(npc.getGfxHeight() << 16);
+        buf.putBits(16, npc.getGfxId());
+        buf.putBits(32, npc.getGfxHeight() << 16);
     }
 
     @Override
     public void appendAnimationRequest(Npc npc, ByteMessage buf) {
-        buf.putShort(npc.getAnimationId(), ByteOrder.LITTLE); // writeWordBigEndian
-        buf.put(npc.getAnimationDelay());
+        buf.putBits(16, npc.getAnimationId());
+        buf.putBits(8, npc.getAnimationDelay());
     }
 
     @Override
     public void appendPrimaryHit(Npc npc, ByteMessage buf) {
-
-        // Client npcUpdateMask (mask & 0x40) expects:
-        // short damage, byte type, short currentHp, short maxHp
-        int damage = npc.getDamageDealt();
-        if (damage < Short.MIN_VALUE) damage = Short.MIN_VALUE;
-        if (damage > Short.MAX_VALUE) damage = Short.MAX_VALUE;
-        buf.putShort(damage);
-
-        int type;
-        if (npc.getDamageDealt() == 0) {
-            type = 0; // miss
-        } else if (npc.getHitType() == Entity.hitType.BURN) {
-            type = 4;
-        } else if (npc.getHitType() == Entity.hitType.CRIT) {
-            type = 3;
-        } else if (npc.getHitType() == Entity.hitType.POISON) {
-            type = 2;
-        } else {
-            type = 1; // normal
-        }
-        buf.put(type);
-
-        int current = Math.max(0, npc.getCurrentHealth());
-        int max = Math.max(1, npc.getMaxHealth());
-        buf.putShort(current);
-        buf.putShort(max);
+        appendTarnishNpcHit(buf, npc.getDamageDealt(), npc.getHitType(), npc);
     }
 
     public void appendPrimaryHit2(Npc npc, ByteMessage buf) {
-        // Client npcUpdateMask (mask & 0x08) uses the same layout as primary hit
-        int damage = npc.getDamageDealt2();
-        if (damage < Short.MIN_VALUE) damage = Short.MIN_VALUE;
-        if (damage > Short.MAX_VALUE) damage = Short.MAX_VALUE;
-        buf.putShort(damage);
-
-        int type;
-        if (npc.getDamageDealt2() == 0) {
-            type = 0; // miss
-        } else if (npc.getHitType2() == Entity.hitType.BURN) {
-            type = 4;
-        } else if (npc.getHitType2() == Entity.hitType.CRIT) {
-            type = 3;
-        } else if (npc.getHitType2() == Entity.hitType.POISON) {
-            type = 2;
-        } else {
-            type = 1; // normal
-        }
-        buf.put(type);
-
-        int current = Math.max(0, npc.getCurrentHealth());
-        int max = Math.max(1, npc.getMaxHealth());
-        buf.putShort(current);
-        buf.putShort(max);
+        appendTarnishNpcHit(buf, npc.getDamageDealt2(), npc.getHitType2(), npc);
     }
     @Override
     public void appendFaceCoordinates(Npc npc, ByteMessage buf) {
-        buf.putShort(npc.getFaceCoordinateX(), ByteOrder.LITTLE); // writeWordBigEndian
-        buf.putShort(npc.getFaceCoordinateY(), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.putBits(16, npc.getFaceCoordinateX());
+        buf.putBits(16, npc.getFaceCoordinateY());
     }
 
     @Override
@@ -265,23 +160,41 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         if (faceTarget < 0 || faceTarget > 0xFFFF) {
             faceTarget = 0xFFFF;
         }
-        buf.putShort(faceTarget);
+        buf.putBits(16, faceTarget);
     }
 
     public void appendAppearanceUpdate(Npc npc, ByteMessage buf) {
-        // Mystic client expects: headIcon, transformFlag, optional transformedNpcId(LEShortA).
-        buf.put(npc.getHeadIcon());
         int transformedNpcId = npc.getTransformedNpcId();
-        boolean transform = transformedNpcId >= 0;
-        buf.put(transform ? 1 : 0);
-        if (transform) {
-            buf.putShort(transformedNpcId, ByteOrder.LITTLE, ValueType.ADD);
-        }
+        int definitionId = transformedNpcId >= 0 ? transformedNpcId : npc.getId();
+        validateNpcDefinitionId(definitionId);
+        buf.putBits(16, definitionId);
+    }
+
+    private static void appendTarnishNpcHit(ByteMessage buf, int damage, Entity.hitType hitType, Npc npc) {
+        int maximum = npc.getMaxHealth() >= 500 ? 200 : 100;
+        int health = Math.max(0, Math.min(maximum,
+                npc.getCurrentHealth() * maximum / Math.max(1, npc.getMaxHealth())));
+        buf.putBits(8, Math.max(0, Math.min(255, damage)));
+        buf.putBits(3, tarnishHitType(damage, hitType));
+        buf.putBits(8, health);
+        buf.putBits(1, maximum == 200 ? 1 : 0);
+    }
+
+    private static int tarnishHitType(int damage, Entity.hitType hitType) {
+        if (damage == 0) return 0;
+        if (hitType == Entity.hitType.BURN) return 4;
+        if (hitType == Entity.hitType.CRIT) return 3;
+        if (hitType == Entity.hitType.POISON) return 2;
+        return 1;
     }
 
     public void updateNPCMovement(Npc npc, ByteMessage buf) {
+        updateNPCMovement(npc, buf, npc.getUpdateFlags().isUpdateRequired());
+    }
+
+    public void updateNPCMovement(Npc npc, ByteMessage buf, boolean updateRequired) {
         if (npc.getDirection() == -1) {
-            if (npc.getUpdateFlags().isUpdateRequired()) {
+            if (updateRequired) {
                 buf.putBits(1, 1);
                 buf.putBits(2, 0);
             } else {
@@ -301,7 +214,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             buf.putBits(1, 1);
             buf.putBits(2, 1);
             buf.putBits(3, translatedDirection);
-            if (npc.getUpdateFlags().isUpdateRequired()) {
+            if (updateRequired) {
                 buf.putBits(1, 1);
             } else {
                 buf.putBits(1, 0);

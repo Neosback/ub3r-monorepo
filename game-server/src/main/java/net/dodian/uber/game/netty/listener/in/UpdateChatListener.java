@@ -1,24 +1,20 @@
 package net.dodian.uber.game.netty.listener.in;
+import net.dodian.uber.game.api.content.ContentInteraction;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService;
 import net.dodian.uber.game.engine.systems.net.PacketConnectionService;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty port of UpdateChat (opcode 95) – adjusts private chat mode and refreshes friends lists.
- */
+
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {95})
 public class UpdateChatListener implements PacketListener {
-
-    static { PacketListenerManager.register(95, new UpdateChatListener()); }
-
     private static final Logger logger = LoggerFactory.getLogger(UpdateChatListener.class);
 
     @Override
@@ -29,7 +25,7 @@ public class UpdateChatListener implements PacketListener {
         int priv = buf.readUnsignedByte();
         buf.readUnsignedByte();
 
-        if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.CHAT_PRIVACY, 600L)) {
+        if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.CHAT_PRIVACY, 600L)) {
             return; // anti-spam
         }
         PacketConnectionService.setPrivateChatMode(client, priv);
@@ -44,4 +40,3 @@ public class UpdateChatListener implements PacketListener {
         logger.debug("UpdateChatListener: {} set private chat={} and refreshed friends", client.getPlayerName(), priv);
     }
 }
-

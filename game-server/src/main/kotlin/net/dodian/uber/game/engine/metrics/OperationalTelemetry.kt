@@ -15,15 +15,28 @@ object OperationalTelemetry {
     private val counters = ConcurrentHashMap<String, LongAdder>()
     private val tickOverruns = LongAdder()
     private val tickCount = LongAdder()
+    @Volatile private var lastTickAtMs: Long = 0L
 
     @JvmStatic
-    fun recordPhaseMillis(phase: String, elapsedMs: Long) {
+    fun recordPhaseNanos(phase: String, elapsedNs: Long) {
         val samples = phaseSamples.computeIfAbsent(phase) { PhaseSamples(SAMPLE_CAPACITY) }
-        samples.record(max(0L, elapsedMs))
+        samples.record(max(0L, elapsedNs))
     }
 
     @JvmStatic
+    fun recordPhaseMillis(phase: String, elapsedMs: Long) {
+        recordPhaseNanos(phase, elapsedMs * 1_000_000L)
+    }
+
+    @JvmStatic
+    fun getLastPhaseNanos(phase: String): Long = phaseSamples[phase]?.lastValue() ?: 0L
+
+    @JvmStatic
+    fun getLastPhaseMillis(phase: String): Long = getLastPhaseNanos(phase) / 1_000_000L
+
+    @JvmStatic
     fun recordTick(elapsedMs: Long, budgetMs: Long = TICK_BUDGET_MS) {
+        lastTickAtMs = System.currentTimeMillis()
         tickCount.increment()
         if (elapsedMs > budgetMs) {
             tickOverruns.increment()
@@ -31,6 +44,14 @@ object OperationalTelemetry {
         }
         recordPhaseMillis("tick.total", elapsedMs)
     }
+
+    @JvmStatic
+    fun isGameLoopFresh(maxAgeMs: Long = 3_000L): Boolean =
+        lastTickAtMs > 0L && System.currentTimeMillis() - lastTickAtMs <= maxAgeMs
+
+    @JvmStatic
+    fun gameLoopAgeMs(): Long =
+        if (lastTickAtMs <= 0L) Long.MAX_VALUE else (System.currentTimeMillis() - lastTickAtMs).coerceAtLeast(0L)
 
     @JvmStatic
     fun incrementCounter(name: String, delta: Long = 1L) {
@@ -60,6 +81,8 @@ object OperationalTelemetry {
             "tickCount" to totalTicks,
             "tickOverruns" to overrunCount,
             "tickOverrunRate" to overrunRate,
+            "lastTickAtMs" to lastTickAtMs,
+            "gameLoopAgeMs" to gameLoopAgeMs(),
             "alerts" to mapOf(
                 "tickOverrunRateHigh" to (overrunRate >= 0.05),
                 "syncSlowEventsHigh" to ((countersSnapshot["sync.slow"] ?: 0L) >= 10L),
@@ -79,6 +102,12 @@ object OperationalTelemetry {
         fun record(value: Long) {
             val i = index.getAndIncrement()
             values[i % values.size] = value
+        }
+
+        fun lastValue(): Long {
+            val cur = index.get()
+            if (cur <= 0) return 0L
+            return values[(cur - 1) % values.size]
         }
 
         fun snapshot(): Map<String, Any> {

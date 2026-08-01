@@ -25,4 +25,3 @@ class WorldObject @JvmOverloads constructor(
     fun getAttachment(): Any? = attachment
 }
 
-

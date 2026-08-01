@@ -1,6 +1,11 @@
 package net.dodian.uber.game.engine.systems.interaction.ui
 
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.social.exchange.TradingService
+import net.dodian.uber.game.social.exchange.DuelingService
+import net.dodian.uber.game.social.exchange.ExchangeRuntime
+import net.dodian.uber.game.api.plugin.social.ExchangeKind
+import net.dodian.uber.game.api.plugin.social.ExchangeCommandResult
 
 object TradeDuelStateMachine {
     @JvmStatic
@@ -8,16 +13,23 @@ object TradeDuelStateMachine {
         if (!client.inTrade || client.tradeConfirmed) {
             return true
         }
-        client.tradeConfirmed = true
+        if (!TradeDuelSessionService.recordStageOneConfirmation(client, other)) {
+            return true
+        }
         if (other.tradeConfirmed) {
-            if (other.hasTradeSpace() || client.hasTradeSpace()) {
+            if (!TradeDuelSessionService.confirmationsCurrent(client, other)) {
+                client.sendMessage("The trade changed; please review it again.")
+                other.sendMessage("The trade changed; please review it again.")
+                return true
+            }
+            if (TradingService.lacksSettlementSpace(other) || TradingService.lacksSettlementSpace(client)) {
                 client.sendMessage(client.failer)
                 other.sendMessage(client.failer)
                 TradeDuelSessionService.closeOpenTrade(client)
                 return true
             }
-            client.confirmScreen()
-            other.confirmScreen()
+            TradingService.showConfirmation(client)
+            TradingService.showConfirmation(other)
             return true
         }
         client.sendString("Waiting for other player...", 3431)
@@ -33,9 +45,12 @@ object TradeDuelStateMachine {
             return true
         }
         client.tradeConfirmed2 = true
+        val session = ExchangeRuntime.session(client, other, ExchangeKind.TRADE) ?: return true
+        if (session.accept(ExchangeRuntime.participant(client), session.revision) !is ExchangeCommandResult.Applied) {
+            return true
+        }
         if (other.tradeConfirmed2) {
-            client.giveItems()
-            other.giveItems()
+            TradeDuelSessionService.settleTrade(client, other)
         } else {
             other.sendString("Other player has accepted.", 3535)
             client.sendString("Waiting for other player...", 3535)
@@ -48,10 +63,22 @@ object TradeDuelStateMachine {
         if (!client.inDuel || client.duelConfirmed) {
             return true
         }
+        if (!canAttackWithDuelRules(client)) {
+            client.sendString("You don't have weapons/spells for rules!", 31009)
+            client.sendMessage("You don't have the right equipment to attack with the enabled combat styles!")
+            return true
+        }
+        if (!canAttackWithDuelRules(other)) {
+            client.sendString("Opponent doesn't have weapons/spells!", 31009)
+            client.sendMessage("Your opponent doesn't have the right equipment to attack with the enabled combat styles!")
+            return true
+        }
+        val session = ExchangeRuntime.session(client, other, ExchangeKind.DUEL) ?: return true
+        if (session.accept(ExchangeRuntime.participant(client), session.revision) !is ExchangeCommandResult.Applied) return true
         client.duelConfirmed = true
         if (!other.duelConfirmed) {
-            client.sendString("Waiting for other player...", 6684)
-            other.sendString("Other player has accepted.", 6684)
+            client.sendString("Waiting for other player...", 31009)
+            other.sendString("Other player has accepted.", 31009)
             return true
         }
 
@@ -61,7 +88,7 @@ object TradeDuelStateMachine {
             other.sendMessage("At least one combat style must be enabled!")
             return true
         }
-        if (client.hasEnoughSpace() || other.hasEnoughSpace()) {
+        if (DuelingService.hasEnoughSpace(client) || DuelingService.hasEnoughSpace(other)) {
             client.sendMessage(client.failer)
             other.sendMessage(client.failer)
             TradeDuelSessionService.closeOpenDuel(client)
@@ -69,8 +96,8 @@ object TradeDuelStateMachine {
         }
 
         client.canOffer = false
-        client.confirmDuel()
-        other.confirmDuel()
+        DuelingService.showConfirmation(client)
+        DuelingService.showConfirmation(other)
         return true
     }
 
@@ -81,15 +108,37 @@ object TradeDuelStateMachine {
         }
         client.canOffer = false
         client.duelConfirmed2 = true
+        val session = ExchangeRuntime.session(client, other, ExchangeKind.DUEL) ?: return true
+        if (session.accept(ExchangeRuntime.participant(client), session.revision) !is ExchangeCommandResult.Applied) return true
         if (other.duelConfirmed2) {
-            client.removeEquipment()
-            other.removeEquipment()
-            client.startDuel()
-            other.startDuel()
+            if (session.beginActive() !is ExchangeCommandResult.Applied) return true
+            DuelingService.removeEquipment(client)
+            DuelingService.removeEquipment(other)
+            if (!canAttackWithDuelRules(client) || !canAttackWithDuelRules(other)) {
+                val msg = "You don't have the right equipment to attack with the enabled combat styles!"
+                client.sendMessage(msg)
+                other.sendMessage(msg)
+                DuelingService.decline(client)
+                return true
+            }
+            DuelingService.start(client)
+            DuelingService.start(other)
         } else {
-            client.sendString("Waiting for other player...", 6571)
-            other.sendString("Other player has accepted", 6571)
+            client.sendString("Waiting for other player...", 31526)
+            other.sendString("Other player has accepted", 31526)
         }
         return true
+    }
+
+    @JvmStatic
+    fun canAttackWithDuelRules(player: Client): Boolean {
+        val noMelee = player.duelRule[1]
+        val noRanged = player.duelRule[0]
+        val noMagic = player.duelRule[2]
+
+        if (!noMelee) return true
+        if (!noRanged && player.contentRuntimeState.isCombatUsingBow()) return true
+        if (!noMagic && (player.magicId >= 0 || (player.hasStaff() && player.autocast_spellIndex >= 0))) return true
+        return false
     }
 }

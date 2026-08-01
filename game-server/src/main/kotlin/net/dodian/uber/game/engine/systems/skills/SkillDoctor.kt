@@ -11,4 +11,3 @@ object SkillDoctor {
         net.dodian.uber.game.skill.runtime.parity.SkillDoctor.validateOrThrow()
     }
 }
-

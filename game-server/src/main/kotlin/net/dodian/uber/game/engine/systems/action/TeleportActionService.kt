@@ -1,4 +1,5 @@
 package net.dodian.uber.game.engine.systems.action
+import net.dodian.uber.game.api.content.ContentActions
 
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.UpdateFlag
@@ -13,7 +14,7 @@ object TeleportActionService {
         targetHeight: Int,
         emote: Int,
     ) {
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             player = client,
             reason = PlayerActionCancelReason.TELEPORT,
             fullResetAnimation = false,

@@ -1,0 +1,16 @@
+package net.dodian.uber.game.engine.sync.player
+
+import net.dodian.uber.game.model.entity.player.Player
+
+object PlayerVisibilityRules {
+    @JvmStatic
+    fun isVisibleTo(viewer: Player?, other: Player?): Boolean {
+        if (viewer == null || other == null || viewer === other || !viewer.isSynchronizationReady || !other.isSynchronizationReady) {
+            return false
+        }
+        if (!viewer.withinDistance(other)) {
+            return false
+        }
+        return !other.invis || viewer.invis
+    }
+}

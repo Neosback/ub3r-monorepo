@@ -16,7 +16,9 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.skills.SkillAdminService
-import net.dodian.uber.game.skill.thieving.PyramidPlunder
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
+import net.dodian.uber.game.engine.systems.skills.toPosition
+import net.dodian.uber.skills.thieving.ThievingModule
 import net.dodian.uber.game.engine.config.gameWorldId
 
 object BetaOnlyCommands : CommandContent {
@@ -77,8 +79,8 @@ private fun handleBeta(context: CommandContext): Boolean {
             }
         }
         context.alias == "item" -> {
-            val newItemID = cmd[1].toInt()
-            var newItemAmount = cmd[2].toInt()
+            val newItemID = cmd.getOrNull(1)?.toIntOrNull() ?: return true
+            var newItemAmount = cmd.getOrNull(2)?.toIntOrNull() ?: 1
             if (newItemID < 1 || newItemID > 22376) {
                 context.reply("Stop pulling a River! Maximum itemid = 22376!")
                 return true
@@ -109,20 +111,21 @@ private fun handleBeta(context: CommandContext): Boolean {
             return true
         }
         context.alias == "plunder" -> {
-            PyramidPlunder.start(client)
+            ThievingModule.startPlunder(client.asSkillPlayer())
             return true
         }
         context.alias == "p_start" -> {
-            client.transport(PyramidPlunder.startPosition())
+            client.transport(ThievingModule.startPosition().toPosition())
             return true
         }
         context.alias == "p_tele" -> {
-            PyramidPlunder.currentDoor()?.let(client::transport)
+            ThievingModule.currentDoor()?.let { client.transport(it.toPosition()) }
             return true
         }
         context.alias == "p_next" -> {
-            PyramidPlunder.advanceRoom(client)
-            context.reply("You are now at floor ${PyramidPlunder.roomNumber(client) + 1}")
+            val player = client.asSkillPlayer()
+            ThievingModule.advanceRoom(player)
+            context.reply("You are now at floor ${ThievingModule.roomNumber(player) + 1}")
             return true
         }
         context.alias == "barrows" -> {
@@ -168,7 +171,7 @@ private fun handleBeta(context: CommandContext): Boolean {
             client.equipmentN[9] = 1
             client.equipment[10] = 4129
             client.equipmentN[10] = 1
-            for (i in 0 until 14) client.setEquipment(client.equipment[i], client.equipmentN[i], i)
+            client.refreshEquipmentState()
             client.addItem(5733, 1)
             repeat(27) { client.addItem(385, 1) }
             client.checkItemUpdate()

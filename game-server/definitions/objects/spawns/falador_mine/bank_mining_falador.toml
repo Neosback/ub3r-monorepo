@@ -1,0 +1,29 @@
+schemaVersion = 1
+region = "falador_mine"
+
+[[object]]
+id = 10583
+name = "Bank (mining falador)"
+x = 3044
+y = 9776
+z = 0
+type = 10
+rotation = "EAST"
+
+[[object]]
+id = 10583
+name = "Bank (mining falador)"
+x = 3045
+y = 9776
+z = 0
+type = 10
+rotation = "EAST"
+
+[[object]]
+id = 10583
+name = "Bank (mining falador)"
+x = 3046
+y = 9776
+z = 0
+type = 10
+rotation = "EAST"

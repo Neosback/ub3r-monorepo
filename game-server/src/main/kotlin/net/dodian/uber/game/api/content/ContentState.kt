@@ -10,6 +10,15 @@ import net.dodian.uber.game.model.item.GroundItem
 
 object ContentState {
     @JvmStatic
+    fun attributes(player: Client): ContentAttributes = object : ContentAttributes {
+        override fun <T : Any> get(key: ContentAttributeKey<T>): T? = player.contentRuntimeState.getPluginAttribute(key.id)
+        override fun <T : Any> put(key: ContentAttributeKey<T>, value: T) = player.contentRuntimeState.putPluginAttribute(key.id, value)
+        override fun remove(key: ContentAttributeKey<*>) = player.contentRuntimeState.removePluginAttribute(key.id)
+    }
+
+    @JvmStatic
+    fun clearSessionState(player: Client) = player.contentRuntimeState.clearPluginAttributes()
+    @JvmStatic
     fun beginGatheringSession(player: Client, sessionKey: String): Boolean = GatheringSessionStateAdapter.begin(player, sessionKey)
 
     @JvmStatic

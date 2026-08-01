@@ -2,8 +2,10 @@ package net.dodian.uber.game.engine.systems.combat
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.combat.attackTarget
+import net.dodian.uber.game.combat.getAttackStyle
 import net.dodian.uber.game.engine.systems.follow.FollowRouting
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.config.gameWorldId
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
@@ -44,12 +46,18 @@ object CombatRuntimeService {
         }
         var cooldown = CombatStartService.restoreCooldownState(player, cycleNow)
 
-        val policy = CombatStartService.policyFor(player, engagement.intent)
-        if (!player.goodDistanceEntity(target, policy.attackDistance)) {
+        val policy = CombatStartService.policyFor(player)
+        val projectileAttack = player.getAttackStyle() != 0
+        val reach = CombatReachService.evaluate(player, target, policy.attackDistance, projectileAttack)
+        if (gameWorldId == 2) {
+            logger.info("[W2-COMBAT] process player=${player.playerName} target=${target.type}:${target.slot} reach=$reach policy.attackDistance=${policy.attackDistance} projectileAttack=$projectileAttack cycleNow=$cycleNow")
+        }
+        if (reach != CombatReachResult.READY) {
             if (combatTelemetryEnabled) {
                 logger.info(
-                    "combat.telemetry phase=target_selection player={} reason=out_of_range targetType={} targetSlot={} attackDistance={}",
+                    "combat.telemetry phase=target_selection player={} reason={} targetType={} targetSlot={} attackDistance={}",
                     player.playerName,
+                    reach.name.lowercase(),
                     target.type,
                     target.slot,
                     policy.attackDistance,
@@ -199,7 +207,11 @@ object CombatRuntimeService {
             engagement.lastFollowCycle != cycleNow &&
                 (engagement.lastFollowTargetX != target.position.x ||
                     engagement.lastFollowTargetY != target.position.y ||
-                    player.wQueueReadPtr == player.wQueueWritePtr)
+                    !player.hasMovementRoute())
+
+        if (gameWorldId == 2) {
+            logger.info("[W2-COMBAT] followTarget player=${player.playerName} target=${target.type}:${target.slot} refreshed=$refreshed autoFollowEnabled=${engagement.autoFollowEnabled} lastFollowCycle=${engagement.lastFollowCycle} cycleNow=$cycleNow")
+        }
 
         if (!engagement.autoFollowEnabled) {
             CombatCommandService.cancelEngagement(player, CombatCancellationReason.OUT_OF_RANGE)
@@ -207,7 +219,7 @@ object CombatRuntimeService {
         }
 
         if (refreshed) {
-            FollowRouting.routeToEntityBoundary(
+            val routed = FollowRouting.routeToEntityBoundary(
                 follower = player,
                 targetX = target.position.x,
                 targetY = target.position.y,
@@ -215,7 +227,16 @@ object CombatRuntimeService {
                 z = player.position.z,
                 preferredDestination = preferredCombatDestination(target, engagement),
                 running = true,
+                targetNpc = if (target is Npc) target else null,
             )
+            if (gameWorldId == 2) {
+                logger.info("[W2-COMBAT] followTarget routed=$routed")
+            }
+            if (!routed && target is Npc) {
+                CombatCommandService.cancelEngagement(player, CombatCancellationReason.OUT_OF_RANGE)
+                player.sendMessage("I can't reach that!")
+                return
+            }
         }
         if (target is Npc) {
             player.faceNpc(target.slot)

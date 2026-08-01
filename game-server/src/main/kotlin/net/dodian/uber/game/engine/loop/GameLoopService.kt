@@ -22,6 +22,8 @@ import net.dodian.uber.game.engine.phases.NpcMainPhase
 import net.dodian.uber.game.engine.phases.OutboundPacketProcessor
 import net.dodian.uber.game.engine.phases.PlayerMainPhase
 import net.dodian.uber.game.engine.phases.WorldMaintenancePhase
+import net.dodian.uber.game.api.plugin.ContentTickPhase
+import net.dodian.uber.game.api.plugin.ContentTickPhases
 import net.dodian.uber.game.engine.metrics.OperationalTelemetry
 import org.slf4j.LoggerFactory
 
@@ -92,6 +94,36 @@ class GameLoopService(
             val elapsedNanos = measureNanoTime { runTick() }
             val elapsedMillis = TimeUnit.NANOSECONDS.toMillis(elapsedNanos)
             OperationalTelemetry.recordTick(elapsedMillis, GAME_TICK_INTERVAL_MS)
+
+            val totalCycleMs = elapsedNanos / 1_000_000.0
+            val playerNanos = (
+                OperationalTelemetry.getLastPhaseNanos("inbound") +
+                OperationalTelemetry.getLastPhaseNanos("player.main") +
+                OperationalTelemetry.getLastPhaseNanos("movement.finalize") +
+                OperationalTelemetry.getLastPhaseNanos("outbound")
+            )
+            val npcNanos = (
+                OperationalTelemetry.getLastPhaseNanos("npc.main") +
+                OperationalTelemetry.getLastPhaseNanos("combat.hitQueue")
+            )
+            val worldNanos = (
+                OperationalTelemetry.getLastPhaseNanos("worldDb.input") +
+                OperationalTelemetry.getLastPhaseNanos("worldDb.read") +
+                OperationalTelemetry.getLastPhaseNanos("worldDb.apply") +
+                OperationalTelemetry.getLastPhaseNanos("plunder") +
+                OperationalTelemetry.getLastPhaseNanos("world.tasks") +
+                OperationalTelemetry.getLastPhaseNanos("groundItems") +
+                OperationalTelemetry.getLastPhaseNanos("shops")
+            )
+
+            net.dodian.uber.game.engine.metrics.PrometheusMetricsRegistry.recordTickMetrics(
+                players = PlayerRegistry.playersOnline.size,
+                npcs = Server.npcManager?.getNpcs()?.size ?: 0,
+                totalCycleMs = totalCycleMs,
+                playerMs = playerNanos / 1_000_000.0,
+                npcMs = npcNanos / 1_000_000.0,
+                worldMs = worldNanos / 1_000_000.0
+            )
             if (elapsedMillis > GAME_TICK_INTERVAL_MS) {
                 logger.warn("Game loop overran tick budget: {}ms", elapsedMillis)
             }
@@ -131,6 +163,7 @@ class GameLoopService(
         timedPhase("timers.pre") { GameThreadTimers.drainDue() }
         timedPhase("ingress.tick") { GameThreadIngress.drainTickIngress() }
         timedPhase("inbound") { inboundPhase.run() }
+        timedPhase("content.preSimulation") { ContentTickPhases.run(ContentTickPhase.PRE_SIMULATION) }
         timedPhase("worldDb.input") { worldMaintenancePhase.runWorldDbInputBuild(currentCycle) }
         timedPhase("worldDb.read") { worldMaintenancePhase.runWorldDbResultRead(currentCycle) }
         timedPhase("worldDb.apply") { worldMaintenancePhase.runWorldDbApply(currentCycle) }
@@ -140,9 +173,12 @@ class GameLoopService(
         timedPhase("world.tasks") { worldMaintenancePhase.runWorldTasks() }
         timedPhase("combat.hitQueue") { CombatHitQueueService.process(currentCycle) }
         timedPhase("groundItems") { worldMaintenancePhase.runGroundItems() }
+        timedPhase("globalObjectSweep") { worldMaintenancePhase.runGlobalObjectSweep() }
         timedPhase("shops") { worldMaintenancePhase.runShops() }
         timedPhase("movement.finalize") { movementFinalizePhase.run() }
+        timedPhase("content.postSimulation") { ContentTickPhases.run(ContentTickPhase.POST_SIMULATION) }
         timedPhase("outbound") { outboundPacketProcessor.run() }
+        timedPhase("content.postOutbound") { ContentTickPhases.run(ContentTickPhase.POST_OUTBOUND) }
         timedPhase("housekeeping") { entityProcessor.runHousekeepingPhase(now) }
         timedPhase("timers.post") { GameThreadTimers.drainDue() }
     }
@@ -152,7 +188,7 @@ class GameLoopService(
         block: () -> Unit,
     ) {
         val elapsedNs = measureNanoTime(block)
-        OperationalTelemetry.recordPhaseMillis(name, TimeUnit.NANOSECONDS.toMillis(elapsedNs))
+        OperationalTelemetry.recordPhaseNanos(name, elapsedNs)
     }
 
     private fun maybeLogCycle(elapsedMillis: Long) {
@@ -181,6 +217,7 @@ class GameLoopService(
     }
 
     private fun logLoopFailure(scope: String, exception: Throwable) {
+        OperationalTelemetry.incrementCounter("game_loop.failure.$scope")
         val signature = "$scope:${exception::class.java.name}:${exception.message ?: ""}"
         if (signature == lastLoopFailureSignature) {
             lastLoopFailureCount++

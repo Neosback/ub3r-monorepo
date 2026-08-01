@@ -4,6 +4,7 @@ import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.api.interaction.ObjectInteractionContext
 
 data class FirstClickObjectAction(
     val objectIds: IntArray,
@@ -45,10 +46,10 @@ abstract class FirstClickDslObjectContent(
         objectIds = grouped.keys.sorted().toIntArray()
     }
 
-    final override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        val handlers = actionsByObjectId[objectId] ?: return false
+    final override fun onFirstClick(context: ObjectInteractionContext): Boolean {
+        val handlers = actionsByObjectId[context.objectId] ?: return false
         for (handler in handlers) {
-            if (handler(client, objectId, position, obj)) {
+            if (handler(context.player, context.objectId, context.position, context.definition)) {
                 return true
             }
         }

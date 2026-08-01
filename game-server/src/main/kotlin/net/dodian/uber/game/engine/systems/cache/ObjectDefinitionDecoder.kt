@@ -21,21 +21,38 @@ object ObjectDefinitionDecoder {
         }
 
         val idxReader = CacheBuffer(locIdx)
-        val count = idxReader.readUnsignedShort()
-        val indices = IntArray(count)
-        var offset = 2
-        for (id in 0 until count) {
+        // Index convention matches the client (ObjectDefinition.unpackConfig): the first short is the
+        // highest file id, data offsets accumulate from 0, and a 65535 size terminates the table.
+        val highestFileId = idxReader.readUnsignedShort()
+        val indices = IntArray(highestFileId + 1)
+        var present = 0
+        var offset = 0
+        for (id in 0..highestFileId) {
+            val size = idxReader.readUnsignedShort()
+            if (size == 65535) {
+                break
+            }
             indices[id] = offset
-            offset += idxReader.readUnsignedShort()
+            offset += size
+            present = id + 1
         }
 
         val dataReader = CacheBuffer(locDat)
-        val definitions = HashMap<Int, GameObjectData>(count)
+        val definitions = HashMap<Int, GameObjectData>(present)
         var interactiveCount = 0
         var blockingCount = 0
-        for (id in 0 until count) {
+        var failed = 0
+        for (id in 0 until present) {
             dataReader.seek(indices[id])
-            val definition = decodeEntry(id, dataReader)
+            val definition =
+                try {
+                    decodeEntry(id, dataReader)
+                } catch (ex: RuntimeException) {
+                    // Skip an individual malformed/unused definition rather than aborting the whole
+                    // bootstrap (mirrors the client, which simply never decodes such entries).
+                    failed++
+                    continue
+                }
             definitions[id] = definition
             if (definition.hasActions()) {
                 interactiveCount++
@@ -43,6 +60,10 @@ object ObjectDefinitionDecoder {
             if (definition.blockWalk() != 0) {
                 blockingCount++
             }
+        }
+        if (failed > 0) {
+            org.slf4j.LoggerFactory.getLogger(ObjectDefinitionDecoder::class.java)
+                .warn("Skipped {} malformed object definitions during decode", failed)
         }
 
         return Result(
@@ -54,26 +75,30 @@ object ObjectDefinitionDecoder {
 
     private fun decodeEntry(id: Int, data: CacheBuffer): GameObjectData {
         var name = "null"
-        var description = "null"
+        val description = "null" // not stored in tarnish-218 cache (opcode 3 is a no-op)
         var sizeX = 1
         var sizeY = 1
         var solid = true
         var interactive = false
         var supportItems = -1
-        var obstructive = false
+        var decoration = false
         var blockWalk = 2
         var blockRange = true
         var breakRouteFinding = false
         var hasModelData = false
         var firstModelType: Int? = null
-        var interactionFaceMask = 0
+        var walkingFlag = 0
         var varbitId = -1
         var varpId = -1
         var childIds: IntArray? = null
         val interactions = arrayOfNulls<String>(9)
 
+        val startPos = data.position
+        val opcodesRead = ArrayList<Int>()
         while (true) {
-            when (val opcode = data.readUnsignedByte()) {
+            val opcode = data.readUnsignedByte()
+            opcodesRead.add(opcode)
+            when (opcode) {
                 0 -> {
                     if (supportItems == -1) {
                         supportItems = if (solid) 1 else 0
@@ -90,14 +115,14 @@ object ObjectDefinitionDecoder {
                         sizeX = sizeX.coerceAtLeast(1),
                         sizeY = sizeY.coerceAtLeast(1),
                         solid = solid,
-                        walkable = !solid,
+                        impenetrable = blockRange,
                         hasActionsFlag = hasActions,
-                        unknownValue = obstructive,
+                        decoration = decoration,
                         walkType = supportItems,
                         blockWalk = blockWalk,
                         blockRange = blockRange,
                         breakRouteFinding = breakRouteFinding,
-                        interactionFaceMask = interactionFaceMask,
+                        walkingFlag = walkingFlag,
                         varbitId = varbitId,
                         varpId = varpId,
                         childIds = childIds,
@@ -118,8 +143,11 @@ object ObjectDefinitionDecoder {
                     }
                 }
 
-                2 -> name = data.readString()
-                3 -> description = data.readString()
+                // tarnish-218 cache uses null-terminated (byte 0) strings, matching the client's
+                // ObjectDefinition.decode (readStringCp1252NullTerminated). Opcode 3 carries no
+                // payload in this cache (the client reads nothing for it).
+                2 -> name = data.readStringNullTerminated()
+                3 -> Unit
                 5 -> {
                     val amount = data.readUnsignedByte()
                     if (amount > 0) {
@@ -144,10 +172,10 @@ object ObjectDefinitionDecoder {
                 27 -> blockWalk = 1
                 24 -> data.skip(2)
                 28, 29, 39 -> data.skip(1)
-                69 -> interactionFaceMask = data.readUnsignedByte()
+                69 -> walkingFlag = data.readUnsignedByte()
                 75, 81 -> supportItems = data.readUnsignedByte()
                 in 30..38 -> {
-                    val action = data.readString()
+                    val action = data.readStringNullTerminated()
                     interactions[opcode - 30] = action.takeUnless { it.equals("hidden", ignoreCase = true) }
                 }
 
@@ -169,8 +197,13 @@ object ObjectDefinitionDecoder {
 
                 60, 61, 65, 66, 67, 68, 82 -> data.skip(2)
                 70, 71, 72 -> data.readShort()
-                73 -> obstructive = true
-                74 -> breakRouteFinding = true
+                73 -> decoration = true
+                74 -> {
+                    solid = false
+                    blockWalk = 0
+                    blockRange = false
+                    breakRouteFinding = false
+                }
 
                 77, 92 -> {
                     varbitId = data.readUnsignedShort()
@@ -210,14 +243,37 @@ object ObjectDefinitionDecoder {
                         val isString = data.readUnsignedByte() == 1
                         data.skip(3)
                         if (isString) {
-                            data.readString()
+                            data.readStringNullTerminated()
                         } else {
                             data.skip(4)
                         }
                     }
                 }
 
-                else -> throw IllegalArgumentException("Unsupported loc.dat opcode $opcode for object $id")
+                100 -> {
+                    data.readUnsignedByte()
+                    data.readUnsignedShort()
+                }
+                101 -> {
+                    data.readUnsignedByte()
+                }
+                102 -> {
+                    data.readUnsignedShort()
+                }
+                103 -> {
+                    data.readUnsignedShort()
+                }
+                104 -> {
+                    data.readUnsignedByte()
+                }
+                105 -> {
+                    data.readUnsignedShort()
+                }
+
+                else -> {
+                    println("Object $id starting at $startPos failed at opcode $opcode at current pos ${data.position}. Opcodes read: $opcodesRead")
+                    throw IllegalArgumentException("Unsupported loc.dat opcode $opcode for object $id")
+                }
             }
         }
     }
@@ -226,4 +282,3 @@ object ObjectDefinitionDecoder {
     private const val CONFIG_ARCHIVE = 2
     private val EMPTY_RESULT = Result(emptyMap(), interactiveCount = 0, blockingCount = 0)
 }
-

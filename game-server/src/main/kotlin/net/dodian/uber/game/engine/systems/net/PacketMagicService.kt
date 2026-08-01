@@ -1,9 +1,9 @@
 package net.dodian.uber.game.engine.systems.net
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.skill.smithing.Smithing
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -22,9 +22,7 @@ import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 /**
- * Kotlin service for magic-packet side-effects.
  *
- * Covers:
  * - MagicOnPlayer (opcode 249)
  * - MagicOnNpc (opcode 131)
  * - NpcAttack magicId reset in NpcInteractionListener
@@ -126,27 +124,29 @@ object PacketMagicService {
      */
     @JvmStatic
     fun handleMagicOnItem(client: Client, castOnSlot: Int, castOnItem: Int, castSpell: Int) {
-        // Validate slot bounds — disconnect on tampered packet
-        if (castOnSlot < 0 || castOnSlot > 28) {
-            client.disconnected = true
+        if (castOnSlot < 0 || castOnSlot >= client.playerItems.size) {
+            // Malformed slot = drop the packet, never disconnect (see PacketItemActionService).
             return
         }
 
         val value = Server.itemManager.getAlchemy(castOnItem)
 
-        if (System.currentTimeMillis() - client.lastMagic < 1800 ||
+        if (GameCycleClock.currentCycle() - client.lastMagicCycle < 3 ||
             !client.playerHasItem(castOnItem) ||
             client.playerItems[castOnSlot] != castOnItem + 1
         ) {
             client.send(SendSideTab(6))
             return
         }
-        if (client.randomed || client.randomed2) return
+        if (client.randomed || client.skillingEventState.isSecondaryRandomEventPending) return
 
         // Superheat
         if (castSpell == 1173) {
             if (!checkLevel(client, 43)) return
-            Smithing.castSuperheat(client, castOnItem)
+            if (net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher.tryHandleMagicOnItem(client, castOnItem, castOnSlot, castSpell)) return
+            client.sendMessage("You can only use this spell on ores or glass material!")
+            client.callGfxMask(85, 100)
+            client.send(SendSideTab(6))
             return
         }
 
@@ -218,7 +218,7 @@ object PacketMagicService {
             client.send(SendMessage("Cant enchant this item!"))
             return true
         }
-        client.lastMagic = System.currentTimeMillis()
+        client.lastMagicCycle = GameCycleClock.currentCycle()
         client.deleteItem(itemId, 1)
         RuneCostService.consume(client, intArrayOf(564), intArrayOf(runeCost))
         client.addItem(resultItem, 1)
@@ -241,7 +241,7 @@ object PacketMagicService {
             client.send(SendMessage("This item can't be alched"))
             return
         }
-        client.lastMagic = System.currentTimeMillis()
+        client.lastMagicCycle = GameCycleClock.currentCycle()
         client.deleteItem(itemId, slot, 1)
         client.deleteItem(561, 1)
         client.addItem(995, value)
@@ -253,4 +253,3 @@ object PacketMagicService {
         client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
     }
 }
-

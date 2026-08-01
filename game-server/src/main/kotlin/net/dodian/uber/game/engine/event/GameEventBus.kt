@@ -93,11 +93,21 @@ object GameEventBus {
                 return emptyList()
             }
             returnableListeners[event.javaClass]?.forEach { raw ->
-                val listener = raw as ReturnableEventListener<E, T>
-                if (listener.condition(event)) {
-                    listener.action(event)?.let { results += it }
-                } else {
-                    listener.otherwiseAction(event)
+                try {
+                    val listener = raw as ReturnableEventListener<E, T>
+                    if (listener.condition(event)) {
+                        listener.action(event)?.let { results += it }
+                    } else {
+                        listener.otherwiseAction(event)
+                    }
+                } catch (exception: RuntimeException) {
+                    EventDispatchTelemetry.recordDispatchException(event.javaClass.simpleName)
+                    logger.error(
+                        "Event returnable listener failed for {} tags={}",
+                        event.javaClass.name,
+                        eventMetadataTags(event),
+                        exception,
+                    )
                 }
             }
         } catch (exception: RuntimeException) {
@@ -128,6 +138,15 @@ object GameEventBus {
             return
         }
         listeners.computeIfAbsent(clazz) { CopyOnWriteArrayList() }.add(listener)
+    }
+
+    /** Lifecycle-friendly notification subscription; it never owns an interaction route. */
+    fun <E : GameEvent> subscribe(clazz: Class<E>, owner: String, action: (E) -> Unit): AutoCloseable {
+        require(owner.isNotBlank()) { "Event subscriber owner cannot be blank" }
+        val listener = EventListener<E>({ true }, { event -> action(event); false })
+        val bucket = listeners.computeIfAbsent(clazz) { CopyOnWriteArrayList() }
+        bucket += listener
+        return AutoCloseable { bucket.remove(listener) }
     }
 
     @JvmStatic
@@ -201,11 +220,21 @@ object GameEventBus {
         }
         var handled = false
         eventListeners?.forEach { raw ->
-            val listener = raw as EventListener<E>
-            if (listener.condition(event)) {
-                handled = listener.action(event) || handled
-            } else {
-                listener.otherwiseAction(event)
+            try {
+                val listener = raw as EventListener<E>
+                if (listener.condition(event)) {
+                    handled = listener.action(event) || handled
+                } else {
+                    listener.otherwiseAction(event)
+                }
+            } catch (exception: RuntimeException) {
+                EventDispatchTelemetry.recordDispatchException(event.javaClass.simpleName)
+                logger.error(
+                    "Event listener failed for {} tags={}",
+                    event.javaClass.name,
+                    eventMetadataTags(event),
+                    exception,
+                )
             }
         }
         return handled
@@ -220,13 +249,23 @@ object GameEventBus {
         }
         var handled = false
         eventListeners?.forEach { raw ->
-            val listener = raw as ReturnableEventListener<E, Any>
-            if (listener.condition(event)) {
-                if (listener.action(event) != null) {
-                    handled = true
+            try {
+                val listener = raw as ReturnableEventListener<E, Any>
+                if (listener.condition(event)) {
+                    if (listener.action(event) != null) {
+                        handled = true
+                    }
+                } else {
+                    listener.otherwiseAction(event)
                 }
-            } else {
-                listener.otherwiseAction(event)
+            } catch (exception: RuntimeException) {
+                EventDispatchTelemetry.recordDispatchException(event.javaClass.simpleName)
+                logger.error(
+                    "Event returnable listener failed for {} tags={}",
+                    event.javaClass.name,
+                    eventMetadataTags(event),
+                    exception,
+                )
             }
         }
         return handled

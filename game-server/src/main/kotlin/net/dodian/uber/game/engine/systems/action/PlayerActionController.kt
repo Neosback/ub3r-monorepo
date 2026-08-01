@@ -83,7 +83,9 @@ object PlayerActionController {
     private fun stopResult(player: Client, startedCycle: Long): PlayerActionStopResult {
         val cancelled = player.actionStartedCycle == startedCycle && player.activeActionCancelReason != null
         return if (cancelled) {
-            PlayerActionStopResult.Cancelled(player.activeActionCancelReason!!)
+            PlayerActionStopResult.Cancelled(
+                checkNotNull(player.activeActionCancelReason) { "cancelReason was null despite != null check" }
+            )
         } else {
             PlayerActionStopResult.Completed
         }

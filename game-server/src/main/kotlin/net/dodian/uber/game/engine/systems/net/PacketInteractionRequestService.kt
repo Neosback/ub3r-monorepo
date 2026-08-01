@@ -8,10 +8,8 @@ import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardSer
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 
 /**
- * Kotlin service for player-to-player social interaction requests that have
  * been extracted from the Netty listener layer.
  *
- * Covers:
  * - Trade request (opcode 139)
  * - Duel request (opcode 153)
  * - Command invalid-client guard (opcode 103)
@@ -23,7 +21,6 @@ object PacketInteractionRequestService {
     // -------------------------------------------------------------------------
 
     /**
-     * Processes a trade-request packet after the target slot has been decoded
      * and the target player validated.
      *
      * All guard messages and the [Client.tradeReq] call live here rather than
@@ -59,7 +56,6 @@ object PacketInteractionRequestService {
     // -------------------------------------------------------------------------
 
     /**
-     * Processes a duel-request packet after the target pid has been decoded
      * and the target player validated.
      */
     @JvmStatic
@@ -96,11 +92,10 @@ object PacketInteractionRequestService {
     }
 
     // -------------------------------------------------------------------------
-    // Legacy Trade Request (opcode 128) — uses duelReq internally
+    // Legacy primary player action (opcode 128)
     // -------------------------------------------------------------------------
 
     /**
-     * Processes the legacy trade-request packet (opcode 128) after the target
      * slot has been decoded and validated.
      *
      * If the player is holding a rubber chicken (item 4566 in weapon slot)
@@ -108,30 +103,14 @@ object PacketInteractionRequestService {
      * Guard messages and the [Client.duelReq] call live here rather than in the listener.
      */
     @JvmStatic
-    fun handleLegacyTradeRequest(client: Client, targetSlot: Int, other: Client) {
+    fun handleLegacyPrimaryPlayerAction(client: Client, targetSlot: Int, other: Client) {
         // Rubber-chicken emote
         if (client.equipment[Equipment.Slot.WEAPON.id] == 4566) {
             client.facePlayer(targetSlot)
             client.performAnimation(1833, 0)
             return
         }
-        if (client.isBusy || other.isBusy) {
-            client.send(
-                SendMessage(
-                    if (client.isBusy) "You are currently busy"
-                    else "${other.getPlayerName()} is currently busy!"
-                )
-            )
-            return
-        }
-        val guardMessage = PlayerInteractionGuardService.tradeBlockMessage(client, other)
-        if (guardMessage != null) {
-            client.send(SendMessage(guardMessage))
-            return
-        }
-        if (!client.inTrade) {
-            TradeDuelSessionService.requestLegacyTrade(client, targetSlot)
-        }
+        handleDuelRequest(client, targetSlot, other)
     }
 
     // -------------------------------------------------------------------------

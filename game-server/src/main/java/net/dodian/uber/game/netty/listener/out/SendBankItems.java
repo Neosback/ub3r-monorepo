@@ -12,9 +12,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Sent to update the client's bank interface with a specific set of items.
- */
+
 public class SendBankItems implements OutgoingPacket {
     private static final Logger logger = LoggerFactory.getLogger(SendBankItems.class);
     private static final int[] TRACE_ITEM_IDS = {1157, 526, 995, 379, 1193, 1007, 1069, 1731, 1083, 1119};
@@ -23,29 +21,25 @@ public class SendBankItems implements OutgoingPacket {
     private final List<Integer> itemIds;
     private final List<Integer> amounts;
     private final int interfaceId;
+    private final int[] tabAmounts;
 
-    /**
-     * Creates a new SendBankItems packet with the specified item IDs and amounts.
-     * 
-     * @param itemIds List of item IDs to send
-     * @param amounts List of corresponding item amounts
-     * @param interfaceId The interface ID to update (default is 5382 for bank)
-     */
-    public SendBankItems(List<Integer> itemIds, List<Integer> amounts, int interfaceId) {
+    
+    public SendBankItems(List<Integer> itemIds, List<Integer> amounts, int interfaceId, int[] tabAmounts) {
         this.itemIds = new ArrayList<>(itemIds);
         this.amounts = new ArrayList<>(amounts);
         this.interfaceId = interfaceId;
+        this.tabAmounts = tabAmounts != null ? tabAmounts.clone() : null;
         if (matchesTraceSubset(this.itemIds, this.amounts, interfaceId)) {
             logger.info("SendBankItems: for npc {} , {} , {}", this.itemIds, this.amounts, interfaceId);
         }
     }
 
-    /**
-     * Creates a new SendBankItems packet with the default bank interface ID (5382).
-     * 
-     * @param itemIds List of item IDs to send
-     * @param amounts List of corresponding item amounts
-     */
+    
+    public SendBankItems(List<Integer> itemIds, List<Integer> amounts, int interfaceId) {
+        this(itemIds, amounts, interfaceId, null);
+    }
+
+    
     public SendBankItems(List<Integer> itemIds, List<Integer> amounts) {
         // Default to first bank tab container (50300) for mystic client's bank tabs
         this(itemIds, amounts, 50300);
@@ -57,34 +51,13 @@ public class SendBankItems implements OutgoingPacket {
             throw new IllegalArgumentException("Item IDs and amounts lists must be of equal size");
         }
 
-        int size = 4 + 2;
+        int[] ids = new int[itemIds.size()];
+        int[] stacks = new int[amounts.size()];
         for (int i = 0; i < itemIds.size(); i++) {
-            size += 4;
-            if (amounts.get(i) != 0) {
-                size += 2;
-            }
+            ids[i] = itemIds.get(i);
+            stacks[i] = amounts.get(i);
         }
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT, ByteMessage.pooledBuffer(size + 8));
-
-        // Mystic client SEND_UPDATE_ITEMS layout:
-        // int interfaceId, short itemCount,
-        // then for each slot: int amount, and if amount != 0 then short id (container value)
-
-        message.putInt(interfaceId);            // interface ID as int
-        message.putShort(itemIds.size());       // number of items
-
-        for (int i = 0; i < itemIds.size(); i++) {
-            int itemId = itemIds.get(i);
-            int amount = amounts.get(i);
-
-            // Amount as full int to match incoming.readInt()
-            message.putInt(amount);
-
-            if (amount != 0) {
-                int containerId = itemId + 1;  // container value (id + 1)
-                message.putShort(containerId, ByteOrder.BIG);
-            }
-        }
+        ByteMessage message = TarnishItemContainerEncoder.fullPreservingZeroAmounts(interfaceId, ids, stacks, tabAmounts);
 
         ItemContainerTrace.log(client, "SendBankItems", interfaceId, itemIds.size(), summarizePreview());
         client.send(message);

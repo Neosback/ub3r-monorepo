@@ -1,0 +1,4208 @@
+# Equipment appearance overrides for rendering body parts.
+# Supported types: DEFAULT, HAT, MASK, HELM, FACE, TORSO, BODY
+
+[[equipment]]
+id = 74
+name = "Khazard helmet"
+type = "HAT"
+
+[[equipment]]
+id = 75
+name = "Khazard armour"
+type = "BODY"
+
+[[equipment]]
+id = 284
+name = "Plague jacket"
+type = "BODY"
+
+[[equipment]]
+id = 430
+name = "Doctors' gown"
+type = "BODY"
+
+[[equipment]]
+id = 540
+name = "Druid's robe top"
+type = "BODY"
+
+[[equipment]]
+id = 544
+name = "Monk's robe top"
+type = "BODY"
+
+[[equipment]]
+id = 546
+name = "Shade robe top"
+type = "BODY"
+
+[[equipment]]
+id = 577
+name = "Blue wizard robe"
+type = "BODY"
+
+[[equipment]]
+id = 579
+name = "Blue wizard hat"
+type = "HAT"
+
+[[equipment]]
+id = 581
+name = "Black robe"
+type = "BODY"
+
+[[equipment]]
+id = 636
+name = "Pink robe top"
+type = "BODY"
+
+[[equipment]]
+id = 638
+name = "Green robe top"
+type = "BODY"
+
+[[equipment]]
+id = 640
+name = "Blue robe top"
+type = "BODY"
+
+[[equipment]]
+id = 642
+name = "Cream robe top"
+type = "BODY"
+
+[[equipment]]
+id = 644
+name = "Turquoise robe top"
+type = "BODY"
+
+[[equipment]]
+id = 656
+name = "Pink hat"
+type = "HAT"
+
+[[equipment]]
+id = 658
+name = "Green hat"
+type = "HAT"
+
+[[equipment]]
+id = 660
+name = "Blue hat"
+type = "HAT"
+
+[[equipment]]
+id = 662
+name = "Cream hat"
+type = "HAT"
+
+[[equipment]]
+id = 664
+name = "Turquoise hat"
+type = "HAT"
+
+[[equipment]]
+id = 740
+name = "Blue hat"
+type = "HAT"
+
+[[equipment]]
+id = 1005
+name = "White apron"
+type = "BODY"
+
+[[equipment]]
+id = 1017
+name = "Wizard hat"
+type = "HAT"
+
+[[equipment]]
+id = 1025
+name = "Right eye patch"
+type = "HAT"
+
+[[equipment]]
+id = 1035
+name = "Zamorak robe"
+type = "BODY"
+
+[[equipment]]
+id = 1037
+name = "Bunny ears"
+type = "HAT"
+
+[[equipment]]
+id = 1038
+name = "Red partyhat"
+type = "HAT"
+
+[[equipment]]
+id = 1040
+name = "Yellow partyhat"
+type = "HAT"
+
+[[equipment]]
+id = 1042
+name = "Blue partyhat"
+type = "HAT"
+
+[[equipment]]
+id = 1044
+name = "Green partyhat"
+type = "HAT"
+
+[[equipment]]
+id = 1046
+name = "Purple partyhat"
+type = "HAT"
+
+[[equipment]]
+id = 1048
+name = "White partyhat"
+type = "HAT"
+
+[[equipment]]
+id = 1050
+name = "Santa hat"
+type = "HAT"
+
+[[equipment]]
+id = 1053
+name = "Green halloween mask"
+type = "MASK"
+
+[[equipment]]
+id = 1055
+name = "Blue halloween mask"
+type = "HAT"
+
+[[equipment]]
+id = 1057
+name = "Red halloween mask"
+type = "HAT"
+
+[[equipment]]
+id = 1101
+name = "Iron chainbody"
+type = "TORSO"
+
+[[equipment]]
+id = 1103
+name = "Bronze chainbody"
+type = "TORSO"
+
+[[equipment]]
+id = 1105
+name = "Steel chainbody"
+type = "TORSO"
+
+[[equipment]]
+id = 1107
+name = "Black chainbody"
+type = "TORSO"
+
+[[equipment]]
+id = 1109
+name = "Mithril chainbody"
+type = "TORSO"
+
+[[equipment]]
+id = 1111
+name = "Adamant chainbody"
+type = "TORSO"
+
+[[equipment]]
+id = 1113
+name = "Rune chainbody"
+type = "TORSO"
+
+[[equipment]]
+id = 1115
+name = "Iron platebody"
+type = "BODY"
+
+[[equipment]]
+id = 1117
+name = "Bronze platebody"
+type = "BODY"
+
+[[equipment]]
+id = 1119
+name = "Steel platebody"
+type = "BODY"
+
+[[equipment]]
+id = 1121
+name = "Mithril platebody"
+type = "BODY"
+
+[[equipment]]
+id = 1123
+name = "Adamant platebody"
+type = "BODY"
+
+[[equipment]]
+id = 1125
+name = "Black platebody"
+type = "BODY"
+
+[[equipment]]
+id = 1127
+name = "Rune platebody"
+type = "BODY"
+
+[[equipment]]
+id = 1129
+name = "Leather body"
+type = "TORSO"
+
+[[equipment]]
+id = 1131
+name = "Hardleather body"
+type = "TORSO"
+
+[[equipment]]
+id = 1133
+name = "Studded body"
+type = "TORSO"
+
+[[equipment]]
+id = 1135
+name = "Green d'hide body"
+type = "TORSO"
+
+[[equipment]]
+id = 1137
+name = "Iron med helm"
+type = "HAT"
+
+[[equipment]]
+id = 1139
+name = "Bronze med helm"
+type = "HAT"
+
+[[equipment]]
+id = 1141
+name = "Steel med helm"
+type = "HAT"
+
+[[equipment]]
+id = 1143
+name = "Mithril med helm"
+type = "HAT"
+
+[[equipment]]
+id = 1145
+name = "Adamant med helm"
+type = "HAT"
+
+[[equipment]]
+id = 1147
+name = "Rune med helm"
+type = "HAT"
+
+[[equipment]]
+id = 1149
+name = "Dragon med helm"
+type = "HAT"
+
+[[equipment]]
+id = 1151
+name = "Black med helm"
+type = "HAT"
+
+[[equipment]]
+id = 1153
+name = "Iron full helm"
+type = "MASK"
+
+[[equipment]]
+id = 1155
+name = "Bronze full helm"
+type = "HAT"
+
+[[equipment]]
+id = 1157
+name = "Steel full helm"
+type = "HAT"
+
+[[equipment]]
+id = 1159
+name = "Mithril full helm"
+type = "HAT"
+
+[[equipment]]
+id = 1161
+name = "Adamant full helm"
+type = "HAT"
+
+[[equipment]]
+id = 1163
+name = "Rune full helm"
+type = "HAT"
+
+[[equipment]]
+id = 1165
+name = "Black full helm"
+type = "HAT"
+
+[[equipment]]
+id = 1167
+name = "Leather cowl"
+type = "HAT"
+
+[[equipment]]
+id = 1169
+name = "Coif"
+type = "MASK"
+
+[[equipment]]
+id = 1506
+name = "Gas mask"
+type = "HAT"
+
+[[equipment]]
+id = 1757
+name = "Brown apron"
+type = "BODY"
+
+[[equipment]]
+id = 1844
+name = "Slave shirt"
+type = "BODY"
+
+[[equipment]]
+id = 1949
+name = "Chef's hat"
+type = "HAT"
+
+[[equipment]]
+id = 2405
+name = "Carnillean armour"
+type = "BODY"
+
+[[equipment]]
+id = 2422
+name = "Blue partyhat"
+type = "HAT"
+
+[[equipment]]
+id = 2499
+name = "Blue d'hide body"
+type = "BODY"
+
+[[equipment]]
+id = 2501
+name = "Red d'hide body"
+type = "TORSO"
+
+[[equipment]]
+id = 2503
+name = "Black d'hide body"
+type = "TORSO"
+
+[[equipment]]
+id = 2513
+name = "Dragon chainbody"
+type = "BODY"
+
+[[equipment]]
+id = 2581
+name = "Robin hood hat"
+type = "HAT"
+
+[[equipment]]
+id = 2583
+name = "Black platebody (t)"
+type = "BODY"
+
+[[equipment]]
+id = 2587
+name = "Black full helm (t)"
+type = "HAT"
+
+[[equipment]]
+id = 2591
+name = "Black platebody (g)"
+type = "BODY"
+
+[[equipment]]
+id = 2595
+name = "Black full helm (g)"
+type = "HAT"
+
+[[equipment]]
+id = 2599
+name = "Adamant platebody (t)"
+type = "BODY"
+
+[[equipment]]
+id = 2605
+name = "Adamant full helm (t)"
+type = "HAT"
+
+[[equipment]]
+id = 2607
+name = "Adamant platebody (g)"
+type = "BODY"
+
+[[equipment]]
+id = 2613
+name = "Adamant full helm (g)"
+type = "HAT"
+
+[[equipment]]
+id = 2615
+name = "Rune platebody (g)"
+type = "BODY"
+
+[[equipment]]
+id = 2619
+name = "Rune full helm (g)"
+type = "HAT"
+
+[[equipment]]
+id = 2623
+name = "Rune platebody (t)"
+type = "BODY"
+
+[[equipment]]
+id = 2627
+name = "Rune full helm (t)"
+type = "HAT"
+
+[[equipment]]
+id = 2631
+name = "Highwayman mask"
+type = "HAT"
+
+[[equipment]]
+id = 2633
+name = "Blue beret"
+type = "HAT"
+
+[[equipment]]
+id = 2635
+name = "Black beret"
+type = "HAT"
+
+[[equipment]]
+id = 2637
+name = "White beret"
+type = "HAT"
+
+[[equipment]]
+id = 2639
+name = "Tan cavalier"
+type = "HAT"
+
+[[equipment]]
+id = 2641
+name = "Dark cavalier"
+type = "HAT"
+
+[[equipment]]
+id = 2643
+name = "Black cavalier"
+type = "HAT"
+
+[[equipment]]
+id = 2645
+name = "Red headband"
+type = "HAT"
+
+[[equipment]]
+id = 2647
+name = "Black headband"
+type = "HAT"
+
+[[equipment]]
+id = 2649
+name = "Brown headband"
+type = "HAT"
+
+[[equipment]]
+id = 2651
+name = "Pirate's hat"
+type = "HAT"
+
+[[equipment]]
+id = 2653
+name = "Zamorak platebody"
+type = "BODY"
+
+[[equipment]]
+id = 2657
+name = "Zamorak full helm"
+type = "HAT"
+
+[[equipment]]
+id = 2661
+name = "Saradomin platebody"
+type = "BODY"
+
+[[equipment]]
+id = 2665
+name = "Saradomin full helm"
+type = "HAT"
+
+[[equipment]]
+id = 2669
+name = "Guthix platebody"
+type = "BODY"
+
+[[equipment]]
+id = 2673
+name = "Guthix full helm"
+type = "HAT"
+
+[[equipment]]
+id = 2896
+name = "Grey robe top"
+type = "BODY"
+
+[[equipment]]
+id = 2900
+name = "Grey hat"
+type = "HAT"
+
+[[equipment]]
+id = 2906
+name = "Red robe top"
+type = "BODY"
+
+[[equipment]]
+id = 2910
+name = "Red hat"
+type = "HAT"
+
+[[equipment]]
+id = 2916
+name = "Yellow robe top"
+type = "BODY"
+
+[[equipment]]
+id = 2920
+name = "Yellow hat"
+type = "HAT"
+
+[[equipment]]
+id = 2926
+name = "Teal robe top"
+type = "BODY"
+
+[[equipment]]
+id = 2930
+name = "Teal hat"
+type = "HAT"
+
+[[equipment]]
+id = 2936
+name = "Purple robe top"
+type = "BODY"
+
+[[equipment]]
+id = 2940
+name = "Purple hat"
+type = "HAT"
+
+[[equipment]]
+id = 2978
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2979
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2980
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2981
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2982
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2983
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2984
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2985
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2986
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2987
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2988
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2989
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2990
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2991
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2992
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2993
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2994
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 2995
+name = "Chompy bird hat"
+type = "HAT"
+
+[[equipment]]
+id = 3057
+name = "Mime mask"
+type = "HAT"
+
+[[equipment]]
+id = 3058
+name = "Mime top"
+type = "BODY"
+
+[[equipment]]
+id = 3140
+name = "Dragon chainbody"
+type = "BODY"
+
+[[equipment]]
+id = 3327
+name = "Myre snelm"
+type = "HAT"
+
+[[equipment]]
+id = 3329
+name = "Blood'n'tar snelm"
+type = "HAT"
+
+[[equipment]]
+id = 3331
+name = "Ochre snelm"
+type = "HAT"
+
+[[equipment]]
+id = 3333
+name = "Bruise blue snelm"
+type = "HAT"
+
+[[equipment]]
+id = 3335
+name = "Broken bark snelm"
+type = "HAT"
+
+[[equipment]]
+id = 3337
+name = "Myre snelm"
+type = "HAT"
+
+[[equipment]]
+id = 3339
+name = "Blood'n'tar snelm"
+type = "HAT"
+
+[[equipment]]
+id = 3341
+name = "Ochre snelm"
+type = "HAT"
+
+[[equipment]]
+id = 3343
+name = "Bruise blue snelm"
+type = "HAT"
+
+[[equipment]]
+id = 3385
+name = "Splitbark helm"
+type = "HAT"
+
+[[equipment]]
+id = 3387
+name = "Splitbark body"
+type = "BODY"
+
+[[equipment]]
+id = 3481
+name = "Gilded platebody"
+type = "BODY"
+
+[[equipment]]
+id = 3486
+name = "Gilded full helm"
+type = "HAT"
+
+[[equipment]]
+id = 3748
+name = "Fremennik helm"
+type = "HAT"
+
+[[equipment]]
+id = 3749
+name = "Archer helm"
+type = "HAT"
+
+[[equipment]]
+id = 3751
+name = "Berserker helm"
+type = "HAT"
+
+[[equipment]]
+id = 3753
+name = "Warrior helm"
+type = "HAT"
+
+[[equipment]]
+id = 3755
+name = "Farseer helm"
+type = "HAT"
+
+[[equipment]]
+id = 3767
+name = "Fremennik brown shirt"
+type = "BODY"
+
+[[equipment]]
+id = 3769
+name = "Fremennik grey shirt"
+type = "BODY"
+
+[[equipment]]
+id = 3771
+name = "Fremennik beige shirt"
+type = "BODY"
+
+[[equipment]]
+id = 3773
+name = "Fremennik red shirt"
+type = "BODY"
+
+[[equipment]]
+id = 3775
+name = "Fremennik blue shirt"
+type = "BODY"
+
+[[equipment]]
+id = 3793
+name = "Fremennik robe"
+type = "BODY"
+
+[[equipment]]
+id = 3797
+name = "Fremennik hat"
+type = "HAT"
+
+[[equipment]]
+id = 4071
+name = "Decorative helm"
+type = "HAT"
+
+[[equipment]]
+id = 4089
+name = "Mystic hat"
+type = "HAT"
+
+[[equipment]]
+id = 4091
+name = "Mystic robe top"
+type = "BODY"
+
+[[equipment]]
+id = 4099
+name = "Mystic hat (dark)"
+type = "HAT"
+
+[[equipment]]
+id = 4101
+name = "Mystic robe top (dark)"
+type = "BODY"
+
+[[equipment]]
+id = 4109
+name = "Mystic hat (light)"
+type = "HAT"
+
+[[equipment]]
+id = 4111
+name = "Mystic robe top (light)"
+type = "BODY"
+
+[[equipment]]
+id = 4164
+name = "Facemask"
+type = "HAT"
+
+[[equipment]]
+id = 4166
+name = "Earmuffs"
+type = "HAT"
+
+[[equipment]]
+id = 4168
+name = "Nose peg"
+type = "HAT"
+
+[[equipment]]
+id = 4298
+name = "Ham shirt"
+type = "BODY"
+
+[[equipment]]
+id = 4302
+name = "Ham hood"
+type = "HAT"
+
+[[equipment]]
+id = 4502
+name = "Bearhead"
+type = "HAT"
+
+[[equipment]]
+id = 4506
+name = "Decorative helm"
+type = "HAT"
+
+[[equipment]]
+id = 4511
+name = "Decorative helm"
+type = "HAT"
+
+[[equipment]]
+id = 4513
+name = "Castlewars hood"
+type = "HAT"
+
+[[equipment]]
+id = 4515
+name = "Castlewars hood"
+type = "HAT"
+
+[[equipment]]
+id = 4551
+name = "Spiny helmet"
+type = "HAT"
+
+[[equipment]]
+id = 4567
+name = "Gold helmet"
+type = "HAT"
+
+[[equipment]]
+id = 4611
+name = "Desert disguise"
+type = "HAT"
+
+[[equipment]]
+id = 4708
+name = "Ahrim's hood"
+type = "HAT"
+
+[[equipment]]
+id = 4712
+name = "Ahrim's robetop"
+type = "BODY"
+
+[[equipment]]
+id = 4716
+name = "Dharok's helm"
+type = "HAT"
+
+[[equipment]]
+id = 4720
+name = "Dharok's platebody"
+type = "BODY"
+
+[[equipment]]
+id = 4724
+name = "Guthan's helm"
+type = "HAT"
+
+[[equipment]]
+id = 4728
+name = "Guthan's platebody"
+type = "BODY"
+
+[[equipment]]
+id = 4732
+name = "Karil's coif"
+type = "HAT"
+
+[[equipment]]
+id = 4736
+name = "Karil's leathertop"
+type = "BODY"
+
+[[equipment]]
+id = 4745
+name = "Torag's helm"
+type = "HAT"
+
+[[equipment]]
+id = 4749
+name = "Torag's platebody"
+type = "BODY"
+
+[[equipment]]
+id = 4753
+name = "Verac's helm"
+type = "HELM"
+
+[[equipment]]
+id = 4757
+name = "Verac's brassard"
+type = "BODY"
+
+[[equipment]]
+id = 4856
+name = "Ahrim's hood 100"
+type = "HAT"
+
+[[equipment]]
+id = 4857
+name = "Ahrim's hood 75"
+type = "HAT"
+
+[[equipment]]
+id = 4858
+name = "Ahrim's hood 50"
+type = "HAT"
+
+[[equipment]]
+id = 4859
+name = "Ahrim's hood 25"
+type = "HAT"
+
+[[equipment]]
+id = 4860
+name = "Ahrim's hood 0"
+type = "HAT"
+
+[[equipment]]
+id = 4868
+name = "Ahrim's robetop 100"
+type = "BODY"
+
+[[equipment]]
+id = 4869
+name = "Ahrim's robetop 75"
+type = "BODY"
+
+[[equipment]]
+id = 4870
+name = "Ahrim's robetop 50"
+type = "BODY"
+
+[[equipment]]
+id = 4871
+name = "Ahrim's robetop 25"
+type = "BODY"
+
+[[equipment]]
+id = 4872
+name = "Ahrim's robetop 0"
+type = "BODY"
+
+[[equipment]]
+id = 4880
+name = "Dharok's helm 100"
+type = "HAT"
+
+[[equipment]]
+id = 4881
+name = "Dharok's helm 75"
+type = "HAT"
+
+[[equipment]]
+id = 4882
+name = "Dharok's helm 50"
+type = "HAT"
+
+[[equipment]]
+id = 4883
+name = "Dharok's helm 25"
+type = "HAT"
+
+[[equipment]]
+id = 4884
+name = "Dharok's helm 0"
+type = "HAT"
+
+[[equipment]]
+id = 4892
+name = "Dharok's platebody 100"
+type = "BODY"
+
+[[equipment]]
+id = 4893
+name = "Dharok's platebody 75"
+type = "BODY"
+
+[[equipment]]
+id = 4894
+name = "Dharok's platebody 50"
+type = "BODY"
+
+[[equipment]]
+id = 4895
+name = "Dharok's platebody 25"
+type = "BODY"
+
+[[equipment]]
+id = 4896
+name = "Dharok's platebody 0"
+type = "BODY"
+
+[[equipment]]
+id = 4904
+name = "Guthan's helm 100"
+type = "HAT"
+
+[[equipment]]
+id = 4905
+name = "Guthan's helm 75"
+type = "HAT"
+
+[[equipment]]
+id = 4906
+name = "Guthan's helm 50"
+type = "HAT"
+
+[[equipment]]
+id = 4907
+name = "Guthan's helm 25"
+type = "HAT"
+
+[[equipment]]
+id = 4908
+name = "Guthan's helm 0"
+type = "HAT"
+
+[[equipment]]
+id = 4916
+name = "Guthan's platebody 100"
+type = "BODY"
+
+[[equipment]]
+id = 4917
+name = "Guthan's platebody 75"
+type = "BODY"
+
+[[equipment]]
+id = 4918
+name = "Guthan's platebody 50"
+type = "BODY"
+
+[[equipment]]
+id = 4919
+name = "Guthan's platebody 25"
+type = "BODY"
+
+[[equipment]]
+id = 4920
+name = "Guthan's platebody 0"
+type = "BODY"
+
+[[equipment]]
+id = 4928
+name = "Karil's coif 100"
+type = "HAT"
+
+[[equipment]]
+id = 4929
+name = "Karil's coif 75"
+type = "HAT"
+
+[[equipment]]
+id = 4930
+name = "Karil's coif 50"
+type = "HAT"
+
+[[equipment]]
+id = 4931
+name = "Karil's coif 25"
+type = "HAT"
+
+[[equipment]]
+id = 4932
+name = "Karil's coif 0"
+type = "HAT"
+
+[[equipment]]
+id = 4940
+name = "Karil's leathertop 100"
+type = "BODY"
+
+[[equipment]]
+id = 4941
+name = "Karil's leathertop 75"
+type = "BODY"
+
+[[equipment]]
+id = 4942
+name = "Karil's leathertop 50"
+type = "BODY"
+
+[[equipment]]
+id = 4943
+name = "Karil's leathertop 25"
+type = "BODY"
+
+[[equipment]]
+id = 4944
+name = "Karil's leathertop 0"
+type = "BODY"
+
+[[equipment]]
+id = 4952
+name = "Torag's helm 100"
+type = "HAT"
+
+[[equipment]]
+id = 4953
+name = "Torag's helm 75"
+type = "HAT"
+
+[[equipment]]
+id = 4954
+name = "Torag's helm 50"
+type = "HAT"
+
+[[equipment]]
+id = 4955
+name = "Torag's helm 25"
+type = "HAT"
+
+[[equipment]]
+id = 4956
+name = "Torag's helm 0"
+type = "HAT"
+
+[[equipment]]
+id = 4964
+name = "Torag's platebody 100"
+type = "BODY"
+
+[[equipment]]
+id = 4965
+name = "Torag's platebody 75"
+type = "BODY"
+
+[[equipment]]
+id = 4966
+name = "Torag's platebody 50"
+type = "BODY"
+
+[[equipment]]
+id = 4967
+name = "Torag's platebody 25"
+type = "BODY"
+
+[[equipment]]
+id = 4968
+name = "Torag's platebody 0"
+type = "BODY"
+
+[[equipment]]
+id = 4976
+name = "Verac's helm 100"
+type = "HAT"
+
+[[equipment]]
+id = 4977
+name = "Verac's helm 75"
+type = "HAT"
+
+[[equipment]]
+id = 4978
+name = "Verac's helm 50"
+type = "HAT"
+
+[[equipment]]
+id = 4979
+name = "Verac's helm 25"
+type = "HAT"
+
+[[equipment]]
+id = 4980
+name = "Verac's helm 0"
+type = "HAT"
+
+[[equipment]]
+id = 4988
+name = "Verac's brassard 100"
+type = "BODY"
+
+[[equipment]]
+id = 4989
+name = "Verac's brassard 75"
+type = "BODY"
+
+[[equipment]]
+id = 4990
+name = "Verac's brassard 50"
+type = "BODY"
+
+[[equipment]]
+id = 4991
+name = "Verac's brassard 25"
+type = "BODY"
+
+[[equipment]]
+id = 4992
+name = "Verac's brassard 0"
+type = "BODY"
+
+[[equipment]]
+id = 5013
+name = "Mining helmet"
+type = "HAT"
+
+[[equipment]]
+id = 5014
+name = "Mining helmet"
+type = "HAT"
+
+[[equipment]]
+id = 5525
+name = "Tiara"
+type = "HAT"
+
+[[equipment]]
+id = 5527
+name = "Air tiara"
+type = "HAT"
+
+[[equipment]]
+id = 5529
+name = "Mind tiara"
+type = "HAT"
+
+[[equipment]]
+id = 5531
+name = "Water tiara"
+type = "HAT"
+
+[[equipment]]
+id = 5533
+name = "Body tiara"
+type = "HAT"
+
+[[equipment]]
+id = 5535
+name = "Earth tiara"
+type = "HAT"
+
+[[equipment]]
+id = 5537
+name = "Fire tiara"
+type = "HAT"
+
+[[equipment]]
+id = 5539
+name = "Cosmic tiara"
+type = "HAT"
+
+[[equipment]]
+id = 5541
+name = "Nature tiara"
+type = "HAT"
+
+[[equipment]]
+id = 5543
+name = "Chaos tiara"
+type = "HAT"
+
+[[equipment]]
+id = 5545
+name = "Law tiara"
+type = "HAT"
+
+[[equipment]]
+id = 5547
+name = "Death tiara"
+type = "HAT"
+
+[[equipment]]
+id = 5553
+name = "Rogue top"
+type = "BODY"
+
+[[equipment]]
+id = 5554
+name = "Rogue mask"
+type = "HAT"
+
+[[equipment]]
+id = 5574
+name = "Initiate sallet"
+type = "HAT"
+
+[[equipment]]
+id = 5575
+name = "Initiate hauberk"
+type = "BODY"
+
+[[equipment]]
+id = 5611
+name = "Initiate sallet"
+type = "HAT"
+
+[[equipment]]
+id = 5612
+name = "Initiate hauberk"
+type = "BODY"
+
+[[equipment]]
+id = 6065
+name = "Mourner top"
+type = "BODY"
+
+[[equipment]]
+id = 6107
+name = "Ghostly robe"
+type = "BODY"
+
+[[equipment]]
+id = 6109
+name = "Ghostly hood"
+type = "MASK"
+
+[[equipment]]
+id = 6128
+name = "Rock-shell helm"
+type = "HAT"
+
+[[equipment]]
+id = 6129
+name = "Rock-shell plate"
+type = "BODY"
+
+[[equipment]]
+id = 6131
+name = "Spined helm"
+type = "HAT"
+
+[[equipment]]
+id = 6133
+name = "Spined body"
+type = "BODY"
+
+[[equipment]]
+id = 6137
+name = "Skeletal helm"
+type = "HAT"
+
+[[equipment]]
+id = 6139
+name = "Skeletal top"
+type = "BODY"
+
+[[equipment]]
+id = 6175
+name = "Rock-shell helm"
+type = "HAT"
+
+[[equipment]]
+id = 6176
+name = "Rock-shell plate"
+type = "BODY"
+
+[[equipment]]
+id = 6180
+name = "Lederhosen top"
+type = "BODY"
+
+[[equipment]]
+id = 6182
+name = "Lederhosen hat"
+type = "HAT"
+
+[[equipment]]
+id = 6184
+name = "Prince tunic"
+type = "BODY"
+
+[[equipment]]
+id = 6186
+name = "Princess blouse"
+type = "BODY"
+
+[[equipment]]
+id = 6188
+name = "Frog mask"
+type = "HAT"
+
+[[equipment]]
+id = 6322
+name = "Snakeskin body"
+type = "BODY"
+
+[[equipment]]
+id = 6326
+name = "Snakeskin bandana"
+type = "HAT"
+
+[[equipment]]
+id = 6335
+name = "Tribal mask"
+type = "HAT"
+
+[[equipment]]
+id = 6337
+name = "Tribal mask"
+type = "HAT"
+
+[[equipment]]
+id = 6339
+name = "Tribal mask"
+type = "HAT"
+
+[[equipment]]
+id = 6343
+name = "Villager robe"
+type = "BODY"
+
+[[equipment]]
+id = 6345
+name = "Villager hat"
+type = "HAT"
+
+[[equipment]]
+id = 6355
+name = "Villager hat"
+type = "HAT"
+
+[[equipment]]
+id = 6365
+name = "Villager hat"
+type = "HAT"
+
+[[equipment]]
+id = 6375
+name = "Villager hat"
+type = "HAT"
+
+[[equipment]]
+id = 6382
+name = "Fez"
+type = "HAT"
+
+[[equipment]]
+id = 6384
+name = "Desert top"
+type = "BODY"
+
+[[equipment]]
+id = 6388
+name = "Desert top"
+type = "BODY"
+
+[[equipment]]
+id = 6392
+name = "Menaphite purple hat"
+type = "HAT"
+
+[[equipment]]
+id = 6394
+name = "Menaphite purple top"
+type = "BODY"
+
+[[equipment]]
+id = 6400
+name = "Menaphite red hat"
+type = "HAT"
+
+[[equipment]]
+id = 6402
+name = "Menaphite red top"
+type = "BODY"
+
+[[equipment]]
+id = 6547
+name = "Doctors hat"
+type = "HAT"
+
+[[equipment]]
+id = 6548
+name = "Nurse hat"
+type = "HAT"
+
+[[equipment]]
+id = 6615
+name = "White chainbody"
+type = "BODY"
+
+[[equipment]]
+id = 6617
+name = "White platebody"
+type = "BODY"
+
+[[equipment]]
+id = 6621
+name = "White med helm"
+type = "HAT"
+
+[[equipment]]
+id = 6623
+name = "White full helm"
+type = "HAT"
+
+[[equipment]]
+id = 6654
+name = "Camo top"
+type = "BODY"
+
+[[equipment]]
+id = 6656
+name = "Camo helmet"
+type = "HAT"
+
+[[equipment]]
+id = 6657
+name = "Camo top"
+type = "BODY"
+
+[[equipment]]
+id = 6665
+name = "Mudskipper hat"
+type = "HAT"
+
+[[equipment]]
+id = 6750
+name = "Black desert shirt"
+type = "BODY"
+
+[[equipment]]
+id = 6786
+name = "Robe of elidinis"
+type = "BODY"
+
+[[equipment]]
+id = 6856
+name = "Bobble hat"
+type = "HAT"
+
+[[equipment]]
+id = 6857
+name = "Bobble scarf"
+type = "HAT"
+
+[[equipment]]
+id = 6858
+name = "Jester hat"
+type = "HAT"
+
+[[equipment]]
+id = 6860
+name = "Tri-jester hat"
+type = "HAT"
+
+[[equipment]]
+id = 6861
+name = "Tri-jester scarf"
+type = "HAT"
+
+[[equipment]]
+id = 6862
+name = "Woolly hat"
+type = "HAT"
+
+[[equipment]]
+id = 6863
+name = "Woolly scarf"
+type = "HAT"
+
+[[equipment]]
+id = 6885
+name = "Progress hat"
+type = "HAT"
+
+[[equipment]]
+id = 6886
+name = "Progress hat"
+type = "HAT"
+
+[[equipment]]
+id = 6887
+name = "Progress hat"
+type = "HAT"
+
+[[equipment]]
+id = 6895
+name = "Adamant med helm"
+type = "HAT"
+
+[[equipment]]
+id = 6916
+name = "Infinity top"
+type = "BODY"
+
+[[equipment]]
+id = 6918
+name = "Infinity hat"
+type = "HAT"
+
+[[equipment]]
+id = 6967
+name = "Dragon med helm"
+type = "HAT"
+
+[[equipment]]
+id = 7003
+name = "Camel mask"
+type = "HAT"
+
+[[equipment]]
+id = 7110
+name = "Stripy pirate shirt"
+type = "BODY"
+
+[[equipment]]
+id = 7112
+name = "Pirate bandana"
+type = "HAT"
+
+[[equipment]]
+id = 7122
+name = "Stripy pirate shirt"
+type = "BODY"
+
+[[equipment]]
+id = 7124
+name = "Pirate bandana"
+type = "HAT"
+
+[[equipment]]
+id = 7128
+name = "Stripy pirate shirt"
+type = "BODY"
+
+[[equipment]]
+id = 7130
+name = "Pirate bandana"
+type = "HAT"
+
+[[equipment]]
+id = 7134
+name = "Stripy pirate shirt"
+type = "BODY"
+
+[[equipment]]
+id = 7136
+name = "Pirate bandana"
+type = "HAT"
+
+[[equipment]]
+id = 7319
+name = "Red boater"
+type = "HAT"
+
+[[equipment]]
+id = 7321
+name = "Orange boater"
+type = "HAT"
+
+[[equipment]]
+id = 7323
+name = "Green boater"
+type = "HAT"
+
+[[equipment]]
+id = 7325
+name = "Blue boater"
+type = "HAT"
+
+[[equipment]]
+id = 7327
+name = "Black boater"
+type = "HAT"
+
+[[equipment]]
+id = 7362
+name = "Studded body (g)"
+type = "TORSO"
+
+[[equipment]]
+id = 7364
+name = "Studded body (t)"
+type = "TORSO"
+
+[[equipment]]
+id = 7370
+name = "Green d'hide body (g)"
+type = "TORSO"
+
+[[equipment]]
+id = 7372
+name = "Green d'hide body (t)"
+type = "TORSO"
+
+[[equipment]]
+id = 7374
+name = "Blue d'hide body (g)"
+type = "TORSO"
+
+[[equipment]]
+id = 7376
+name = "Blue d'hide body (t)"
+type = "TORSO"
+
+[[equipment]]
+id = 7390
+name = "Blue wizard robe (g)"
+type = "BODY"
+
+[[equipment]]
+id = 7392
+name = "Blue wizard robe (t)"
+type = "BODY"
+
+[[equipment]]
+id = 7394
+name = "Blue wizard hat (g)"
+type = "HAT"
+
+[[equipment]]
+id = 7396
+name = "Blue wizard hat (t)"
+type = "HAT"
+
+[[equipment]]
+id = 7399
+name = "Enchanted top"
+type = "BODY"
+
+[[equipment]]
+id = 7400
+name = "Enchanted hat"
+type = "HAT"
+
+[[equipment]]
+id = 7534
+name = "Fishbowl helmet"
+type = "HAT"
+
+[[equipment]]
+id = 7539
+name = "Crab helmet"
+type = "HAT"
+
+[[equipment]]
+id = 7592
+name = "Zombie shirt"
+type = "BODY"
+
+[[equipment]]
+id = 7594
+name = "Zombie mask"
+type = "HAT"
+
+[[equipment]]
+id = 7917
+name = "Ram skull helm"
+type = "HAT"
+
+[[equipment]]
+id = 7957
+name = "White apron"
+type = "BODY"
+
+[[equipment]]
+id = 8464
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8466
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8468
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8470
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8472
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8474
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8476
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8478
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8480
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8482
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8484
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8486
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8488
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8490
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8492
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8494
+name = "Rune heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8682
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8684
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8686
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8688
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8690
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8692
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8694
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8696
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8698
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8700
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8702
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8704
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8706
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8708
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8710
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8712
+name = "Steel heraldic helm"
+type = "HAT"
+
+[[equipment]]
+id = 8839
+name = "Void knight top"
+type = "BODY"
+
+[[equipment]]
+id = 8901
+name = "Black mask (10)"
+type = "HAT"
+
+[[equipment]]
+id = 8903
+name = "Black mask (9)"
+type = "HAT"
+
+[[equipment]]
+id = 8905
+name = "Black mask (8)"
+type = "HAT"
+
+[[equipment]]
+id = 8907
+name = "Black mask (7)"
+type = "HAT"
+
+[[equipment]]
+id = 8909
+name = "Black mask (6)"
+type = "HAT"
+
+[[equipment]]
+id = 8911
+name = "Black mask (5)"
+type = "HAT"
+
+[[equipment]]
+id = 8913
+name = "Black mask (4)"
+type = "HAT"
+
+[[equipment]]
+id = 8915
+name = "Black mask (3)"
+type = "HAT"
+
+[[equipment]]
+id = 8917
+name = "Black mask (2)"
+type = "HAT"
+
+[[equipment]]
+id = 8919
+name = "Black mask (1)"
+type = "HAT"
+
+[[equipment]]
+id = 8921
+name = "Black mask"
+type = "HAT"
+
+[[equipment]]
+id = 8924
+name = "Bandana eyepatch"
+type = "HAT"
+
+[[equipment]]
+id = 8925
+name = "Bandana eyepatch"
+type = "HAT"
+
+[[equipment]]
+id = 8926
+name = "Bandana eyepatch"
+type = "HAT"
+
+[[equipment]]
+id = 8927
+name = "Bandana eyepatch"
+type = "HAT"
+
+[[equipment]]
+id = 8928
+name = "Hat eyepatch"
+type = "HAT"
+
+[[equipment]]
+id = 8949
+name = "Pirate bandana"
+type = "HAT"
+
+[[equipment]]
+id = 8950
+name = "Pirate hat"
+type = "HAT"
+
+[[equipment]]
+id = 8959
+name = "Blue tricorn hat"
+type = "HAT"
+
+[[equipment]]
+id = 8960
+name = "Green tricorn hat"
+type = "HAT"
+
+[[equipment]]
+id = 8961
+name = "Red tricorn hat"
+type = "HAT"
+
+[[equipment]]
+id = 8962
+name = "Brown tricorn hat"
+type = "HAT"
+
+[[equipment]]
+id = 8963
+name = "Black tricorn hat"
+type = "HAT"
+
+[[equipment]]
+id = 8964
+name = "Purple tricorn hat"
+type = "HAT"
+
+[[equipment]]
+id = 8965
+name = "Grey tricorn hat"
+type = "HAT"
+
+[[equipment]]
+id = 9068
+name = "Moonclan helm"
+type = "HAT"
+
+[[equipment]]
+id = 9069
+name = "Moonclan hat"
+type = "HAT"
+
+[[equipment]]
+id = 9070
+name = "Moonclan armour"
+type = "BODY"
+
+[[equipment]]
+id = 9096
+name = "Lunar helm"
+type = "HAT"
+
+[[equipment]]
+id = 9097
+name = "Lunar torso"
+type = "BODY"
+
+[[equipment]]
+id = 9472
+name = "Gnome goggles"
+type = "HAT"
+
+[[equipment]]
+id = 9629
+name = "Tyras helm"
+type = "HAT"
+
+[[equipment]]
+id = 9634
+name = "Vyrewatch top"
+type = "BODY"
+
+[[equipment]]
+id = 9640
+name = "Citizen top"
+type = "BODY"
+
+[[equipment]]
+id = 9672
+name = "Proselyte sallet"
+type = "HAT"
+
+[[equipment]]
+id = 9674
+name = "Proselyte hauberk"
+type = "BODY"
+
+[[equipment]]
+id = 9729
+name = "Elemental helmet"
+type = "HAT"
+
+[[equipment]]
+id = 9733
+name = "Mind helmet"
+type = "HAT"
+
+[[equipment]]
+id = 9749
+name = "Attack hood"
+type = "HAT"
+
+[[equipment]]
+id = 9752
+name = "Strength hood"
+type = "HAT"
+
+[[equipment]]
+id = 9755
+name = "Defence hood"
+type = "HAT"
+
+[[equipment]]
+id = 9758
+name = "Ranging hood"
+type = "HAT"
+
+[[equipment]]
+id = 9761
+name = "Prayer hood"
+type = "HAT"
+
+[[equipment]]
+id = 9764
+name = "Magic hood"
+type = "HAT"
+
+[[equipment]]
+id = 9767
+name = "Runecrafting hood"
+type = "HAT"
+
+[[equipment]]
+id = 9770
+name = "Hitpoints hood"
+type = "HAT"
+
+[[equipment]]
+id = 9773
+name = "Agility hood"
+type = "HAT"
+
+[[equipment]]
+id = 9776
+name = "Herblore hood"
+type = "HAT"
+
+[[equipment]]
+id = 9779
+name = "Thieving hood"
+type = "HAT"
+
+[[equipment]]
+id = 9782
+name = "Crafting hood"
+type = "HAT"
+
+[[equipment]]
+id = 9785
+name = "Fletching hood"
+type = "HAT"
+
+[[equipment]]
+id = 9788
+name = "Slayer hood"
+type = "HAT"
+
+[[equipment]]
+id = 9791
+name = "Construct. hood"
+type = "HAT"
+
+[[equipment]]
+id = 9794
+name = "Mining hood"
+type = "HAT"
+
+[[equipment]]
+id = 9797
+name = "Smithing hood"
+type = "HAT"
+
+[[equipment]]
+id = 9800
+name = "Fishing hood"
+type = "HAT"
+
+[[equipment]]
+id = 9803
+name = "Cooking hood"
+type = "HAT"
+
+[[equipment]]
+id = 9806
+name = "Firemaking hood"
+type = "HAT"
+
+[[equipment]]
+id = 9809
+name = "Woodcutting hood"
+type = "HAT"
+
+[[equipment]]
+id = 9812
+name = "Farming hood"
+type = "HAT"
+
+[[equipment]]
+id = 9814
+name = "Quest point hood"
+type = "HAT"
+
+[[equipment]]
+id = 9815
+name = "Bobble hat"
+type = "HAT"
+
+[[equipment]]
+id = 9816
+name = "Bobble scarf"
+type = "HAT"
+
+[[equipment]]
+id = 9920
+name = "Jack lantern mask"
+type = "HAT"
+
+[[equipment]]
+id = 9924
+name = "Skeleton shirt"
+type = "BODY"
+
+[[equipment]]
+id = 9925
+name = "Skeleton mask"
+type = "HAT"
+
+[[equipment]]
+id = 9944
+name = "Bomber jacket"
+type = "HAT"
+
+[[equipment]]
+id = 9945
+name = "Bomber cap"
+type = "HAT"
+
+[[equipment]]
+id = 9946
+name = "Cap and goggles"
+type = "HAT"
+
+[[equipment]]
+id = 9950
+name = "Hunter hood"
+type = "HAT"
+
+[[equipment]]
+id = 10037
+name = "Kyatt top"
+type = "BODY"
+
+[[equipment]]
+id = 10039
+name = "Kyatt hat"
+type = "HAT"
+
+[[equipment]]
+id = 10043
+name = "Larupia top"
+type = "BODY"
+
+[[equipment]]
+id = 10045
+name = "Larupia hat"
+type = "HAT"
+
+[[equipment]]
+id = 10049
+name = "Graahk top"
+type = "BODY"
+
+[[equipment]]
+id = 10051
+name = "Graahk headdress"
+type = "HAT"
+
+[[equipment]]
+id = 10053
+name = "Wood camo top"
+type = "BODY"
+
+[[equipment]]
+id = 10057
+name = "Jungle camo top"
+type = "BODY"
+
+[[equipment]]
+id = 10061
+name = "Desert camo top"
+type = "BODY"
+
+[[equipment]]
+id = 10065
+name = "Polar camo top"
+type = "BODY"
+
+[[equipment]]
+id = 10172
+name = "Fake beak"
+type = "HAT"
+
+[[equipment]]
+id = 10286
+name = "Rune helm (h1)"
+type = "HAT"
+
+[[equipment]]
+id = 10288
+name = "Rune helm (h2)"
+type = "HAT"
+
+[[equipment]]
+id = 10290
+name = "Rune helm (h3)"
+type = "HAT"
+
+[[equipment]]
+id = 10292
+name = "Rune helm (h4)"
+type = "HAT"
+
+[[equipment]]
+id = 10294
+name = "Rune helm (h5)"
+type = "HAT"
+
+[[equipment]]
+id = 10296
+name = "Adamant helm (h1)"
+type = "HAT"
+
+[[equipment]]
+id = 10298
+name = "Adamant helm (h2)"
+type = "HAT"
+
+[[equipment]]
+id = 10300
+name = "Adamant helm (h3)"
+type = "HAT"
+
+[[equipment]]
+id = 10302
+name = "Adamant helm (h4)"
+type = "HAT"
+
+[[equipment]]
+id = 10304
+name = "Adamant helm (h5)"
+type = "HAT"
+
+[[equipment]]
+id = 10306
+name = "Black helm (h1)"
+type = "HAT"
+
+[[equipment]]
+id = 10308
+name = "Black helm (h2)"
+type = "HAT"
+
+[[equipment]]
+id = 10310
+name = "Black helm (h3)"
+type = "HAT"
+
+[[equipment]]
+id = 10312
+name = "Black helm (h4)"
+type = "HAT"
+
+[[equipment]]
+id = 10314
+name = "Black helm (h5)"
+type = "HAT"
+
+[[equipment]]
+id = 10316
+name = "Bob's red shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10318
+name = "Bob's blue shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10320
+name = "Bob's green shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10322
+name = "Bob's black shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10324
+name = "Bob's purple shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10330
+name = "3rd age range top"
+type = "BODY"
+
+[[equipment]]
+id = 10334
+name = "3rd age range coif"
+type = "HAT"
+
+[[equipment]]
+id = 10338
+name = "3rd age robe top"
+type = "BODY"
+
+[[equipment]]
+id = 10342
+name = "3rd age mage hat"
+type = "HAT"
+
+[[equipment]]
+id = 10348
+name = "3rd age platebody"
+type = "BODY"
+
+[[equipment]]
+id = 10350
+name = "3rd age full helmet"
+type = "HAT"
+
+[[equipment]]
+id = 10370
+name = "Zamorak d'hide"
+type = "BODY"
+
+[[equipment]]
+id = 10374
+name = "Zamorak coif"
+type = "HAT"
+
+[[equipment]]
+id = 10378
+name = "Guthix dragonhide"
+type = "BODY"
+
+[[equipment]]
+id = 10382
+name = "Guthix coif"
+type = "HAT"
+
+[[equipment]]
+id = 10386
+name = "Saradomin d'hide"
+type = "BODY"
+
+[[equipment]]
+id = 10390
+name = "Saradomin coif"
+type = "HAT"
+
+[[equipment]]
+id = 10392
+name = "A powdered wig"
+type = "HAT"
+
+[[equipment]]
+id = 10398
+name = "Sleeping cap"
+type = "HAT"
+
+[[equipment]]
+id = 10400
+name = "Black elegant shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10404
+name = "Red elegant shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10406
+name = "Red elegant legs"
+type = "BODY"
+
+[[equipment]]
+id = 10408
+name = "Blue elegant shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10410
+name = "Blue elegant legs"
+type = "BODY"
+
+[[equipment]]
+id = 10412
+name = "Green elegant shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10414
+name = "Green elegant legs"
+type = "BODY"
+
+[[equipment]]
+id = 10416
+name = "Purple elegant shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10418
+name = "Purple elegant legs"
+type = "BODY"
+
+[[equipment]]
+id = 10420
+name = "White elegant blouse"
+type = "BODY"
+
+[[equipment]]
+id = 10424
+name = "Red elegant blouse"
+type = "BODY"
+
+[[equipment]]
+id = 10426
+name = "Red elegant skirt"
+type = "BODY"
+
+[[equipment]]
+id = 10428
+name = "Blue elegant blouse"
+type = "BODY"
+
+[[equipment]]
+id = 10430
+name = "Blue elegant skirt"
+type = "BODY"
+
+[[equipment]]
+id = 10432
+name = "Green elegant blouse"
+type = "BODY"
+
+[[equipment]]
+id = 10436
+name = "Purple elegant blouse"
+type = "BODY"
+
+[[equipment]]
+id = 10438
+name = "Purple elegant skirt"
+type = "BODY"
+
+[[equipment]]
+id = 10452
+name = "Saradomin mitre"
+type = "HAT"
+
+[[equipment]]
+id = 10454
+name = "Guthix mitre"
+type = "HAT"
+
+[[equipment]]
+id = 10456
+name = "Zamorak mitre"
+type = "HAT"
+
+[[equipment]]
+id = 10458
+name = "Saradomin robe top"
+type = "BODY"
+
+[[equipment]]
+id = 10460
+name = "Zamorak robe top"
+type = "BODY"
+
+[[equipment]]
+id = 10462
+name = "Guthix robe top"
+type = "BODY"
+
+[[equipment]]
+id = 10507
+name = "Reindeer hat"
+type = "HAT"
+
+[[equipment]]
+id = 10547
+name = "Healer hat"
+type = "HAT"
+
+[[equipment]]
+id = 10548
+name = "Fighter hat"
+type = "HAT"
+
+[[equipment]]
+id = 10549
+name = "Runner hat"
+type = "HAT"
+
+[[equipment]]
+id = 10550
+name = "Ranger hat"
+type = "HAT"
+
+[[equipment]]
+id = 10551
+name = "Fighter torso"
+type = "BODY"
+
+[[equipment]]
+id = 10564
+name = "Granite body"
+type = "BODY"
+
+[[equipment]]
+id = 10589
+name = "Granite helm"
+type = "HAT"
+
+[[equipment]]
+id = 10601
+name = "Mystic hat"
+type = "HAT"
+
+[[equipment]]
+id = 10602
+name = "Mystic hat (dark)"
+type = "HAT"
+
+[[equipment]]
+id = 10603
+name = "Mystic hat (light)"
+type = "HAT"
+
+[[equipment]]
+id = 10604
+name = "Skeletal helm"
+type = "HAT"
+
+[[equipment]]
+id = 10605
+name = "Infinity top"
+type = "BODY"
+
+[[equipment]]
+id = 10606
+name = "Splitbark helm"
+type = "HAT"
+
+[[equipment]]
+id = 10608
+name = "Moonclan hat"
+type = "HAT"
+
+[[equipment]]
+id = 10609
+name = "Lunar helm"
+type = "HAT"
+
+[[equipment]]
+id = 10611
+name = "Void knight top"
+type = "BODY"
+
+[[equipment]]
+id = 10612
+name = "Rogue mask"
+type = "HAT"
+
+[[equipment]]
+id = 10613
+name = "Rock-shell helm"
+type = "HAT"
+
+[[equipment]]
+id = 10614
+name = "Spined helm"
+type = "HAT"
+
+[[equipment]]
+id = 10615
+name = "Tribal mask"
+type = "HAT"
+
+[[equipment]]
+id = 10616
+name = "Tribal mask"
+type = "HAT"
+
+[[equipment]]
+id = 10617
+name = "Tribal mask"
+type = "HAT"
+
+[[equipment]]
+id = 10618
+name = "White platebody"
+type = "BODY"
+
+[[equipment]]
+id = 10619
+name = "Initiate hauberk"
+type = "BODY"
+
+[[equipment]]
+id = 10620
+name = "Proselyte hauberk"
+type = "BODY"
+
+[[equipment]]
+id = 10621
+name = "Mourner top"
+type = "BODY"
+
+[[equipment]]
+id = 10622
+name = "Kyatt top"
+type = "BODY"
+
+[[equipment]]
+id = 10623
+name = "Larupia top"
+type = "BODY"
+
+[[equipment]]
+id = 10624
+name = "Graahk top"
+type = "BODY"
+
+[[equipment]]
+id = 10625
+name = "Wood camo top"
+type = "BODY"
+
+[[equipment]]
+id = 10626
+name = "Jungle camo top"
+type = "BODY"
+
+[[equipment]]
+id = 10627
+name = "Desert camo top"
+type = "BODY"
+
+[[equipment]]
+id = 10628
+name = "Polar camo top"
+type = "BODY"
+
+[[equipment]]
+id = 10629
+name = "Mime mask"
+type = "HAT"
+
+[[equipment]]
+id = 10630
+name = "Princess blouse"
+type = "BODY"
+
+[[equipment]]
+id = 10631
+name = "Zombie shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10632
+name = "Camo top"
+type = "BODY"
+
+[[equipment]]
+id = 10633
+name = "Lederhosen top"
+type = "BODY"
+
+[[equipment]]
+id = 10634
+name = "Shade robe"
+type = "BODY"
+
+[[equipment]]
+id = 10680
+name = "Studded body (g)"
+type = "BODY"
+
+[[equipment]]
+id = 10681
+name = "Studded body (t)"
+type = "BODY"
+
+[[equipment]]
+id = 10688
+name = "Enchanted top"
+type = "BODY"
+
+[[equipment]]
+id = 10690
+name = "Black platebody (t)"
+type = "BODY"
+
+[[equipment]]
+id = 10691
+name = "Black platebody (g)"
+type = "BODY"
+
+[[equipment]]
+id = 10692
+name = "Highwayman mask"
+type = "HAT"
+
+[[equipment]]
+id = 10693
+name = "Blue beret"
+type = "HAT"
+
+[[equipment]]
+id = 10694
+name = "Black beret"
+type = "HAT"
+
+[[equipment]]
+id = 10695
+name = "White beret"
+type = "HAT"
+
+[[equipment]]
+id = 10697
+name = "Adamant platebody (t)"
+type = "BODY"
+
+[[equipment]]
+id = 10698
+name = "Adamant platebody (g)"
+type = "BODY"
+
+[[equipment]]
+id = 10704
+name = "Rune helm (h1)"
+type = "HAT"
+
+[[equipment]]
+id = 10705
+name = "Rune helm (h2)"
+type = "HAT"
+
+[[equipment]]
+id = 10706
+name = "Rune helm (h3)"
+type = "HAT"
+
+[[equipment]]
+id = 10707
+name = "Rune helm (h4)"
+type = "HAT"
+
+[[equipment]]
+id = 10708
+name = "Rune helm (h5)"
+type = "HAT"
+
+[[equipment]]
+id = 10709
+name = "Adamant helm (h1)"
+type = "HAT"
+
+[[equipment]]
+id = 10710
+name = "Adamant helm (h2)"
+type = "HAT"
+
+[[equipment]]
+id = 10711
+name = "Adamant helm (h3)"
+type = "HAT"
+
+[[equipment]]
+id = 10712
+name = "Adamant helm (h4)"
+type = "HAT"
+
+[[equipment]]
+id = 10713
+name = "Adamant helm (h5)"
+type = "HAT"
+
+[[equipment]]
+id = 10714
+name = "Bob's red shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10715
+name = "Bob's blue shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10716
+name = "Bob's green shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10717
+name = "Bob's black shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10718
+name = "Bob's purple shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10721
+name = "Frog mask"
+type = "HAT"
+
+[[equipment]]
+id = 10722
+name = "Reindeer hat"
+type = "HAT"
+
+[[equipment]]
+id = 10723
+name = "Jack lantern mask"
+type = "HAT"
+
+[[equipment]]
+id = 10727
+name = "Skeleton shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10728
+name = "Skeleton mask"
+type = "HAT"
+
+[[equipment]]
+id = 10734
+name = "Bunny ears"
+type = "HAT"
+
+[[equipment]]
+id = 10740
+name = "A powdered wig"
+type = "HAT"
+
+[[equipment]]
+id = 10746
+name = "Sleeping cap"
+type = "HAT"
+
+[[equipment]]
+id = 10748
+name = "Black elegant shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10750
+name = "Red elegant shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10752
+name = "Blue elegant shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10754
+name = "Green elegant shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10756
+name = "Purple elegant shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10758
+name = "Red boater"
+type = "HAT"
+
+[[equipment]]
+id = 10760
+name = "Orange boater"
+type = "HAT"
+
+[[equipment]]
+id = 10762
+name = "Green boater"
+type = "HAT"
+
+[[equipment]]
+id = 10764
+name = "Blue boater"
+type = "HAT"
+
+[[equipment]]
+id = 10766
+name = "Black boater"
+type = "HAT"
+
+[[equipment]]
+id = 10768
+name = "Red headband"
+type = "HAT"
+
+[[equipment]]
+id = 10770
+name = "Black headband"
+type = "HAT"
+
+[[equipment]]
+id = 10772
+name = "Brown headband"
+type = "HAT"
+
+[[equipment]]
+id = 10774
+name = "Pirate's hat"
+type = "HAT"
+
+[[equipment]]
+id = 10776
+name = "Zamorak platebody"
+type = "BODY"
+
+[[equipment]]
+id = 10778
+name = "Saradomin plate"
+type = "BODY"
+
+[[equipment]]
+id = 10780
+name = "Guthix platebody"
+type = "BODY"
+
+[[equipment]]
+id = 10782
+name = "Gilded platebody"
+type = "BODY"
+
+[[equipment]]
+id = 10784
+name = "Saradomin robe top"
+type = "BODY"
+
+[[equipment]]
+id = 10786
+name = "Zamorak robe top"
+type = "BODY"
+
+[[equipment]]
+id = 10788
+name = "Guthix robe top"
+type = "BODY"
+
+[[equipment]]
+id = 10790
+name = "Zamorak d'hide"
+type = "BODY"
+
+[[equipment]]
+id = 10792
+name = "Saradomin d'hide"
+type = "BODY"
+
+[[equipment]]
+id = 10794
+name = "Guthix dragonhide"
+type = "BODY"
+
+[[equipment]]
+id = 10796
+name = "Robin hood hat"
+type = "HAT"
+
+[[equipment]]
+id = 10798
+name = "Rune platebody (g)"
+type = "BODY"
+
+[[equipment]]
+id = 10800
+name = "Rune platebody (t)"
+type = "BODY"
+
+[[equipment]]
+id = 10802
+name = "Tan cavalier"
+type = "HAT"
+
+[[equipment]]
+id = 10804
+name = "Dark cavalier"
+type = "HAT"
+
+[[equipment]]
+id = 10806
+name = "Black cavalier"
+type = "HAT"
+
+[[equipment]]
+id = 10828
+name = "Helm of neitiznot"
+type = "HELM"
+
+[[equipment]]
+id = 10836
+name = "Silly jester hat"
+type = "HAT"
+
+[[equipment]]
+id = 10837
+name = "Silly jester top"
+type = "BODY"
+
+[[equipment]]
+id = 10862
+name = "Hard hat"
+type = "HAT"
+
+[[equipment]]
+id = 10863
+name = "Builder's shirt"
+type = "BODY"
+
+[[equipment]]
+id = 10883
+name = "Hard hat"
+type = "HAT"
+
+[[equipment]]
+id = 10939
+name = "Lumberjack top"
+type = "BODY"
+
+[[equipment]]
+id = 10941
+name = "Lumberjack hat"
+type = "HAT"
+
+[[equipment]]
+id = 10945
+name = "Lumberjack top"
+type = "BODY"
+
+[[equipment]]
+id = 10954
+name = "Frog-leather body"
+type = "BODY"
+
+[[equipment]]
+id = 11015
+name = "Chicken head"
+type = "HAT"
+
+[[equipment]]
+id = 11017
+name = "Chicken wings"
+type = "BODY"
+
+[[equipment]]
+id = 11020
+name = "Chicken wings"
+type = "BODY"
+
+[[equipment]]
+id = 11021
+name = "Chicken head"
+type = "HAT"
+
+[[equipment]]
+id = 11135
+name = "Bomber jacket"
+type = "HAT"
+
+[[equipment]]
+id = 11200
+name = "Dwarven helmet"
+type = "HAT"
+
+[[equipment]]
+id = 11274
+name = "Ham shirt"
+type = "BODY"
+
+[[equipment]]
+id = 11277
+name = "Cavalier mask"
+type = "HAT"
+
+[[equipment]]
+id = 11278
+name = "Beret mask"
+type = "HAT"
+
+[[equipment]]
+id = 11280
+name = "Cavalier mask"
+type = "HAT"
+
+[[equipment]]
+id = 11282
+name = "Beret mask"
+type = "HAT"
+
+[[equipment]]
+id = 11335
+name = "Dragon full helm"
+type = "MASK"
+
+[[equipment]]
+id = 11663
+name = "Void mage helm"
+type = "HAT"
+
+[[equipment]]
+id = 11664
+name = "Void ranger helm"
+type = "HAT"
+
+[[equipment]]
+id = 11665
+name = "Void melee helm"
+type = "HAT"
+
+[[equipment]]
+id = 11674
+name = "Void mage helm"
+type = "HAT"
+
+[[equipment]]
+id = 11675
+name = "Void ranger helm"
+type = "HAT"
+
+[[equipment]]
+id = 11676
+name = "Void melee helm"
+type = "HAT"
+
+[[equipment]]
+id = 11774
+name = "Black mask (10) (i)"
+type = "HAT"
+
+[[equipment]]
+id = 11775
+name = "Black mask (9) (i)"
+type = "HAT"
+
+[[equipment]]
+id = 11776
+name = "Black mask (8) (i)"
+type = "HAT"
+
+[[equipment]]
+id = 11777
+name = "Black mask (7) (i)"
+type = "HAT"
+
+[[equipment]]
+id = 11778
+name = "Black mask (6) (i)"
+type = "HAT"
+
+[[equipment]]
+id = 11779
+name = "Black mask (5) (i)"
+type = "HAT"
+
+[[equipment]]
+id = 11780
+name = "Black mask (4) (i)"
+type = "HAT"
+
+[[equipment]]
+id = 11781
+name = "Black mask (3) (i)"
+type = "HAT"
+
+[[equipment]]
+id = 11782
+name = "Black mask (2) (i)"
+type = "HAT"
+
+[[equipment]]
+id = 11783
+name = "Black mask (1) (i)"
+type = "HAT"
+
+[[equipment]]
+id = 11784
+name = "Black mask (i)"
+type = "HAT"
+
+[[equipment]]
+id = 11826
+name = "Armadyl helmet"
+type = "HAT"
+
+[[equipment]]
+id = 11828
+name = "Armadyl chestplate"
+type = "BODY"
+
+[[equipment]]
+id = 11832
+name = "Bandos chestplate"
+type = "BODY"
+
+[[equipment]]
+id = 11847
+name = "Black h'ween mask"
+type = "HAT"
+
+[[equipment]]
+id = 11850
+name = "Graceful hood"
+type = "HAT"
+
+[[equipment]]
+id = 11851
+name = "Graceful hood"
+type = "HAT"
+
+[[equipment]]
+id = 11854
+name = "Graceful top"
+type = "BODY"
+
+[[equipment]]
+id = 11855
+name = "Graceful top"
+type = "BODY"
+
+[[equipment]]
+id = 11862
+name = "Black partyhat"
+type = "HAT"
+
+[[equipment]]
+id = 11863
+name = "Rainbow partyhat"
+type = "HAT"
+
+[[equipment]]
+id = 11864
+name = "Slayer helmet"
+type = "HAT"
+
+[[equipment]]
+id = 11865
+name = "Slayer helmet (i)"
+type = "HAT"
+
+[[equipment]]
+id = 11896
+name = "Decorative armour"
+type = "BODY"
+
+[[equipment]]
+id = 11898
+name = "Decorative armour"
+type = "HAT"
+
+[[equipment]]
+id = 11919
+name = "Cow mask"
+type = "HAT"
+
+[[equipment]]
+id = 11990
+name = "Fedora"
+type = "HAT"
+
+[[equipment]]
+id = 12013
+name = "Prospector helmet"
+type = "HAT"
+
+[[equipment]]
+id = 12014
+name = "Prospector jacket"
+type = "BODY"
+
+[[equipment]]
+id = 12193
+name = "Ancient robe top"
+type = "BODY"
+
+[[equipment]]
+id = 12203
+name = "Ancient mitre"
+type = "HAT"
+
+[[equipment]]
+id = 12205
+name = "Bronze platebody (g)"
+type = "BODY"
+
+[[equipment]]
+id = 12211
+name = "Bronze full helm (g)"
+type = "HAT"
+
+[[equipment]]
+id = 12215
+name = "Bronze platebody (t)"
+type = "BODY"
+
+[[equipment]]
+id = 12221
+name = "Bronze full helm (t)"
+type = "HAT"
+
+[[equipment]]
+id = 12225
+name = "Iron platebody (t)"
+type = "BODY"
+
+[[equipment]]
+id = 12231
+name = "Iron full helm (t)"
+type = "HAT"
+
+[[equipment]]
+id = 12235
+name = "Iron platebody (g)"
+type = "BODY"
+
+[[equipment]]
+id = 12241
+name = "Iron full helm (g)"
+type = "HAT"
+
+[[equipment]]
+id = 12245
+name = "Beanie"
+type = "HAT"
+
+[[equipment]]
+id = 12247
+name = "Red beret"
+type = "HAT"
+
+[[equipment]]
+id = 12249
+name = "Imp mask"
+type = "HAT"
+
+[[equipment]]
+id = 12251
+name = "Goblin mask"
+type = "HAT"
+
+[[equipment]]
+id = 12253
+name = "Armadyl robe top"
+type = "BODY"
+
+[[equipment]]
+id = 12259
+name = "Armadyl mitre"
+type = "HAT"
+
+[[equipment]]
+id = 12265
+name = "Bandos robe top"
+type = "BODY"
+
+[[equipment]]
+id = 12271
+name = "Bandos mitre"
+type = "HAT"
+
+[[equipment]]
+id = 12277
+name = "Mithril platebody (g)"
+type = "BODY"
+
+[[equipment]]
+id = 12283
+name = "Mithril full helm (g)"
+type = "HAT"
+
+[[equipment]]
+id = 12287
+name = "Mithril platebody (t)"
+type = "BODY"
+
+[[equipment]]
+id = 12293
+name = "Mithril full helm (t)"
+type = "HAT"
+
+[[equipment]]
+id = 12299
+name = "White headband"
+type = "HAT"
+
+[[equipment]]
+id = 12301
+name = "Blue headband"
+type = "HAT"
+
+[[equipment]]
+id = 12303
+name = "Gold headband"
+type = "HAT"
+
+[[equipment]]
+id = 12305
+name = "Pink headband"
+type = "HAT"
+
+[[equipment]]
+id = 12307
+name = "Green headband"
+type = "HAT"
+
+[[equipment]]
+id = 12309
+name = "Pink boater"
+type = "HAT"
+
+[[equipment]]
+id = 12311
+name = "Purple boater"
+type = "HAT"
+
+[[equipment]]
+id = 12313
+name = "White boater"
+type = "HAT"
+
+[[equipment]]
+id = 12315
+name = "Pink elegant shirt"
+type = "BODY"
+
+[[equipment]]
+id = 12317
+name = "Pink elegant legs"
+type = "BODY"
+
+[[equipment]]
+id = 12319
+name = "Crier hat"
+type = "HAT"
+
+[[equipment]]
+id = 12321
+name = "White cavalier"
+type = "HAT"
+
+[[equipment]]
+id = 12323
+name = "Red cavalier"
+type = "HAT"
+
+[[equipment]]
+id = 12325
+name = "Navy cavalier"
+type = "HAT"
+
+[[equipment]]
+id = 12327
+name = "Red d'hide body (g)"
+type = "BODY"
+
+[[equipment]]
+id = 12331
+name = "Red d'hide body (t)"
+type = "BODY"
+
+[[equipment]]
+id = 12337
+name = "Sagacious spectacles"
+type = "HAT"
+
+[[equipment]]
+id = 12339
+name = "Pink elegant blouse"
+type = "BODY"
+
+[[equipment]]
+id = 12341
+name = "Pink elegant skirt"
+type = "BODY"
+
+[[equipment]]
+id = 12343
+name = "Gold elegant blouse"
+type = "BODY"
+
+[[equipment]]
+id = 12345
+name = "Gold elegant skirt"
+type = "BODY"
+
+[[equipment]]
+id = 12347
+name = "Gold elegant shirt"
+type = "BODY"
+
+[[equipment]]
+id = 12349
+name = "Gold elegant legs"
+type = "BODY"
+
+[[equipment]]
+id = 12351
+name = "Musketeer hat"
+type = "HAT"
+
+[[equipment]]
+id = 12353
+name = "Monocle"
+type = "HAT"
+
+[[equipment]]
+id = 12355
+name = "Big pirate hat"
+type = "HAT"
+
+[[equipment]]
+id = 12359
+name = "Leprechaun hat"
+type = "HAT"
+
+[[equipment]]
+id = 12361
+name = "Cat mask"
+type = "HAT"
+
+[[equipment]]
+id = 12363
+name = "Bronze dragon mask"
+type = "HAT"
+
+[[equipment]]
+id = 12365
+name = "Iron dragon mask"
+type = "HAT"
+
+[[equipment]]
+id = 12367
+name = "Steel dragon mask"
+type = "HAT"
+
+[[equipment]]
+id = 12369
+name = "Mithril dragon mask"
+type = "HAT"
+
+[[equipment]]
+id = 12371
+name = "Lava dragon mask"
+type = "HAT"
+
+[[equipment]]
+id = 12381
+name = "Black d'hide body (g)"
+type = "BODY"
+
+[[equipment]]
+id = 12385
+name = "Black d'hide body (t)"
+type = "BODY"
+
+[[equipment]]
+id = 12393
+name = "Royal gown top"
+type = "BODY"
+
+[[equipment]]
+id = 12397
+name = "Royal crown"
+type = "HAT"
+
+[[equipment]]
+id = 12399
+name = "Partyhat & specs"
+type = "HAT"
+
+[[equipment]]
+id = 12412
+name = "Pirate hat & patch"
+type = "HAT"
+
+[[equipment]]
+id = 12414
+name = "Dragon chainbody (g)"
+type = "BODY"
+
+[[equipment]]
+id = 12417
+name = "Dragon full helm (g)"
+type = "HAT"
+
+[[equipment]]
+id = 12419
+name = "Light infinity hat"
+type = "HAT"
+
+[[equipment]]
+id = 12420
+name = "Light infinity top"
+type = "BODY"
+
+[[equipment]]
+id = 12428
+name = "Penguin mask"
+type = "HAT"
+
+[[equipment]]
+id = 12430
+name = "Afro"
+type = "HAT"
+
+[[equipment]]
+id = 12432
+name = "Top hat"
+type = "HAT"
+
+[[equipment]]
+id = 12434
+name = "Top hat & monocle"
+type = "HAT"
+
+[[equipment]]
+id = 12441
+name = "Musketeer tabard"
+type = "BODY"
+
+[[equipment]]
+id = 12449
+name = "Black wizard robe (g)"
+type = "BODY"
+
+[[equipment]]
+id = 12451
+name = "Black wizard robe (t)"
+type = "BODY"
+
+[[equipment]]
+id = 12453
+name = "Black wizard hat (g)"
+type = "HAT"
+
+[[equipment]]
+id = 12455
+name = "Black wizard hat (t)"
+type = "HAT"
+
+[[equipment]]
+id = 12457
+name = "Dark infinity hat"
+type = "HAT"
+
+[[equipment]]
+id = 12458
+name = "Dark infinity top"
+type = "BODY"
+
+[[equipment]]
+id = 12460
+name = "Ancient platebody"
+type = "BODY"
+
+[[equipment]]
+id = 12466
+name = "Ancient full helm"
+type = "HAT"
+
+[[equipment]]
+id = 12470
+name = "Armadyl platebody"
+type = "BODY"
+
+[[equipment]]
+id = 12476
+name = "Armadyl full helm"
+type = "HAT"
+
+[[equipment]]
+id = 12480
+name = "Bandos platebody"
+type = "BODY"
+
+[[equipment]]
+id = 12486
+name = "Bandos full helm"
+type = "HAT"
+
+[[equipment]]
+id = 12492
+name = "Ancient d'hide"
+type = "BODY"
+
+[[equipment]]
+id = 12496
+name = "Ancient coif"
+type = "HAT"
+
+[[equipment]]
+id = 12500
+name = "Bandos d'hide"
+type = "BODY"
+
+[[equipment]]
+id = 12504
+name = "Bandos coif"
+type = "HAT"
+
+[[equipment]]
+id = 12508
+name = "Armadyl d'hide"
+type = "BODY"
+
+[[equipment]]
+id = 12512
+name = "Armadyl coif"
+type = "HAT"
+
+[[equipment]]
+id = 12516
+name = "Pith helmet"
+type = "HAT"
+
+[[equipment]]
+id = 12518
+name = "Green dragon mask"
+type = "HAT"
+
+[[equipment]]
+id = 12520
+name = "Blue dragon mask"
+type = "HAT"
+
+[[equipment]]
+id = 12522
+name = "Red dragon mask"
+type = "HAT"
+
+[[equipment]]
+id = 12524
+name = "Black dragon mask"
+type = "HAT"
+
+[[equipment]]
+id = 12540
+name = "Deerstalker"
+type = "HAT"
+
+[[equipment]]
+id = 12596
+name = "Rangers' tunic"
+type = "BODY"
+
+[[equipment]]
+id = 12600
+name = "Druidic wreath"
+type = "HAT"
+
+[[equipment]]
+id = 12637
+name = "Saradomin halo"
+type = "HAT"
+
+[[equipment]]
+id = 12638
+name = "Zamorak halo"
+type = "HAT"
+
+[[equipment]]
+id = 12639
+name = "Guthix halo"
+type = "HAT"
+
+[[equipment]]
+id = 12810
+name = "Ironman helm"
+type = "HAT"
+
+[[equipment]]
+id = 12811
+name = "Ironman platebody"
+type = "BODY"
+
+[[equipment]]
+id = 12813
+name = "Ultimate ironman helm"
+type = "HAT"
+
+[[equipment]]
+id = 12814
+name = "Ultimate ironman platebody"
+type = "BODY"
+
+[[equipment]]
+id = 12845
+name = "Grim reaper hood"
+type = "HAT"
+
+[[equipment]]
+id = 12855
+name = "Hunter's honour"
+type = "HAT"
+
+[[equipment]]
+id = 12856
+name = "Rogue's revenge"
+type = "HAT"
+
+[[equipment]]
+id = 12887
+name = "Santa mask"
+type = "HAT"
+
+[[equipment]]
+id = 12888
+name = "Santa jacket"
+type = "BODY"
+
+[[equipment]]
+id = 12892
+name = "Antisanta mask"
+type = "HAT"
+
+[[equipment]]
+id = 12893
+name = "Antisanta jacket"
+type = "BODY"
+
+[[equipment]]
+id = 12929
+name = "Serpentine helm (uncharged)"
+type = "HAT"
+
+[[equipment]]
+id = 12931
+name = "Serpentine helm"
+type = "HAT"
+
+[[equipment]]
+id = 12956
+name = "Cow top"
+type = "BODY"
+
+[[equipment]]
+id = 13070
+name = "Achievement diary hood"
+type = "HAT"
+
+[[equipment]]
+id = 13072
+name = "Elite void top"
+type = "BODY"
+
+[[equipment]]
+id = 13104
+name = "Varrock armour 1"
+type = "BODY"
+
+[[equipment]]
+id = 13105
+name = "Varrock armour 2"
+type = "BODY"
+
+[[equipment]]
+id = 13106
+name = "Varrock armour 3"
+type = "BODY"
+
+[[equipment]]
+id = 13107
+name = "Varrock armour 4"
+type = "BODY"
+
+[[equipment]]
+id = 13137
+name = "Kandarin headgear 1"
+type = "HAT"
+
+[[equipment]]
+id = 13138
+name = "Kandarin headgear 2"
+type = "HAT"
+
+[[equipment]]
+id = 13139
+name = "Kandarin headgear 3"
+type = "HAT"
+
+[[equipment]]
+id = 13140
+name = "Kandarin headgear 4"
+type = "HAT"
+
+[[equipment]]
+id = 13196
+name = "Tanzanite helm (uncharged)"
+type = "HAT"
+
+[[equipment]]
+id = 13197
+name = "Tanzanite helm"
+type = "HAT"
+
+[[equipment]]
+id = 13198
+name = "Magma helm (uncharged)"
+type = "HAT"
+
+[[equipment]]
+id = 13199
+name = "Magma helm"
+type = "HAT"
+
+[[equipment]]
+id = 13258
+name = "Angler hat"
+type = "HAT"
+
+[[equipment]]
+id = 13259
+name = "Angler top"
+type = "BODY"
+
+[[equipment]]
+id = 13281
+name = "Max hood"
+type = "HAT"
+
+[[equipment]]
+id = 13330
+name = "Fire max hood"
+type = "HAT"
+
+[[equipment]]
+id = 13332
+name = "Saradomin max hood"
+type = "HAT"
+
+[[equipment]]
+id = 13334
+name = "Zamorak max hood"
+type = "HAT"
+
+[[equipment]]
+id = 13336
+name = "Guthix max hood"
+type = "HAT"
+
+[[equipment]]
+id = 13338
+name = "Ava's max hood"
+type = "HAT"
+
+[[equipment]]
+id = 20149
+name = "Gilded chainbody"
+type = "TORSO"
+
+[[equipment]]
+id = 20266
+name = "Black unicorn mask"
+type = "MASK"
+
+[[equipment]]
+id = 21018
+name = "Ancestral hat"
+type = "HAT"
+
+[[equipment]]
+id = 21021
+name = "Ancestral robe top"
+type = "BODY"
+

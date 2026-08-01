@@ -53,4 +53,3 @@ object Misc {
         h: Int,
     ): GameObjectDef? = Geometry.getObject(objectId, x, y, h)
 }
-

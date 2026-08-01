@@ -5,13 +5,24 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 
+import java.util.Arrays;
+
 final class PlayerUpdateState {
+    /**
+     * Globally-unique appearance ticket source. Uniqueness across all player instances means a
+     * viewer's remembered ticket for a slot can never falsely match after the slot is reused by
+     * a different session.
+     */
+    private static final java.util.concurrent.atomic.AtomicLong APPEARANCE_TICKETS =
+            new java.util.concurrent.atomic.AtomicLong();
+
     private final Player owner;
-    private ByteMessage cachedUpdateBlock = null;
-    private boolean cachedUpdateBlockValid = false;
     private volatile long appearanceRevision = 0L;
     private volatile long cachedAppearanceRevision = -1L;
+    private volatile int cachedAppearanceSignature = Integer.MIN_VALUE;
     private volatile byte[] cachedAppearanceBytes = null;
+    private volatile long appearanceTicket = APPEARANCE_TICKETS.incrementAndGet();
+    private volatile byte[] ticketedAppearanceBytes = null;
     private final byte[] chatText = new byte[4096];
     private int chatTextSize = 0;
     private int chatTextEffects = 0;
@@ -25,33 +36,10 @@ final class PlayerUpdateState {
         this.owner = owner;
     }
 
-    boolean isCachedUpdateBlockValid() {
-        return cachedUpdateBlockValid && cachedUpdateBlock != null && cachedUpdateBlock.getBuffer().refCnt() > 0;
-    }
-
-    void writeCachedUpdateBlock(ByteMessage dst) {
-        dst.putBytes(cachedUpdateBlock);
-    }
-
-    void cacheUpdateBlock(ByteMessage src) {
-        releaseCachedUpdateBlock();
-        if (src != null) {
-            src.retain();
-            cachedUpdateBlock = src;
-            cachedUpdateBlockValid = true;
-            return;
-        }
-        cachedUpdateBlockValid = false;
-    }
-
-    void invalidateCachedUpdateBlock() {
-        cachedUpdateBlockValid = false;
-        releaseCachedUpdateBlock();
-    }
-
     void markAppearanceDirty() {
         appearanceRevision++;
         cachedAppearanceRevision = -1L;
+        cachedAppearanceSignature = Integer.MIN_VALUE;
         cachedAppearanceBytes = null;
     }
 
@@ -60,7 +48,9 @@ final class PlayerUpdateState {
     }
 
     boolean isCachedAppearanceValid() {
-        return cachedAppearanceBytes != null && cachedAppearanceRevision == appearanceRevision;
+        return cachedAppearanceBytes != null
+                && cachedAppearanceRevision == appearanceRevision
+                && cachedAppearanceSignature == appearanceSignature();
     }
 
     byte[] getCachedAppearanceBytes() {
@@ -70,16 +60,48 @@ final class PlayerUpdateState {
     void cacheAppearanceBytes(byte[] bytes) {
         cachedAppearanceBytes = bytes;
         cachedAppearanceRevision = appearanceRevision;
+        cachedAppearanceSignature = appearanceSignature();
+        // A new ticket only when the visible bytes actually changed — a defensive-signature
+        // rebuild that produces identical bytes must not force viewers to re-receive appearance.
+        if (ticketedAppearanceBytes == null || !Arrays.equals(ticketedAppearanceBytes, bytes)) {
+            ticketedAppearanceBytes = bytes;
+            appearanceTicket = APPEARANCE_TICKETS.incrementAndGet();
+        }
     }
 
-    void releaseCachedUpdateBlock() {
-        if (cachedUpdateBlock == null) {
-            return;
-        }
-        if (cachedUpdateBlock.getBuffer().refCnt() > 0) {
-            cachedUpdateBlock.release();
-        }
-        cachedUpdateBlock = null;
+    long getAppearanceTicket() {
+        return appearanceTicket;
+    }
+
+    /**
+     * Most appearance state is changed through PlayerAppearanceState, which
+     * increments the revision above. Equipment is legacy array-backed state,
+     * however, so this signature is a defensive backstop for any missed
+     * writer. It prevents an old model from being reused even if a caller
+     * changed an equipment array directly.
+     */
+    private int appearanceSignature() {
+        int result = Arrays.hashCode(owner.getEquipment());
+        result = 31 * result + Arrays.hashCode(owner.playerLooks);
+        result = 31 * result + owner.getGender();
+        result = 31 * result + owner.headIcon;
+        result = 31 * result + owner.skullIcon;
+        result = 31 * result + (owner.isNpc ? 1 : 0);
+        result = 31 * result + owner.getPlayerNpc();
+        result = 31 * result + (owner.UsingAgility ? 1 : 0);
+        result = 31 * result + owner.getTorso();
+        result = 31 * result + owner.getArms();
+        result = 31 * result + owner.getLegs();
+        result = 31 * result + owner.getHands();
+        result = 31 * result + owner.getFeet();
+        result = 31 * result + owner.getBeard();
+        result = 31 * result + owner.getHead();
+        result = 31 * result + owner.getStandAnim();
+        result = 31 * result + owner.getWalkAnim();
+        result = 31 * result + owner.getRunAnim();
+        result = 31 * result + owner.determineCombatLevel();
+        result = 31 * result + (owner.getPlayerName() == null ? 0 : owner.getPlayerName().hashCode());
+        return result;
     }
 
     byte[] getChatText() {
@@ -124,7 +146,6 @@ final class PlayerUpdateState {
         chatTextSize = 0;
         chatTextColor = 0;
         chatTextEffects = 0;
-        invalidateCachedUpdateBlock();
     }
 
     void faceTarget(int index) {
@@ -157,12 +178,12 @@ final class PlayerUpdateState {
     }
 
     void appendMask400Update(ByteMessage buf) {
-        buf.put(owner.m4001, ValueType.SUBTRACT);
-        buf.put(owner.m4002, ValueType.SUBTRACT);
-        buf.put(owner.m4003, ValueType.SUBTRACT);
-        buf.put(owner.m4004, ValueType.SUBTRACT);
-        buf.putShort(owner.m4006, ByteOrder.BIG, ValueType.ADD);
-        buf.putShort(owner.m4005, ValueType.ADD);
-        buf.put(owner.m4007, ValueType.SUBTRACT);
+        buf.putBits(8, owner.m4001);
+        buf.putBits(8, owner.m4002);
+        buf.putBits(8, owner.m4003);
+        buf.putBits(8, owner.m4004);
+        buf.putBits(16, owner.m4006);
+        buf.putBits(16, owner.m4005);
+        buf.putBits(8, owner.m4007);
     }
 }

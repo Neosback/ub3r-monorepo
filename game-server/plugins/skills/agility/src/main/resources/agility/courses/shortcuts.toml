@@ -1,0 +1,29 @@
+schema_version = 1
+
+[[obstacle]]
+course = "shortcuts"
+name = "orange_bar"
+object_id = 23567
+required_level = 1
+experience = 100
+movement_type = "walk"
+delta_x = 0
+delta_y = 6
+duration_ms = 3600
+animation_id = 744
+required_item = 1544
+required_item_message = "You need a orange key to use these bars!"
+
+[[obstacle]]
+course = "shortcuts"
+name = "yellow_ledge"
+object_id = 23548
+required_level = 1
+experience = 100
+movement_type = "walk"
+delta_x = 0
+delta_y = 8
+duration_ms = 5400
+animation_id = 756
+required_item = 1545
+required_item_message = "You need a yellow key to use this ledge!"

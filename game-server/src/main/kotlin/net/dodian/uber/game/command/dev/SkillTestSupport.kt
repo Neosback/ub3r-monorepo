@@ -9,8 +9,8 @@ import net.dodian.uber.game.ui.bank.PlayerBankService
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
-import net.dodian.uber.game.skill.farming.FarmingData
-import net.dodian.uber.game.skill.farming.FarmingState
+import net.dodian.uber.game.engine.systems.skills.farming.FarmingData
+import net.dodian.uber.game.engine.systems.skills.farming.FarmingState
 import net.dodian.uber.game.engine.systems.skills.SkillAdminService
 
 private const val SKILL_TEST_BANK_AMOUNT = 100_000
@@ -154,11 +154,11 @@ internal fun handleSlayerTest(context: CommandContext): Boolean {
     val masterId = resolveSlayerMasterId(masterToken) ?: currentOrDefaultMaster(client)
 
     client.slayerData[0] = masterId
-    client.slayerData[1] = task.ordinal
+    client.slayerData[1] = net.dodian.uber.skills.slayer.SlayerTaskRegistry.tasks.indexOf(task)
     client.slayerData[2] = amount
     client.slayerData[3] = amount
     client.markSaveDirty(PlayerSaveSegment.SLAYER.mask)
-    context.reply("Set slayer task to ${task.textRepresentation} x$amount (master=$masterId).")
+    context.reply("Set slayer task to ${task.name} x$amount (master=$masterId).")
     return true
 }
 
@@ -170,12 +170,11 @@ private fun clearInventory(client: Client) {
     client.markSaveDirty(PlayerSaveSegment.INVENTORY.mask)
 }
 
-private fun resolveSlayerTask(raw: String): net.dodian.uber.game.skill.slayer.SlayerTaskDefinition? {
-    raw.toIntOrNull()?.let { return net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(it) }
+private fun resolveSlayerTask(raw: String): net.dodian.uber.skills.slayer.SlayerTaskDef? {
+    raw.toIntOrNull()?.let { return net.dodian.uber.skills.slayer.SlayerTaskRegistry.forOrdinal(it) }
     val normalized = raw.trim().lowercase().replace(" ", "_")
-    return net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.values().firstOrNull { task ->
-        task.name.lowercase() == normalized ||
-            task.textRepresentation.lowercase().replace(" ", "_") == normalized
+    return net.dodian.uber.skills.slayer.SlayerTaskRegistry.tasks.firstOrNull { task ->
+        task.name.lowercase().replace(" ", "_") == normalized
     }
 }
 

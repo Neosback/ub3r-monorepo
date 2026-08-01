@@ -8,6 +8,7 @@ import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.engine.systems.skills.sendFilterMessage
 import net.dodian.uber.game.engine.systems.skills.RuneCostService
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
+import net.dodian.uber.game.engine.systems.inventory.inventoryTransaction
 
 object ProductionActionService {
     @JvmStatic
@@ -98,37 +99,7 @@ object ProductionActionService {
         val itemMake = request.productId
         var amount = request.amountPerCycle
 
-        if (request.mode == ProductionMode.SUPER_COMBAT) {
-            if (!client.playerHasItem(itemOne) || (!client.playerHasItem(111) && !client.playerHasItem(269)) || !client.playerHasItem(2440) || !client.playerHasItem(2442)) {
-                client.resetAction()
-                val text =
-                    if (!client.playerHasItem(111) && !client.playerHasItem(269)) client.getItemName(269).lowercase()
-                    else if (!client.playerHasItem(itemOne)) client.getItemName(2436).lowercase()
-                    else if (!client.playerHasItem(2440)) client.getItemName(2440).lowercase()
-                    else client.getItemName(2442).lowercase()
-                client.sendFilterMessage("You do not have anymore $text.")
-                return false
-            }
-            client.deleteItem(itemOne, amount)
-            client.deleteItem(if (!client.playerHasItem(269)) 111 else 269, amount)
-            client.deleteItem(2440, amount)
-            client.deleteItem(2442, amount)
-            client.addItem(itemMake, amount)
-        } else if (request.mode == ProductionMode.OVERLOAD) {
-            if (!client.playerHasItem(itemOne) || !client.playerHasItem(2444) || !client.playerHasItem(12695)) {
-                client.resetAction()
-                val text =
-                    if (!client.playerHasItem(itemOne)) client.getItemName(itemOne).lowercase()
-                    else if (!client.playerHasItem(2444)) client.getItemName(2444).lowercase()
-                    else client.getItemName(12695).lowercase()
-                client.sendFilterMessage("You do not have anymore $text.")
-                return false
-            }
-            client.deleteItem(itemOne, amount)
-            client.deleteItem(2444, amount)
-            client.deleteItem(12695, amount)
-            client.addItem(itemMake, amount)
-        } else if (request.mode == ProductionMode.CHARGED_ORB) {
+        if (request.mode == ProductionMode.CHARGED_ORB) {
             if (!client.playerHasItem(itemOne) || !client.playerHasItem(itemTwo, 3)) {
                 client.resetAction()
                 client.sendFilterMessage("You need one unpowered orb and 3 cosmic runes to cast on this obelisk.")
@@ -144,10 +115,13 @@ object ProductionActionService {
                 client.sendFilterMessage("You need one bucket of sand and one soda ash")
                 return false
             }
-            client.deleteItem(itemOne, amount)
-            client.addItem(1925, amount)
-            client.deleteItem(itemTwo, amount)
-            client.addItem(itemMake, amount)
+            if (!client.inventoryTransaction {
+                    remove(itemOne, amount)
+                    remove(itemTwo, amount)
+                    add(1925, amount)
+                    add(itemMake, amount)
+                }
+            ) return false
         } else {
             if (!client.playerHasItem(itemOne) || (itemTwo != -1 && !client.playerHasItem(itemTwo))) {
                 client.resetAction()
@@ -162,14 +136,17 @@ object ProductionActionService {
                 client.resetAction()
                 return false
             }
-            client.deleteItem(itemOne, amount)
-            if (itemTwo != -1) {
-                client.deleteItem(itemTwo, amount)
-            }
-            client.addItem(itemMake, amount)
+            if (!client.inventoryTransaction {
+                    remove(itemOne, amount)
+                    if (itemTwo != -1) remove(itemTwo, amount)
+                    add(itemMake, amount)
+                }
+            ) return false
         }
 
-        client.checkItemUpdate()
+        if (request.mode == ProductionMode.CHARGED_ORB) {
+            client.checkItemUpdate()
+        }
         if (request.animationId != -1) {
             client.performAnimation(request.animationId, 0)
         }

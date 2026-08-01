@@ -9,4 +9,3 @@ object DevNpcContentCommands : CommandContent {
         commands {
         }
 }
-

@@ -1,0 +1,11 @@
+schemaVersion = 1
+region = "port_sarim"
+
+[[object]]
+id = 26254
+name = "Premium Deposit (wyverns)"
+x = 3058
+y = 9563
+z = 0
+type = 10
+rotation = "EAST"

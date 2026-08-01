@@ -1,0 +1,20 @@
+schemaVersion = 1
+region = "edgeville"
+
+[[object]]
+id = 409
+name = "Altar"
+x = 3094
+y = 3506
+z = 0
+type = 10
+rotation = "EAST"
+
+[[object]]
+id = 575
+name = "Altar"
+x = 3097
+y = 3506
+z = 0
+type = 10
+rotation = "WEST"

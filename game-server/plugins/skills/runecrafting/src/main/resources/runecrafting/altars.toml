@@ -1,0 +1,22 @@
+schema_version = 1
+
+# Rune essence altars. Crafting rolls once per essence for a bonus rune, then
+# adds the total crafted amount and grants experiencePerEssence * essenceCount xp.
+
+[[altar]]
+objectIds = "34768"
+runeId = 561
+requiredLevel = 1
+experiencePerEssence = 60
+
+[[altar]]
+objectIds = "27978"
+runeId = 565
+requiredLevel = 50
+experiencePerEssence = 85
+
+[[altar]]
+objectIds = "34766"
+runeId = 564
+requiredLevel = 75
+experiencePerEssence = 120

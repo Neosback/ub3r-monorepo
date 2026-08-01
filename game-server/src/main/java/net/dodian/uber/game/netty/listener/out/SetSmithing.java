@@ -16,26 +16,13 @@ public class SetSmithing implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-
-        // Write interface ID as int (4 bytes) - matches client's incoming.readInt()
-        message.putInt(writeFrame);
-
-        // Write item count as short (2 bytes) - matches client's incoming.readShort()
-        message.putShort(smithingItems.length);
-
+        int[] itemIds = new int[smithingItems.length];
+        int[] amounts = new int[smithingItems.length];
         for (int i = 0; i < smithingItems.length; i++) {
-            int itemId = smithingItems[i][0] + 1;
-            int amount = smithingItems[i][1];
-
-            // Amount as int (4 bytes) - matches client's incoming.readInt()
-            message.putInt(amount);
-
-            // Item ID only if amount > 0 - matches client's conditional read
-            if (amount != 0) {
-                message.putShort(itemId);
-            }
+            itemIds[i] = smithingItems[i][0];
+            amounts[i] = smithingItems[i][1];
         }
+        ByteMessage message = TarnishItemContainerEncoder.full(writeFrame, itemIds, amounts);
         client.send(message);
     }
 }

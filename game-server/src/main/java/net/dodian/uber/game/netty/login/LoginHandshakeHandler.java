@@ -40,11 +40,9 @@ public class LoginHandshakeHandler extends ByteToMessageDecoder {
         response.writeLong(serverSeed);
         ctx.writeAndFlush(response);
 
-        // Set the seed for the payload decoder and then remove this handler.
         ctx.channel().attr(SERVER_SEED_KEY).set(serverSeed);
         logger.debug("[Netty] Handshake complete for {} (seed {})", ctx.channel().remoteAddress(), serverSeed);
 
-        // The handshake is done, so this handler is no longer needed.
         ctx.pipeline().remove(this);
     }
 

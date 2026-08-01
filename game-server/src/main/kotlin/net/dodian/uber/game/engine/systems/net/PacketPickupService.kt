@@ -1,4 +1,5 @@
 package net.dodian.uber.game.engine.systems.net
+import net.dodian.uber.game.api.content.ContentActions
 
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService
 import net.dodian.uber.game.model.entity.player.Client
@@ -11,7 +12,6 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 
 /**
- * Kotlin service for ground-item pickup packet logic (opcode 236).
  *
  * The full business logic — guard messages, action cancellation, ground-item
  * lookup, pickup scheduling — lives here rather than in the listener.
@@ -21,7 +21,6 @@ object PacketPickupService {
         LocalDate.of(2024, 6, 1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 
     /**
-     * Processes a pick-up-ground-item request after the listener has decoded
      * item id and world coordinates and passed throttle checks.
      *
      * @param client the requesting player
@@ -43,7 +42,7 @@ object PacketPickupService {
             return
         }
 
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             client,
             PlayerActionCancelReason.GROUND_ITEM_INTERACTION,
             false, false, false, true

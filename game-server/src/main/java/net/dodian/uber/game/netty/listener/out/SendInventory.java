@@ -11,12 +11,7 @@ import java.util.List;
  * Sends an inventory (or any item container) update to the client.
  * <p>
  * Opcode: 53 (variable-short length)
- * Layout matching Client.java:15522-15582:
- *   - interface id:        int (4 bytes, big-endian)
- *   - item count:          short (2 bytes, big-endian)
- *   - for each item:
- *        * amount:         int (4 bytes, big-endian)
- *        * item id:        short (2 bytes, big-endian) - only if amount != 0
+ * Uses Tarnish's canonical opcode-53 item-container layout.
  */
 public class SendInventory implements OutgoingPacket {
 
@@ -30,18 +25,10 @@ public class SendInventory implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage msg = ByteMessage.message(53, MessageType.VAR_SHORT);
-        msg.putInt(interfaceId);
-        msg.putShort(items.size(), ByteOrder.BIG);
-
+        ByteMessage msg = TarnishItemContainerEncoder.full(interfaceId, items);
         StringBuilder preview = new StringBuilder();
         for (GameItem item : items) {
             int amount = item.getAmount();
-            msg.putInt(amount, ByteOrder.BIG);
-
-            if (amount != 0) {
-                msg.putShort(item.getId() + 1, ByteOrder.BIG);
-            }
             if (preview.length() < 120) {
                 if (preview.length() > 0) {
                     preview.append(", ");

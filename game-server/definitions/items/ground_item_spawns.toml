@@ -1,0 +1,434 @@
+# Global ground item spawns.
+# Loaded once at server startup via GlobalGroundItemSpawns.spawnAll().
+
+[[spawn]]
+group = "Troll Items"
+x = 2611
+y = 3096
+z = 0
+itemId = 11862
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "Troll Items"
+x = 2612
+y = 3096
+z = 0
+itemId = 11863
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "Troll Items"
+x = 2563
+y = 9511
+z = 0
+itemId = 1631
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "Troll Items"
+x = 2564
+y = 9511
+z = 0
+itemId = 6571
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "Yanille Starter Items"
+x = 2605
+y = 3104
+z = 0
+itemId = 1277
+amount = 1
+displayTime = 33
+
+[[spawn]]
+group = "Yanille Starter Items"
+x = 2607
+y = 3104
+z = 0
+itemId = 1171
+amount = 1
+displayTime = 33
+
+[[spawn]]
+group = "Snape Grass"
+x = 2810
+y = 3203
+z = 0
+itemId = 231
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "Snape Grass"
+x = 2807
+y = 3204
+z = 0
+itemId = 231
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "Snape Grass"
+x = 2804
+y = 3207
+z = 0
+itemId = 231
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "Snape Grass"
+x = 2801
+y = 3210
+z = 0
+itemId = 231
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "Limpwurt"
+x = 2874
+y = 3475
+z = 0
+itemId = 225
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "Limpwurt"
+x = 2876
+y = 3001
+z = 0
+itemId = 225
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "White Berries"
+x = 2935
+y = 3489
+z = 0
+itemId = 239
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "White Berries"
+x = 2877
+y = 3000
+z = 0
+itemId = 239
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "Red Spider Eggs"
+x = 3595
+y = 3479
+z = 0
+itemId = 223
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "Red Spider Eggs"
+x = 3597
+y = 3479
+z = 0
+itemId = 223
+amount = 1
+displayTime = 100
+
+[[spawn]]
+group = "Seaweed Brimhaven"
+x = 2797
+y = 3211
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Brimhaven"
+x = 2795
+y = 3212
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Brimhaven"
+x = 2792
+y = 3213
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Brimhaven"
+x = 2789
+y = 3214
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Brimhaven"
+x = 2786
+y = 3215
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Brimhaven"
+x = 2784
+y = 3217
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Brimhaven"
+x = 2782
+y = 3219
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Brimhaven"
+x = 2779
+y = 3219
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Bandit Camp"
+x = 3143
+y = 2991
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Bandit Camp"
+x = 3143
+y = 2988
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Bandit Camp"
+x = 3145
+y = 2985
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Bandit Camp"
+x = 3147
+y = 2983
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Bandit Camp"
+x = 3149
+y = 2980
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Bandit Camp"
+x = 3147
+y = 2977
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Bandit Camp"
+x = 3145
+y = 2975
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Bandit Camp"
+x = 3143
+y = 2973
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Catherby"
+x = 2860
+y = 3427
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Catherby"
+x = 2858
+y = 3427
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Catherby"
+x = 2856
+y = 3426
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Catherby"
+x = 2855
+y = 3425
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Catherby"
+x = 2852
+y = 3425
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Catherby"
+x = 2850
+y = 3427
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Catherby"
+x = 2848
+y = 3429
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Catherby"
+x = 2846
+y = 3431
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Ardougne"
+x = 2641
+y = 3255
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Ardougne"
+x = 2644
+y = 3254
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Ardougne"
+x = 2645
+y = 3252
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Ardougne"
+x = 2645
+y = 3250
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Ardougne"
+x = 2643
+y = 3248
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Ardougne"
+x = 2641
+y = 3246
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Ardougne"
+x = 2641
+y = 3243
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25
+
+[[spawn]]
+group = "Seaweed Ardougne"
+x = 2642
+y = 3240
+z = 0
+itemId = 401
+amount = 1
+displayTime = 25

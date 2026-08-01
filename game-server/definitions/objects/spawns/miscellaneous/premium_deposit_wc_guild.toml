@@ -1,0 +1,11 @@
+schemaVersion = 1
+region = "miscellaneous"
+
+[[object]]
+id = 26254
+name = "Premium Deposit (wc guild)"
+x = 1616
+y = 3503
+z = 0
+type = 10
+rotation = "SOUTH"

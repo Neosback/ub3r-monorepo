@@ -3,9 +3,10 @@ package net.dodian.uber.game.ui
 import java.text.DecimalFormat
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendString
+import net.dodian.uber.game.engine.systems.quests.asQuestPlayer
+import net.dodian.uber.quests.tutorialisland.TutorialIslandModule
 import kotlin.jvm.JvmName
 
 enum class QuestTabEntry(
@@ -50,14 +51,15 @@ enum class QuestTabEntry(
     fun getName(): String = questName
 
     companion object {
-        private val QUEST_SEND_VALUES = values()
+        @JvmField
+        val VALUES = values()
         private val HOURS_FORMAT = ThreadLocal.withInitial { DecimalFormat("0.000") }
         private var cachedUptimeMinutes = Long.MIN_VALUE
         private var cachedUptimeText = "@gre@[0@gre@] minutes uptime"
 
         @JvmStatic
         fun getSender(button: Int): QuestTabEntry? {
-            for (quest in QUEST_SEND_VALUES) {
+            for (quest in VALUES) {
                 if (quest.getClickId() == button) {
                     return quest
                 }
@@ -70,7 +72,7 @@ enum class QuestTabEntry(
             client.sendCachedString("Dodian Quests", 640)
             client.sendCachedString("Premium", 663)
             client.sendCachedString("Other Stuff", 682)
-            for (quest in QUEST_SEND_VALUES) {
+            for (quest in VALUES) {
                 val stage = client.quests[quest.getId()]
                 if (stage == 0) {
                     client.sendCachedString("@red@" + quest.getName(), quest.getConfig())
@@ -104,6 +106,7 @@ enum class QuestTabEntry(
             if (client.playerRights > 0) {
                 client.sendCachedString("@lre@---------@dre@Moderator@lre@---------", 7346)
                 client.sendCachedString("@gre@Game CP", 7341)
+                client.sendCachedString("@gre@Tutorial Island", 7342)
             }
             return null
         }
@@ -138,11 +141,11 @@ enum class QuestTabEntry(
                         client.sendString("@dre@Uber Server 3.0 - Boss Log", 8144)
                         client.clearQuestInterface()
                         var line = 8145
-                        for (i in client.boss_name.indices) {
-                            if (client.boss_amount[i] < 100000) {
-                                client.sendString(client.boss_name[i].replace("_", " ") + ": " + client.boss_amount[i], line)
+                        for (i in 0 until client.bossKillLogState.size()) {
+                            if (client.bossKillLogState.countAt(i) < 100000) {
+                                client.sendString(client.bossKillLogState.nameAt(i).replace("_", " ") + ": " + client.bossKillLogState.countAt(i), line)
                             } else {
-                                client.sendString(client.boss_name[i].replace("_", " ") + ": LOTS", line)
+                                client.sendString(client.bossKillLogState.nameAt(i).replace("_", " ") + ": LOTS", line)
                             }
                             line++
                             if (line == 8196) {
@@ -181,12 +184,12 @@ enum class QuestTabEntry(
                     }
 
                     7383 -> {
-                        Player.openPage(client, "https://dodian.net/showthread.php?t=" + client.latestNews)
+                        ExternalUrlService.open(client, "https://dodian.net/showthread.php?t=" + client.latestNews)
                         return true
                     }
 
                     7339 -> {
-                        Player.openPage(client, "https://dodian.net/forumdisplay.php?f=22")
+                        ExternalUrlService.open(client, "https://dodian.net/forumdisplay.php?f=22")
                         return true
                     }
 
@@ -238,7 +241,7 @@ enum class QuestTabEntry(
                     }
 
                     7338 -> {
-                        Player.openPage(client, "https://dodian.net/forumdisplay.php?f=83")
+                        AccountServices.open(client)
                         return true
                     }
 
@@ -249,7 +252,21 @@ enum class QuestTabEntry(
                     }
 
                     7341 -> {
-                        Player.openPage(client, "https://dodian.net/index.php?pageid=modcp")
+                        if (client.playerRights < 1) {
+                            client.sendMessage("You do not have permission to open the Game Control Panel.")
+                            return true
+                        }
+                        net.dodian.uber.game.social.moderation.ModerationService.openList(client)
+                        return true
+                    }
+
+                    7342 -> {
+                        if (client.playerRights < 1) {
+                            client.sendMessage("Tutorial Island is still in development.")
+                            return true
+                        }
+                        client.sendMessage("Starting/resuming Tutorial Island...")
+                        TutorialIslandModule.startOrResume(client.asQuestPlayer())
                         return true
                     }
                 }
@@ -273,7 +290,7 @@ enum class QuestTabEntry(
 
         @JvmStatic
         fun clearQuestName(client: Client) {
-            for (quest in QUEST_SEND_VALUES) {
+            for (quest in VALUES) {
                 client.sendString("", quest.getConfig())
             }
         }

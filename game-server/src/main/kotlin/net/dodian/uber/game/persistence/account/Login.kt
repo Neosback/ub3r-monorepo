@@ -10,10 +10,11 @@ import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.engine.config.gameWorldId
 import org.slf4j.LoggerFactory
 
+import net.dodian.uber.game.persistence.DbDispatchers
+
 class Login {
     private val logger = LoggerFactory.getLogger(Login::class.java)
 
-    @Synchronized
     fun sendSession(
         dbId: Int,
         clientPid: Int,
@@ -22,31 +23,31 @@ class Login {
         start: Long,
         end: Long,
     ) {
-        try {
-            DbAsyncRepository.withConnection { conn ->
-                val query =
-                    "INSERT INTO ${DbTables.GAME_PLAYER_SESSIONS} (dbid, client, duration, hostname, start, end, world) VALUES (?, ?, ?, ?, ?, ?, ?)"
-                conn.prepareStatement(query).use { statement ->
-                    statement.setInt(1, dbId)
-                    statement.setInt(2, clientPid)
-                    statement.setInt(3, elapsed)
-                    statement.setString(4, connectedFrom)
-                    statement.setLong(5, start)
-                    statement.setLong(6, end)
-                    statement.setInt(7, gameWorldId)
-                    statement.executeUpdate()
+        DbDispatchers.accountExecutor.execute {
+            try {
+                DbAsyncRepository.withConnection { conn ->
+                    val query =
+                        "INSERT INTO ${DbTables.GAME_PLAYER_SESSIONS} (dbid, client, duration, hostname, start, end, world) VALUES (?, ?, ?, ?, ?, ?, ?)"
+                    conn.prepareStatement(query).use { statement ->
+                        statement.setInt(1, dbId)
+                        statement.setInt(2, clientPid)
+                        statement.setInt(3, elapsed)
+                        statement.setString(4, connectedFrom)
+                        statement.setLong(5, start)
+                        statement.setLong(6, end)
+                        statement.setInt(7, gameWorldId)
+                        statement.executeUpdate()
+                    }
                 }
+            } catch (exception: SQLException) {
+                logger.error("Failed to record player session for dbId={}", dbId, exception)
+            } catch (exception: RuntimeException) {
+                logger.error("Failed to record player session for dbId={}", dbId, exception)
             }
-        } catch (exception: SQLException) {
-            logger.error("Failed to record player session for dbId={}", dbId, exception)
-        } catch (exception: RuntimeException) {
-            logger.error("Failed to record player session for dbId={}", dbId, exception)
         }
     }
 
     companion object {
-        private const val UUID_BANS_PATH = "./data/UUIDBans.txt"
-
         @JvmField
         val bannedUid: MutableSet<String> = LinkedHashSet()
 
@@ -73,26 +74,7 @@ class Login {
 
         @JvmStatic
         fun banUid() {
-            val file = File(UUID_BANS_PATH)
-            if (!file.exists()) {
-                file.parentFile?.mkdirs()
-                try {
-                    file.createNewFile()
-                } catch (exception: IOException) {
-                    logger.warn("Could not initialize UUID ban file.", exception)
-                }
-                return
-            }
-            try {
-                file.forEachLine { line ->
-                    val value = line.trim()
-                    if (value.isNotEmpty()) {
-                        bannedUid.add(value)
-                    }
-                }
-            } catch (exception: IOException) {
-                logger.error("Failed reading UUID bans.", exception)
-            }
+            // UUIDBans.txt has been deprecated and removed. A database-backed ban system will be implemented later.
         }
 
         @JvmStatic
@@ -100,22 +82,10 @@ class Login {
             if (UUID == null || UUID.isEmpty()) {
                 return
             }
-            try {
-                File(UUID_BANS_PATH).parentFile?.mkdirs()
-                FileWriter(UUID_BANS_PATH, true).use { writer ->
-                    for (value in UUID) {
-                        if (value.isBlank() || isUidBanned(value)) {
-                            continue
-                        }
-                        bannedUid.add(value)
-                        writer.write(value)
-                        writer.write(System.lineSeparator())
-                    }
+            for (value in UUID) {
+                if (value.isNotBlank() && !isUidBanned(value)) {
+                    bannedUid.add(value)
                 }
-            } catch (_: FileNotFoundException) {
-                // This file is often absent in local dev; ignore missing-file noise.
-            } catch (exception: IOException) {
-                logger.error("Failed appending UUID bans.", exception)
             }
         }
 

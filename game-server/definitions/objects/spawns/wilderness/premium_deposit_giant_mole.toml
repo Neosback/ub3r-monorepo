@@ -1,0 +1,11 @@
+schemaVersion = 1
+region = "wilderness"
+
+[[object]]
+id = 26254
+name = "Premium Deposit (giant mole)"
+x = 1754
+y = 5187
+z = 0
+type = 10
+rotation = "WEST"

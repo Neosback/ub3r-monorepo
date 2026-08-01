@@ -75,7 +75,6 @@ object PlayerUiDeltaProcessor {
                 state.lastWildLevel = wildLevel
             }
         } else {
-            // Ensure server-side wilderness state is cleared when leaving. setWildLevel(0) is
             // a no-op packet-wise, but it updates the cached wildyLevel used by teleport rules.
             if (state.lastWildLevel != 0) {
                 player.setWildLevel(0)

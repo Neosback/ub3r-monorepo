@@ -7,36 +7,29 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketItemActionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty implementation for opcode 41 (wear/equip item).
- * Decodes packet fields and delegates to PacketItemActionService.
- */
+
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {41})
 public class WearItemListener implements PacketListener {
-
-    static { PacketListenerManager.register(41, new WearItemListener()); }
-
     private static final Logger logger = LoggerFactory.getLogger(WearItemListener.class);
     private static final int MIN_PAYLOAD_BYTES = 6;
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.WearItem msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.WearItem.decode(packet.payload());
+        if (msg == null) {
             return;
         }
 
-        int wearId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.NORMAL);
-        int wearSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int interfaceId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
+            logger.debug("[WEAR:PACKET] player={} item={} slot={} interface={}",
+                    client.getPlayerName(), msg.itemId(), msg.slot(), msg.interfaceId());
+        }
 
-        logger.debug("WearItemListener: item {} slot {} interface {}", wearId, wearSlot, interfaceId);
-
-        PacketItemActionService.handleWear(client, wearId, wearSlot, interfaceId);
+        PacketItemActionService.handleWear(client, msg.itemId(), msg.slot(), msg.interfaceId());
     }
 }
-

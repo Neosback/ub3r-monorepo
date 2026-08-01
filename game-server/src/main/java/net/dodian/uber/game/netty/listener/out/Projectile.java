@@ -3,11 +3,9 @@ package net.dodian.uber.game.netty.listener.out;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.MessageType;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
 /**
- * Sent to create a projectile in the game world.
  * This is used for various in-game projectiles like arrows, spells, etc.
  */
 public class Projectile implements OutgoingPacket {
@@ -15,7 +13,6 @@ public class Projectile implements OutgoingPacket {
     private final Position casterPosition;
     private final int offsetY;
     private final int offsetX;
-    private final int angle;
     private final int speed;
     private final int gfxMoving;
     private final int startHeight;
@@ -24,30 +21,12 @@ public class Projectile implements OutgoingPacket {
     private final int begin;
     private final int slope;
     private final int initDistance;
+    private Object targetObject = null;
 
-    /**
-     * Creates a new Projectile packet.
-     * 
-     * @param casterPosition The position of the caster (source of the projectile)
-     * @param offsetY The Y offset from the caster's position
-     * @param offsetX The X offset from the caster's position
-     * @param angle The starting angle of the projectile
-     * @param speed The speed of the projectile
-     * @param gfxMoving The graphic ID of the projectile
-     * @param startHeight The starting height of the projectile
-     * @param endHeight The ending height of the projectile
-     * @param targetIndex The index of the target (NPC or player)
-     * @param begin The tick when the projectile is created
-     * @param slope The initial slope of the projectile
-     * @param initDistance The initial distance from the source
-     */
-    public Projectile(Position casterPosition, int offsetY, int offsetX, int angle, int speed,
-                     int gfxMoving, int startHeight, int endHeight, int targetIndex,
-                     int begin, int slope, int initDistance) {
+    public Projectile(Position casterPosition, int offsetY, int offsetX, int speed, int gfxMoving, int startHeight, int endHeight, int targetIndex, int begin, int slope, int initDistance) {
         this.casterPosition = casterPosition;
         this.offsetY = offsetY;
         this.offsetX = offsetX;
-        this.angle = angle;
         this.speed = speed;
         this.gfxMoving = gfxMoving;
         this.startHeight = startHeight;
@@ -58,33 +37,58 @@ public class Projectile implements OutgoingPacket {
         this.initDistance = initDistance;
     }
 
+    public Projectile(Position casterPosition, Object targetObject, int speed, int gfxMoving, int startHeight, int endHeight, int targetIndex, int begin, int slope, int initDistance) {
+        this.casterPosition = casterPosition;
+        this.targetObject = targetObject;
+        this.speed = speed;
+        this.gfxMoving = gfxMoving;
+        this.startHeight = startHeight;
+        this.endHeight = endHeight;
+        this.targetIndex = targetIndex;
+        this.begin = begin;
+        this.slope = slope;
+        this.initDistance = initDistance;
+        this.offsetY = 0;
+        this.offsetX = 0;
+    }
+
     @Override
     public void send(Client client) {
-        // Calculate the base position for the region (align to 8x8 region)
         int baseX = (casterPosition.getX() >> 3) << 3;
         int baseY = (casterPosition.getY() >> 3) << 3;
 
-        // Ensure the client has the correct map region loaded
         client.send(new SetMap(new Position(baseX, baseY)));
 
-        // Calculate the offset byte: (localX << 4) | localY
         int localX = casterPosition.getX() - baseX;
         int localY = casterPosition.getY() - baseY;
-        int offsetByte = (localX << 4) | localY;
+        // Tarnish client reads opcode 117's offset byte as (offset>>3)&0x7 for x and offset&7
+        // for y (Client.java method137, `if (j == 117)`) — a 3-bit shift. Other opcodes in the
+        // same client dispatch method (84/105/215/156) use a 4-bit shift instead; don't conflate
+        // them — using <<4 here sends every projectile at the wrong origin offset.
+        int offsetByte = (localX << 3) | localY;
 
-        // Create and send the projectile packet
-        ByteMessage message = ByteMessage.message(117, MessageType.FIXED);
-        message.put(offsetByte);        // Position offset from region base
-        message.put(offsetX);           // X offset to target
-        message.put(offsetY);           // Y offset to target
-        message.putShort(targetIndex);  // Target index (NPC or player)
-        message.putShort(gfxMoving);    // Projectile graphic ID
-        message.put(startHeight);       // Starting height (client multiplies by 4)
-        message.put(endHeight);         // Ending height (client multiplies by 4)
-        message.putShort(begin);        // Start time
-        message.putShort(speed);        // End time
-        message.put(slope);             // Initial slope
-        message.put(initDistance);      // Initial distance from source
-        client.send(message);
+        int finalOffsetX;
+        int finalOffsetY;
+
+        if (targetObject == null) {
+            finalOffsetX = offsetX;
+            finalOffsetY = offsetY;
+        } else {
+            Position targetPos;
+            if (targetObject instanceof net.dodian.uber.game.model.entity.Entity) {
+                targetPos = ((net.dodian.uber.game.model.entity.Entity) targetObject).getPosition();
+            } else if (targetObject instanceof Position) {
+                targetPos = (Position) targetObject;
+            } else {
+                targetPos = casterPosition;
+            }
+            finalOffsetX = targetPos.getX() - casterPosition.getX();
+            finalOffsetY = targetPos.getY() - casterPosition.getY();
+        }
+
+        client.send(new TarnishOutboundPackets.Projectile(
+            offsetByte, finalOffsetX, finalOffsetY, targetIndex, gfxMoving,
+            startHeight, endHeight, begin, speed, slope, initDistance
+        ).encode());
     }
 }

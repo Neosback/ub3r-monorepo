@@ -1,0 +1,94 @@
+schema_version = 1
+
+[[target]]
+name = "farmer"
+target_type = "npc"
+id = 3114
+level = 10
+experience = 800
+loot_items = [314]
+loot_chances = [100]
+loot_min_amounts = [2]
+loot_max_amounts = [5]
+
+[[target]]
+name = "master_farmer"
+target_type = "npc"
+id = 5730
+level = 70
+experience = 1200
+loot_items = [314]
+loot_chances = [100]
+loot_min_amounts = [4]
+loot_max_amounts = [10]
+
+[[target]]
+name = "cage"
+target_type = "other"
+id = 20873
+level = 1
+experience = 150
+loot_items = [995]
+loot_chances = [100]
+loot_min_amounts = [20]
+loot_max_amounts = [50]
+
+[[target]]
+name = "baker_stall"
+target_type = "stall"
+id = 11730
+level = 10
+experience = 1000
+loot_items = [2309]
+loot_chances = [100]
+loot_min_amounts = [1]
+loot_max_amounts = [1]
+respawn_ticks = 20
+
+[[target]]
+name = "fur_stall"
+target_type = "stall"
+id = 11732
+level = 40
+experience = 1800
+loot_items = [1751, 1753, 1739, 1759, 995]
+loot_chances = [5, 10, 15, 20, 100]
+loot_min_amounts = [1, 1, 1, 1, 150]
+loot_max_amounts = [1, 1, 1, 1, 350]
+respawn_ticks = 42
+
+[[target]]
+name = "silver_stall"
+target_type = "stall"
+id = 11734
+level = 65
+experience = 2500
+loot_items = [2349, 2351, 2353, 2357, 2359, 995]
+loot_chances = [5, 10, 15, 20, 25, 100]
+loot_min_amounts = [1, 1, 1, 1, 1, 300]
+loot_max_amounts = [1, 1, 1, 1, 1, 600]
+respawn_ticks = 42
+
+[[target]]
+name = "spice_stall"
+target_type = "stall"
+id = 11733
+level = 80
+experience = 4800
+loot_items = [215, 213, 209, 207, 203, 199]
+loot_chances = [5, 10, 20, 35, 55, 100]
+loot_min_amounts = [1, 1, 1, 1, 1, 1]
+loot_max_amounts = [1, 1, 1, 1, 1, 1]
+respawn_ticks = 58
+
+[[target]]
+name = "gem_stall"
+target_type = "stall"
+id = 11731
+level = 90
+experience = 5800
+loot_items = [1617, 1619, 1621, 1623, 995]
+loot_chances = [2, 5, 8, 15, 100]
+loot_min_amounts = [1, 1, 1, 1, 500]
+loot_max_amounts = [1, 1, 1, 1, 850]
+respawn_ticks = 63

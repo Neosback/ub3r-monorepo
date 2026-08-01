@@ -21,6 +21,11 @@ final class StressBotSession implements Runnable {
         void onSessionEnded(String username, boolean loggedIn, String reason);
     }
 
+    // Server-side LoginPreparationService rejects empty passwords outright (code 13) before the
+    // dev-mode auto-create/password-bypass logic (AccountLoginService, gated on Settings.toml
+    // server.environment="dev") ever runs - a non-empty password is required to reach it at all.
+    private static final String STRESS_PASSWORD = "stress-test";
+
     private final StressTestConfig config;
     private final String username;
     private final Listener listener;
@@ -49,7 +54,7 @@ final class StressBotSession implements Runnable {
             socket = s;
             s.connect(new InetSocketAddress(config.getHost(), config.getPort()), config.getConnectTimeoutMs());
             s.setTcpNoDelay(true);
-            s.setSoTimeout(1000);
+            s.setSoTimeout(Math.max(5000, config.getConnectTimeoutMs()));
 
             InputStream in = new BufferedInputStream(s.getInputStream());
             OutputStream out = new BufferedOutputStream(s.getOutputStream());
@@ -58,7 +63,7 @@ final class StressBotSession implements Runnable {
                     in,
                     out,
                     username,
-                    "",
+                    STRESS_PASSWORD,
                     config.isReconnecting(),
                     config.getClientVersion(),
                     config.isLowMemory()
@@ -67,6 +72,7 @@ final class StressBotSession implements Runnable {
             loggedIn = true;
             long connectMs = Math.max(1L, System.currentTimeMillis() - connectStart);
             listener.onLoginSuccess(username, connectMs, loginSession.getRights());
+            s.setSoTimeout(500);
 
             long keepAliveEveryMs = Math.max(5_000L, config.getKeepAliveSeconds() * 1_000L);
             long nextKeepAliveAt = System.currentTimeMillis() + keepAliveEveryMs;

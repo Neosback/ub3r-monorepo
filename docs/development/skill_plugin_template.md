@@ -1,200 +1,119 @@
-# Skill Plugin Template
+# Skill Plugin Modules
 
-Use this as the default pattern when adding a new skill or extending an existing one.
-
-## Goals
-
-- one clear entry point per skill: `object <Skill>NameSkillPlugin : SkillPlugin`
-- route ownership declared in one place
-- orchestration kept in shared runtime systems, not ad-hoc loops inside plugin files
-- bridge helpers used when wrapping existing `ObjectContent` / `ItemContent`
-- explicit `PolicyPreset` on every route binding
-- concise authoring via one content-facing import surface where practical
-
-## Preferred file shape
+Gameplay skills live in independent Gradle modules under `game-server/plugins/skills/`. A module must
+apply `ub3r.skill-plugin`, declare its implementation class, own its route
+bindings, bundle TOML data, and test its behavior without a `Client` instance.
 
 ```kotlin
-package net.dodian.uber.game.skill.example
+plugins { id("ub3r.skill-plugin") }
 
-import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.item.ItemContent
-import net.dodian.uber.game.objects.ObjectContent
-import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.bindItemContentClick
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentClick
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentMagic
-import net.dodian.uber.game.api.plugin.skills.bindObjectContentUseItem
-import net.dodian.uber.game.api.plugin.skills.skillPlugin
-import net.dodian.uber.game.engine.systems.action.PolicyPreset
-
-object ExampleSkill {
-    @JvmStatic
-    fun start(client: Client, request: ExampleRequest): Boolean {
-        // domain logic only
-        return true
-    }
-}
-
-private class ExampleObjectContent : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(1234)
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        return ExampleSkill.start(client, ExampleRequest(objectId, position))
-    }
-}
-
-private class ExampleItemContent : ItemContent {
-    override val itemIds: IntArray = intArrayOf(5678)
-
-    override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
-        return true
-    }
-}
-
-object ExampleSkillPlugin : SkillPlugin {
-    override val definition =
-        skillPlugin(name = "Example", skill = Skill.EXAMPLE) {
-            val exampleObjects = ExampleObjectContent()
-            val exampleItems = ExampleItemContent()
-
-            bindObjectContentClick(
-                preset = PolicyPreset.GATHERING,
-                option = 1,
-                content = exampleObjects,
-            )
-            bindObjectContentUseItem(
-                preset = PolicyPreset.GATHERING,
-                content = exampleObjects,
-                itemIds = exampleItems.itemIds,
-            )
-            bindObjectContentMagic(
-                preset = PolicyPreset.GATHERING,
-                content = exampleObjects,
-                spellIds = intArrayOf(1179),
-            )
-            bindItemContentClick(
-                preset = PolicyPreset.GATHERING,
-                option = 1,
-                content = exampleItems,
-            )
-        }
+skillModule {
+    implementationClass.set("net.dodian.uber.skills.example.ExampleModule")
 }
 ```
 
-## Route selection guide
+Use `SkillPlugin` for a trainable skill and `SkillContentModule` for supporting
+content such as Skill Guide. The convention plugin generates the module
+descriptor consumed by startup discovery.
 
-### Single import surface for content helpers
+## Data
 
-For general content helpers (events/actions/scheduling), prefer:
+Keep data in `src/main/resources/<skill>/`. Every TOML file begins with
+`schema_version = 1`, has one array-of-tables record kind, uses snake_case
+fields, and has stable record keys. IDs, rates, requirements, and rewards are
+data; policy choices and orchestration stay in Kotlin.
 
-- `import net.dodian.uber.game.api.content.ContentPredef.*`
+The shared reader fails on missing or malformed files. Module loaders must also
+validate semantic constraints such as duplicate IDs, invalid levels, and broken
+cross references.
 
-This keeps module code concise while preserving strict plugin route ownership.
+## Tests
 
-### Use direct plugin DSL when the skill is already plugin-native
+Use `FakeSkillPlayer` for route and action tests. Cover successful outcomes,
+resource/level failures, cancellation, and transactional rollback. Run:
 
-Prefer these when the handler is simple and does not need a compatibility wrapper:
-
-- `objectClick(...)`
-- `npcClick(...)`
-- `itemOnItem(...)`
-- `itemClick(...)`
-- `itemOnObject(...)`
-- `magicOnObject(...)`
-- `button(...)`
-
-### Use bridge helpers when wrapping existing content objects
-
-Prefer these while migrating old skills or when a content object is still shared elsewhere:
-
-- `bindObjectContentClick(...)`
-- `bindObjectContentMagic(...)`
-- `bindObjectContentUseItem(...)`
-- `bindItemContentClick(...)`
-
-## Conventions
-
-### 0. Mandatory module contract
-
-Each plugin-owned skill module should expose:
-
-- `<Skill>Data.kt` with route ids/constants and policy defaults (for example `object <Skill>RouteIds`)
-- `<Skill>Actions.kt` with stable action identifiers (for example `object <Skill>ActionIds`)
-- `<Skill>.kt` with `object <Skill>SkillPlugin : SkillPlugin` as the route ownership entrypoint
-
-Do not scatter route id arrays and action id strings across multiple files.
-
-### 1. Keep exported surface small and plugin-owned
-
-Expose only:
-
-- the skill domain object (`ExampleSkill`)
-- the plugin (`ExampleSkillPlugin`)
-
-Keep wrapper content objects `internal` unless another package truly needs them.
-
-Prefer private wrapper classes instantiated inside `*SkillPlugin` (plugin-owned instances). Avoid singleton `object ... : ObjectContent` wrappers in skill modules.
-
-### 2. Put behavior in the domain object, not the plugin body
-
-Good:
-
-```kotlin
-objectClick(preset = PolicyPreset.GATHERING, option = 1, 1234) { client, objectId, position, obj ->
-    ExampleSkill.start(client, ExampleRequest(objectId, position))
-}
+```text
+./gradlew :skills:<name>:check
+./gradlew skillsCheck
 ```
 
-Avoid large inline lambdas with lots of orchestration.
+Modules may not import `Client`, unwrap engine adapters, or depend on
+`:game-server`. Engine packet rendering, persistence wiring, and world access
+belong in thin adapters only.
 
-### 3. Always declare `preset = PolicyPreset...`
+## Real-world integration tests
 
-This is required for consistent routing and audit checks.
+`FakeSkillPlayer` tests are mandatory per module (`VerifySkillModule` fails the
+build without one) and stay fast because they never touch a real `Client`,
+`World`, or tick loop. For extra end-to-end confidence on a skill's most
+important flows, there is a second, additive tier that boots a real in-process
+game world - real cache-loaded map/collision/object defs, a real
+`GameLoopService` tick pipeline, real skill-plugin wiring - and drives actions
+through the same packet-equivalent entry points a real client uses
+(`PacketObjectService.handleObjectClick`/`handleItemOnObject`, etc.). This
+tier lives in `:game-server`, not in the plugin modules, since it needs
+`Client`/`World`, which skill modules may not depend on.
 
-### 4. Avoid legacy ownership split
+See `game-server/src/test/kotlin/net/dodian/uber/game/integration/skills/`:
+`support/RealWorldHarness.kt` (the boot/tick/factory harness, including
+`objectOption`/`itemOnObject`/`npcOption`/`itemOnItem`/`itemClick`/
+`completeProduction` entry points) and `support/RealWorldSkillTest.kt` (the
+base test class). 14 of the 16 skill modules have a real-world test file
+covering their primary interaction shape:
 
-Do not introduce new skill behavior that only lives in:
+| Interaction shape | Skills |
+| --- | --- |
+| object click (gathering loop) | Woodcutting, Mining |
+| object click (one-shot) | Runecrafting, Agility |
+| npc click | Fishing, Thieving |
+| item-on-object | Smithing, Cooking, Prayer (offering) |
+| item-on-item (direct) | Firemaking, Crafting, Slayer (helm) |
+| item-on-item (make-x menu, `completeProduction`) | Fletching, Herblore |
+| item click | Prayer (bury) |
 
-- `ObjectContentRegistry`
-- `ItemContentRegistry`
-- direct packet listeners
-- ad-hoc branches in `InteractionProcessor`
+Note on Agility: `SkillWorld.traverse`/`climb` complete via
+`GameEventScheduler.runLaterMs(durationMs)`, which looks like a wall-clock
+scheduler at a glance but actually converts `durationMs` to ticks
+(`delayMsToTicks`) and waits on `GameTaskRuntime`'s world-task queue - the
+same queue `GameLoopService.runTick()`'s `world.tasks` phase cycles every
+tick (`ActionProcessor.run()` -> `QueueTaskService.processDue()` ->
+`GameTaskRuntime.cycleWorld()`). So it's driven by this tier's ordinary
+`tick()`/`tickUntil()` like everything else - no real sleep needed. Also note
+`AgilityModule.crossObstacle` requires the player to be standing at the
+obstacle's exact real-world `startPosition`, so its success test spawns the
+player at that real coordinate rather than an arbitrary one.
 
-If it is skill-owned, route it through the skill plugin system.
+**Not covered, deliberately deferred:**
+- **Farming** - blocked on a real, suspected-live bug, not just missing test
+  infrastructure. `interactItemBin`/`clickPatch`
+  (`engine/systems/skills/farming/Farming.kt`) classify a clicked patch's
+  crop type by parsing `GameObjectData.forId(objectId).name` (stripping
+  `" patch"`, e.g. `"allotment patch"` -> `"allotment"`). Verified empirically
+  against the real bundled cache: all 17 ids in
+  `FarmingModule.livePatchObjectIds` - the ones actually wired into
+  `FarmingData.patches`, the internal table the interaction loop matches
+  against - resolve to the literal string `"null"` for `.name` (not an actual
+  null; `GameObjectData.name` is non-nullable), so crop-type classification
+  fails silently for every currently-configured real patch location: raking
+  works (doesn't need the name), planting silently no-ops (needs it). A
+  separate set of ids (8573/7840/8132, `FarmingModule.patchObjectIds`) do
+  resolve to real names ("Allotment"/"Flower Patch"/"Herb patch") but aren't
+  in `FarmingData.patches` either, so they don't dispatch at all. This needs
+  its own fix (confirm real per-location object ids against a live client,
+  and/or fix name resolution for these multiloc-child objects) before a
+  meaningful real-world test can be written - see the spawned task for
+  tracking. Also note growth/harvest (separate from planting) runs on real
+  elapsed wall-clock time via `FarmingRuntimeService`'s offline "catch-up
+  pulse" system, not ticks - relevant for whoever picks this up next.
+- **Skill Guide** - a `SkillContentModule` (UI content, not a trainable
+  skill), better suited to unit-level interface tests than this tier.
 
-### 4.1 Dialogue routing for new modules
+This tier is not mandatory per module - add one for a skill when its flow is
+representative of a new interaction shape or high-risk enough to warrant
+real-pipeline coverage, not for every skill by default. It requires the real
+OSRS cache under `game-server/data/cache` and skips gracefully without it
+(e.g. in CI) via `RequiresCache`. Run locally with:
 
-For new content modules, route dialogue through:
-
-- `NpcDialogueDsl` for NPC option flows
-- `DialogueFactory`/`DialogueService` for general dialogue chains
-
-Avoid introducing new direct `Client.showNPCChat(...)` / `Client.showPlayerChat(...)` usage.
-
-### 5. Prefer shared runtime actions
-
-Use the runtime helpers already in place for loops/cycles:
-
-- gathering/production queues
-- `ContentActions`
-- skill runtime action helpers
-- progression/random event services
-
-Do not build new `while (true)` loops or ad-hoc player action schedulers inside plugins.
-
-## Current migration rule of thumb
-
-For existing mixed-mode skills:
-
-1. keep legacy wrapper behavior temporarily if needed, but prefer class wrappers over singleton objects
-2. register those wrappers through the skill plugin bridge helpers
-3. once stable, inline or remove wrappers if they no longer add value
-
-## Magic-on-object guidance
-
-`magicOnObject(...)` is now a first-class skill plugin route.
-
-Use it directly for plugin-native skills, or `bindObjectContentMagic(...)` while migrating existing `ObjectContent` wrappers. Prefer explicit spell ids over wildcard spell ownership unless the whole object is genuinely owned by one skill for all spells.
+```text
+./gradlew :game-server:realWorldSkillTest
+```

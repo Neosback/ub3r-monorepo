@@ -4,12 +4,12 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.CombatStyle;
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager;
+import net.dodian.uber.game.engine.routing.WorldRouteService;
 import net.dodian.uber.game.model.entity.npc.Npc;
 
-import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public abstract class Entity {
 
@@ -74,22 +74,37 @@ public abstract class Entity {
     }
 
     public boolean isWithinDistance(int entityX, int entityY, int otherX, int otherY, int distance) {
-        int dist = (int) Math.sqrt(Math.pow(entityX - otherX, 2) + Math.pow(entityY - otherY, 2));
-        return dist <= distance;
+        int dx = entityX - otherX;
+        int dy = entityY - otherY;
+        // Equivalent to (int) Math.sqrt(dx*dx + dy*dy) <= distance without the sqrt call:
+        // floor(sqrt(sum)) <= distance iff sum < (distance + 1)^2.
+        int bound = distance + 1;
+        return dx * dx + dy * dy < bound * bound;
     }
 
     public boolean isWithinDistance(Position otherPosition, int distance) {
         return getPosition().withinDistance(otherPosition, distance);
     }
 
+    public abstract boolean didMove();
+
     public int getSlot() {
         return slot;
     }
 
     public void setFocus(int focusPointX, int focusPointY) {
-        faceCoordinateX = encodeFaceCoordinate(focusPointX);
-        faceCoordinateY = encodeFaceCoordinate(focusPointY);
+        setPersistedFaceCoord(focusPointX, focusPointY);
+    }
+
+    public void applyFocus(int focusPointX, int focusPointY) {
+        int encodedX = encodeFaceCoordinate(focusPointX);
+        int encodedY = encodeFaceCoordinate(focusPointY);
         getUpdateFlags().setRequired(UpdateFlag.FACE_CHARACTER, false);
+        if (faceCoordinateX == encodedX && faceCoordinateY == encodedY) {
+            return;
+        }
+        faceCoordinateX = encodedX;
+        faceCoordinateY = encodedY;
         getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
     }
 
@@ -189,6 +204,16 @@ public abstract class Entity {
     }
 
     public int getSize() {
+        if (type == Type.PLAYER && this instanceof net.dodian.uber.game.model.entity.player.Player) {
+            net.dodian.uber.game.model.entity.player.Player player = (net.dodian.uber.game.model.entity.player.Player) this;
+            if (player.getPlayerNpc() >= 0) {
+                net.dodian.uber.game.engine.systems.cache.CacheNpcDefinition npcDef =
+                    net.dodian.uber.game.npc.NpcClientMorphService.INSTANCE.definition(player.getPlayerNpc());
+                if (npcDef != null) {
+                    return npcDef.getSize();
+                }
+            }
+        }
         if (type != null && type == Type.NPC && Server.npcManager.getData(((Npc) this).getId()) != null) {
             return Server.npcManager.getData(((Npc) this).getId()).getSize();
         }
@@ -215,16 +240,19 @@ public abstract class Entity {
     }
 
     public boolean goodDistanceEntity(Entity other, int distance) {
-        Rectangle thisArea = new Rectangle(getPosition().getX() - distance, getPosition().getY() - distance,
-                2 * distance + getSize(), 2 * distance + getSize());
-        Rectangle otherArea = new Rectangle(other.getPosition().getX(), other.getPosition().getY(), other.getSize(),
-                other.getSize());
-        return thisArea.intersects(otherArea);
+        int thisX = getPosition().getX() - distance;
+        int thisY = getPosition().getY() - distance;
+        int thisSpan = 2 * distance + getSize();
+        int otherX = other.getPosition().getX();
+        int otherY = other.getPosition().getY();
+        int otherSize = other.getSize();
+        return thisX < otherX + otherSize && otherX < thisX + thisSpan
+                && thisY < otherY + otherSize && otherY < thisY + thisSpan;
     }
 
     public boolean canMove(int x, int y) {
-        return CollisionManager.global().canMove(getPosition().getX(), getPosition().getY(),
-                getPosition().getX() + x, getPosition().getY() + y, getPosition().getZ(), getSize(), getSize());
+        return WorldRouteService.INSTANCE.canMove(getPosition().getX(), getPosition().getY(),
+                getPosition().getX() + x, getPosition().getY() + y, getPosition().getZ(), getSize());
     }
 
     public CombatStyle getCombatStyle() {
@@ -237,6 +265,20 @@ public abstract class Entity {
 
     public Map<Entity, Integer> getDamage() {
         return damage;
+    }
+
+    /**
+     * Releases combat-attribution references when this entity leaves its
+     * lifecycle. Callers deliberately do not use this for a temporary loss of
+     * combat so contribution credit survives a short disengagement.
+     */
+    public void clearDamageAttribution() {
+        damage.clear();
+    }
+
+    /** Removes invalid attribution references without clearing live combat credit. */
+    public void pruneDamageAttribution(Predicate<Entity> retain) {
+        damage.entrySet().removeIf(entry -> !retain.test(entry.getKey()));
     }
 
     public UpdateFlags getUpdateFlags() {
@@ -255,10 +297,14 @@ public abstract class Entity {
     public enum damageType {
         MELEE, RANGED, MAGIC, //Standard
         FIRE_BREATH, JAD_MAGIC, JAD_RANGED, //Special
-        BLOODATTACK, TRUEDAMAGE //Unique
+        BLOODATTACK, TRUEDAMAGE; //Unique
+
+        public static final damageType[] VALUES = values();
     }
     public enum hitType {
-        STANDARD, CRIT, POISON, BURN, BLEED //Bleed is custom and thus got no hitsplat yet!
+        STANDARD, CRIT, POISON, BURN, BLEED; //Bleed is custom and thus got no hitsplat yet!
+
+        public static final hitType[] VALUES = values();
     }
 
 }

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.net
 
-import net.dodian.uber.game.Constants
+import net.dodian.uber.game.engine.config.gameMaxPlayers
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.events.item.ItemOnPlayerEvent
 import net.dodian.uber.game.model.entity.player.Client
@@ -11,10 +11,8 @@ import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 /**
- * Kotlin service for item-interaction packet side-effects that must be kept
  * out of the Netty listener layer.
  *
- * Covers:
  * - WearItem (opcode 41)
  * - ClickItem2 / ClickItem3 / UseItemOnNpc validation disconnects
  * - UseItemOnPlayer / Christmas cracker (opcode 14)
@@ -28,19 +26,26 @@ object PacketItemActionService {
     @JvmStatic
     fun handleWear(client: Client, wearId: Int, wearSlot: Int, interfaceId: Int) {
         if (client.randomed || client.UsingAgility) return
-        client.wear(wearId, wearSlot, interfaceId)
+            net.dodian.uber.game.engine.systems.inventory.EquipmentService.wear(client, wearId, wearSlot, interfaceId)
     }
 
+    private val logger = org.slf4j.LoggerFactory.getLogger(PacketItemActionService::class.java)
+
     /**
-     * Validates that [slot] is within the legal inventory range (0–28).
-     * If out of bounds the client is disconnected.
+     * Validates that [slot] is within the legal inventory range (0–27).
+     * An out-of-range slot drops the packet with a log — it must never disconnect:
+     * historically a decode mismatch here silently killed sessions with no trace,
+     * which presented as "random disconnects" on ordinary item clicks.
      *
      * @return true when the slot is valid and the caller may proceed.
      */
     @JvmStatic
     fun validateInventorySlot(client: Client, slot: Int): Boolean {
-        if (slot < 0 || slot > 28) {
-            client.disconnected = true
+        if (slot < 0 || slot >= client.playerItems.size) {
+            logger.warn(
+                "Rejecting item packet with out-of-range inventory slot={} player={} (dropping packet, not disconnecting)",
+                slot, client.playerName,
+            )
             return false
         }
         return true
@@ -48,21 +53,23 @@ object PacketItemActionService {
 
     /**
      * Validates that [slot] is within the legal range for use-item-on-NPC (0–27).
-     * If out of bounds the client is disconnected.
+     * Same policy as [validateInventorySlot]: log and drop, never disconnect.
      *
      * @return true when the slot is valid and the caller may proceed.
      */
     @JvmStatic
     fun validateItemOnNpcSlot(client: Client, slot: Int): Boolean {
-        if (slot < 0 || slot > 27) {
-            client.disconnected = true
+        if (slot < 0 || slot >= client.playerItems.size) {
+            logger.warn(
+                "Rejecting item-on-npc packet with out-of-range slot={} player={} (dropping packet, not disconnecting)",
+                slot, client.playerName,
+            )
             return false
         }
         return true
     }
 
     /**
-     * Processes a first-click item action (opcode 122) after slot validation.
      * Enforces duel-rules guards and dispatches via ItemDispatcher.
      */
     @JvmStatic
@@ -82,17 +89,21 @@ object PacketItemActionService {
         }
         if (ItemDispatcher.tryHandle(client, 1, item, slot, interfaceId)) {
             client.checkItemUpdate()
+            return
+        }
+        val equipSlot = net.dodian.uber.game.Server.itemManager.getSlot(id)
+        if (equipSlot in 0..13) {
+            net.dodian.uber.game.engine.systems.inventory.EquipmentService.wear(client, id, slot, interfaceId)
         }
     }
 
     /**
-     * Handles a Use-Item-On-Player action (opcode 14).
      * Currently supports the Christmas cracker (item 962) and the hot-potato
      * internal mini-game (item 5733).
      */
     @JvmStatic
     fun handleUseItemOnPlayer(client: Client, playerSlot: Int, itemId: Int, crackerSlot: Int) {
-        val target: Client? = if (playerSlot >= 0 && playerSlot < Constants.maxPlayers)
+        val target: Client? = if (playerSlot >= 0 && playerSlot < gameMaxPlayers)
             PlayerRegistry.players[playerSlot] as? Client
         else null
         if (target == null || !client.playerHasItem(itemId)) return

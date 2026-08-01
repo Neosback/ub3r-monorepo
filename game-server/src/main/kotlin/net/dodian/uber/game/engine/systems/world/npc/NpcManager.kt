@@ -1,18 +1,25 @@
 package net.dodian.uber.game.engine.systems.world.npc
 
+import java.nio.file.Path
 import java.util.TreeMap
 import net.dodian.uber.game.npc.NpcSpawnDef
+import net.dodian.uber.game.npc.NpcDefinitionRepository
+import net.dodian.uber.game.npc.NpcServerDefinition
+import net.dodian.uber.game.npc.NpcSpawnSource
+import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcData
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.world.npc.NpcDataRepository
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentRegistry
+import net.dodian.uber.game.engine.systems.interaction.npcs.NpcInteractionProfileRegistry
 import org.slf4j.LoggerFactory
 
 class NpcManager {
     val npcMap = HashMap<Int, Npc>()
     private val data = HashMap<Int, NpcData>()
+    private val serverDefinitions = HashMap<Int, NpcServerDefinition>()
     private var nextIndex = 1
 
     init {
@@ -24,44 +31,19 @@ class NpcManager {
     fun getNpcData(): Collection<NpcData> = data.values
 
     fun loadSpawns() {
-        logger.info("Loading NPC spawns from content registry modules")
-        val contentSpawns = NpcContentRegistry.allSpawns()
-        ensureDefinitionsForSpawnNpcIds(contentSpawns)
-        val loaded = loadContentSpawns(contentSpawns)
-        logger.info("Loaded {} content NPC spawns from modules.", loaded)
+        logger.debug("Loading NPC spawns from Kotlin modules")
+        val kotlinSpawns = ContentModuleIndex.npcModules
+            .filterIsInstance<NpcSpawnSource>()
+            .flatMap { it.spawns }
+        ensureDefinitionsForSpawnNpcIds(kotlinSpawns)
+        val loaded = loadContentSpawns(kotlinSpawns)
+        logger.debug("Loaded {} Kotlin NPC spawns.", loaded)
     }
 
     private fun ensureDefinitionsForSpawnNpcIds(spawns: List<NpcSpawnDef>) {
         val missingIds = spawns.asSequence().map { it.npcId }.distinct().filter { getData(it) == null }.sorted().toList()
-        if (missingIds.isEmpty()) {
-            return
-        }
-
-        var inserted = 0
-        val stillMissing = ArrayList<Int>()
-        for (npcId in missingIds) {
-            try {
-                NpcDataRepository.insertDefaultDefinition(npcId)
-                val loaded = NpcDataRepository.loadDefinitionById(npcId)
-                if (loaded != null) {
-                    data[npcId] = loaded
-                    inserted++
-                } else {
-                    stillMissing += npcId
-                }
-            } catch (e: RuntimeException) {
-                logger.error("Failed to upsert missing NPC definition for spawn npcId={}", npcId, e)
-                stillMissing += npcId
-            }
-        }
-
-        logger.warn(
-            "Auto-upserted {} missing NPC definitions for content spawns ({} requested).",
-            inserted,
-            missingIds.size,
-        )
-        if (stillMissing.isNotEmpty()) {
-            logger.error("NPC definitions still missing after auto-upsert attempt: {}", stillMissing.joinToString(","))
+        if (missingIds.isNotEmpty()) {
+            error("Missing NPC definitions for Kotlin spawns: ${missingIds.joinToString(",")}")
         }
     }
 
@@ -102,21 +84,33 @@ class NpcManager {
                     continue
                 }
                 val npc = createNpc(spawn.npcId, position, spawn.face)
+                NpcInteractionProfileRegistry.register(spawn.profile)
+                npc.interactionProfile = spawn.profile
                 npc.applySpawnOverrides(
-                    spawn.respawnTicks,
-                    spawn.attack,
-                    spawn.defence,
-                    spawn.strength,
-                    spawn.hitpoints,
-                    spawn.ranged,
-                    spawn.magic,
+                    spawn.overrides.respawnTicks,
+                    spawn.overrides.attack,
+                    spawn.overrides.defence,
+                    spawn.overrides.strength,
+                    spawn.overrides.hitpoints,
+                    spawn.overrides.ranged,
+                    spawn.overrides.magic,
+                    spawn.overrides.attackAnimation,
+                    spawn.overrides.defenceAnimation,
+                    spawn.overrides.deathAnimation,
                 )
+                npc.applyDisplayOverrides(spawn.overrides.headIcon, spawn.overrides.transformTo)
                 npc.applySpawnBehaviorOverrides(
                     effectiveWalkRadius(spawn),
                     spawn.attackRange,
+                    spawn.leashDistance,
                     spawn.alwaysActive,
                     spawn.condition,
                 )
+                val serverDef = serverDefinitions[spawn.npcId]
+                if (serverDef != null) {
+                    npc.setBossAttackHandler(serverDef.bossAttackHandler)
+                    npc.setBossAttackSpeedOverride(serverDef.attackSpeed)
+                }
                 loaded++
             } catch (e: RuntimeException) {
                 failed++
@@ -139,7 +133,7 @@ class NpcManager {
             )
         }
 
-        logger.info(
+        logger.debug(
             "Loaded {}/{} content NPC spawns (skipped {}, inactive {}, duplicate {}, missing-data {}, failed {}).",
             loaded,
             total,
@@ -231,57 +225,55 @@ class NpcManager {
 
     fun reloadAllData(c: Client, id: Int) {
         try {
-            val definition = NpcDataRepository.loadDefinitionById(id)
-            if (definition != null) {
-                data[id] = definition
-                for (n in npcMap.values) {
-                    if (n.id == id) {
-                        n.reloadData()
-                    }
-                }
-            }
             reloadDrops(c, id)
-            c.sendMessage("Finished updating all '${getData(id)?.name}' npcs!")
+            c.sendMessage("Finished reloading drops for '${getData(id)?.name}' npcs. NPC definitions now come from cache and Kotlin families.")
         } catch (e: RuntimeException) {
             logger.error("NPC full data reload failed for id={}", id, e)
         }
     }
 
     fun reloadNpcConfig(c: Client, id: Int, table: String, value: String) {
-        if (!data.containsKey(id)) {
-            try {
-                NpcDataRepository.insertDefaultDefinition(id)
-                val defaultDefinition = NpcDataRepository.loadDefinitionById(id)
-                if (defaultDefinition != null) {
-                    data[id] = defaultDefinition
-                    c.sendMessage("Added default config values to the npc!")
-                }
-            } catch (e: RuntimeException) {
-                logger.error("NPC config bootstrap failed for id={}", id, e)
-            }
-        } else if (!table.equals("new npc", ignoreCase = true)) {
-            try {
-                val field = NpcDataRepository.parseDefinitionField(table)
-                NpcDataRepository.updateDefinitionField(id, field, value)
-                c.sendMessage("You updated '${field.column}' with value '$value'!")
-                reloadAllData(c, id)
-            } catch (e: IllegalArgumentException) {
-                c.sendMessage(e.message ?: "Invalid npc config field.")
-            } catch (e: RuntimeException) {
-                logger.error("NPC config reload failed for id={} field={}", id, table, e)
-                c.sendMessage("Failed updating npc config. Check logs for details.")
-            }
-        }
+        c.sendMessage("NPC definitions are edited in Kotlin family files now. Drops still use ::r_drops / drop commands.")
     }
 
     fun loadData() {
         try {
-            val definitions = NpcDataRepository.loadDefinitions()
+            val cachePath = Path.of("data/cache")
+            val cacheDefs = NpcDefinitionRepository.load(cachePath)
+            val definitions = cacheDefs.mapValues { (_, runtimeDef) ->
+                val cacheDef = runtimeDef.cache
+                val serverDefValues = runtimeDef.server
+                NpcData(
+                    cacheDef.name,
+                    cacheDef.examine,
+                    serverDefValues.attackAnimation ?: 806,
+                    serverDefValues.defenceAnimation ?: 0,
+                    serverDefValues.deathAnimation ?: 836,
+                    serverDefValues.respawnTicks ?: 60,
+                    cacheDef.combatLevel,
+                    cacheDef.size,
+                    intArrayOf(
+                        serverDefValues.defence ?: 0,
+                        serverDefValues.attack ?: 0,
+                        serverDefValues.strength ?: 0,
+                        serverDefValues.hitpoints ?: 0,
+                        serverDefValues.ranged ?: 0,
+                        0,
+                        serverDefValues.magic ?: 0
+                    ),
+                    serverDefValues.aggressive,
+                    serverDefValues.alwaysAggressive,
+                    serverDefValues.fightsBack
+                )
+            }
             data.clear()
             data.putAll(definitions)
-            logger.info("Loaded {} Npc Definitions", definitions.size)
+            serverDefinitions.clear()
+            serverDefinitions.putAll(cacheDefs.mapValues { (_, definition) -> definition.server })
+            logger.debug("Loaded {} NPC definitions from cache plus Kotlin server definitions", definitions.size)
         } catch (e: RuntimeException) {
             logger.error("Error loading NPC definitions", e)
+            throw e
         }
 
         try {
@@ -298,7 +290,7 @@ class NpcManager {
                     definition.addDrop(drop.itemId, drop.amountMin, drop.amountMax, drop.percent, drop.rareShout)
                 }
             }
-            logger.info("Loaded {} Npc Drops", amount)
+            logger.debug("Loaded {} Npc Drops", amount)
         } catch (e: RuntimeException) {
             logger.error("Error loading NPC drops", e)
         }
@@ -306,12 +298,21 @@ class NpcManager {
 
     fun createNpc(id: Int, position: Position, face: Int): Npc {
         val npc = Npc(nextIndex, id, position, face)
+        serverDefinitions[id]?.let { npc.applyDisplayOverrides(it.headIcon, it.transformTo) }
         npcMap[nextIndex] = npc
         nextIndex++
         if (net.dodian.uber.game.Server.chunkManager != null) {
             npc.syncChunkMembership()
         }
         return npc
+    }
+
+    fun removeNpc(npc: Npc) {
+        npc.alive = false
+        npc.visible = false
+        npc.removeFromChunk()
+        npcMap.remove(npc.slot)
+        NpcTimerScheduler.removeNpc(npc)
     }
 
     fun getNpc(index: Int): Npc = npcMap[index]

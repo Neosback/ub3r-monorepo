@@ -3,79 +3,78 @@ package net.dodian.uber.game.npc
 import net.dodian.uber.game.api.content.dialogue.DialogueEmote
 import net.dodian.uber.game.api.content.dialogue.DialogueOption
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator
 
-internal object GnomeTrainer : NpcModule {
-    // Stats: 6080: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
-
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 6080, x = 2475, y = 3428, z = 0, face = 0),
-        NpcSpawnDef(npcId = 6080, x = 2476, y = 3423, z = 1, face = 0),
-        NpcSpawnDef(npcId = 6080, x = 2475, y = 3419, z = 2, face = 0),
-        NpcSpawnDef(npcId = 6080, x = 2485, y = 3421, z = 2, face = 0),
-        NpcSpawnDef(npcId = 6080, x = 2487, y = 3423, z = 0, face = 0),
-        NpcSpawnDef(npcId = 6080, x = 2486, y = 3430, z = 0, face = 0),
-        NpcSpawnDef(npcId = 6080, x = 2474, y = 3439, z = 0, face = 0),
-        NpcSpawnDef(npcId = 6080, x = 3002, y = 3931, z = 0, face = 0),
-        NpcSpawnDef(npcId = 6080, x = 2547, y = 3554, z = 0, face = 0),
-    )
-
-    val npcIds: IntArray = npcIdsFromEntries(entries)
-
-
-    override val definition = legacyNpcDefinition(
-        name = "GnomeTrainer",
-        entries = entries,
-        onFirstClick = ::onFirstClick,
-    )
-
-    fun onFirstClick(client: Client, npc: Npc): Boolean {
-        if (NpcSpawnLocator.isGnomeCourseNpc(npc)) {
-            return false
-        }
-        DialogueService.start(client) {
-            npcChat(npc.id, DialogueEmote.DEFAULT, "Fancy meeting you here maggot.", "If you have any agility ticket,", "I would gladly take them from you.")
-            options(
-                title = "Trade in tickets or teleport to agility course?",
-                DialogueOption("Trade in tickets.") {
-                    action { c -> c.spendTickets() }
-                    finish()
-                },
-                DialogueOption("Another course, please.") {
-                    val atWilderness = npc.position.x == 3002 && npc.position.y == 3931
-                    val atBarbarian = npc.position.x == 2547 && npc.position.y == 3554
-                    val courseOptions = if (atWilderness) {
-                        arrayOf("Gnome", "Barbarian", "Stay here")
-                    } else if (atBarbarian) {
-                        arrayOf("Gnome", "Wilderness", "Stay here")
-                    } else {
-                        arrayOf("Barbarian", "Wilderness", "Stay here")
-                    }
-                    options(
-                        title = "Which course do you wish to be taken to?",
-                        DialogueOption(courseOptions[0]) {
-                            action { c ->
-                                if (atWilderness) c.teleportTo(2474, 3438, 0)
-                                else if (atBarbarian) c.teleportTo(2474, 3438, 0)
-                                else c.teleportTo(2547, 3553, 0)
-                            }
-                            finish()
-                        },
-                        DialogueOption(courseOptions[1]) {
-                            action { c ->
-                                if (atWilderness) c.teleportTo(2547, 3553, 0)
-                                else if (atBarbarian) c.teleportTo(3002, 3932, 0)
-                                else c.teleportTo(3002, 3932, 0)
-                            }
-                            finish()
-                        },
-                        DialogueOption(courseOptions[2]) { finish() },
-                    )
-                },
-            )
-        }
-        return true
+internal object GnomeTrainer : NpcFamily by npcFamily("Gnome trainer", 6080, block = {
+    definition {
+        examine = "He can advise on training."
     }
+
+    server {
+        deathAnimation = 2304
+    }
+
+    options {
+        talkTo(handler = ::handleGnomeTrainerTalkTo)
+    }
+
+    spawns {
+        spawn(2474, 3439)
+        spawn(2547, 3554)
+        spawn(3002, 3931)
+        spawn(2475, 3428)
+        spawn(2476, 3423, z = 1)
+        spawn(2475, 3419, z = 2)
+        spawn(2485, 3421, z = 2)
+        spawn(2487, 3423)
+        spawn(2486, 3430)
+    }
+})
+
+private fun handleGnomeTrainerTalkTo(client: Client, npc: Npc): Boolean {
+    if (NpcSpawnLocator.isGnomeCourseNpc(npc)) return false
+
+    DialogueService.start(client) {
+        npcChat(
+            npc.id,
+            DialogueEmote.DEFAULT,
+            "Fancy meeting you here maggot.",
+            "If you have any agility tickets,",
+            "I would gladly take them from you.",
+        )
+        options(
+            title = "Trade in tickets or teleport to agility course?",
+            DialogueOption("Trade in tickets.") {
+                finishThen { it.spendTickets() }
+            },
+            DialogueOption("Another course, please.") {
+                val course = trainerCourse(npc)
+                options(
+                    title = "Which course do you wish to be taken to?",
+                    DialogueOption(if (course == 1) "Barbarian" else "Gnome") {
+                        finishThen { player ->
+                            if (course == 1) player.teleportTo(2547, 3553, 0)
+                            else player.teleportTo(2474, 3438, 0)
+                        }
+                    },
+                    DialogueOption(if (course == 3) "Barbarian" else "Wilderness") {
+                        finishThen { player ->
+                            if (course == 3) player.teleportTo(2547, 3553, 0)
+                            else player.teleportTo(3002, 3932, 0)
+                        }
+                    },
+                    DialogueOption("Stay here") { finish() },
+                )
+            },
+        )
+    }
+    return true
+}
+
+private fun trainerCourse(npc: Npc): Int = when {
+    npc.position.x == 3002 && npc.position.y == 3931 -> 3
+    npc.position.x == 2547 && npc.position.y == 3554 -> 2
+    else -> 1
 }

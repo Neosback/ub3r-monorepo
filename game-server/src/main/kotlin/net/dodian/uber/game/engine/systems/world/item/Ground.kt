@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.world.item
 
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ConcurrentHashMap
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
@@ -9,13 +9,34 @@ import net.dodian.uber.game.model.item.GroundItem
 
 object Ground {
     @JvmField
-    val ground_items: CopyOnWriteArrayList<GroundItem> = CopyOnWriteArrayList()
+    val ground_items: MutableSet<GroundItem> = ConcurrentHashMap.newKeySet()
 
     @JvmField
-    val untradeable_items: CopyOnWriteArrayList<GroundItem> = CopyOnWriteArrayList()
+    val untradeable_items: MutableSet<GroundItem> = ConcurrentHashMap.newKeySet()
 
     @JvmField
-    val tradeable_items: CopyOnWriteArrayList<GroundItem> = CopyOnWriteArrayList()
+    val tradeable_items: MutableSet<GroundItem> = ConcurrentHashMap.newKeySet()
+
+    // Exact-tile index mirroring the three flat lists above, so findGroundItem - called on every
+    // pickup attempt - only ever scans however many items are stacked on one tile, instead of
+    // linear-scanning every ground item in the world. Kept in lockstep by addItem/deleteItem.
+    private val byTile = HashMap<Long, MutableList<GroundItem>>()
+
+    private fun tileKey(x: Int, y: Int, z: Int): Long =
+        (x.toLong() shl 34) or (y.toLong() shl 4) or z.toLong()
+
+    private fun indexAdd(item: GroundItem) {
+        byTile.computeIfAbsent(tileKey(item.x, item.y, item.z)) { ArrayList(2) }.add(item)
+    }
+
+    private fun indexRemove(item: GroundItem) {
+        val key = tileKey(item.x, item.y, item.z)
+        val bucket = byTile[key] ?: return
+        bucket.remove(item)
+        if (bucket.isEmpty()) {
+            byTile.remove(key)
+        }
+    }
 
     @JvmStatic
     fun deleteItem(item: GroundItem) {
@@ -24,12 +45,16 @@ object Ground {
                 item.setTaken(true)
                 item.visible = false
                 item.removeItemDisplay()
+                // Intentionally not removed from ground_items/byTile here - matches the existing
+                // "hidden, not deleted" semantics for static/global ground items (see addItem's
+                // replace-on-respawn path below).
             }
 
             1 -> {
                 item.setTaken(true)
                 item.removeItemDisplay()
                 untradeable_items.remove(item)
+                indexRemove(item)
             }
 
             else -> {
@@ -37,6 +62,7 @@ object Ground {
                 item.visible = false
                 item.removeItemDisplay()
                 tradeable_items.remove(item)
+                indexRemove(item)
             }
         }
     }
@@ -45,17 +71,29 @@ object Ground {
     fun addItem(item: GroundItem) {
         when (item.type) {
             0 -> {
-                val existingIndex = ground_items.indexOf(item)
-                if (existingIndex < 0) {
+                val existing = ground_items.find { it == item }
+                if (existing == null) {
                     ground_items.add(item)
+                    indexAdd(item)
                 } else {
-                    ground_items[existingIndex] = item
+                    ground_items.remove(existing)
+                    ground_items.add(item)
+                    if (existing !== item) {
+                        indexRemove(existing)
+                        indexAdd(item)
+                    }
                 }
                 item.itemDisplay()
             }
 
-            1 -> untradeable_items.add(item)
-            else -> tradeable_items.add(item)
+            1 -> {
+                untradeable_items.add(item)
+                indexAdd(item)
+            }
+            else -> {
+                tradeable_items.add(item)
+                indexAdd(item)
+            }
         }
     }
 
@@ -107,19 +145,22 @@ object Ground {
         }
     }
 
+    /**
+     * Scans only the items stacked on tile ([x], [y], [z]) - typically zero to a handful - instead
+     * of every ground item in the world. [matchesCategory] mirrors the exact 0/1/else type
+     * branching addItem/deleteItem already use (static / untradeable / tradeable).
+     */
     private fun findGroundItem(
-        list: CopyOnWriteArrayList<GroundItem>,
+        matchesCategory: (Int) -> Boolean,
         client: Client?,
         id: Int,
         x: Int,
         y: Int,
         z: Int,
     ): GroundItem? {
-        if (list.isEmpty()) {
-            return null
-        }
-        for (item in list) {
-            if (item.id != id || item.x != x || item.y != y || item.z != z || item.isTaken()) {
+        val bucket = byTile[tileKey(x, y, z)] ?: return null
+        for (item in bucket) {
+            if (!matchesCategory(item.type) || item.id != id || item.isTaken()) {
                 continue
             }
             if (client != null && !canPickup(client, item)) {
@@ -132,19 +173,15 @@ object Ground {
 
     @JvmStatic
     fun findGroundItem(client: Client?, id: Int, x: Int, y: Int, z: Int): GroundItem? {
-        if (!Server.itemManager.isTradable(id)) {
-            val staticItem = findGroundItem(ground_items, client, id, x, y, z)
-            if (staticItem != null) {
-                return staticItem
-            }
-            return findGroundItem(untradeable_items, client, id, x, y, z)
-        }
-
-        val staticItem = findGroundItem(ground_items, client, id, x, y, z)
+        val staticItem = findGroundItem({ it == 0 }, client, id, x, y, z)
         if (staticItem != null) {
             return staticItem
         }
-        return findGroundItem(tradeable_items, client, id, x, y, z)
+        return if (!Server.itemManager.isTradable(id)) {
+            findGroundItem({ it == 1 }, client, id, x, y, z)
+        } else {
+            findGroundItem({ it != 0 && it != 1 }, client, id, x, y, z)
+        }
     }
 
     @JvmStatic

@@ -1,0 +1,185 @@
+# Ancient Magicks spellbook data.
+# One row per spell (index 0-15, matching autocast/menu ordering: 4 tiers x 4 elements).
+# coolDown is per-element (smoke/shadow/blood/ice all share one value across their tier),
+# duplicated per row rather than split into a second table, matching this codebase's
+# one-record-kind-per-file convention (see projectiles.toml / equipment_appearance.toml).
+
+[[spell]]
+index = 0
+name = "Smoke Rush"
+requiredLevel = 1
+baseDamage = 2
+spellId = 12939
+buttonId = 51133
+coolDown = 5
+projectileGfx = "smoke_rush_travel"
+impactGfx = "smoke_rush_impact"
+
+[[spell]]
+index = 1
+name = "Shadow Rush"
+requiredLevel = 10
+baseDamage = 4
+spellId = 12987
+buttonId = 51185
+coolDown = 5
+projectileGfx = "shadow_rush_travel"
+impactGfx = "shadow_rush_impact"
+
+[[spell]]
+index = 2
+name = "Blood Rush"
+requiredLevel = 20
+baseDamage = 6
+spellId = 12901
+buttonId = 51091
+coolDown = 6
+projectileGfx = "blood_rush_travel"
+impactGfx = "blood_rush_impact"
+
+[[spell]]
+index = 3
+name = "Ice Rush"
+requiredLevel = 30
+baseDamage = 8
+spellId = 12861
+buttonId = 24018
+coolDown = 6
+projectileGfx = "ice_rush_travel"
+impactGfx = "ice_rush_impact"
+
+[[spell]]
+index = 4
+name = "Smoke Burst"
+requiredLevel = 40
+baseDamage = 10
+spellId = 12963
+buttonId = 51159
+coolDown = 5
+projectileGfx = "smoke_burst_travel"
+impactGfx = "smoke_burst_impact"
+
+[[spell]]
+index = 5
+name = "Shadow Burst"
+requiredLevel = 50
+baseDamage = 12
+spellId = 13011
+buttonId = 51211
+coolDown = 5
+impactGfx = "shadow_burst_impact"
+
+[[spell]]
+index = 6
+name = "Blood Burst"
+requiredLevel = 60
+baseDamage = 14
+spellId = 12919
+buttonId = 51111
+coolDown = 6
+impactGfx = "spell_blood_burst_impact"
+
+[[spell]]
+index = 7
+name = "Ice Burst"
+requiredLevel = 70
+baseDamage = 16
+spellId = 12881
+buttonId = 51069
+coolDown = 6
+projectileGfx = "ice_burst_travel"
+impactGfx = "ice_burst_impact"
+
+[[spell]]
+index = 8
+name = "Smoke Blitz"
+requiredLevel = 74
+baseDamage = 18
+spellId = 12951
+buttonId = 51146
+coolDown = 5
+castGfx = "smoke_blitz_travel"
+projectileGfx = "smoke_blitz_travel"
+impactGfx = "smoke_blitz_impact"
+castAnim = 1978
+
+[[spell]]
+index = 9
+name = "Shadow Blitz"
+requiredLevel = 76
+baseDamage = 20
+spellId = 12999
+buttonId = 51198
+coolDown = 5
+castGfx = "shadow_blitz_travel"
+projectileGfx = "shadow_blitz_travel"
+impactGfx = "shadow_blitz_impact"
+castAnim = 1978
+
+[[spell]]
+index = 10
+name = "Blood Blitz"
+requiredLevel = 80
+baseDamage = 22
+spellId = 12911
+buttonId = 51102
+coolDown = 6
+castGfx = "blood_blitz_travel"
+projectileGfx = "blood_blitz_travel"
+impactGfx = "blood_blitz_impact"
+castAnim = 1978
+
+[[spell]]
+index = 11
+name = "Ice Blitz"
+requiredLevel = 82
+baseDamage = 24
+spellId = 12871
+buttonId = 51058
+coolDown = 6
+castGfx = "ice_blitz_travel"
+projectileGfx = "ice_blitz_travel"
+impactGfx = "ice_blitz_impact"
+castAnim = 1978
+
+[[spell]]
+index = 12
+name = "Smoke Barrage"
+requiredLevel = 86
+baseDamage = 26
+spellId = 12975
+buttonId = 51172
+coolDown = 5
+projectileGfx = "smoke_barrage_travel"
+impactGfx = "smoke_barrage_impact"
+
+[[spell]]
+index = 13
+name = "Shadow Barrage"
+requiredLevel = 88
+baseDamage = 28
+spellId = 13023
+buttonId = 51224
+coolDown = 5
+impactGfx = "shadow_barrage_impact"
+
+[[spell]]
+index = 14
+name = "Blood Barrage"
+requiredLevel = 92
+baseDamage = 30
+spellId = 12929
+buttonId = 51122
+coolDown = 6
+impactGfx = "spell_blood_barrage_impact"
+
+[[spell]]
+index = 15
+name = "Ice Barrage"
+requiredLevel = 94
+baseDamage = 32
+spellId = 12891
+buttonId = 51080
+coolDown = 6
+castGfx = "ice_burst_travel"
+impactGfx = "ice_barrage_impact"

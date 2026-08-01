@@ -10,6 +10,7 @@ import net.dodian.uber.game.events.skilling.SkillActionStartEvent
 import net.dodian.uber.game.skill.runtime.requirements.Requirement
 import net.dodian.uber.game.skill.runtime.requirements.ValidationResult
 import net.dodian.uber.game.skill.runtime.requirements.failureMessageOrNull
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.skill.runtime.action.ActionStopReason
 import net.dodian.uber.game.skill.runtime.action.ActionStopReasonMapper
 import net.dodian.uber.game.engine.event.GameEventBus
@@ -69,7 +70,7 @@ class ActionScope internal constructor(
         requirement: Requirement,
         failureReason: ActionStopReason = ActionStopReason.REQUIREMENT_FAILED,
     ): Boolean {
-        val result = requirement.validate(player)
+        val result = requirement.validate(player.asSkillPlayer())
         val failureMessage = result.failureMessageOrNull()
         if (failureMessage != null) {
             player.sendMessage(failureMessage)

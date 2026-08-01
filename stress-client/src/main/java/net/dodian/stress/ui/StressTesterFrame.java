@@ -177,7 +177,7 @@ public final class StressTesterFrame extends JFrame {
                     parseInt(connectIntervalField, "Connect Interval (ms)", 1, 300_000),
                     parseInt(keepAliveField, "KeepAlive (sec)", 1, 300),
                     parseInt(timeoutField, "Connect Timeout (ms)", 100, 120_000),
-                    317,
+                    12,
                     false,
                     false
             );
@@ -270,7 +270,8 @@ public final class StressTesterFrame extends JFrame {
         fieldConstraints.fill = GridBagConstraints.HORIZONTAL;
         fieldConstraints.insets = new Insets(4, 2, 4, 2);
 
-        if (field instanceof JLabel labelField) {
+        if (field instanceof JLabel) {
+            JLabel labelField = (JLabel) field;
             labelField.setForeground(new Color(236, 242, 248));
             labelField.setFont(labelField.getFont().deriveFont(Font.BOLD));
         }

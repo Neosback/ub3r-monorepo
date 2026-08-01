@@ -7,30 +7,24 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketMagicService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Netty implementation of legacy {@code MagicOnNpc} (opcode 131).
- * Decodes then delegates to PacketMagicService.
- */
+
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {131})
 public class MagicOnNpcListener implements PacketListener {
-
-    static { PacketListenerManager.register(131, new MagicOnNpcListener()); }
-
     private static final Logger logger = LoggerFactory.getLogger(MagicOnNpcListener.class);
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < 4) {
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.MagicOnNpc msg =
+                net.dodian.uber.game.netty.game.decode.TarnishPackets.MagicOnNpc.decode(packet.payload());
+        if (msg == null) {
             return;
         }
-
-        int npcIndex = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        int magicId = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int npcIndex = msg.npcIndex();
+        int magicId = msg.spellId();
 
         logger.debug("MagicOnNpcListener: magic {} on npc {}", magicId, npcIndex);
 

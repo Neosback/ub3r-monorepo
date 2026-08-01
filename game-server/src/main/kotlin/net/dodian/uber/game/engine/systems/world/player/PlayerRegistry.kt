@@ -1,8 +1,9 @@
 package net.dodian.uber.game.engine.systems.world.player
 
-import net.dodian.uber.game.Constants
+import net.dodian.uber.game.engine.config.gameMaxPlayers
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
+import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.engine.util.Utils
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -20,7 +21,7 @@ object PlayerRegistry {
     val slotLock: Any = Any()
 
     @JvmField
-    val usedSlots: BitSet = BitSet(Constants.maxPlayers + 1)
+    val usedSlots: BitSet = BitSet(gameMaxPlayers + 1)
 
     @JvmField
     val playersOnline: ConcurrentHashMap<Long, Client> = ConcurrentHashMap()
@@ -29,7 +30,7 @@ object PlayerRegistry {
     val allOnline: ConcurrentHashMap<Long, Int> = ConcurrentHashMap()
 
     @JvmField
-    val players: Array<Player?> = arrayOfNulls(Constants.maxPlayers + 1)
+    val players: Array<Player?> = arrayOfNulls(gameMaxPlayers + 1)
 
     @JvmField
     var cycle: Int = 1
@@ -46,7 +47,7 @@ object PlayerRegistry {
     @JvmStatic
     fun validClient(index: Int): Boolean {
         val player = players.getOrNull(index) as? Client ?: return false
-        return !player.disconnected && player.dbId >= 0
+        return !player.disconnected && player.dbId > 0
     }
 
     @JvmStatic
@@ -56,7 +57,7 @@ object PlayerRegistry {
 
     @JvmStatic
     fun initializeSlots() {
-        for (i in 1..Constants.maxPlayers) {
+        for (i in 1..gameMaxPlayers) {
             players[i] = null
         }
     }
@@ -66,14 +67,14 @@ object PlayerRegistry {
         val regionX = player.position.x shr 6
         val regionY = player.position.y shr 6
         val locals = ArrayList<Player>(256)
-        for (other in players) {
-            if (other == null || !other.isActive || other === player) {
+        for (client in playersOnline.values) {
+            if (!client.isActive || client === player) {
                 continue
             }
-            val otherRegionX = other.position.x shr 6
-            val otherRegionY = other.position.y shr 6
+            val otherRegionX = client.position.x shr 6
+            val otherRegionY = client.position.y shr 6
             if (kotlin.math.abs(regionX - otherRegionX) <= 1 && kotlin.math.abs(regionY - otherRegionY) <= 1) {
-                locals.add(other)
+                locals.add(client)
             }
         }
         return locals
@@ -136,12 +137,15 @@ object PlayerRegistry {
 
     @JvmStatic
     fun removePlayer(player: Player?) {
+        GameThreadContext.validateGameThread("player-registry.remove")
         val client = player as? Client
         if (client == null) {
             logger.warn("Tried to remove a null player!")
             return
         }
 
+        // Stop new viewers admitting this session before any teardown mutates it.
+        client.setSynchronizationReady(false)
         client.destruct()
         logger.info(
             "Finished removing player: '{}' slot={} active={} disconnected={}",
@@ -152,11 +156,15 @@ object PlayerRegistry {
         )
 
         val slot = client.slot
-        if (slot in 1..Constants.maxPlayers) {
+        if (slot in 1..gameMaxPlayers) {
             synchronized(slotLock) {
-                usedSlots.clear(slot)
+                // A delayed disconnect task must never clear a newer occupant that reused
+                // this slot after the original channel died.
+                if (players[slot] === client) {
+                    players[slot] = null
+                    usedSlots.clear(slot)
+                }
             }
-            players[slot] = null
         }
 
         playersOnline.remove(client.longName, client)
@@ -172,8 +180,7 @@ object PlayerRegistry {
 
     private fun isActiveClient(client: Client?): Boolean {
         return client != null &&
-            client.isActive &&
-            !client.disconnected &&
+            client.isSynchronizationReady &&
             client.channel != null &&
             client.channel.isActive
     }

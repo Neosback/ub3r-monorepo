@@ -6,6 +6,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ThreadLocalRandom;
@@ -19,6 +20,9 @@ public final class Rs317LoginProtocol {
     private static final int LOGIN_TYPE_NEW = 16;
     private static final int LOGIN_TYPE_RECONNECT = 18;
     private static final int LOGIN_SUCCESS = 2;
+
+    private static final BigInteger RSA_MODULUS = new BigInteger("102353038900255891527619367941460634639078944277149869534765441701765061915480193910291695742706042386340616731973380032288127455494356031646220980795852675234525031620306539656965685802100384909448780766960597664159328648803794286947984198753216591499378109000984639229430631686267432671373106838769133939913");
+    private static final BigInteger RSA_EXPONENT = new BigInteger("65537");
 
     private Rs317LoginProtocol() {
     }
@@ -40,8 +44,8 @@ public final class Rs317LoginProtocol {
 
         long serverSeed = ByteBuffer.wrap(handshake, 9, 8).getLong();
         long clientSeed = ThreadLocalRandom.current().nextLong();
-        byte[] rsaBlock = buildRsaBlock(clientSeed, serverSeed, username, password);
-        byte[] loginBlock = buildLoginBlock(reconnecting, clientVersion, lowMemory, rsaBlock);
+        byte[] rsaBlockEncrypted = buildRsaBlock(clientSeed, serverSeed, username, password);
+        byte[] loginBlock = buildLoginBlock(reconnecting, clientVersion, lowMemory, rsaBlockEncrypted);
 
         out.write(loginBlock);
         out.flush();
@@ -71,10 +75,8 @@ public final class Rs317LoginProtocol {
     }
 
     public static void writeKeepAlive(OutputStream out, Rs317IsaacCipher outCipher) throws IOException {
-        int encryptedOpcode = (outCipher.getNextKey()) & 0xFF;
-        int encryptedLength = (2 + outCipher.getNextKey()) & 0xFF;
+        int encryptedOpcode = (0 + outCipher.getNextKey()) & 0xFF;
         out.write(encryptedOpcode);
-        out.write(encryptedLength);
         out.flush();
     }
 
@@ -88,36 +90,43 @@ public final class Rs317LoginProtocol {
                                         long serverSeed,
                                         String username,
                                         String password) throws IOException {
-        ByteArrayOutputStream rsa = new ByteArrayOutputStream(128);
+        ByteArrayOutputStream rsa = new ByteArrayOutputStream(256);
         DataOutputStream rsaOut = new DataOutputStream(rsa);
         rsaOut.writeByte(RSA_PACKET_ID);
         rsaOut.writeLong(clientSeed);
         rsaOut.writeLong(serverSeed);
-        rsaOut.writeByte(10); // empty server string terminator
+        rsaOut.writeInt(0); // legacy UID
+        rsaOut.writeInt(0); // matching game-client Client.java line 11850
+        writeRuneString(rsaOut, ""); // discordAuthCode
+        writeRuneString(rsaOut, "00:00:00:00:00:00"); // MAC address
         writeRuneString(rsaOut, username);
         writeRuneString(rsaOut, password == null ? "" : password);
         rsaOut.flush();
-        return rsa.toByteArray();
+
+        byte[] rawRsa = rsa.toByteArray();
+        BigInteger encrypted = new BigInteger(1, rawRsa).modPow(RSA_EXPONENT, RSA_MODULUS);
+        return encrypted.toByteArray();
     }
 
     private static byte[] buildLoginBlock(boolean reconnecting,
                                           int clientVersion,
                                           boolean lowMemory,
-                                          byte[] rsaBlock) throws IOException {
-        ByteArrayOutputStream login = new ByteArrayOutputStream(256);
+                                          byte[] rsaBlockEncrypted) throws IOException {
+        ByteArrayOutputStream login = new ByteArrayOutputStream(512);
         DataOutputStream loginOut = new DataOutputStream(login);
         loginOut.writeByte(reconnecting ? LOGIN_TYPE_RECONNECT : LOGIN_TYPE_NEW);
 
-        int loginPacketSize = 1 + 2 + 1 + 36 + 1 + rsaBlock.length;
-        loginOut.writeByte(loginPacketSize);
+        // Matching game-client: declared block length is rsaBlockEncrypted.length + 38
+        int declaredSize = rsaBlockEncrypted.length + 38;
+        loginOut.writeByte(declaredSize);
         loginOut.writeByte(RSA_MAGIC);
-        loginOut.writeShort(clientVersion);
+        loginOut.writeByte(clientVersion); // 1 byte version
         loginOut.writeByte(lowMemory ? 1 : 0);
         for (int i = 0; i < 9; i++) {
             loginOut.writeInt(0);
         }
-        loginOut.writeByte(rsaBlock.length);
-        loginOut.write(rsaBlock);
+        loginOut.writeByte(rsaBlockEncrypted.length);
+        loginOut.write(rsaBlockEncrypted);
         loginOut.flush();
         return login.toByteArray();
     }

@@ -38,4 +38,3 @@ public class ConnectionLoggingHandler extends ChannelDuplexHandler {
         super.write(ctx, msg, promise);
     }
 }
-

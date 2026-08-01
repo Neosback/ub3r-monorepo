@@ -1,0 +1,86 @@
+schema_version = 1
+
+# Mining rock definitions. objectIds is a comma-separated list since many world
+# objects (variants across map regions) share one rock's stats.
+
+[[rock]]
+name = "rune_essence"
+objectIds = "34773"
+requiredLevel = 1
+baseDelayMs = 1000
+oreItemId = 1436
+experience = 50
+restThreshold = 14
+randomGemEligible = false
+
+[[rock]]
+name = "copper"
+objectIds = "10943,11161"
+requiredLevel = 1
+baseDelayMs = 2000
+oreItemId = 436
+experience = 110
+restThreshold = 4
+
+[[rock]]
+name = "tin"
+objectIds = "11360,11361"
+requiredLevel = 1
+baseDelayMs = 2000
+oreItemId = 438
+experience = 110
+restThreshold = 4
+
+[[rock]]
+name = "iron"
+objectIds = "11364,11365"
+requiredLevel = 15
+baseDelayMs = 3000
+oreItemId = 440
+experience = 280
+restThreshold = 4
+
+[[rock]]
+name = "coal"
+objectIds = "11366,11367"
+requiredLevel = 30
+baseDelayMs = 5000
+oreItemId = 453
+experience = 420
+restThreshold = 4
+
+[[rock]]
+name = "gold"
+objectIds = "11370,11371,36206"
+requiredLevel = 40
+baseDelayMs = 6000
+oreItemId = 444
+experience = 510
+restThreshold = 4
+
+[[rock]]
+name = "mithril"
+objectIds = "11372,11373"
+requiredLevel = 55
+baseDelayMs = 7000
+oreItemId = 447
+experience = 620
+restThreshold = 4
+
+[[rock]]
+name = "adamantite"
+objectIds = "11374,11375,36208"
+requiredLevel = 70
+baseDelayMs = 9000
+oreItemId = 449
+experience = 780
+restThreshold = 4
+
+[[rock]]
+name = "runite"
+objectIds = "11376,11377"
+requiredLevel = 85
+baseDelayMs = 35000
+oreItemId = 451
+experience = 3100
+restThreshold = 4

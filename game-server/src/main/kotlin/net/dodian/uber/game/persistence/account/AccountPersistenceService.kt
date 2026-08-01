@@ -6,6 +6,7 @@ import java.util.function.IntConsumer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.dodian.uber.game.model.entity.player.Client
@@ -15,7 +16,6 @@ import net.dodian.uber.game.persistence.account.login.AccountLoginService
 import net.dodian.uber.game.persistence.player.PlayerSaveService
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.persistence.repository.DbResult
-import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import net.dodian.uber.game.engine.tasking.PlayerScopedCoroutineService
 import net.dodian.uber.game.engine.loop.TickThreadBlockingGuard
@@ -32,42 +32,98 @@ object AccountPersistenceService {
 
     @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
     @JvmStatic
+    @JvmOverloads
     fun submitLoginLoad(
         client: Client,
         username: String,
         password: String,
+        discordAuthCode: String = "",
+        accountCreationRequested: Boolean = discordAuthCode.isNotBlank(),
         onComplete: Consumer<LoginLoadResult>,
     ) {
         scope.launch {
             val startedAt = System.nanoTime()
             var pendingRetries = 0
-            val code =
+            val prepared =
                 try {
+                    // Check before exchanging the one-time Discord OAuth code. This lets the
+                    // client keep that authorization and submit a different username instead of
+                    // forcing the player through Discord again for a simple name collision.
+                    val creationPreflightCode = accountCreationPreflightCode(
+                        accountCreationRequested = accountCreationRequested,
+                        discordAuthCode = discordAuthCode,
+                        usernameExists = { AccountLoginService.usernameExists(username) },
+                    )
+                    if (creationPreflightCode != null) {
+                        if (creationPreflightCode == AccountLoginService.USERNAME_TAKEN) {
+                            logger.info("Account creation rejected: username already exists username={}", username)
+                        } else {
+                            logger.warn("Account creation rejected for {}: missing Discord authorization", username)
+                        }
+                        val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
+                        onComplete.accept(LoginLoadResult(creationPreflightCode, durationMs, 0, null))
+                        return@launch
+                    }
+                    val discordUser = if (accountCreationRequested) {
+                        when (val discordResult =
+                            net.dodian.uber.game.persistence.account.discord.DiscordApiService.fetchDiscordUserResult(discordAuthCode)
+                        ) {
+                            is net.dodian.uber.game.persistence.account.discord.DiscordFetchResult.Success ->
+                                discordResult.user
+                            net.dodian.uber.game.persistence.account.discord.DiscordFetchResult.InvalidAuthorization -> {
+                                logger.warn("Account creation rejected for {}: invalid or expired Discord authorization", username)
+                                val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
+                                onComplete.accept(LoginLoadResult(29, durationMs, 0, null))
+                                return@launch
+                            }
+                            net.dodian.uber.game.persistence.account.discord.DiscordFetchResult.Unavailable -> {
+                                logger.warn("Account creation unavailable for {}: Discord service/configuration failure", username)
+                                val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
+                                onComplete.accept(LoginLoadResult(13, durationMs, 0, null))
+                                return@launch
+                            }
+                        }
+                    } else {
+                        null
+                    }
+                    val email = discordUser?.email ?: ""
+                    val discordId = discordUser?.id ?: ""
+                    val discordUsername = discordUser?.username ?: ""
+                    val discordVerified = discordUser?.verified ?: false
                     val deadline = System.currentTimeMillis() + 3_000L
-                    var finalCode = 13
+                    var finalResult = AccountLoginService.PreparedLogin.failure(13)
                     while (true) {
-                        val loadCode = AccountLoginService.loadGame(client, username, password)
-                        if (loadCode != AccountLoginService.FINAL_SAVE_PENDING_INTERNAL) {
-                            finalCode = loadCode
+                        val loadResult = AccountLoginService.prepareGame(
+                            client,
+                            username,
+                            password,
+                            email,
+                            discordId,
+                            discordUsername,
+                            discordVerified,
+                            accountCreationRequested = accountCreationRequested,
+                        )
+                        if (loadResult.code != AccountLoginService.FINAL_SAVE_PENDING_INTERNAL) {
+                            finalResult = loadResult
                             break
                         }
                         pendingRetries++
                         if (System.currentTimeMillis() >= deadline) {
-                            finalCode = 5
+                            finalResult = AccountLoginService.PreparedLogin.failure(5)
                             break
                         }
                         delay(50L)
                     }
-                    finalCode
-                } catch (exception: CancellationException) {
+                    finalResult
+                } catch (_: CancellationException) {
                     logger.info("Account load cancelled for {}", username)
-                    13
+                    AccountLoginService.PreparedLogin.failure(13)
                 } catch (exception: RuntimeException) {
                     logger.warn("Account load failed for {}", username, exception)
-                    13
+                    AccountLoginService.PreparedLogin.failure(13)
                 }
             val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
-            onComplete.accept(LoginLoadResult(code, durationMs, pendingRetries))
+            onComplete.accept(LoginLoadResult(prepared.code, durationMs, pendingRetries, prepared.takeIf { it.code == 0 }))
         }
     }
 
@@ -79,6 +135,16 @@ object AccountPersistenceService {
         onComplete: IntConsumer,
     ) {
         submitLoginLoad(client, username, password) { result -> onComplete.accept(result.code) }
+    }
+
+    internal fun accountCreationPreflightCode(
+        accountCreationRequested: Boolean,
+        discordAuthCode: String,
+        usernameExists: () -> Boolean,
+    ): Int? {
+        if (!accountCreationRequested) return null
+        if (discordAuthCode.isBlank()) return 29
+        return if (usernameExists()) AccountLoginService.USERNAME_TAKEN else null
     }
 
     @JvmStatic
@@ -166,6 +232,7 @@ object AccountPersistenceService {
     @JvmStatic
     fun shutdownAndDrain(timeout: Duration) {
         TickThreadBlockingGuard.requireNotGameThread("AccountPersistenceService.shutdownAndDrain")
+        scope.cancel("Account persistence shutdown")
         PlayerSaveService.shutdownAndDrain(timeout)
         DbDispatchers.shutdown(DbDispatchers.accountExecutor, timeout)
     }
@@ -174,5 +241,6 @@ object AccountPersistenceService {
         val code: Int,
         val durationMs: Long,
         val pendingRetries: Int,
+        val hydration: AccountLoginService.PreparedLogin? = null,
     )
 }

@@ -24,7 +24,9 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
 
     private long packetWindowStartMillis = 0L;
     private int packetsInWindow = 0;
+    private int rateLimitViolations = 0;
     private boolean windowRateLimitLogged = false;
+    private boolean windowQueueOverflowLogged = false;
 
     private final Client client;
 
@@ -40,7 +42,9 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
         if (now - packetWindowStartMillis > PACKET_WINDOW_MILLIS) {
             packetWindowStartMillis = now;
             packetsInWindow = 0;
+            rateLimitViolations = 0;
             windowRateLimitLogged = false;
+            windowQueueOverflowLogged = false;
         }
 
         if (packetsInWindow >= NetworkConstants.PACKET_RATE_LIMIT_PER_WINDOW) {
@@ -55,6 +59,11 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
                     packet.opcode(), packet.size(), client.getPlayerName(),
                     NetworkConstants.PACKET_RATE_LIMIT_PER_WINDOW, PACKET_WINDOW_MILLIS);
             releasePacket(packet);
+            if (++rateLimitViolations >= NetworkConstants.PACKET_RATE_LIMIT_VIOLATIONS_BEFORE_CLOSE) {
+                logger.warn("[Netty] Closing {} after {} packet-rate violations in one window",
+                        client.getPlayerName(), rateLimitViolations);
+                ctx.close();
+            }
             return;
         }
 
@@ -67,11 +76,30 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
             return;
         }
 
-        if (!client.queueInboundPacket(packet)) {
-            PacketRejectTelemetry.record(packet.opcode(), "inbound_queue_overflow");
-            logger.warn("[Netty] Inbound queue overflow for {}, closing channel", client.getPlayerName());
+        if (client.disconnected) {
+            // The game thread has already abandoned this session; leaving the socket open
+            // produces a zombie connection that spams rejected packets and confuses the
+            // client into relog loops. Closing here is the correct, deliberate close.
             releasePacket(packet);
             ctx.close();
+            return;
+        }
+
+        if (!client.queueInboundPacket(packet)) {
+            PacketRejectTelemetry.record(packet.opcode(), "inbound_queue_overflow");
+            releasePacket(packet);
+            // The inbound mailbox is a bounded buffer, not a flood defense — that's what the
+            // rate limiter above is for, and it already has its own close-after-violations
+            // policy. A full mailbox just means the game thread hasn't drained a burst yet
+            // (e.g. a rapid-click spree); dropping the newest packet and letting the client
+            // catch up on the next tick is correct here, closing the connection is not.
+            if (!windowQueueOverflowLogged) {
+                logger.warn("[Netty] Inbound queue overflow for {}: opcode={} size={} (mailbox full, dropping until drained)",
+                        client.getPlayerName(), packet.opcode(), packet.size());
+                windowQueueOverflowLogged = true;
+            }
+            logger.debug("[Netty] Dropping packet opcode={} size={} from {} due to inbound queue overflow",
+                    packet.opcode(), packet.size(), client.getPlayerName());
         }
     }
 

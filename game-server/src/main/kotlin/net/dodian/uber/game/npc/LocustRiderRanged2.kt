@@ -1,0 +1,25 @@
+package net.dodian.uber.game.npc
+
+internal object LocustRiderRanged2 : NpcFamily by npcFamily("Locust rider ranged 2", 796, block = {
+    definition {
+        examine = "Ranged warrior of scarabs"
+    }
+
+    server {
+        defenceAnimation = 5448
+        attackAnimation = 5451
+        deathAnimation = 5449
+        attack = 20
+        strength = 110
+        defence = 80
+        hitpoints = 92
+        ranged = 210
+        magic = 300
+    }
+
+    combat { handler(ScarabLocustCombat) }
+
+    spawns {
+        spawn(3237, 2780)
+    }
+})

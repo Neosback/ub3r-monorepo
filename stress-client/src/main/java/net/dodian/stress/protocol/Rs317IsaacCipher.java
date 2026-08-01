@@ -32,10 +32,10 @@ public final class Rs317IsaacCipher {
         for (int i = 0; i < 256; i++) {
             int x = memory[i];
             switch (i & 3) {
-                case 0 -> accumulator ^= accumulator << 13;
-                case 1 -> accumulator ^= accumulator >>> 6;
-                case 2 -> accumulator ^= accumulator << 2;
-                default -> accumulator ^= accumulator >>> 16;
+                case 0: accumulator ^= accumulator << 13; break;
+                case 1: accumulator ^= accumulator >>> 6; break;
+                case 2: accumulator ^= accumulator << 2; break;
+                default: accumulator ^= accumulator >>> 16; break;
             }
             accumulator += memory[(i + 128) & 0xFF];
             int y = memory[(x & 0x3FC) >> 2] + accumulator + lastResult;

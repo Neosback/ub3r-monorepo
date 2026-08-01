@@ -34,7 +34,7 @@ object CacheUtils {
     fun unpackBzip2(data: ByteArray): ByteArray =
         ByteArrayInputStream(BZIP_HEADER + data).use { input ->
             BZip2CompressorInputStream(input).use { compressed ->
-                ByteArrayOutputStream().use { output ->
+                ByteArrayOutputStream(maxOf(4096, data.size * 4)).use { output ->
                     compressed.copyTo(output)
                     output.toByteArray()
                 }
@@ -44,7 +44,7 @@ object CacheUtils {
     fun unzipGzip(data: ByteArray): ByteArray =
         ByteArrayInputStream(data).use { input ->
             GZIPInputStream(input).use { gzip ->
-                ByteArrayOutputStream().use { output ->
+                ByteArrayOutputStream(maxOf(4096, data.size * 4)).use { output ->
                     gzip.copyTo(output)
                     output.toByteArray()
                 }
@@ -97,6 +97,18 @@ class CacheBuffer(
         return value
     }
 
+    fun readStringNullTerminated(): String {
+        val start = position
+        while (position < data.size && data[position] != 0.toByte()) {
+            position++
+        }
+        val value = String(data, start, (position - start).coerceAtLeast(0), Charsets.ISO_8859_1)
+        if (position < data.size) {
+            position++
+        }
+        return value
+    }
+
     fun readUnsignedSmart(): Int {
         val peek = data[position].toInt() and 0xFF
         return if (peek < 128) {
@@ -115,5 +127,46 @@ class CacheBuffer(
         } while (value == 32767)
         return total
     }
-}
 
+    fun readBytes(length: Int): ByteArray {
+        val bytes = data.copyOfRange(position, position + length)
+        position += length
+        return bytes
+    }
+
+    fun readMedium(): Int {
+        val value = ((data[position].toInt() and 0xFF) shl 16) or
+                    ((data[position + 1].toInt() and 0xFF) shl 8) or
+                    (data[position + 2].toInt() and 0xFF)
+        position += 3
+        return value
+    }
+
+    fun readInt(): Int {
+        val value = ((data[position].toInt() and 0xFF) shl 24) or
+                    ((data[position + 1].toInt() and 0xFF) shl 16) or
+                    ((data[position + 2].toInt() and 0xFF) shl 8) or
+                    (data[position + 3].toInt() and 0xFF)
+        position += 4
+        return value
+    }
+
+    fun readJString(): String = readString()
+
+    fun readBigSmart2(): Int {
+        if (data[position].toInt() < 0) {
+            return readInt() and Integer.MAX_VALUE
+        }
+        val value = readUnsignedShort()
+        return if (value == 32767) -1 else value
+    }
+
+    fun readUnsignedShortSmartMinusOne(): Int {
+        val peek = data[position].toInt() and 0xFF
+        return if (peek < 128) {
+            readUnsignedByte() - 1
+        } else {
+            readUnsignedShort() - 0x8001
+        }
+    }
+}

@@ -2,12 +2,19 @@ package net.dodian.uber.game.netty.listener.out;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets;
 
-/**
- * @author Dashboard
- */
-public record Sound(int soundId, int volume, int delay) implements OutgoingPacket {
+public final class Sound implements OutgoingPacket {
+
+    private final int soundId;
+    private final int volume;
+    private final int delay;
+
+    public Sound(int soundId, int volume, int delay) {
+        this.soundId = soundId;
+        this.volume = volume;
+        this.delay = delay;
+    }
 
     public Sound(int soundId, int delay) {
         this(soundId, 4, delay);
@@ -17,14 +24,21 @@ public record Sound(int soundId, int volume, int delay) implements OutgoingPacke
         this(soundId, 4, 0);
     }
 
+    public int soundId() {
+        return soundId;
+    }
+
+    public int volume() {
+        return volume;
+    }
+
+    public int delay() {
+        return delay;
+    }
+
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(174);
-        message.putShort(soundId);
-        message.put(volume); // type field (reusing volume for type)
-        message.putShort(delay);
-        message.putShort(volume); // actual volume field
-        client.send(message);
+        client.send(new TarnishOutboundPackets.Sound(soundId, volume, delay).encode());
     }
 
 }

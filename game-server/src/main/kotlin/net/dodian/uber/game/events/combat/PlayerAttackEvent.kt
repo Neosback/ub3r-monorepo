@@ -13,4 +13,3 @@ data class PlayerAttackEvent(
     val targetIndex: Int,
     val targetIsPlayer: Boolean,
 ) : GameEvent
-

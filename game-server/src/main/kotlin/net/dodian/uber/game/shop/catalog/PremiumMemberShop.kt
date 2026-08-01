@@ -34,4 +34,3 @@ object PremiumMemberShop : ShopPlugin {
             item(2621, 100)
         }.definition
 }
-

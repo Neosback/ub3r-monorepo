@@ -1,6 +1,7 @@
 package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
@@ -24,14 +25,17 @@ final class PlayerStats {
 
     void addExperience(int experience, Skill skill) {
         playerXP[skill.getId()] += experience;
+        cachedCombatLevel = -1;
     }
 
     void setLevel(int level, Skill skill) {
         playerLevel[skill.getId()] = level;
+        cachedCombatLevel = -1;
     }
 
     void setExperience(int experience, Skill skill) {
         playerXP[skill.getId()] = experience;
+        cachedCombatLevel = -1;
     }
 
     int getCurrentHealth() {
@@ -54,7 +58,7 @@ final class PlayerStats {
         Client c = (Client) owner;
         int maxLevel = getMaxHealth() + overHeal;
         setCurrentHealth(Math.min(getCurrentHealth() + healing, maxLevel));
-        c.refreshSkill(Skill.HITPOINTS);
+        ProgressionService.refresh(c, Skill.HITPOINTS);
     }
 
     void eat(int healing, int removeId, int removeSlot) {
@@ -82,7 +86,7 @@ final class PlayerStats {
         int currentLevel = c.getLevel(skill);
         boosted = currentLevel >= lvl + boosted ? currentLevel - lvl : boosted;
         owner.boostedLevel[skill.getId()] = boosted;
-        c.refreshSkill(skill);
+        ProgressionService.refresh(c, skill);
         c.markSaveDirty(PlayerSaveSegment.STATS.getMask());
     }
 
@@ -111,10 +115,22 @@ final class PlayerStats {
         Client c = (Client) owner;
         int maxLevel = getMaxPrayer();
         setCurrentPrayer(Math.min(getCurrentPrayer() + healing, maxLevel));
-        c.refreshSkill(Skill.PRAYER);
+        ProgressionService.refresh(c, Skill.PRAYER);
+    }
+
+    private int cachedCombatLevel = -1;
+
+    void invalidateCombatLevel() {
+        this.cachedCombatLevel = -1;
     }
 
     int determineCombatLevel() {
+        if (owner.customCombat != -1) {
+            return owner.customCombat;
+        }
+        if (cachedCombatLevel != -1) {
+            return cachedCombatLevel;
+        }
         int magLvl = Skills.getLevelForExperience(getExperience(Skill.MAGIC));
         int ranLvl = Skills.getLevelForExperience(getExperience(Skill.RANGED));
         int attLvl = Skills.getLevelForExperience(getExperience(Skill.ATTACK));
@@ -133,7 +149,8 @@ final class PlayerStats {
         } else {
             combatLevel = ((double) defLvl * 0.25) + ((double) hitLvl * 0.25) + ((double) (prayLvl / 2) * 0.25) + ((double) attLvl * 0.325) + ((double) strLvl * 0.325);
         }
-        return owner.customCombat != -1 ? owner.customCombat : (int) combatLevel;
+        this.cachedCombatLevel = (int) combatLevel;
+        return this.cachedCombatLevel;
     }
 
     int getSkillLevel(Skill skill) {

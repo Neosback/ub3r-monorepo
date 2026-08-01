@@ -201,14 +201,8 @@ private fun handleDevNpc(context: CommandContext): Boolean {
             }
         }
         "addxmastree" -> {
-            val x = client.position.x
-            val y = client.position.y
-            CommandDbService.submit(
-                "add-xmas-tree",
-                { CommandDbService.insertObjectDefinition(1318, x, y, 2) },
-                { _ -> if (!client.disconnected) context.reply("Object added, at x = $x y = $y") },
-                { exception -> commandLogger.debug("add-xmas-tree failed at x={} y={}", x, y, exception) },
-            )
+            context.reply("This command is disabled after the custom objects spawn hard cutover.")
+            context.reply("Add object spawns in JSON files under game/objects/spawns for permanent changes.")
         }
         "addnpc" -> {
             context.reply("This command is disabled after the NPC spawn hard cutover.")

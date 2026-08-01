@@ -42,4 +42,3 @@ object FoodItemContent : ItemContent {
         return true
     }
 }
-

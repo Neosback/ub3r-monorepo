@@ -2,6 +2,7 @@ package net.dodian.uber.game.engine.lifecycle
 
 import net.dodian.uber.game.api.plugin.ContentBootstrap
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
+import net.dodian.uber.game.api.plugin.ContentPluginLifecycle
 import net.dodian.uber.game.api.plugin.PluginRegistry
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectContentRegistry
@@ -53,6 +54,7 @@ object EnginePluginBootstrap {
             for (bootstrap: ContentBootstrap in orderedContentBootstraps()) {
                 bootstrap.bootstrap()
             }
+            ContentPluginLifecycle.start(ContentModuleIndex.contentPlugins)
             GameEventBus.bootstrap()
             ObjectContentRegistry.prewarmObjectDefinitions()
             WebApi.start()
@@ -64,6 +66,9 @@ object EnginePluginBootstrap {
 
     @JvmStatic
     fun currentPhase(): LifecyclePhase = phase
+
+    @JvmStatic
+    fun isFrozen(): Boolean = bootstrapped.get() && phase == LifecyclePhase.FREEZE
 
     @JvmStatic
     fun orderedContentBootstrapIds(): List<String> = orderedContentBootstraps().map(ContentBootstrap::id)

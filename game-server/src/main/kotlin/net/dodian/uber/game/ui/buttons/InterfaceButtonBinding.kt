@@ -38,4 +38,3 @@ fun buttonBinding(
         opIndex = opIndex,
         handler = InterfaceButtonHandler { request -> handler(request.client, request) },
     )
-

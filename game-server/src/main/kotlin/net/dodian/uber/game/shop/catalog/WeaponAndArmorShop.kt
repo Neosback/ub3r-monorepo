@@ -44,4 +44,3 @@ object WeaponAndArmorShop : ShopPlugin {
             item(1313, 100)
         }.definition
 }
-

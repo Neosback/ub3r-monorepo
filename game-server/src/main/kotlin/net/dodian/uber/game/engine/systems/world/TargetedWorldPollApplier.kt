@@ -62,7 +62,9 @@ class TargetedWorldPollApplier {
             }
         }
         result.bannedPlayerIds.forEach { dbId ->
-            playerIndex.byDbId(dbId)?.disconnected = true
+            playerIndex.byDbId(dbId)?.let { client ->
+                client.disconnected = true
+            }
         }
     }
 }

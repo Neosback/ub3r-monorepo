@@ -1,0 +1,20 @@
+schemaVersion = 1
+region = "wilderness"
+
+[[object]]
+id = 10583
+name = "Bank (mining falador)"
+x = 2470
+y = 10430
+z = 0
+type = 10
+rotation = "NORTH"
+
+[[object]]
+id = 10583
+name = "Bank (mining falador)"
+x = 2488
+y = 10442
+z = 0
+type = 10
+rotation = "EAST"

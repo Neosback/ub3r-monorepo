@@ -1,0 +1,71 @@
+schema_version = 1
+
+[[bow]]
+key = "oak"
+log_item_id = 1521
+unstrung_shortbow_id = 54
+unstrung_longbow_id = 56
+shortbow_id = 843
+longbow_id = 845
+short_level_required = 20
+long_level_required = 25
+short_experience = 102
+long_experience = 150
+short_string_animation_id = 6679
+long_string_animation_id = 6685
+
+[[bow]]
+key = "willow"
+log_item_id = 1519
+unstrung_shortbow_id = 60
+unstrung_longbow_id = 58
+shortbow_id = 849
+longbow_id = 847
+short_level_required = 35
+long_level_required = 40
+short_experience = 198
+long_experience = 252
+short_string_animation_id = 6680
+long_string_animation_id = 6686
+
+[[bow]]
+key = "maple"
+log_item_id = 1517
+unstrung_shortbow_id = 64
+unstrung_longbow_id = 62
+shortbow_id = 853
+longbow_id = 851
+short_level_required = 50
+long_level_required = 55
+short_experience = 300
+long_experience = 348
+short_string_animation_id = 6681
+long_string_animation_id = 6687
+
+[[bow]]
+key = "yew"
+log_item_id = 1515
+unstrung_shortbow_id = 68
+unstrung_longbow_id = 66
+shortbow_id = 857
+longbow_id = 855
+short_level_required = 65
+long_level_required = 70
+short_experience = 408
+long_experience = 450
+short_string_animation_id = 6682
+long_string_animation_id = 6688
+
+[[bow]]
+key = "magic"
+log_item_id = 1513
+unstrung_shortbow_id = 72
+unstrung_longbow_id = 70
+shortbow_id = 861
+longbow_id = 859
+short_level_required = 80
+long_level_required = 85
+short_experience = 504
+long_experience = 552
+short_string_animation_id = 6683
+long_string_animation_id = 6689

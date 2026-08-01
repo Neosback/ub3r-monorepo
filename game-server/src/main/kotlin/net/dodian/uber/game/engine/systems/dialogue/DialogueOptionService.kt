@@ -5,10 +5,8 @@ import net.dodian.uber.game.objects.travel.dialogue.BrimhavenEntryDialogueOption
 import net.dodian.uber.game.engine.systems.world.item.Ground
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skill.agility.AgilityTravel
-import net.dodian.uber.game.skill.herblore.HerbloreData
-import net.dodian.uber.game.skill.smithing.rockshell.RockshellDialogueOptionHandler
-import net.dodian.uber.game.skill.thieving.dialogue.PyramidPlunderDialogueOptionHandler
+import net.dodian.uber.game.engine.systems.skills.agility.AgilityTravel
+import net.dodian.uber.skills.herblore.HerbloreModule
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -115,9 +113,9 @@ object DialogueOptionService {
         val npcTalkTo = DialogueService.activeNpcId(c)
 
         if (
-            RockshellDialogueOptionHandler.handle(c, dialogueId, button) ||
             BrimhavenEntryDialogueOptionHandler.handle(c, dialogueId, button) ||
-            PyramidPlunderDialogueOptionHandler.handle(c, dialogueId, button)
+            net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher.tryHandleConfirmDialogue(c, dialogueId, button) ||
+            net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher.tryHandlePlayerOptionMenu(c, dialogueId, button)
         ) {
             val nextDialogueId = DialogueService.nextDialogueId(c)
             if (nextDialogueId > 0) {
@@ -143,16 +141,16 @@ object DialogueOptionService {
         if (dialogueId == 16) {
             if (button == 1) {
                 val slayerState = c.slayerTaskState
-                val checkTask = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(slayerState.taskOrdinal)
+                val checkTask = net.dodian.uber.skills.slayer.SlayerTaskRegistry.forOrdinal(slayerState.taskOrdinal)
                 if (checkTask != null) {
-                    for (i in checkTask.npcId.indices) {
+                    for (i in checkTask.npcIds.indices) {
                         for (slot in 0 until c.monsterName.size) {
-                            if (c.monsterName[slot].equals(Server.npcManager.getName(checkTask.npcId[i]), ignoreCase = true)) {
+                            if (c.monsterName[slot].equals(Server.npcManager.getName(checkTask.npcIds[i]), ignoreCase = true)) {
                                 c.monsterCount[slot] = 0
                             }
                         }
                     }
-                    c.sendMessage(checkTask.textRepresentation + " have now been reseted!")
+                    c.sendMessage(checkTask.name + " have now been reseted!")
                 }
             }
             c.send(RemoveInterfaces())
@@ -428,7 +426,7 @@ object DialogueOptionService {
             } else {
                 c.send(RemoveInterfaces())
                 resetDialogue()
-                val doseDefinitions = HerbloreData.potionDoseDefinitions
+                val doseDefinitions = HerbloreModule.doses
                 val amount = LongArray(doseDefinitions.size)
                 val vials = LongArray(doseDefinitions.size)
                 for (i in doseDefinitions.indices) {

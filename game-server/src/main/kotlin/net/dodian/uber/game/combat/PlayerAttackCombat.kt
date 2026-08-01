@@ -1,6 +1,7 @@
 package net.dodian.uber.game.combat
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -40,7 +41,7 @@ fun Client.getAttackStyle() : Int {
         return 2
     else if (!hasStaff() && magicId >= 0)
         return 2
-    else if (usingBow)
+    else if (contentRuntimeState.isCombatUsingBow())
         return 1
     return 0
 }
@@ -75,12 +76,12 @@ fun Client.attackTarget(): CombatAttackResult? {
             resetAttack()
             return null
         }
-        if (!(duelFight && duel_with == target.slot) && !Server.pking) {
+        if (!(duelFight && duel_with == target.slot) && !FeatureStateService.pvp.get()) {
             send(SendMessage("Pking has been disabled"))
             resetAttack()
             return null
         }
-        if (!canAttack) {
+        if (!contentRuntimeState.isCombatAttackEnabled()) {
             send(SendMessage("You cannot attack your oppenent yet!"))
             resetAttack()
             return null
@@ -98,11 +99,5 @@ if (!((castOnPlayer.inWildy() && diff <= client.wildyLevel && diff <= castOnPlay
     return;
 }*/ //TODO: Fix wildy checks if we release wilderness!
     /* Style check to attack! */
-    if(attackStyle == 2)
-        return handleMagicAttack()
-    if(attackStyle == 1)
-        return handleRangedAttack()
-    if(attackStyle == 0)
-        return handleMeleeAttack()
-    return null
+    return PlayerCombatStrategies.resolve(attackStyle)?.execute(this)
 }

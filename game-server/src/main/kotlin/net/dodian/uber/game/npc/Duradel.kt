@@ -1,42 +1,39 @@
 package net.dodian.uber.game.npc
 
-import net.dodian.uber.game.api.content.dialogue.DialogueEmote
-import net.dodian.uber.game.api.content.dialogue.DialogueOption
-import net.dodian.uber.game.engine.systems.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.skills.slayer.SlayerModule
 
-internal object Duradel : NpcModule {
-    // Stats: 405: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
-
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 405, x = 2606, y = 3398, z = 0, face = 0),
-    )
-
-    val npcIds: IntArray = npcIdsFromEntries(entries)
-
-
-    override val definition = legacyNpcDefinition(
-        name = "Duradel",
-        entries = entries,
-        onFirstClick = ::onFirstClick,
-        onSecondClick = ::onSecondClick,
-        onThirdClick = ::onThirdClick,
-    )
-
-    fun onFirstClick(client: Client, npc: Npc): Boolean {
-        SlayerMasterDialogue.startIntro(client, npc.id)
-        return true
+internal object Duradel : NpcFamily by npcFamily("Duradel", 405, block = {
+    definition {
+        examine = "He looks dangerous!"
     }
 
-    fun onSecondClick(client: Client, npc: Npc): Boolean {
-        SlayerMasterDialogue.assignTask(client, npc.id)
-        return true
+    server {
+        deathAnimation = 2304
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    fun onThirdClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 15
-        return true
+    options {
+        talkTo(handler = ::handleSlayerMasterTalkTo)
+        third("assignment", ::handleSlayerMasterAssignment)
     }
+
+    spawns {
+        spawn(2606, 3398)
+    }
+})
+
+// Shadowed in practice by SlayerModule's own npcClick(option=1/3, 405) bindings
+// (SkillInteractionDispatcher is tried before NpcContentRegistry) - kept functionally correct
+// rather than stubbed, since these registrations still drive the client-visible "talk-to"/
+// "assignment" right-click menu labels (see the Tanner.kt/Zahur.kt precedent).
+private fun handleSlayerMasterTalkTo(client: Client, npc: Npc): Boolean {
+    SlayerModule.startIntro(client.asSkillPlayer(), npc.id)
+    return true
+}
+
+private fun handleSlayerMasterAssignment(client: Client, npc: Npc): Boolean {
+    SlayerModule.assignTask(client.asSkillPlayer(), npc.id)
+    return true
 }

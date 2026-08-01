@@ -10,17 +10,10 @@ import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
-import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 
-@PacketHandler(opcode = 53)
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {53})
 public class ItemOnItemListener implements PacketListener {
-
-    static {
-        PacketListenerManager.register(53, new ItemOnItemListener());
-    }
-
     private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override

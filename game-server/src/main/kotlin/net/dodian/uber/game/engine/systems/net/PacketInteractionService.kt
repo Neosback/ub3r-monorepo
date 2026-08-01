@@ -13,20 +13,25 @@ import net.dodian.uber.game.engine.systems.combat.CombatCommandService
 import net.dodian.uber.game.engine.systems.combat.CombatIntent
 import net.dodian.uber.game.engine.systems.interaction.AttackPlayerIntent
 import net.dodian.uber.game.engine.systems.interaction.ItemOnNpcIntent
+import net.dodian.uber.game.engine.systems.interaction.EntityInteractionReach
+import net.dodian.uber.game.engine.systems.interaction.EntityReachResult
+import net.dodian.uber.game.engine.systems.interaction.npcs.BankerApproachFallbackService
 import net.dodian.uber.game.engine.systems.interaction.NpcInteractionIntent
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentRegistry
 import net.dodian.uber.game.engine.systems.interaction.scheduler.InteractionTaskScheduler
 import net.dodian.uber.game.engine.systems.interaction.scheduler.NpcInteractionTask
 import net.dodian.uber.game.engine.systems.interaction.scheduler.PlayerInteractionTask
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.config.gameWorldId
+import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
+import org.slf4j.LoggerFactory
 
 /**
- * Kotlin service for player-interaction packet side-effects that must stay out
  * of Netty inbound listeners.
  */
 object PacketInteractionService {
+    private val logger = LoggerFactory.getLogger(PacketInteractionService::class.java)
     /**
-     * Processes an attack-player packet after the listener has decoded the
      * victim slot.
      */
     @JvmStatic
@@ -56,20 +61,19 @@ object PacketInteractionService {
     }
 
     /**
-     * Processes a use-item-on-NPC packet after the listener has decoded the
      * packet values and validated the inventory slot/item match.
      */
     @JvmStatic
     fun handleUseItemOnNpc(client: Client, opcode: Int, itemId: Int, slot: Int, npcIndex: Int) {
         if (client.randomed || client.UsingAgility) return
-        Server.npcManager.npcMap[npcIndex] ?: return
+        val npc = Server.npcManager.npcMap[npcIndex] ?: return
+        ConsoleAuditLog.npcClick(client, npc, 0, opcode)
 
         val intent = ItemOnNpcIntent(opcode, PlayerRegistry.cycle.toLong(), itemId, slot, npcIndex)
         InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
     }
 
     /**
-     * Processes an NPC click packet after the listener has decoded the target
      * index and recorded decode-time metrics.
      */
     @JvmStatic
@@ -85,11 +89,15 @@ object PacketInteractionService {
         if (client.randomed || client.UsingAgility) {
             return
         }
+        ConsoleAuditLog.npcClick(client, npc, option, opcode)
         if (client.playerPotatoState != null) {
             client.clearPlayerPotatoState()
         }
         if (option in 1..4) {
             LegendsGuildGateService.primeGuardApproach(client, npc)
+            if (BankerApproachFallbackService.shouldAttemptFallback(client, npc, option)) {
+                BankerApproachFallbackService.tryRouteCustomerSide(client, npc)
+            }
         }
         if (shouldClearRedundantWalkForNpcInteraction(client, npc, option)) {
             client.resetWalkingQueue()
@@ -100,7 +108,6 @@ object PacketInteractionService {
     }
 
     /**
-     * Processes an NPC attack packet after the listener has decoded the target
      * index and recorded decode-time metrics.
      */
     @JvmStatic
@@ -109,26 +116,43 @@ object PacketInteractionService {
         if (client.deathStage >= 1) return
 
         val npc = Server.npcManager.npcMap[npcIndex]
+        if (gameWorldId == 2) {
+            logger.info("[W2-ATTACK] handleNpcAttack: player=${client.playerName}, opcode=$opcode, npcIndex=$npcIndex, npcFound=${npc != null}, npcId=${npc?.id}, npcAlive=${npc?.alive}, npcHealth=${npc?.currentHealth}")
+        }
         if (npc == null) {
             return
         }
         if (client.randomed || client.UsingAgility) {
+            if (gameWorldId == 2) {
+                logger.info("[W2-ATTACK] handleNpcAttack rejected: randomed=${client.randomed}, UsingAgility=${client.UsingAgility}")
+            }
             return
         }
-        when (AttackStartDedupeService.shouldAcceptAttackStart(
+        ConsoleAuditLog.npcClick(client, npc, 5, opcode)
+        val dedupeDecision = AttackStartDedupeService.shouldAcceptAttackStart(
             player = client,
             intent = CombatIntent.ATTACK_NPC,
             targetType = Entity.Type.NPC,
             targetSlot = npcIndex,
             cycle = PlayerRegistry.cycle.toLong(),
-        )) {
+        )
+        if (gameWorldId == 2) {
+            logger.info("[W2-ATTACK] handleNpcAttack dedupe decision: $dedupeDecision")
+        }
+        when (dedupeDecision) {
             Decision.ACCEPT -> {
                 GameEventBus.post(PlayerAttackEvent(client, npcIndex, false))
-                if (NpcContentRegistry.hasAttackHandler(npc.id)) {
+                if (NpcContentRegistry.hasAttackHandler(npc)) {
+                    if (gameWorldId == 2) {
+                        logger.info("[W2-ATTACK] handleNpcAttack: NPC has attack handler, scheduling interaction task")
+                    }
                     val intent = NpcInteractionIntent(opcode, PlayerRegistry.cycle.toLong(), npcIndex, 5)
                     InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
                 } else {
-                    CombatCommandService.requestAttack(client, npc, CombatIntent.ATTACK_NPC)
+                    val result = CombatCommandService.requestAttack(client, npc, CombatIntent.ATTACK_NPC)
+                    if (gameWorldId == 2) {
+                        logger.info("[W2-ATTACK] handleNpcAttack: requestAttack returned $result")
+                    }
                 }
             }
             Decision.DUPLICATE_PENDING,
@@ -145,10 +169,7 @@ object PacketInteractionService {
         if (option !in 1..4) {
             return false
         }
-        if (npc.position.withinDistance(client.position, 0)) {
-            return false
-        }
-        return client.goodDistanceEntity(npc, 1)
+        return EntityInteractionReach.resolve(client, npc, 1) == EntityReachResult.REACHED
     }
 
     private fun refreshCombatTargetFacing(client: Client, target: Entity) {

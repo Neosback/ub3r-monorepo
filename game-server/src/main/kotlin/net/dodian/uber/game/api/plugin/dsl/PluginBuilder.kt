@@ -19,4 +19,3 @@ fun plugin(block: PluginMetadata.() -> Unit): PluginMetadata {
     metadata.validate()
     return metadata
 }
-

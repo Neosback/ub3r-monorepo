@@ -32,7 +32,11 @@ object CombatCommandService {
 
         if (matches(currentEngagement, target, intent)) {
             applyFacing(player, target)
-            player.combatEngagementState = refreshEngagement(currentEngagement!!, target, cycle)
+            player.combatEngagementState = refreshEngagement(
+                currentEngagement ?: return AttackRequestResult.REJECTED_INVALID,
+                target,
+                cycle,
+            )
             syncLegacyState(player)
             return AttackRequestResult.REFRESHED_SAME_TARGET
         }
@@ -208,26 +212,7 @@ object CombatCommandService {
     fun normalizeCooldownState(
         player: Client,
         cycleNow: Long,
-    ): CombatCooldownState? {
-        player.combatCooldownState?.let { return it }
-        player.combatTargetState?.let { legacy ->
-            return CombatCooldownState(
-                attackStyleAtStart = legacy.attackStyleAtStart,
-                initialSwingConsumed = legacy.initialSwingConsumed,
-                nextAttackCycle = legacy.nextAttackCycle,
-                lastAttackCycle = legacy.lastAttackCycle,
-            )
-        }
-        if (player.combatTimer > 0) {
-            return CombatCooldownState(
-                attackStyleAtStart = player.getAttackStyle(),
-                initialSwingConsumed = true,
-                nextAttackCycle = cycleNow + player.combatTimer.toLong(),
-                lastAttackCycle = (cycleNow - 1L).coerceAtLeast(0L),
-            )
-        }
-        return null
-    }
+    ): CombatCooldownState? = player.combatCooldownState
 
     private fun createEngagement(
         target: Entity,

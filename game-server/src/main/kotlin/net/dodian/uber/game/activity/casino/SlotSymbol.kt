@@ -40,4 +40,3 @@ class SlotSymbol(
 
     fun output(): String = formattedOutput()
 }
-

@@ -73,4 +73,3 @@ object Utils {
     @JvmStatic
     fun capitalize(str: String?): String? = Formatting.capitalize(str)
 }
-

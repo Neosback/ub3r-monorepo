@@ -1,0 +1,581 @@
+schema_version = 1
+
+[[crop]]
+type = "allotment"
+name = "potato"
+level = 1
+seed_id = 5318
+plant_xp = 32
+harvest_xp = 36
+harvest_item = 1942
+stages = 5
+grow_tick = 8
+disease_chance = 180
+check_health_xp = 0
+
+[[crop]]
+type = "allotment"
+name = "onion"
+level = 5
+seed_id = 5319
+plant_xp = 38
+harvest_xp = 42
+harvest_item = 1957
+stages = 5
+grow_tick = 8
+disease_chance = 190
+check_health_xp = 0
+
+[[crop]]
+type = "allotment"
+name = "cabbage"
+level = 9
+seed_id = 5324
+plant_xp = 40
+harvest_xp = 46
+harvest_item = 1965
+stages = 5
+grow_tick = 8
+disease_chance = 200
+check_health_xp = 0
+
+[[crop]]
+type = "allotment"
+name = "tomato"
+level = 16
+seed_id = 5322
+plant_xp = 50
+harvest_xp = 56
+harvest_item = 1982
+stages = 5
+grow_tick = 8
+disease_chance = 210
+check_health_xp = 0
+
+[[crop]]
+type = "allotment"
+name = "sweetcorn"
+level = 25
+seed_id = 5320
+plant_xp = 68
+harvest_xp = 76
+harvest_item = 5986
+stages = 7
+grow_tick = 8
+disease_chance = 220
+check_health_xp = 0
+
+[[crop]]
+type = "allotment"
+name = "strawberry"
+level = 31
+seed_id = 5323
+plant_xp = 100
+harvest_xp = 116
+harvest_item = 5504
+stages = 7
+grow_tick = 8
+disease_chance = 230
+check_health_xp = 0
+
+[[crop]]
+type = "allotment"
+name = "watermelon"
+level = 47
+seed_id = 5321
+plant_xp = 180
+harvest_xp = 208
+harvest_item = 5982
+stages = 9
+grow_tick = 8
+disease_chance = 240
+check_health_xp = 0
+
+[[crop]]
+type = "allotment"
+name = "snape grass"
+level = 59
+seed_id = 22879
+plant_xp = 300
+harvest_xp = 312
+harvest_item = -1
+stages = 8
+grow_tick = 8
+disease_chance = 250
+check_health_xp = 0
+
+[[crop]]
+type = "flower"
+name = "marigold"
+level = 3
+seed_id = 5096
+plant_xp = 36
+harvest_xp = 180
+harvest_item = 6010
+stages = 5
+grow_tick = 4
+disease_chance = 185
+check_health_xp = 0
+
+[[crop]]
+type = "flower"
+name = "rosemary"
+level = 13
+seed_id = 5097
+plant_xp = 48
+harvest_xp = 260
+harvest_item = 6014
+stages = 5
+grow_tick = 4
+disease_chance = 190
+check_health_xp = 0
+
+[[crop]]
+type = "flower"
+name = "nasturtium"
+level = 22
+seed_id = 5098
+plant_xp = 80
+harvest_xp = 440
+harvest_item = 6012
+stages = 5
+grow_tick = 4
+disease_chance = 195
+check_health_xp = 0
+
+[[crop]]
+type = "flower"
+name = "woad"
+level = 26
+seed_id = 5099
+plant_xp = 88
+harvest_xp = 480
+harvest_item = 1793
+stages = 5
+grow_tick = 4
+disease_chance = 200
+check_health_xp = 0
+
+[[crop]]
+type = "flower"
+name = "limpwurt"
+level = 34
+seed_id = 5100
+plant_xp = 96
+harvest_xp = 500
+harvest_item = 225
+stages = 5
+grow_tick = 4
+disease_chance = 210
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "guam"
+level = 8
+seed_id = 5291
+plant_xp = 44
+harvest_xp = 50
+harvest_item = 199
+stages = 5
+grow_tick = 15
+disease_chance = 210
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "marrentill"
+level = 12
+seed_id = 5292
+plant_xp = 54
+harvest_xp = 60
+harvest_item = 201
+stages = 5
+grow_tick = 15
+disease_chance = 220
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "tarromin"
+level = 19
+seed_id = 5293
+plant_xp = 64
+harvest_xp = 72
+harvest_item = 203
+stages = 5
+grow_tick = 15
+disease_chance = 230
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "harralander"
+level = 999
+seed_id = 5294
+plant_xp = 86
+harvest_xp = 96
+harvest_item = -1
+stages = 5
+grow_tick = 15
+disease_chance = 240
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "ranarr"
+level = 34
+seed_id = 5295
+plant_xp = 108
+harvest_xp = 122
+harvest_item = 207
+stages = 5
+grow_tick = 15
+disease_chance = 250
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "toadflax"
+level = 999
+seed_id = 5296
+plant_xp = 154
+harvest_xp = 154
+harvest_item = -1
+stages = 5
+grow_tick = 15
+disease_chance = 260
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "irit"
+level = 44
+seed_id = 5297
+plant_xp = 172
+harvest_xp = 194
+harvest_item = 209
+stages = 5
+grow_tick = 15
+disease_chance = 270
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "avantoe"
+level = 999
+seed_id = 5298
+plant_xp = 218
+harvest_xp = 246
+harvest_item = -1
+stages = 5
+grow_tick = 15
+disease_chance = 280
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "kwuarm"
+level = 56
+seed_id = 5299
+plant_xp = 276
+harvest_xp = 312
+harvest_item = 213
+stages = 5
+grow_tick = 15
+disease_chance = 290
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "snapdragon"
+level = 63
+seed_id = 5300
+plant_xp = 350
+harvest_xp = 394
+harvest_item = 3051
+stages = 5
+grow_tick = 15
+disease_chance = 300
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "cadantine"
+level = 70
+seed_id = 5301
+plant_xp = 426
+harvest_xp = 480
+harvest_item = 215
+stages = 5
+grow_tick = 15
+disease_chance = 310
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "lantadyme"
+level = 999
+seed_id = 5302
+plant_xp = 538
+harvest_xp = 606
+harvest_item = -1
+stages = 5
+grow_tick = 15
+disease_chance = 320
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "dwarf weed"
+level = 79
+seed_id = 5303
+plant_xp = 682
+harvest_xp = 768
+harvest_item = 217
+stages = 5
+grow_tick = 15
+disease_chance = 330
+check_health_xp = 0
+
+[[crop]]
+type = "herb"
+name = "torstol"
+level = 85
+seed_id = 5304
+plant_xp = 798
+harvest_xp = 898
+harvest_item = 219
+stages = 5
+grow_tick = 15
+disease_chance = 340
+check_health_xp = 0
+
+# The 17 crop types below (bush/fruit tree/tree families) share the same
+# clickPatch/interactItemBin state machine as allotment/flower/herb, but this
+# server has no confirmed real-world patch *locations* for them yet (the old
+# FarmingData.patches enum never had bush/fruit-tree/tree entries either -
+# this is a pre-existing gap, not a regression from this migration). Their
+# seed ids are still listed here so useItem() dispatch is ready the moment
+# real patch locations are added; planting them has no reachable object today.
+
+[[crop]]
+type = "bush"
+name = "redberry"
+level = 22
+seed_id = 5101
+plant_xp = 44
+harvest_xp = 20
+harvest_item = 1951
+stages = 6
+grow_tick = 16
+disease_chance = 230
+check_health_xp = 256
+
+[[crop]]
+type = "bush"
+name = "cadavaberry"
+level = 68
+seed_id = 5102
+plant_xp = 400
+harvest_xp = 136
+harvest_item = 1987
+stages = 7
+grow_tick = 16
+disease_chance = 230
+check_health_xp = 2280
+
+[[crop]]
+type = "bush"
+name = "dwellberry"
+level = 36
+seed_id = 5103
+plant_xp = 120
+harvest_xp = 48
+harvest_item = 2126
+stages = 8
+grow_tick = 16
+disease_chance = 230
+check_health_xp = 700
+
+[[crop]]
+type = "bush"
+name = "jangerberry"
+level = 48
+seed_id = 5104
+plant_xp = 200
+harvest_xp = 76
+harvest_item = 247
+stages = 9
+grow_tick = 16
+disease_chance = 230
+check_health_xp = 1120
+
+[[crop]]
+type = "bush"
+name = "whiteberry"
+level = 59
+seed_id = 5105
+plant_xp = 312
+harvest_xp = 116
+harvest_item = 239
+stages = 9
+grow_tick = 16
+disease_chance = 230
+check_health_xp = 1720
+
+[[crop]]
+type = "fruit tree"
+name = "apple tree"
+level = 27
+seed_id = 5496
+plant_xp = 88
+harvest_xp = 36
+harvest_item = 1955
+stages = 7
+grow_tick = 120
+disease_chance = 240
+check_health_xp = 5090
+
+[[crop]]
+type = "fruit tree"
+name = "banana tree"
+level = 33
+seed_id = 5497
+plant_xp = 112
+harvest_xp = 44
+harvest_item = 1963
+stages = 7
+grow_tick = 120
+disease_chance = 240
+check_health_xp = 7366
+
+[[crop]]
+type = "fruit tree"
+name = "orange tree"
+level = 39
+seed_id = 5498
+plant_xp = 140
+harvest_xp = 52
+harvest_item = 2108
+stages = 7
+grow_tick = 120
+disease_chance = 240
+check_health_xp = 10340
+
+[[crop]]
+type = "fruit tree"
+name = "curry tree"
+level = 45
+seed_id = 5499
+plant_xp = 160
+harvest_xp = 64
+harvest_item = 5970
+stages = 7
+grow_tick = 120
+disease_chance = 240
+check_health_xp = 12140
+
+[[crop]]
+type = "fruit tree"
+name = "pineapple tree"
+level = 51
+seed_id = 5500
+plant_xp = 220
+harvest_xp = 84
+harvest_item = 2114
+stages = 7
+grow_tick = 120
+disease_chance = 240
+check_health_xp = 19160
+
+[[crop]]
+type = "fruit tree"
+name = "papaya tree"
+level = 57
+seed_id = 5501
+plant_xp = 280
+harvest_xp = 108
+harvest_item = 5972
+stages = 7
+grow_tick = 120
+disease_chance = 240
+check_health_xp = 25520
+
+[[crop]]
+type = "fruit tree"
+name = "palm tree"
+level = 63
+seed_id = 5502
+plant_xp = 440
+harvest_xp = 140
+harvest_item = 5974
+stages = 7
+grow_tick = 120
+disease_chance = 240
+check_health_xp = 42000
+
+[[crop]]
+type = "tree"
+name = "oak tree"
+level = 15
+seed_id = 5370
+plant_xp = 60
+harvest_xp = 0
+harvest_item = 1521
+stages = 5
+grow_tick = 30
+disease_chance = 190
+check_health_xp = 1860
+
+[[crop]]
+type = "tree"
+name = "willow tree"
+level = 30
+seed_id = 5371
+plant_xp = 100
+harvest_xp = 0
+harvest_item = 1519
+stages = 7
+grow_tick = 30
+disease_chance = 200
+check_health_xp = 5800
+
+[[crop]]
+type = "tree"
+name = "maple tree"
+level = 45
+seed_id = 5372
+plant_xp = 180
+harvest_xp = 0
+harvest_item = 1517
+stages = 9
+grow_tick = 30
+disease_chance = 210
+check_health_xp = 13600
+
+[[crop]]
+type = "tree"
+name = "yew tree"
+level = 60
+seed_id = 5373
+plant_xp = 320
+harvest_xp = 0
+harvest_item = 1515
+stages = 11
+grow_tick = 30
+disease_chance = 220
+check_health_xp = 28000
+
+[[crop]]
+type = "tree"
+name = "magic tree"
+level = 75
+seed_id = 5374
+plant_xp = 580
+harvest_xp = 0
+harvest_item = 1513
+stages = 13
+grow_tick = 30
+disease_chance = 230
+check_health_xp = 54800

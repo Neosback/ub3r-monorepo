@@ -13,11 +13,16 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Player
 
 class ChunkManager {
-    private val chunks = ConcurrentHashMap<Long, ChunkEntityIndex>()
+    private val chunks = ConcurrentHashMap<Long, ChunkEntityIndex>(6_000)
 
+    @JvmName("load")
     fun load(chunk: Chunk): ChunkEntityIndex =
         chunks.computeIfAbsent(pack(chunk.x, chunk.y)) { ChunkEntityIndex(chunk) }
 
+    fun load(chunkX: Int, chunkY: Int): ChunkEntityIndex =
+        load(Chunk(chunkX, chunkY))
+
+    @JvmName("getLoaded")
     fun getLoaded(chunk: Chunk): ChunkEntityIndex? = chunks[pack(chunk.x, chunk.y)]
 
     fun getLoaded(chunkX: Int, chunkY: Int): ChunkEntityIndex? = chunks[pack(chunkX, chunkY)]
@@ -106,6 +111,33 @@ class ChunkManager {
             Predicate { npc -> npc.isVisible },
             consumer,
         )
+    }
+
+    /**
+     * Allocation-light spatial query used by routing and occupancy checks. The bounds are the
+     * exact chunks touched by the requested tile square; an empty loaded view remains empty.
+     */
+    fun <E : Entity> forEachNearby(
+        center: Position,
+        type: EntityType,
+        distance: Int,
+        predicate: Predicate<E>,
+        consumer: Consumer<E>,
+    ) {
+        val minChunkX = ((center.x - distance) shr 3) - 6
+        val maxChunkX = ((center.x + distance) shr 3) - 6
+        val minChunkY = ((center.y - distance) shr 3) - 6
+        val maxChunkY = ((center.y + distance) shr 3) - 6
+        for (chunkX in minChunkX..maxChunkX) {
+            for (chunkY in minChunkY..maxChunkY) {
+                val repo = getLoaded(chunkX, chunkY) ?: continue
+                for (entity in repo.getAll<E>(type)) {
+                    if (center.withinDistance(entity.position, distance) && predicate.test(entity)) {
+                        consumer.accept(entity)
+                    }
+                }
+            }
+        }
     }
 
     private fun <E : Entity> forEach(

@@ -4,7 +4,9 @@ import net.dodian.uber.game.engine.config.databasePoolMaxSize
 import net.dodian.uber.game.engine.config.databasePoolMinSize
 import net.dodian.uber.game.engine.config.dodianLogLevel
 import net.dodian.uber.game.engine.config.gameConnectionsPerIp
+import net.dodian.uber.game.engine.config.gameMultiplierGlobalXp
 import net.dodian.uber.game.engine.config.gameWorldId
+import net.dodian.uber.game.engine.config.serverEnv
 import net.dodian.uber.game.engine.config.serverPort
 import net.dodian.uber.game.engine.config.webApiEnabled
 import net.dodian.uber.game.engine.config.webApiPort
@@ -14,11 +16,15 @@ import org.slf4j.LoggerFactory
 object StartupValidationService {
     private val logger = LoggerFactory.getLogger(StartupValidationService::class.java)
     private val validLogLevels = setOf("trace", "debug", "info", "warn", "error")
+    private val validEnvironments = setOf("dev", "test", "staging", "prod", "production")
 
     @JvmStatic
     fun validateOrThrow() {
         val violations = ArrayList<String>()
 
+        if (serverEnv !in validEnvironments) {
+            violations += "SERVER_ENV must be one of ${validEnvironments.sorted().joinToString(",")}"
+        }
         if (serverPort !in 1..65535) {
             violations += "SERVER_PORT must be between 1 and 65535"
         }
@@ -29,10 +35,10 @@ object StartupValidationService {
             violations += "WEB_API_PORT must be different from SERVER_PORT"
         }
         if (gameWorldId <= 0) {
-            violations += "GAME_WORLD_ID must be > 0"
+            violations += "WORLD_ID must be > 0"
         }
         if (gameConnectionsPerIp <= 0) {
-            violations += "GAME_CONNECTIONS_PER_IP must be > 0"
+            violations += "connections_per_ip must be > 0"
         }
         if (databasePoolMinSize <= 0) {
             violations += "DATABASE_POOL_MIN_SIZE must be > 0"
@@ -57,8 +63,11 @@ object StartupValidationService {
             "Startup validation failed:\n${violations.joinToString("\n")}"
         }
         logger.info(
-            "Startup validation passed: worldId={} gamePort={} webApiEnabled={} webApiPort={} dbPool={}..{} packetLimits={}/{}",
+            "Startup validation passed: env={} worldId={} xpMultiplier={}x connPerIp={} gamePort={} webApiEnabled={} webApiPort={} dbPool={}..{} packetLimits={}/{}",
+            serverEnv,
             gameWorldId,
+            gameMultiplierGlobalXp,
+            gameConnectionsPerIp,
             serverPort,
             webApiEnabled,
             webApiPort,

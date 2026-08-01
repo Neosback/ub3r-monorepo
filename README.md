@@ -2,52 +2,107 @@
 
 # Dodian Ub3r
 
-This is the original Dodian Ub3r source code, which has been maintained by various people over the years. The client included in this package is not the same client that was used back in the day.
+This is the original Dodian Ub3r source code, fully modernized into a high-performance modular monorepo.
 
 ---
 
-## Progress Notes
+## Major Modernization & Feature Highlights
 
+- **RuneLite Client & Revision 218 OSRS Data (317 Format)**:
+  - Upgraded client infrastructure to **RuneLite Client with Revision 218 OSRS Data packed into 317 format** (`main_file_cache.dat`, `.idx0` through `.idx5`).
+  - Generated dump-backed cache reference mappings and enriched revision 218 definition metadata (items, objects, NPCs) for accurate ID resolutions across content plugins.
+  - Added OSRS "Make-All" interface support (smelting, glassblowing, crafting).
 
-- **Architecture**: A transition to a robust, modular Kotlin coroutine-based action system, heavily reducing reliance on the monolithic `Client.process()` loop.
-- **Scheduling Modernization**: Legacy scheduling approaches have been cleaned up, including replacing **Quartz Scheduler** with **Kotlin coroutines** for a more unified and lightweight execution model.
-- **Performance**: Zero-allocation strategies in network packets, modernized caching systems, and strict tick-stamped action controllers replacing manual wall-clock checks.
-- **Modernization**: Upgraded tooling to utilize Gradle and Java 17 for the backend, alongside major refactors to social, skilling, and pathfinding systems.
-- **Async MySQL + Connection Pooling**: Database access has been modernized with asynchronous MySQL handling and **HikariCP** connection pooling to reduce blocking and improve scalability.
-- **Netty Migration**: The networking layer has been migrated away from older stream-based I/O to **Netty** and non-blocking I/O for a more modern and efficient packet pipeline.
-- **Player and NPC Delta Updating**: Update handling has been improved so only meaningful state changes are sent, reducing packet waste and unnecessary bandwidth usage.
-- **UI Update Optimization**: Interface state syncing has been improved to avoid re-sending unchanged state, reducing redundant packets and wasteful resource usage.
-- **Event-Driven Systems**: More gameplay systems are being moved away from constant loop-based checks and toward event-driven or action-driven execution where appropriate.
-- **Stability Improvements**: Multiple duplication bugs and related exploit paths have been identified and fixed.
+- **Server-Side OSRS Cache Decoding & Spatial Collision Engine**:
+  - Implemented direct server-side OSRS cache decoding (`CacheBootstrapService`) that parses map terrain grids, 3D game object bounds (`ObjectDefinitionDecoder`), graphics spot animations (`SpotAnimDefinitionDecoder`), and interface component definitions (`InterfaceDefinitionDecoder`).
+  - Automatically streams decoded terrain and object boundaries directly into the RSMod `routefinder` spatial collision matrix across all 35.7M world tiles.
+
+- **Discord OAuth2 Account Creation & Bot Integration**:
+  - Implemented secure account registration and authentication via **Discord OAuth2**, eliminating plaintext password transmissions over the game protocol.
+  - Integrated Discord bot services for server status tracking and account verification.
+
+- **RSMod-Style Modular Content Plugin System**:
+  - Fully migrated all skills out of the monolithic core server code into isolated, decoupled content plugins under `:skills:*` (Agility, Cooking, Crafting, Farming, Firemaking, Fishing, Fletching, Herblore, Mining, Prayer, Runecrafting, Skillguide, Slayer, Smithing, Thieving, Woodcutting) and `:quests:*` (Tutorial Island).
+  - Implemented TOML-backed skill guides, declarative plugin descriptors, and event-driven route key bindings so developers can build and extend gameplay features independently.
+
+- **MariaDB Driver Migration & Async Database Handling**:
+  - Replaced legacy database connectors with the modern **MariaDB JDBC Driver (`org.mariadb.jdbc:mariadb-java-client`)** utilizing `jdbc:mariadb://` connections (compatible with MariaDB and MySQL server instances).
+  - Modernized connection management with **HikariCP** pooling and Virtual Thread async dispatchers (`DbDispatchers`).
+
+- **JDK 21 & Kotlin 2.3 Runtime Modernization**:
+  - `game-server` builds and runs natively on **JDK 21** with **Kotlin 2.3** (`jvmTarget = "21"`).
+  - Configured **Generational ZGC** (`-XX:+UseZGC -XX:+ZGenerational`), String Deduplication (`-XX:+UseStringDeduplication`), and memory footprint optimizations (reducing startup heap usage down to **~300MB**).
+  - Leveraged JDK 21 **Virtual Threads** (`Thread.ofVirtual()`) for async database operations and parallel startup data loading (`NpcManager`, `ItemManager`, `CacheBootstrapService`).
+
+- **RSProt-Style Networking & FIFO Packet Pipeline**:
+  - Upgraded networking layer to a Netty-based **RSProt-style architecture** supporting Linux Epoll transport, zero-allocation packet parsing, and strict First-In-First-Out (FIFO) packet execution.
+
+- **RSMod Pathfinding & Spatial Engine**:
+  - Integrated RSMod pathfinding engine (`routefinder`) with real-time object collision overlays and spatial chunk indexing (`Chunk`) for precise entity movement and region synchronization.
+
+- **Atomic Economy & Anti-Dupe Safeguards**:
+  - Wrapped duel payouts, stake refunds, and banking operations into atomic transactions (`EconomyTransaction.run{}`), eliminating item duplication exploits and race conditions.
+
+- **Developer Experience & Diagnostic Logging**:
+  - Added real-time operational monitoring endpoints: **Prometheus Text Exporter** (`http://localhost:8081/prometheus`) and **Interactive Visual Dashboard** (`http://localhost:8081/dashboard`).
+  - Added structured ASCII Service Table boot output, condensed diagnostic metrics, and clean Gradle dev builds.
 
 ---
 
-## Work in Progress
+## Quick Setup & Cache Setup Guide
 
-The following areas are still actively being worked on:
+1. **Prerequisites**: Host OS with **JDK 21 or greater** (Gradle auto-provisions JDK 21 per machine).
+2. **Database**: MariaDB 10.11+ or MySQL 8.0+ instance running with `.env` configured (`SERVER_DATABASE_INITIALIZE=true`).
+3. **OSRS Cache Setup (317 Format)**:
+   - Download the **Revision 218 Cache (OSRS Data packed into 317 Format)**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)
+   - Extract the contents into `game-server/data/cache`.
+   - **Important**: If the ZIP extracts as a folder named `cache-tarnish-218`, rename it to `cache` so that the cache index files reside directly inside:
+     ```
+     game-server/data/cache/
+     ```
+   - **Expected Server Cache Files in `game-server/data/cache`**:
+     - `main_file_cache.dat`
+     - `main_file_cache.idx0`
+     - `main_file_cache.idx1`
+     - `main_file_cache.idx2`
+     - `main_file_cache.idx3`
+     - `main_file_cache.idx4`
+     - `main_file_cache.idx5`
+4. **Run Server**: `./gradlew :game-server:run`
 
-- **Player Following Improvements**  
-  Following behavior is still being refined so movement feels correct and does not result in no-clip style pathing issues.
+---
 
-- **Farming**  
-  Farming is still under development and will continue to be expanded and refined.
+## Active Work in Progress
 
-- **NPC Movement Improvements**  
-  NPC movement and related behavior are still being improved. Some areas of Dodian are still years behind modern standards, and this is one of the areas being actively brought up to date.
+- **Map Editing & Custom Map Support**:  
+  Map editing with custom maps (WIP) — ongoing work on pipeline support for loading, editing, and rendering custom 317 map files and collision overlays.
 
-- **Plugin System for Content**  
-  A plugin-based content system is being worked on to make it easier for developers to build, extend, and maintain skills and other gameplay content without forcing everything into tightly coupled core code.
+- **Following & Movement Refinements**:  
+  Continuously tuning RSMod pathfinder following logic and collision handling to eliminate edge-case pathing quirks.
 
-- **Newer Client with OSRS Data**  
-  Work is planned or ongoing toward using a newer client with newer OSRS-packed data. The target revision is around **171**, though that may still be subject to change.
+- **Farming Skill Expansion**:  
+  Expanding farming patch states, crop growth cycles, and plugin-owned farming handlers.
+
+- **NPC AI & Movement Mechanics**:  
+  Modernizing legacy NPC combat AI, pathing boundaries, and movement behaviors.
 
 ---
 
 ## Long-Term Direction
 
-The long-term goal is to continue modernizing the codebase by reducing unnecessary main-thread work, improving update and networking efficiency, and replacing legacy blocking systems with cleaner event-driven and asynchronous designs.
+The long-term goal is to continue modularizing the codebase, reducing main-thread tick workloads, expanding RSMod-style plugin content, and maintaining a state-of-the-art RSPS architecture powered by modern JVM and Kotlin standards.
 
-There is also a strong focus on building a more modular system that is easier to maintain, easier to extend, and better suited for delivering consistent updates over time.
+---
+
+## Previews & System Screenshots
+
+| RuneLite Client 317 | Real-Time Visual Telemetry Dashboard |
+| :---: | :---: |
+| ![RuneLite Client 317](docs/images/game_client_317.png) | ![Telemetry Dashboard](docs/images/telemetry_dashboard.png) |
+
+| In-Game Monster Drop Guide | Accounts Manager | RuneLite Hiscores Integration |
+| :---: | :---: | :---: |
+| ![Monster Drop Guide](docs/images/monster_drop_guide.png) | ![Accounts Manager](docs/images/accounts_manager.png) | ![RuneLite Hiscores](docs/images/runelite_hiscores.png) |
 
 ---
 

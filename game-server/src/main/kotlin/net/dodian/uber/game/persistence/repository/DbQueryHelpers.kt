@@ -15,4 +15,3 @@ inline fun <T> ResultSet.mapFirstOrNull(mapper: (ResultSet) -> T): T? {
     }
     return mapper(this)
 }
-

@@ -18,8 +18,6 @@ public class SendRunEnergy implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage msg = ByteMessage.message(110);
-        msg.put(energy & 0xFF);
-        client.send(msg);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.SendRunEnergy(energy).encode());
     }
 }

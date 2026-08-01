@@ -54,6 +54,10 @@ class DialogueFactory {
         steps += DialogueStep.Options(title = title, options = built)
     }
 
+    fun statement(vararg lines: String) {
+        steps += DialogueStep.Statement(lines.toList())
+    }
+
     fun action(action: (Client) -> Unit) {
         steps += DialogueStep.Action(action)
     }

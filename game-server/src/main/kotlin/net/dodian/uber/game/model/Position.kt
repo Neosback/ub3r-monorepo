@@ -1,7 +1,6 @@
 package net.dodian.uber.game.model
 
 import net.dodian.uber.game.model.chunk.Chunk
-import net.dodian.uber.game.engine.util.Misc
 import kotlin.jvm.JvmName
 
 class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 0) {
@@ -21,6 +20,12 @@ class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 
         get() = getZ()
         set(value) = setZ(value)
 
+    val packedTileKey: Int
+        get() = packed
+
+    val packedChunkKey: Int
+        get() = (getZ() shl 28) or ((getX() shr 3) shl 14) or (getY() shr 3)
+
     fun getX(): Int = unpackCoordinate(packed shr X_SHIFT)
 
     fun getY(): Int = unpackCoordinate(packed shr Y_SHIFT)
@@ -37,7 +42,11 @@ class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 
         return kotlin.math.sqrt((difX * difX + difY * difY).toDouble())
     }
 
-    fun isWithinRange(position: Position, threshold: Double): Boolean = getDistance(position) <= threshold
+    fun isWithinRange(position: Position, threshold: Double): Boolean {
+        val difX = getX() - position.getX()
+        val difY = getY() - position.getY()
+        return (difX * difX + difY * difY) <= (threshold * threshold)
+    }
 
     fun moveTo(x: Int, y: Int, z: Int) {
         packed = pack(x, y, z)
@@ -57,7 +66,7 @@ class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 
     fun copy(): Position = Position(getX(), getY(), getZ())
 
     fun isPerpendicularTo(other: Position): Boolean {
-        val delta = Misc.delta(this, other)
+        val delta = delta(this, other)
         return (delta.getX() != delta.getY() && delta.getX() == 0) || delta.getY() == 0
     }
 
@@ -78,6 +87,7 @@ class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 
         get() = (getY() shr 3) - 6
 
     val chunk: Chunk
+        @JvmName("getChunk")
         get() = Chunk(chunkX, chunkY)
 
     val chunkX: Int
@@ -139,14 +149,18 @@ class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 
         }
 
         private fun encodeCoordinate(axis: String, value: Int): Int {
-            require(value in MIN_COORDINATE..MAX_COORDINATE) { "Position $axis out of range: $value" }
+            if (value !in MIN_COORDINATE..MAX_COORDINATE) {
+                throw IllegalArgumentException("Position $axis out of range: $value")
+            }
             return value + 1
         }
 
         private fun unpackCoordinate(encoded: Int): Int = (encoded and X_MASK) - 1
 
         private fun encodeHeight(value: Int): Int {
-            require(value in MIN_HEIGHT..MAX_HEIGHT) { "Position z out of range: $value" }
+            if (value !in MIN_HEIGHT..MAX_HEIGHT) {
+                throw IllegalArgumentException("Position z out of range: $value")
+            }
             return value
         }
     }

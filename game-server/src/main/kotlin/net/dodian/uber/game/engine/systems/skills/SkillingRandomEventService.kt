@@ -13,4 +13,3 @@ object SkillingRandomEventService {
         net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService.trigger(client, awardedExperience)
     }
 }
-

@@ -17,4 +17,3 @@ object CraftingStoreShop : ShopPlugin {
             item(11065, 10000)
         }.definition
 }
-

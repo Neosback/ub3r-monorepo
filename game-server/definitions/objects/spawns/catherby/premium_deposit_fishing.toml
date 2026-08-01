@@ -1,0 +1,11 @@
+schemaVersion = 1
+region = "catherby"
+
+[[object]]
+id = 26254
+name = "Premium Deposit (fishing)"
+x = 2837
+y = 3437
+z = 0
+type = 10
+rotation = "NORTH"

@@ -8,4 +8,3 @@ sealed class DbResult<out T> {
         val retryable: Boolean,
     ) : DbResult<Nothing>()
 }
-

@@ -157,15 +157,7 @@ object CommandDbService {
         it.setString(6, rareShout)
     }
 
-    @JvmStatic @Throws(Exception::class)
-    fun insertObjectDefinition(id: Int, x: Int, y: Int, type: Int): CommandWriteResult = executeWrite(
-        "INSERT INTO ${DbTables.GAME_OBJECT_DEFINITIONS} (id, x, y, type) VALUES (?, ?, ?, ?)",
-    ) {
-        it.setInt(1, id)
-        it.setInt(2, x)
-        it.setInt(3, y)
-        it.setInt(4, type)
-    }
+
 
     @JvmStatic
     fun parseContainerEntries(text: String?): ArrayList<ContainerEntry> {
@@ -189,17 +181,28 @@ object CommandDbService {
         for (line in text.split(" ")) {
             if (line.isEmpty()) continue
             val parts = line.split("-")
-            if (parts.size < 3) continue
-            val parsedItemId = parts[1].toInt()
-            val parsedAmount = parts[2].toInt()
+            if (parts.size < 3) {
+                builder.append(line).append(' ')
+                continue
+            }
+            val parsedItemId = parts[1].toIntOrNull()
+            val parsedAmount = parts[2].toIntOrNull()
+            if (parsedItemId == null || parsedAmount == null) {
+                builder.append(line).append(' ')
+                continue
+            }
             if (parsedItemId == itemId && remaining > 0) {
                 val canRemove = minOf(parsedAmount, remaining)
                 val newAmount = parsedAmount - canRemove
                 remaining -= canRemove
                 removed += canRemove
-                if (newAmount > 0) builder.append(parts[0]).append('-').append(parts[1]).append('-').append(newAmount).append(' ')
+                if (newAmount > 0) {
+                    builder.append(parts[0]).append('-').append(parts[1]).append('-').append(newAmount)
+                    if (parts.size > 3) builder.append('-').append(parts.drop(3).joinToString("-"))
+                    builder.append(' ')
+                }
             } else {
-                builder.append(parts[0]).append('-').append(parts[1]).append('-').append(parts[2]).append(' ')
+                builder.append(line).append(' ')
             }
         }
         return ContainerMutation(builder.toString(), removed, remaining)

@@ -71,4 +71,3 @@ object ContentPlayerActions {
 		DialogueService.showPlayerChat(player, lines.toList().toTypedArray(), emote)
 	}
 }
-

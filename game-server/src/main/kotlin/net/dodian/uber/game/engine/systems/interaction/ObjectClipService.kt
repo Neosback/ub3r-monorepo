@@ -1,17 +1,19 @@
 package net.dodian.uber.game.engine.systems.interaction
 
 import net.dodian.cache.objects.GameObjectData
+import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditObject
+import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditStore
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.objects.DoorRegistry
+import net.dodian.uber.game.model.objects.TomlRemovedObjectLoader
 import net.dodian.uber.game.model.objects.WorldObject
 import net.dodian.uber.game.engine.systems.cache.CollisionBuildService
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionDirection
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
+import net.dodian.uber.game.engine.routing.WorldRouteService
 import java.util.concurrent.ConcurrentHashMap
 import org.slf4j.LoggerFactory
 
 object ObjectClipService {
-    private val collisionBuildService = CollisionBuildService(CollisionManager.global())
+    private val collisionBuildService = CollisionBuildService(WorldRouteService)
     private val logger = LoggerFactory.getLogger(ObjectClipService::class.java)
 
     data class AppliedClip(
@@ -20,6 +22,11 @@ object ObjectClipService {
         val type: Int,
         val direction: Int,
         val solid: Boolean,
+        val blockWalk: Int,
+        val blockRange: Boolean,
+        val breakRouteFinding: Boolean,
+        val impenetrable: Boolean,
+        val decoration: Boolean,
     )
 
     private val appliedClips = ConcurrentHashMap<String, AppliedClip>()
@@ -43,6 +50,10 @@ object ObjectClipService {
             appliedWorldObjects++
         }
 
+        // Clear cached-object collision at TOML-removed positions before
+        // door application, so stale cache data never feeds into door collision.
+        applyTomlRemovalsBeforeDoors()
+
         var appliedDoors = 0
         for (index in DoorRegistry.doorId.indices) {
             val objectId = DoorRegistry.doorId[index]
@@ -51,13 +62,11 @@ object ObjectClipService {
             if (objectId <= 0 || x <= 0 || y <= 0) {
                 continue
             }
-            applyDecodedObject(
-                position = Position(x, y, DoorRegistry.doorHeight[index]),
-                objectId = objectId,
-                type = 0,
-                direction = DoorRegistry.doorFace[index],
-                obj = GameObjectData.forId(objectId),
-            )
+            val position = Position(x, y, DoorRegistry.doorHeight[index])
+            removeCachedObjectsAt(position, type = 0)
+            removeCachedObjectsAt(position, type = 9)
+
+            applyDoor(position, objectId, DoorRegistry.doorFace[index])
             appliedDoors++
         }
 
@@ -68,6 +77,19 @@ object ObjectClipService {
         )
 
         applyStaticOverrides(StaticObjectOverrides.all())
+    }
+
+    @JvmStatic
+    fun applyTomlRemovalsBeforeDoors() {
+        val removals = TomlRemovedObjectLoader.load()
+        for (entry in removals) {
+            val position = Position(entry.x, entry.y, entry.z)
+            removeDecodedObject(position)
+            removeCachedObjectsAt(position, entry.type)
+        }
+        if (removals.isNotEmpty()) {
+            logger.info("Applied TOML-based object removals before doors: count={}", removals.size)
+        }
     }
 
     @JvmStatic
@@ -83,12 +105,19 @@ object ObjectClipService {
     }
 
     @JvmStatic
-    fun applyDecodedObject(position: Position, objectId: Int, type: Int, direction: Int, obj: GameObjectData?) {
+    fun applyDecodedObject(position: Position, objectId: Int, type: Int, direction: Int, obj: GameObjectData?, forceSolid: Boolean = false, solidOverride: Boolean? = null, blockWalkOverride: Int? = null, blockRangeOverride: Boolean? = null) {
         removeDecodedObject(position)
-        if (obj == null || CollisionBuildService.ignoredObjectIds.contains(objectId)) {
+        if (obj == null) {
             return
         }
-        appliedClips[key(position)] = AppliedClip(position.copy(), objectId, type, direction, obj.isSolid())
+        val effectiveSolid = solidOverride ?: (forceSolid || obj.isSolid())
+        val effectiveBlockWalk = blockWalkOverride ?: if (forceSolid) 2 else obj.blockWalk()
+        val effectiveBlockRange = blockRangeOverride ?: if (forceSolid) true else obj.blockRange()
+        val effectiveImpenetrable = if (objectId in CollisionBuildService.BLOCK_RANGE_FALSE_IDS) false else obj.isImpenetrable()
+        appliedClips[key(position)] = AppliedClip(
+            position.copy(), objectId, type, direction, effectiveSolid, effectiveBlockWalk, effectiveBlockRange,
+            obj.breakRouteFinding(), effectiveImpenetrable, obj.isDecoration(),
+        )
         collisionBuildService.applyObject(
             id = objectId,
             x = position.x,
@@ -98,13 +127,34 @@ object ObjectClipService {
             rotation = direction,
             sizeX = obj.sizeX,
             sizeY = obj.sizeY,
-            solid = obj.isSolid(),
-            walkable = obj.isWalkable(),
+            solid = effectiveSolid,
+            walkable = if (forceSolid) false else obj.isWalkable(),
             hasActions = obj.hasActions(),
             objectName = obj.name,
-            blockWalk = obj.blockWalk(),
-            blockRange = obj.blockRange(),
+            blockWalk = effectiveBlockWalk,
+            blockRange = effectiveBlockRange,
             breakRouteFinding = obj.breakRouteFinding(),
+            impenetrable = effectiveImpenetrable,
+            decoration = obj.isDecoration(),
+        )
+    }
+
+    /**
+     * Applies a configured door as a solid straight wall at its current face.
+     *
+     * Opening a door changes its face, rather than removing its collision: the old doorway edge
+     * becomes traversable and the rotated door panel blocks its new edge.  Keeping this here makes
+     * startup overlays and live door toggles use the exact same collision policy.
+     */
+    @JvmStatic
+    fun applyDoor(position: Position, objectId: Int, face: Int) {
+        applyDecodedObject(
+            position = position,
+            objectId = objectId,
+            type = 0,
+            direction = face,
+            obj = GameObjectData.forId(objectId),
+            forceSolid = true,
         )
     }
 
@@ -113,10 +163,7 @@ object ObjectClipService {
         removeTrackedClip(position)
     }
 
-    @Suppress("UNUSED_PARAMETER")
     fun remove(position: Position, type: Int, direction: Int, solid: Boolean) {
-        // Removal only updates the applied-clip bookkeeper; collision flags remain managed by the
-        // decoded-object path through CollisionBuildService and the global collision manager.
         removeTrackedClip(position)
     }
 
@@ -135,7 +182,7 @@ object ObjectClipService {
 
     private fun applyStaticOverride(override: StaticObjectOverride) {
         removeDecodedObject(override.position)
-        clearStaticCollisionBroadly(override.position)
+        removeCachedObjectsForStaticOverride(override)
         if (override.replacementObjectId >= 0) {
             applyDecodedObject(
                 position = override.position,
@@ -147,12 +194,54 @@ object ObjectClipService {
         }
     }
 
-    private fun clearStaticCollisionBroadly(position: Position) {
-        val collision = CollisionManager.global()
-        collision.clearSolid(position.x, position.y, position.z)
-        for (direction in CollisionDirection.WNES) {
-            collision.clearWall(position.x, position.y, position.z, direction)
+    private fun removeCachedObjectsAt(position: Position, type: Int?) {
+        CacheCollisionAuditStore.objectsForTile(position.x, position.y)
+            .asSequence()
+            .filter { !it.skipped && it.x == position.x && it.y == position.y && it.plane == position.z && (type == null || it.type == type) }
+            .forEach { removeCachedObject(it) }
+    }
+
+    private fun removeCachedObjectsForStaticOverride(override: StaticObjectOverride) {
+        CacheCollisionAuditStore.objectsForTile(override.position.x, override.position.y)
+            .asSequence()
+            .filter { it.matchesStaticOverrideRemoval(override) }
+            .forEach { removeCachedObject(it) }
+    }
+
+    private fun CacheCollisionAuditObject.matchesStaticOverrideRemoval(override: StaticObjectOverride): Boolean {
+        if (skipped) {
+            return false
         }
+        if (x != override.position.x || y != override.position.y || plane != override.position.z) {
+            return false
+        }
+        if (type != override.replacementType) {
+            return false
+        }
+        return override.replacementFace < 0 || rotation == (override.replacementFace and 0x3)
+    }
+
+    private fun removeCachedObject(obj: CacheCollisionAuditObject) {
+        val definition = GameObjectData.forId(obj.objectId)
+        collisionBuildService.removeObject(
+            id = obj.objectId,
+            x = obj.x,
+            y = obj.y,
+            z = obj.plane,
+            type = obj.type,
+            rotation = obj.rotation,
+            sizeX = definition.sizeX,
+            sizeY = definition.sizeY,
+            solid = definition.isSolid(),
+            walkable = definition.isWalkable(),
+            hasActions = definition.hasActions(),
+            objectName = definition.name,
+            blockWalk = definition.blockWalk(),
+            blockRange = definition.blockRange(),
+            breakRouteFinding = definition.breakRouteFinding(),
+            impenetrable = definition.isImpenetrable(),
+            decoration = definition.isDecoration(),
+        )
     }
 
     private fun removeTrackedClip(position: Position) {
@@ -167,13 +256,15 @@ object ObjectClipService {
             rotation = existing.direction,
             sizeX = definition.sizeX,
             sizeY = definition.sizeY,
-            solid = definition.isSolid(),
-            walkable = definition.isWalkable(),
+            solid = existing.solid,
+            walkable = !existing.solid,
             hasActions = definition.hasActions(),
             objectName = definition.name,
-            blockWalk = definition.blockWalk(),
-            blockRange = definition.blockRange(),
-            breakRouteFinding = definition.breakRouteFinding(),
+            blockWalk = existing.blockWalk,
+            blockRange = existing.blockRange,
+            breakRouteFinding = existing.breakRouteFinding,
+            impenetrable = existing.impenetrable,
+            decoration = existing.decoration,
         )
     }
 

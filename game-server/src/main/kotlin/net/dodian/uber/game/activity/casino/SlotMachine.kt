@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
-import net.dodian.uber.game.persistence.audit.AsyncSqlService
+import net.dodian.uber.game.persistence.account.AccountPersistenceService
 import net.dodian.uber.game.persistence.db.DbTables
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.engine.util.Misc
@@ -22,55 +22,6 @@ class SlotMachine {
     @Volatile var coinsLostBillions: Int = 0
     @Volatile var coinsWonRemainder: Int = 0
     @Volatile var coinsLostRemainder: Int = 0
-
-    @Deprecated("Use remainingAutoSpins instead")
-    var slotsGames: Int
-        get() = remainingAutoSpins
-        set(value) {
-            remainingAutoSpins = value
-        }
-
-    @Deprecated("Use houseBalance instead")
-    var peteBalance: Int
-        get() = houseBalance
-        set(value) {
-            houseBalance = value
-        }
-
-    @Deprecated("Use jackpotPool instead")
-    var slotsJackpot: Int
-        get() = jackpotPool
-        set(value) {
-            jackpotPool = value
-        }
-
-    @Deprecated("Use coinsWonBillions instead")
-    var CoinsBillion_Win: Int
-        get() = coinsWonBillions
-        set(value) {
-            coinsWonBillions = value
-        }
-
-    @Deprecated("Use coinsLostBillions instead")
-    var CoinsBillion_Lose: Int
-        get() = coinsLostBillions
-        set(value) {
-            coinsLostBillions = value
-        }
-
-    @Deprecated("Use coinsWonRemainder instead")
-    var Coins_Win: Int
-        get() = coinsWonRemainder
-        set(value) {
-            coinsWonRemainder = value
-        }
-
-    @Deprecated("Use coinsLostRemainder instead")
-    var Coins_Lose: Int
-        get() = coinsLostRemainder
-        set(value) {
-            coinsLostRemainder = value
-        }
 
     private val slotSymbols = ArrayList<SlotSymbol>()
     private val counterLock = Any()
@@ -173,44 +124,39 @@ class SlotMachine {
         if (gameWorldId == 5) {
             return
         }
-        AsyncSqlService.execute(
-            "slot-machine-load-gamble",
-            Runnable {
-                try {
-                    DbAsyncRepository.withConnection { conn ->
-                        conn.prepareStatement("SELECT Tracker_ID, CoinsBillion, Coins FROM ${DbTables.GAME_PETE_CO}").use { stmt ->
-                            stmt.executeQuery().use { results ->
-                                var winBillions = 0
-                                var winCoins = 0
-                                var loseBillions = 0
-                                var loseCoins = 0
-                                while (results.next()) {
-                                    when (results.getInt("Tracker_ID")) {
-                                        1 -> {
-                                            winBillions = results.getInt("CoinsBillion")
-                                            winCoins = results.getInt("Coins")
-                                        }
-
-                                        2 -> {
-                                            loseBillions = results.getInt("CoinsBillion")
-                                            loseCoins = results.getInt("Coins")
-                                        }
-                                    }
+        DbAsyncRepository.fireAndForgetWriteConnection(AccountPersistenceService.scope) { conn ->
+            try {
+                conn.prepareStatement("SELECT Tracker_ID, CoinsBillion, Coins FROM ${DbTables.GAME_PETE_CO}").use { stmt ->
+                    stmt.executeQuery().use { results ->
+                        var winBillions = 0
+                        var winCoins = 0
+                        var loseBillions = 0
+                        var loseCoins = 0
+                        while (results.next()) {
+                            when (results.getInt("Tracker_ID")) {
+                                1 -> {
+                                    winBillions = results.getInt("CoinsBillion")
+                                    winCoins = results.getInt("Coins")
                                 }
-                                synchronized(counterLock) {
-                                    coinsWonBillions = winBillions
-                                    coinsWonRemainder = winCoins
-                                    coinsLostBillions = loseBillions
-                                    coinsLostRemainder = loseCoins
+
+                                2 -> {
+                                    loseBillions = results.getInt("CoinsBillion")
+                                    loseCoins = results.getInt("Coins")
                                 }
                             }
                         }
+                        synchronized(counterLock) {
+                            coinsWonBillions = winBillions
+                            coinsWonRemainder = winCoins
+                            coinsLostBillions = loseBillions
+                            coinsLostRemainder = loseCoins
+                        }
                     }
-                } catch (exception: Exception) {
-                    logger.error("Failed loading slot machine balances", exception)
                 }
-            },
-        )
+            } catch (exception: Exception) {
+                logger.error("Failed loading slot machine balances", exception)
+            }
+        }
     }
 
     fun trackDiceTotals(id: Int, amount: Int) {
@@ -242,33 +188,28 @@ class SlotMachine {
             }
         }
 
-        AsyncSqlService.execute(
-            "slot-machine-track-dice",
-            Runnable {
-                try {
-                    DbAsyncRepository.withConnection { conn ->
-                        conn.prepareStatement("UPDATE ${DbTables.GAME_PETE_CO} SET CoinsBillion = ?, Coins = ? WHERE Tracker_ID = ?")
-                            .use { stmt ->
-                                stmt.setInt(1, coinsBillion)
-                                stmt.setInt(2, coins)
-                                stmt.setInt(3, trackerId)
-                                stmt.executeUpdate()
-                            }
-                        conn.prepareStatement(
-                            "INSERT INTO ${DbTables.GAME_PETE_CO} (Tracker_ID, CoinsBillion, Coins) SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM ${DbTables.GAME_PETE_CO} WHERE Tracker_ID = ?)",
-                        ).use { insert ->
-                            insert.setInt(1, trackerId)
-                            insert.setInt(2, coinsBillion)
-                            insert.setInt(3, coins)
-                            insert.setInt(4, trackerId)
-                            insert.executeUpdate()
-                        }
+        DbAsyncRepository.fireAndForgetWriteConnection(AccountPersistenceService.scope) { conn ->
+            try {
+                conn.prepareStatement("UPDATE ${DbTables.GAME_PETE_CO} SET CoinsBillion = ?, Coins = ? WHERE Tracker_ID = ?")
+                    .use { stmt ->
+                        stmt.setInt(1, coinsBillion)
+                        stmt.setInt(2, coins)
+                        stmt.setInt(3, trackerId)
+                        stmt.executeUpdate()
                     }
-                } catch (exception: Exception) {
-                    logger.error("Failed tracking slot machine counters for trackerId={}", trackerId, exception)
+                conn.prepareStatement(
+                    "INSERT INTO ${DbTables.GAME_PETE_CO} (Tracker_ID, CoinsBillion, Coins) SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM ${DbTables.GAME_PETE_CO} WHERE Tracker_ID = ?)",
+                ).use { insert ->
+                    insert.setInt(1, trackerId)
+                    insert.setInt(2, coinsBillion)
+                    insert.setInt(3, coins)
+                    insert.setInt(4, trackerId)
+                    insert.executeUpdate()
                 }
-            },
-        )
+            } catch (exception: Exception) {
+                logger.error("Failed tracking slot machine counters for trackerId={}", trackerId, exception)
+            }
+        }
     }
 
     fun playSlotMachine(client: Client, times: Int) {
@@ -315,14 +256,5 @@ class SlotMachine {
         }
     }
 
-    @Deprecated("Use loadBalanceTracker instead")
-    fun loadGamble() = loadBalanceTracker()
-
-    @Deprecated("Use trackDiceTotals instead")
-    fun trackDice(id: Int, amount: Int) = trackDiceTotals(id, amount)
-
-    @Deprecated("Use playSlotMachine instead")
-    fun playSlots(client: Client, times: Int) = playSlotMachine(client, times)
 }
-
 

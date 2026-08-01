@@ -6,40 +6,44 @@ import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
-import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketBankingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@PacketHandler(opcode = 214)
+@net.dodian.uber.game.netty.listener.PacketHandler(opcodes = {214})
 public class MoveItemsListener implements PacketListener {
-
-    static {
-        PacketListenerManager.register(214, new MoveItemsListener());
-    }
-
     private static final Logger logger = LoggerFactory.getLogger(MoveItemsListener.class);
-    private static final int MIN_PAYLOAD_BYTES = 9;
+    private static final int PAYLOAD_BYTES = 7;
 
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
-        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+        if (buf.readableBytes() != PAYLOAD_BYTES) {
             return;
         }
 
-        int interfaceId = ByteBufReader.readInt(buf);
-        buf.readUnsignedByte();
-        int itemFrom = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
-        int itemTo = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
+        net.dodian.uber.game.netty.game.decode.TarnishPackets.MoveItems msg = net.dodian.uber.game.netty.game.decode.TarnishPackets.MoveItems.decode(buf);
+        if (msg == null) {
+            return;
+        }
+        int interfaceId = msg.interfaceId();
+        int mode = msg.mode();
+        int itemFrom = msg.fromSlot();
+        int itemTo = msg.toSlot();
 
         if (client.playerRights >= 2) {
-            client.println_debug("MoveItems: iface=" + interfaceId + " from=" + itemFrom + " to=" + itemTo);
+            client.println_debug("MoveItems: iface=" + interfaceId + " mode=" + mode + " from=" + itemFrom + " to=" + itemTo);
         }
 
-        logger.debug("MoveItems: iface={} from={} to={}", interfaceId, itemFrom, itemTo);
-        PacketBankingService.handleMoveItems(client, interfaceId, itemFrom, itemTo);
+        logger.debug("MoveItems: iface={} mode={} from={} to={}", interfaceId, mode, itemFrom, itemTo);
+
+        if (mode == 2) {
+            PacketBankingService.handleTabCreation(client, interfaceId, itemFrom, itemTo);
+            return;
+        }
+
+        PacketBankingService.handleMoveItems(client, interfaceId, itemFrom, itemTo, mode);
     }
+
 }

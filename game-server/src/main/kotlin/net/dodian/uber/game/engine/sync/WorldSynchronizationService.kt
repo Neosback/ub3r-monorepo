@@ -1,26 +1,21 @@
 package net.dodian.uber.game.engine.sync
 
-import io.netty.buffer.ByteBuf
 import kotlin.system.measureNanoTime
+import net.dodian.uber.game.engine.config.gameMaxPlayers
+import net.dodian.uber.game.engine.config.serverDebugMode
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.player.PlayerUpdating
-import net.dodian.uber.game.netty.codec.ByteMessage
-import net.dodian.uber.game.netty.codec.MessageType
 import net.dodian.uber.game.engine.sync.cache.RootSynchronizationCache
-import net.dodian.uber.game.engine.sync.npc.NpcChunkActivityIndex
-import net.dodian.uber.game.engine.sync.npc.NpcSyncDecision
-import net.dodian.uber.game.engine.sync.npc.RootNpcDeltaIndex
-import net.dodian.uber.game.engine.sync.npc.ViewerNpcSyncState
-import net.dodian.uber.game.engine.sync.player.PlayerChunkActivityIndex
-import net.dodian.uber.game.engine.sync.player.PlayerSyncDecision
-import net.dodian.uber.game.engine.sync.player.PlayerSyncRevisionIndex
-import net.dodian.uber.game.engine.sync.player.ViewerPlayerSyncState
-import net.dodian.uber.game.engine.sync.playerinfo.RootPlayerInfoService
+import net.dodian.uber.game.engine.sync.npc.StagedNpcSynchronizationService
+import net.dodian.uber.game.engine.sync.player.PlayerSyncInvariantValidator
+import net.dodian.uber.game.engine.sync.player.StagedPlayerSynchronizationService
 import net.dodian.uber.game.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.engine.sync.viewport.ViewportIndex
+import net.dodian.uber.game.engine.loop.GameThreadContext
+import net.dodian.uber.game.engine.processing.EntityProcessor
 import net.dodian.uber.game.engine.systems.zone.ZoneUpdateBus
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import net.dodian.uber.game.engine.metrics.OperationalTelemetry
@@ -30,59 +25,51 @@ class WorldSynchronizationService {
     private val logger = LoggerFactory.getLogger(WorldSynchronizationService::class.java)
     private val playerUpdating = PlayerUpdating.getInstance()
     private val npcUpdating = NpcUpdating.getInstance()
-    private val playerRevisionIndex = PlayerSyncRevisionIndex()
-    private val npcRevisionIndex = RootNpcDeltaIndex()
-    private val rootPlayerInfoService = RootPlayerInfoService.INSTANCE
-    private val sharedPlayerActivityIndex = PlayerChunkActivityIndex()
-    private val sharedNpcActivityIndex = NpcChunkActivityIndex()
-    private val activePlayerBuffer = ArrayList<Client>(2048)
+    private val activePlayerBuffer = ArrayList<Client>(gameMaxPlayers + 1)
+    private val stagedPlayerSynchronization = StagedPlayerSynchronizationService()
+    private val stagedNpcSynchronization = StagedNpcSynchronizationService()
     private var tick = 0L
 
     fun run() {
+        GameThreadContext.validateGameThread("world.synchronization")
         val startedNs = System.nanoTime()
         tick++
         val activePlayers = currentActivePlayers()
+        val readyPlayers = activePlayers.filter(Client::isSynchronizationReady)
         val viewportIndex = ViewportIndex.build(activePlayers, VIEW_DISTANCE)
         val relevantNpcs: Collection<Npc> = viewportIndex?.relevantNpcs() ?: emptyList()
+        val processedNpcs: Collection<Npc> = EntityProcessor.activeNpcsForSynchronization()
         val rootCache = RootSynchronizationCache()
-        val playerActivityIndex = sharedPlayerActivityIndex.apply { clear() }
-        val npcActivityIndex = sharedNpcActivityIndex.apply { clear() }
-        playerRevisionIndex.rebuild(activePlayers, tick, playerActivityIndex)
-        npcRevisionIndex.rebuild(relevantNpcs, tick, npcActivityIndex)
         val cycle =
             SynchronizationCycle(
                 tick = tick,
                 rootCache = rootCache,
                 viewportIndex = viewportIndex,
-                playerRevisionIndex = playerRevisionIndex,
-                playerActivityIndex = playerActivityIndex,
-                npcRevisionIndex = npcRevisionIndex,
-                npcActivityIndex = npcActivityIndex,
             )
-
-        measure(cycle, SynchronizationStage.SYNC_PLAYER_PREP) {
-            buildPlayerRootCache(activePlayers, rootCache)
-        }
-        measure(cycle, SynchronizationStage.SYNC_NPC_PREP) {
-            buildNpcRootCache(relevantNpcs, rootCache)
-        }
 
         SynchronizationContext.setCurrent(cycle)
         try {
+            measure(cycle, SynchronizationStage.SYNC_PLAYER_PREP) {
+                buildPlayerRootCache(activePlayers, rootCache)
+            }
+            measure(cycle, SynchronizationStage.SYNC_NPC_PREP) {
+                buildNpcRootCache(relevantNpcs, rootCache)
+            }
             measure(cycle, SynchronizationStage.SYNC_PLAYER_ENCODE) {
-                encodePlayers(activePlayers)
+                encodePlayers(readyPlayers)
             }
             measure(cycle, SynchronizationStage.SYNC_NPC_ENCODE) {
                 encodeNpcs(activePlayers)
             }
             measure(cycle, SynchronizationStage.SYNC_FLUSH) {
-                flushActivePlayers(activePlayers)
+                flushActivePlayers(readyPlayers)
             }
             measure(cycle, SynchronizationStage.SYNC_FLAG_CLEAR) {
-                clearFlags(activePlayers, relevantNpcs)
+                clearFlags(activePlayers, processedNpcs)
             }
         } finally {
             SynchronizationContext.clear()
+            viewportIndex?.release()
         }
         OperationalTelemetry.recordPhaseMillis("sync.total", (System.nanoTime() - startedNs) / 1_000_000L)
     }
@@ -90,74 +77,115 @@ class WorldSynchronizationService {
     private fun currentActivePlayers(): List<Client> {
         activePlayerBuffer.clear()
         for (player in PlayerRegistry.playersOnline.values) {
-            if (player.isActive && !player.disconnected) {
+            if (player.isSynchronizationReady) {
                 val channel = player.channel
                 if (channel != null && channel.isActive) {
                     activePlayerBuffer += player
                 }
             }
         }
+        activePlayerBuffer.sortBy(Client::getSlot)
+        // Safe to return the live buffer: it's only read within this same tick's run(),
+        // and SyncWorker.forEachViewer is a synchronous submit-and-join barrier, so any
+        // parallel fan-out over this list has completed before the next tick clears it.
         return activePlayerBuffer
     }
 
     private fun buildPlayerRootCache(activePlayers: List<Client>, rootCache: RootSynchronizationCache) {
         activePlayers.forEach { player ->
-            rootCache.playerBlocks.put(player, PHASE_ADD_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_ADD_LOCAL))
-            if (player.updateFlags.isUpdateRequired) {
-                rootCache.playerBlocks.put(player, PHASE_UPDATE_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_UPDATE_LOCAL))
+            if (!player.isSynchronizationReady) return@forEach
+            try {
+                rootCache.playerMovements.put(player, playerUpdating.buildLocalMovement(player), tick)
+                rootCache.playerBlocks.put(player, PHASE_ADD_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_ADD_LOCAL), tick)
+                if (player.updateFlags.isUpdateRequired) {
+                    rootCache.playerBlocks.put(player, PHASE_UPDATE_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_UPDATE_LOCAL), tick)
+                }
+            } catch (throwable: Throwable) {
+                OperationalTelemetry.incrementCounter("sync.player.subject_prep_failure")
+                handleViewerSyncFailure("player-block-prep", player, throwable)
             }
         }
     }
 
     private fun buildNpcRootCache(activeNpcs: Collection<Npc>, rootCache: RootSynchronizationCache) {
         activeNpcs.forEach { npc ->
+            rootCache.npcMovements.put(npc, npcUpdating.buildLocalMovement(npc), tick)
             if (npc.updateFlags.isUpdateRequired) {
-                rootCache.npcBlocks.put(npc, npcUpdating.buildSharedBlock(npc))
+                npcUpdating.buildSharedBlock(npc)?.let { block ->
+                    rootCache.npcBlocks.put(npc, block, tick)
+                }
             }
         }
     }
 
-    private fun encodePlayers(activePlayers: List<Client>) {
-        rootPlayerInfoService.sync(activePlayers)
+    private fun encodePlayers(readyPlayers: List<Client>) {
+        // Per-viewer encode is independent by construction (PREP caches frozen, thread-local
+        // scratch, viewer-own commit state, MPSC outbound enqueue) — see SyncWorker contract.
+        SyncWorker.forEachViewer(readyPlayers) { player ->
+            try {
+                val result = stagedPlayerSynchronization.synchronize(player)
+                if (!result.accepted) {
+                    OperationalTelemetry.incrementCounter("player.disconnect.sync_outbound_rejected")
+                    player.noteDisconnectReason("sync-outbound-rejected")
+                    player.setSynchronizationReady(false)
+                    player.disconnected = true
+                    return@forEachViewer
+                }
+                SynchronizationContext.recordPlayerPacketBuilt(result.committedCount)
+                SynchronizationContext.recordViewer(result.committedCount, player.localNpcSize)
+                if (serverDebugMode) {
+                    validateSyncInvariants(player)
+                }
+            } catch (throwable: Throwable) {
+                OperationalTelemetry.incrementCounter("sync.player.viewer_encode_failure")
+                handleViewerSyncFailure("player-sync-staged", player, throwable)
+            }
+        }
+    }
+
+    private fun validateSyncInvariants(player: Client) {
+        try {
+            PlayerSyncInvariantValidator.validateViewerLocals(player, player.previousSyncSnapshot)
+            player.previousSyncSnapshot = PlayerSyncInvariantValidator.snapshot(player)
+        } catch (violation: RuntimeException) {
+            OperationalTelemetry.incrementCounter("sync.player.invariant_violation")
+            logger.error("Player sync invariant violation for viewer slot={}", player.slot, violation)
+        }
     }
 
     private fun encodeNpcs(activePlayers: List<Client>) {
-        activePlayers.forEach { player ->
+        SyncWorker.forEachViewer(activePlayers) { player ->
+            if (!player.isSynchronizationReady) return@forEachViewer
             try {
-                val state = SynchronizationContext.getViewerNpcSyncState(player)
-                val chunkStamp = SynchronizationContext.getNpcChunkActivityStamp(player)
-                val localActivityStamp = SynchronizationContext.getNpcLocalActivityStamp(player)
-                val membershipRevision = player.localNpcMembershipRevision
-                val decision = shouldSkipNpcSync(player, state, chunkStamp, localActivityStamp, membershipRevision)
-                if (decision == NpcSyncDecision.SKIP) {
-                    SynchronizationContext.recordNpcPacketSkipped(player.localNpcs.size)
-                    SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
-                    updateNpcViewerSyncState(player, chunkStamp, localActivityStamp, membershipRevision)
-                    return@forEach
+                val result = stagedNpcSynchronization.synchronize(player)
+                if (!result.accepted) {
+                    OperationalTelemetry.incrementCounter("player.disconnect.sync_outbound_rejected")
+                    player.noteDisconnectReason("sync-outbound-rejected")
+                    player.setSynchronizationReady(false)
+                    player.disconnected = true
+                    return@forEachViewer
                 }
-                player.sendNpcSynchronization()
-                SynchronizationContext.recordNpcPacketBuilt(player.localNpcs.size)
-                SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
-                updateNpcViewerSyncState(player, chunkStamp, localActivityStamp, membershipRevision)
+                SynchronizationContext.recordNpcPacketBuilt(result.committedCount)
+                SynchronizationContext.recordViewer(player.playerListSize, result.committedCount)
             } catch (throwable: Throwable) {
                 handleViewerSyncFailure("npc-sync", player, throwable)
             }
         }
     }
 
-    private fun flushActivePlayers(activePlayers: List<Client>) {
-        val uiNanos = measureNanoTime { PlayerUiDeltaProcessor.process(activePlayers) }
+    private fun flushActivePlayers(readyPlayers: List<Client>) {
+        val uiNanos = measureNanoTime { PlayerUiDeltaProcessor.process(readyPlayers) }
         val zoneStatsRef = arrayOfNulls<net.dodian.uber.game.engine.systems.zone.ZoneFlushStats>(1)
         val zoneNanos =
             measureNanoTime {
-                zoneStatsRef[0] = ZoneUpdateBus.flush(activePlayers)
+                zoneStatsRef[0] = ZoneUpdateBus.flush(readyPlayers)
             }
         var flushedPlayers = 0
         var flushedMessages = 0
         var flushedBytes = 0
         val netNanos =
             measureNanoTime {
-                activePlayers.forEach { player ->
+                readyPlayers.forEach { player ->
                     try {
                         val flushStats = player.flushOutbound()
                         if (flushStats.flushedMessages() > 0) {
@@ -196,62 +224,25 @@ class WorldSynchronizationService {
 
     private fun handleViewerSyncFailure(stage: String, player: Client, throwable: Throwable) {
         logger.error(
-            "World sync viewer failure stage={} player={} slot={} pos={}",
+            "World sync viewer failure stage={} tick={} player={} dbId={} slot={} session={} ready={} pos={} locals={} movement=[{},{}] flags={}",
             stage,
+            tick,
             player.playerName,
+            player.dbId,
             player.slot,
+            player.synchronizationSessionGeneration,
+            player.isSynchronizationReady,
             player.position,
+            player.playerListSize,
+            player.primaryDirection,
+            player.secondaryDirection,
+            player.updateFlags,
             throwable,
         )
+        player.noteDisconnectReason("sync-failure:$stage")
+        OperationalTelemetry.incrementCounter("player.disconnect.sync_failure")
+        player.setSynchronizationReady(false)
         player.disconnected = true
-    }
-
-    private fun shouldSkipNpcSync(
-        player: Client,
-        state: ViewerNpcSyncState?,
-        chunkStamp: Long,
-        localActivityStamp: Long,
-        membershipRevision: Long,
-    ): NpcSyncDecision {
-        state ?: run {
-            SynchronizationContext.recordNpcBuildNoState()
-            return NpcSyncDecision.BUILD
-        }
-        val mapChanged =
-            state.lastKnownMapRegionX != Int.MIN_VALUE &&
-                (state.lastKnownMapRegionX != player.mapRegionX || state.lastKnownMapRegionY != player.mapRegionY)
-        val planeChanged = state.lastKnownPlane != Int.MIN_VALUE && state.lastKnownPlane != player.position.z
-        if (mapChanged || planeChanged || player.didTeleport() || player.didMapRegionChange()) {
-            SynchronizationContext.recordNpcBuildMapRegionOrTeleport()
-            return NpcSyncDecision.BUILD
-        }
-        if (state.lastKnownLocalNpcCount != player.localNpcs.size) {
-            SynchronizationContext.recordNpcBuildLocalCountChanged()
-            return NpcSyncDecision.BUILD
-        }
-        val snapshot = SynchronizationContext.getViewportSnapshot(player)
-        if (player.localNpcs.isEmpty() && snapshot != null && snapshot.npcs.isNotEmpty()) {
-            SynchronizationContext.recordNpcBuildPendingViewport()
-            return NpcSyncDecision.BUILD
-        }
-        return if (
-            state.lastChunkActivityStamp == chunkStamp &&
-            state.lastLocalNpcActivityStamp == localActivityStamp &&
-            state.lastLocalNpcMembershipRevision == membershipRevision
-        ) {
-            NpcSyncDecision.SKIP
-        } else {
-            if (state.lastChunkActivityStamp != chunkStamp) {
-                SynchronizationContext.recordNpcBuildChunkActivityChanged()
-            }
-            if (state.lastLocalNpcActivityStamp != localActivityStamp) {
-                SynchronizationContext.recordNpcBuildLocalActivityChanged()
-            }
-            if (state.lastLocalNpcMembershipRevision != membershipRevision) {
-                SynchronizationContext.recordNpcBuildLocalMembershipChanged()
-            }
-            NpcSyncDecision.BUILD
-        }
     }
 
     private fun measure(cycle: SynchronizationCycle, stage: SynchronizationStage, block: () -> Unit) {
@@ -263,44 +254,26 @@ class WorldSynchronizationService {
             OperationalTelemetry.incrementCounter("sync.slow")
             when (stage) {
                 SynchronizationStage.SYNC_PLAYER_ENCODE -> {
-                    val built = cycle.playerPacketsBuilt + cycle.playerPacketsTemplated
-                    val idleTemplated = cycle.playerPacketsIdleTemplated
-                    val skipped = cycle.playerPacketsSkipped
-                    val total = built + idleTemplated + skipped
-                    val localCoverage = cycle.playerLocalScans + cycle.playerLocalsSkipped + cycle.playerTemplatedLocalCoverage
-                    val avgLocals = if (total > 0) localCoverage.toDouble() / total.toDouble() else 0.0
+                    val built = cycle.playerPacketsBuilt
+                    val avgLocals = if (built > 0) cycle.playerLocalScans.toDouble() / built.toDouble() else 0.0
                     logger.warn(
-                        "Sync stage {} took {}ms viewersBuilt={} viewersIdleTemplated={} viewersSkipped={} teleportReinserts={} avgLocalPlayers={}",
+                        "Sync stage {} took {}ms viewersBuilt={} avgLocalPlayers={}",
                         stage,
                         elapsedMs,
                         built,
-                        idleTemplated,
-                        skipped,
-                        cycle.playerTeleportReinsertCount,
                         String.format("%.2f", avgLocals),
                     )
                 }
 
                 SynchronizationStage.SYNC_NPC_ENCODE -> {
                     val built = cycle.npcPacketsBuilt
-                    val skipped = cycle.npcPacketsSkipped
-                    val total = built + skipped
-                    val localCoverage = cycle.npcLocalScans + cycle.npcLocalsSkipped
-                    val avgLocals = if (total > 0) localCoverage.toDouble() / total.toDouble() else 0.0
+                    val avgLocals = if (built > 0) cycle.npcLocalScans.toDouble() / built.toDouble() else 0.0
                     logger.warn(
-                        "Sync stage {} took {}ms viewersBuilt={} viewersSkipped={} avgLocalNpcs={} buildReasons=[noState={}, mapOrTeleport={}, localCount={}, pendingViewport={}, chunkStamp={}, localActivity={}, membership={}]",
+                        "Sync stage {} took {}ms viewersBuilt={} avgLocalNpcs={}",
                         stage,
                         elapsedMs,
                         built,
-                        skipped,
                         String.format("%.2f", avgLocals),
-                        cycle.npcBuildNoStateCount,
-                        cycle.npcBuildMapRegionOrTeleportCount,
-                        cycle.npcBuildLocalCountChangedCount,
-                        cycle.npcBuildPendingViewportCount,
-                        cycle.npcBuildChunkActivityChangedCount,
-                        cycle.npcBuildLocalActivityChangedCount,
-                        cycle.npcBuildLocalMembershipChangedCount,
                     )
                 }
 
@@ -317,49 +290,5 @@ class WorldSynchronizationService {
         const val PHASE_UPDATE_LOCAL = "UPDATE_LOCAL"
 
         private const val VIEW_DISTANCE = 16
-    }
-
-    private fun updateViewerSyncState(player: Client) {
-        val state: ViewerPlayerSyncState = playerRevisionIndex.viewerState(player)
-        val chunkStamp = SynchronizationContext.getPlayerChunkActivityStamp(player)
-        val localActivityStamp = SynchronizationContext.getPlayerLocalActivityStamp(player)
-        val membershipRevision = player.localPlayerMembershipRevision
-        state.lastPlayerSyncTick = tick
-        state.lastSelfMovementRevision = playerRevisionIndex.movementRevision(player)
-        state.lastSelfBlockRevision = playerRevisionIndex.blockRevision(player)
-        state.lastViewportRevision = chunkStamp
-        state.lastKnownLocalCount = player.playerListSize
-        state.lastKnownMapRegionX = player.mapRegionX
-        state.lastKnownMapRegionY = player.mapRegionY
-        state.lastKnownPlane = player.position.z
-        state.lastKnownTeleportState = player.didTeleport()
-        state.lastChunkActivityStamp = chunkStamp
-        state.lastLocalActivityStamp = localActivityStamp
-        state.lastLocalMembershipRevision = membershipRevision
-    }
-
-    private fun sendPlayerTemplate(player: Client, payload: ByteArray) {
-        val pooledBuffer: ByteBuf = ByteMessage.pooledBuffer(payload.size.coerceAtLeast(64))
-        val message = ByteMessage.message(81, MessageType.VAR_SHORT, pooledBuffer)
-        message.putBytes(payload)
-        player.send(message)
-    }
-
-    private fun updateNpcViewerSyncState(
-        player: Client,
-        chunkStamp: Long,
-        localActivityStamp: Long,
-        membershipRevision: Long,
-    ) {
-        val state: ViewerNpcSyncState = npcRevisionIndex.viewerState(player)
-        state.lastNpcSyncTick = tick
-        state.lastNpcViewportRevision = chunkStamp
-        state.lastKnownLocalNpcCount = player.localNpcs.size
-        state.lastKnownMapRegionX = player.mapRegionX
-        state.lastKnownMapRegionY = player.mapRegionY
-        state.lastKnownPlane = player.position.z
-        state.lastChunkActivityStamp = chunkStamp
-        state.lastLocalNpcActivityStamp = localActivityStamp
-        state.lastLocalNpcMembershipRevision = membershipRevision
     }
 }

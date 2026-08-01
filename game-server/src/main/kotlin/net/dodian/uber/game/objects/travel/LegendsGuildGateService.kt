@@ -1,21 +1,24 @@
 package net.dodian.uber.game.objects.travel
 
+import net.dodian.cache.objects.GameObjectData
 import java.util.ArrayDeque
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.entity.player.MovementPoint
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.objects.DoorRegistry
 import net.dodian.uber.game.api.content.ContentTiming
 import net.dodian.uber.game.engine.systems.follow.FollowService
+import net.dodian.uber.game.engine.systems.interaction.ObjectClipService
 import net.dodian.uber.game.engine.systems.interaction.PersonalPassageService
-import net.dodian.uber.game.engine.systems.pathing.AStarPathfindingAlgorithm
-import net.dodian.uber.game.engine.systems.pathing.Heuristic
-import net.dodian.uber.game.engine.systems.pathing.Node
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
+import net.dodian.uber.game.engine.routing.RouteRequestLoc
+import net.dodian.uber.game.engine.routing.WorldRouteService
+import net.dodian.uber.game.engine.routing.findRoute
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.npc.LegendsGuard
 import org.slf4j.LoggerFactory
 
 object LegendsGuildGateService {
@@ -32,15 +35,10 @@ object LegendsGuildGateService {
     private const val LEGENDS_GUARD_NPC_ID = 3951
     private val DEFAULT_LEFT_GATE_FACES = FacePair(open = 0, closed = -3)
     private val DEFAULT_RIGHT_GATE_FACES = FacePair(open = -2, closed = -3)
-    private const val PASSAGE_DURATION_MS = 5_000L
-    private const val VISUAL_OPEN_MS = 2_400L
+    private const val PASSAGE_DURATION_MS = 12_000L
+    private const val VISUAL_OPEN_MS = 12_000L
     private const val TRAVERSAL_TICK_MS = 600
     private const val TRAVERSAL_TIMEOUT_MS = 8_000L
-    private val pathfinder =
-        AStarPathfindingAlgorithm(
-            collision = { x, y, z, dx, dy -> CollisionManager.global().traversable(x, y, z, dx, dy) },
-            heuristic = Heuristic.EUCLIDEAN,
-        )
 
     private enum class Stage {
         TO_ENTRY,
@@ -105,6 +103,8 @@ object LegendsGuildGateService {
         )
         openGateForNearbyPlayers()
 
+        LegendsGuard.triggerGateChat(client)
+
         val traversal =
             ActiveTraversal(
                 playerKey = key,
@@ -131,6 +131,43 @@ object LegendsGuildGateService {
             durationMs = PASSAGE_DURATION_MS,
         )
         openGateForNearbyPlayers()
+        return true
+    }
+
+    /**
+     * The guard stands one tile outside each gate lane, so normal adjacent-NPC
+     * routing would incorrectly walk a player through the closed gate.  This is
+     * deliberate Legends Guild content, not a general interaction exception.
+     */
+    @JvmStatic
+    fun isFrontLaneInteraction(client: Client, npc: Npc, option: Int): Boolean {
+        if (option !in 1..4 || npc.id != LEGENDS_GUARD_NPC_ID || !isLegendsGuard(npc.position)) {
+            return false
+        }
+        return client.position.z == leftGate.z &&
+            client.position.x in leftGate.x..rightGate.x &&
+            client.position.y in southLeft.y..northLeft.y
+    }
+
+    @JvmStatic
+    fun openForGuardTalk(client: Client, npc: Npc): Boolean {
+        if (npc.id != LEGENDS_GUARD_NPC_ID || !isLegendsGuard(npc.position)) {
+            return false
+        }
+        if (!client.premium) {
+            client.sendMessage("You need to be a premium member to enter the Legends Guild.")
+            return true
+        }
+
+        val fromSouth = client.position.y <= leftGate.y
+        PersonalPassageService.grantBidirectionalEdges(
+            client,
+            edges = gatePassageEdges() + guardApproachEdges(fromSouth),
+            durationMs = PASSAGE_DURATION_MS,
+        )
+        openGateForNearbyPlayers()
+        LegendsGuard.triggerGateChat(client)
+        client.sendMessage("The guard opens the gate for you.")
         return true
     }
 
@@ -224,11 +261,33 @@ object LegendsGuildGateService {
         PersonalPassageService.grantBidirectionalEdges(
             client,
             edges =
-                listOf(
-                    lane.entry to lane.gate,
-                    lane.gate to lane.exit,
-                ) + guardApproachEdges(fromSouth = lane.entry.y < leftGate.y),
+                gatePassageEdges(lane) + guardApproachEdges(fromSouth = lane.entry.y < leftGate.y),
             durationMs = PASSAGE_DURATION_MS,
+        )
+    }
+
+    private fun gatePassageEdges(): List<Pair<Position, Position>> =
+        gatePassageEdges(resolveLaneForSide(southLeft.x, fromSouth = true)) +
+            gatePassageEdges(resolveLaneForSide(southRight.x, fromSouth = true)) +
+            gatePassageEdges(resolveLaneForSide(northLeft.x, fromSouth = false)) +
+            gatePassageEdges(resolveLaneForSide(northRight.x, fromSouth = false))
+
+    private fun gatePassageEdges(lane: Lane): List<Pair<Position, Position>> =
+        listOf(
+            lane.entry to lane.gate,
+            lane.gate to lane.exit,
+        )
+
+    private fun resolveLaneForSide(laneX: Int, fromSouth: Boolean): Lane {
+        val entryY = if (fromSouth) southLeft.y else northLeft.y
+        val exitY = if (fromSouth) northLeft.y else southLeft.y
+        val direction = if (fromSouth) "south_to_north" else "north_to_south"
+        val side = if (laneX == leftGate.x) "left" else "right"
+        return Lane(
+            id = "$side:$direction",
+            entry = Position(laneX, entryY, leftGate.z),
+            gate = Position(laneX, leftGate.y, leftGate.z),
+            exit = Position(laneX, exitY, leftGate.z),
         )
     }
 
@@ -248,12 +307,14 @@ object LegendsGuildGateService {
     private fun openGateForNearbyPlayers() {
         val snapshot = resolveVisualSnapshot()
         lastVisualSnapshotForTests = snapshot
+        applyGateCollision(snapshot, open = true)
         broadcastGateFaces(snapshot, open = true)
         val token = visualToken.incrementAndGet()
         ContentTiming.runLaterMs(VISUAL_OPEN_MS.toInt()) {
             if (visualToken.get() != token) {
                 return@runLaterMs
             }
+            applyGateCollision(snapshot, open = false)
             broadcastGateFaces(snapshot, open = false)
         }
     }
@@ -308,14 +369,37 @@ object LegendsGuildGateService {
         }
     }
 
+    private fun applyGateCollision(snapshot: VisualSnapshot, open: Boolean) {
+        val leftFace = if (open) snapshot.left?.open else snapshot.left?.closed
+        val rightFace = if (open) snapshot.right?.open else snapshot.right?.closed
+        if (leftFace != null) {
+            ObjectClipService.applyDecodedObject(
+                position = leftGate,
+                objectId = GATE_OBJECT_LEFT,
+                type = GATE_TYPE,
+                direction = leftFace,
+                obj = GameObjectData.forId(GATE_OBJECT_LEFT),
+            )
+        }
+        if (rightFace != null) {
+            ObjectClipService.applyDecodedObject(
+                position = rightGate,
+                objectId = GATE_OBJECT_RIGHT,
+                type = GATE_TYPE,
+                direction = rightFace,
+                obj = GameObjectData.forId(GATE_OBJECT_RIGHT),
+            )
+        }
+    }
+
     private fun routeAcrossGate(client: Client, lane: Lane): Boolean {
         if (client.position.z != lane.exit.z) {
             return false
         }
 
-        val path = ArrayDeque<Node>(2)
-        path.add(Node(lane.gate.x, lane.gate.y, lane.gate.z))
-        path.add(Node(lane.exit.x, lane.exit.y, lane.exit.z))
+        val path = ArrayDeque<GateStep>(2)
+        path.add(GateStep(lane.gate.x, lane.gate.y, lane.gate.z))
+        path.add(GateStep(lane.exit.x, lane.exit.y, lane.exit.z))
 
         val validated = validatePath(client, path)
         if (validated.isEmpty()) {
@@ -339,10 +423,21 @@ object LegendsGuildGateService {
             return true
         }
 
-        val path = pathfinder.find(client.position.x, client.position.y, destination.x, destination.y, destination.z)
-        if (path.isEmpty()) {
+        val route = WorldRouteService.findRoute(
+            RouteRequestLoc(
+                level = destination.z,
+                srcX = client.position.x,
+                srcY = client.position.y,
+                destX = destination.x,
+                destY = destination.y,
+                srcSize = client.size,
+                moveNear = false,
+            ),
+        )
+        if (!route.success) {
             return false
         }
+        val path = ArrayDeque(route.waypoints.map { GateStep(it.x, it.z, it.level) })
 
         val validated = validatePath(client, path)
         if (validated.isEmpty()) {
@@ -358,8 +453,8 @@ object LegendsGuildGateService {
         return true
     }
 
-    private fun validatePath(client: Client, path: ArrayDeque<Node>): ArrayDeque<Node> {
-        val validated = ArrayDeque<Node>(path.size)
+    private fun validatePath(client: Client, path: ArrayDeque<GateStep>): ArrayDeque<GateStep> {
+        val validated = ArrayDeque<GateStep>(path.size)
         var currentX = client.position.x
         var currentY = client.position.y
         val z = client.position.z
@@ -371,7 +466,7 @@ object LegendsGuildGateService {
                 continue
             }
             val traversable =
-                CollisionManager.global().traversable(step.x, step.y, z, dx, dy) ||
+                WorldRouteService.hasLineOfWalk(Position(currentX, currentY, z), Position(step.x, step.y, z), client.size) ||
                     PersonalPassageService.canTraverse(client, currentX, currentY, step.x, step.y, z)
             if (!traversable) {
                 break
@@ -384,28 +479,14 @@ object LegendsGuildGateService {
         return validated
     }
 
-    private fun applyRoute(client: Client, path: ArrayDeque<Node>) {
-        client.resetWalkingQueue()
-        client.newWalkCmdSteps = 0
-        client.newWalkCmdIsRunning = false
-        val steps = minOf(path.size, Player.WALKING_QUEUE_SIZE)
-        val baseX = client.mapRegionX * 8
-        val baseY = client.mapRegionY * 8
-        client.newWalkCmdSteps = steps
-        client.newWalkCmdIsRunning = false
-
-        var index = 0
-        for (step in path) {
-            if (index >= steps) {
-                break
-            }
-            client.newWalkCmdX[index] = step.x - baseX
-            client.newWalkCmdY[index] = step.y - baseY
-            client.tmpNWCX[index] = client.newWalkCmdX[index]
-            client.tmpNWCY[index] = client.newWalkCmdY[index]
-            index++
-        }
+    private fun applyRoute(client: Client, path: ArrayDeque<GateStep>) {
+        val waypoints = path
+            .take(net.dodian.uber.game.model.entity.player.RouteDestination.MAX_WAYPOINTS)
+            .map { MovementPoint(it.x, it.y, it.z) }
+        client.replaceMovementRoute(waypoints, false)
     }
+
+    private data class GateStep(val x: Int, val y: Int, val z: Int)
 
     private fun finishTraversal(client: Client, lane: Lane, reason: String, clearPassage: Boolean) {
         cleanup(client, clearPassage)
@@ -434,10 +515,10 @@ object LegendsGuildGateService {
         client.position.x == position.x && client.position.y == position.y && client.position.z == position.z
 
     private fun isMovementSettled(client: Client): Boolean {
-        return client.primaryDirection == -1 && client.secondaryDirection == -1 && client.wQueueReadPtr == client.wQueueWritePtr
+        return client.primaryDirection == -1 && client.secondaryDirection == -1 && !client.hasMovementRoute()
     }
 
-    private fun hasPendingWalkCommand(client: Client): Boolean = client.newWalkCmdSteps > 0
+    private fun hasPendingWalkCommand(client: Client): Boolean = client.hasMovementRoute()
 
     private fun playerKey(player: Player): String {
         val longName = player.longName

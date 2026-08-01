@@ -1,17 +1,15 @@
+@file:Suppress("UNUSED_PARAMETER")
+
 package net.dodian.uber.game.engine.systems.cache
 
 import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionDirection
-import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
+import net.dodian.uber.game.engine.routing.CollisionDirection
+import net.dodian.uber.game.engine.routing.WorldRouteService
 
 class CollisionBuildService(
-    private val collision: CollisionManager,
+    private val collision: WorldRouteService = WorldRouteService,
+    private val skippedObjectKeys: Set<Long> = emptySet(),
 ) {
-    enum class FootprintMode {
-        ROTATED,
-        LUNA_UNROTATED_INTERACTABLE,
-    }
-
     fun clear() {
         collision.clear()
     }
@@ -29,105 +27,89 @@ class CollisionBuildService(
     }
 
     fun applyTerrain(grid: DecodedMapTileGrid) {
+        applyTerrain(grid, CollisionPlaneResolver.from(grid))
+    }
+
+    fun applyTerrain(grid: DecodedMapTileGrid, planeResolver: CollisionPlaneResolver) {
+        val regionBaseX = (grid.regionId shr 8) * 64
+        val regionBaseY = (grid.regionId and 0xFF) * 64
         for (plane in 0 until 4) {
+            collision.allocateRegionPlane(regionBaseX, regionBaseY, plane)
             for (x in 0 until 64) {
                 for (y in 0 until 64) {
+                    val globalX = regionBaseX + x
+                    val globalY = regionBaseY + y
                     val tile = grid.getTile(x, y, plane)
+                    if (tile.isBridge()) {
+                        collision.markBridge(globalX, globalY, plane)
+                    }
                     if (!tile.isBlocked()) {
                         continue
                     }
 
-                    var effectivePlane = plane
-                    if (grid.getTile(x, y, 1).isBridge()) {
-                        effectivePlane--
-                    }
+                    val effectivePlane = planeResolver.terrainPlane(x, y, plane)
                     if (effectivePlane < 0) {
                         continue
                     }
 
-                    val globalX = (grid.regionId shr 8) * 64 + x
-                    val globalY = (grid.regionId and 0xFF) * 64 + y
-                    collision.flagSolid(globalX, globalY, effectivePlane)
+                    collision.markTerrainBlocked(globalX, globalY, effectivePlane)
                 }
             }
         }
     }
 
     fun applyObjects(table: MapIndexTable) {
+        val planeResolversByRegion = table.tileGrids.mapValues { (_, grid) -> CollisionPlaneResolver.from(grid) }
         for (obj in table.objects) {
-            val grid = table.tileGrids[obj.regionId]
-            val definition = GameObjectData.forId(obj.objectId)
-            applyObject(
-                id = obj.objectId,
-                x = obj.x,
-                y = obj.y,
-                z = obj.plane,
-                type = obj.type,
-                rotation = obj.rotation,
-                sizeX = definition.sizeX,
-                sizeY = definition.sizeY,
-                solid = definition.isSolid(),
-                walkable = definition.isWalkable(),
-                hasActions = definition.hasActions(),
-                objectName = definition.name,
-                blockWalk = definition.blockWalk(),
-                blockRange = definition.blockRange(),
-                breakRouteFinding = definition.breakRouteFinding(),
-                grid = grid,
+            applyObjectDataResolved(
+                obj = obj,
+                definition = GameObjectData.forId(obj.objectId),
+                planeResolver = planeResolversByRegion[obj.regionId],
             )
         }
     }
 
     fun applyObjects(objects: List<DecodedMapObject>) {
         for (obj in objects) {
-            val definition = GameObjectData.forId(obj.objectId)
-            applyObject(
-                id = obj.objectId,
-                x = obj.x,
-                y = obj.y,
-                z = obj.plane,
-                type = obj.type,
-                rotation = obj.rotation,
-                sizeX = definition.sizeX,
-                sizeY = definition.sizeY,
-                solid = definition.isSolid(),
-                walkable = definition.isWalkable(),
-                hasActions = definition.hasActions(),
-                objectName = definition.name,
-                blockWalk = definition.blockWalk(),
-                blockRange = definition.blockRange(),
-                breakRouteFinding = definition.breakRouteFinding(),
-            )
+            applyObjectData(obj, GameObjectData.forId(obj.objectId))
         }
     }
 
     fun applyObjectData(obj: DecodedMapObject, definition: GameObjectData, grid: DecodedMapTileGrid? = null) {
+        applyObjectDataResolved(obj, definition, grid?.let { CollisionPlaneResolver.from(it) })
+    }
+
+    fun applyObjectDataResolved(obj: DecodedMapObject, definition: GameObjectData, planeResolver: CollisionPlaneResolver?) {
+        val effectivePlane = adjustedPlane(obj.x, obj.y, obj.plane, planeResolver)
+        if (effectivePlane < 0 || isSkippedObject(obj.x, obj.y, effectivePlane)) {
+            return
+        }
+        val impenetrable = if (obj.objectId in BLOCK_RANGE_FALSE_OVERRIDES) false else definition.isImpenetrable()
         applyObject(
             id = obj.objectId,
             x = obj.x,
             y = obj.y,
-            z = obj.plane,
+            z = effectivePlane,
             type = obj.type,
             rotation = obj.rotation,
             sizeX = definition.sizeX,
             sizeY = definition.sizeY,
             solid = definition.isSolid(),
-            walkable = definition.isWalkable(),
-            hasActions = definition.hasActions(),
-            objectName = definition.name,
             blockWalk = definition.blockWalk(),
-            blockRange = definition.blockRange(),
+            impenetrable = impenetrable,
             breakRouteFinding = definition.breakRouteFinding(),
-            grid = grid,
+            hasActions = definition.hasActions(),
+            decoration = definition.isDecoration(),
         )
     }
 
     fun applyTerrainAndObjects(grid: DecodedMapTileGrid?, objects: List<DecodedMapObject>) {
+        val planeResolver = grid?.let { CollisionPlaneResolver.from(it) }
         if (grid != null) {
-            applyTerrain(grid)
+            applyTerrain(grid, planeResolver!!)
         }
         for (obj in objects) {
-            applyObjectData(obj, GameObjectData.forId(obj.objectId), grid)
+            applyObjectDataResolved(obj, GameObjectData.forId(obj.objectId), planeResolver)
         }
     }
 
@@ -141,31 +123,30 @@ class CollisionBuildService(
         sizeX: Int,
         sizeY: Int,
         solid: Boolean,
-        walkable: Boolean,
+        walkable: Boolean = !solid,
         hasActions: Boolean = true,
         objectName: String? = null,
         blockWalk: Int = if (solid) 2 else 0,
         blockRange: Boolean = blockWalk != 0,
         breakRouteFinding: Boolean = false,
         grid: DecodedMapTileGrid? = null,
+        impenetrable: Boolean = blockRange,
+        decoration: Boolean = false,
     ) = updateObjectCollision(
         remove = false,
-        id = id,
         x = x,
         y = y,
-        z = z,
+        z = adjustedPlane(x, y, z, grid),
         type = type,
         rotation = rotation,
         sizeX = sizeX,
         sizeY = sizeY,
         solid = solid,
-        walkable = walkable,
-        hasActions = hasActions,
-        objectName = objectName,
         blockWalk = blockWalk,
-        blockRange = blockRange,
+        impenetrable = impenetrable,
         breakRouteFinding = breakRouteFinding,
-        grid = grid,
+        hasActions = hasActions,
+        decoration = decoration,
     )
 
     fun removeObject(
@@ -178,37 +159,34 @@ class CollisionBuildService(
         sizeX: Int,
         sizeY: Int,
         solid: Boolean,
-        walkable: Boolean,
+        walkable: Boolean = !solid,
         hasActions: Boolean = true,
         objectName: String? = null,
         blockWalk: Int = if (solid) 2 else 0,
         blockRange: Boolean = blockWalk != 0,
         breakRouteFinding: Boolean = false,
         grid: DecodedMapTileGrid? = null,
+        impenetrable: Boolean = blockRange,
+        decoration: Boolean = false,
     ) = updateObjectCollision(
         remove = true,
-        id = id,
         x = x,
         y = y,
-        z = z,
+        z = adjustedPlane(x, y, z, grid),
         type = type,
         rotation = rotation,
         sizeX = sizeX,
         sizeY = sizeY,
         solid = solid,
-        walkable = walkable,
-        hasActions = hasActions,
-        objectName = objectName,
         blockWalk = blockWalk,
-        blockRange = blockRange,
+        impenetrable = impenetrable,
         breakRouteFinding = breakRouteFinding,
-        grid = grid,
+        hasActions = hasActions,
+        decoration = decoration,
     )
 
-    @Suppress("UNUSED_PARAMETER")
     private fun updateObjectCollision(
         remove: Boolean,
-        id: Int,
         x: Int,
         y: Int,
         z: Int,
@@ -217,132 +195,113 @@ class CollisionBuildService(
         sizeX: Int,
         sizeY: Int,
         solid: Boolean,
-        walkable: Boolean,
-        hasActions: Boolean,
-        objectName: String?,
         blockWalk: Int,
-        blockRange: Boolean,
+        impenetrable: Boolean,
         breakRouteFinding: Boolean,
-        grid: DecodedMapTileGrid? = null,
+        hasActions: Boolean,
+        decoration: Boolean,
     ) {
-        if (ignoredObjectIds.contains(id)) {
+        if (z < 0 || blockWalk == 0) {
             return
         }
-        if (!isTypeWalkBlocking(type, solid, hasActions, objectName)) {
-            return
-        }
-
-        var effectiveZ = z
-        if (z > 0 && grid != null) {
-            val localX = x % 64
-            val localY = y % 64
-            if (grid.getTile(localX, localY, 1).isBridge()) {
-                effectiveZ--
-            }
-        }
-        if (effectiveZ < 0) return
 
         val normalizedRotation = rotation and 0x3
-        val (width, height) = resolveFootprint(type, normalizedRotation, sizeX, sizeY, LIVE_FOOTPRINT_MODE)
+        val (width, length) = resolveFootprint(normalizedRotation, sizeX, sizeY)
+        val add = !remove
 
-        when (type) {
-            0 -> applyWall(remove, x, y, effectiveZ, CollisionDirection.WNES[normalizedRotation], blockRange)
-            1, 3 -> applyDiagonalWall(remove, x, y, effectiveZ, CollisionDirection.WNES_DIAGONAL[normalizedRotation], blockRange)
-            2 -> applyLargeCorner(remove, x, y, effectiveZ, CollisionDirection.WNES_DIAGONAL[normalizedRotation], blockRange)
-            else -> {
-                for (dx in 0 until width) {
-                    for (dy in 0 until height) {
-                        applySolid(remove, x + dx, y + dy, effectiveZ, blockRange)
-                        if (breakRouteFinding && type in 9..21) {
-                            applyRouteBlocker(remove, x + dx, y + dy, effectiveZ)
-                        }
-                    }
+        when {
+            type == 22 -> {
+                if (blockWalk == 1) collision.markGroundDecoration(z, x, y, add)
+            }
+            type == 10 || type == 11 || type == 9 || type >= 12 -> {
+                collision.markOccupant(z, x, y, width, length, impenetrable, breakRouteFinding, add)
+            }
+            type in 0..3 -> {
+                val orientation = CollisionDirection.WNES[normalizedRotation]
+                if (add) {
+                    collision.markWall(orientation, z, x, y, type, impenetrable, add = true)
+                } else {
+                    collision.markWall(orientation, z, x, y, type, impenetrable, add = false)
                 }
             }
         }
     }
 
-    private fun applyWall(remove: Boolean, x: Int, y: Int, z: Int, direction: CollisionDirection, blockRange: Boolean) {
-        if (remove) {
-            collision.clearWall(x, y, z, direction, blockRange)
-        } else {
-            collision.wall(x, y, z, direction, blockRange)
-        }
+    fun auditObject(obj: DecodedMapObject, grid: DecodedMapTileGrid?): CacheCollisionAuditObject =
+        auditObjectResolved(obj, grid?.let { CollisionPlaneResolver.from(it) })
+
+    fun auditObjectResolved(obj: DecodedMapObject, planeResolver: CollisionPlaneResolver?): CacheCollisionAuditObject {
+        val effectivePlane = adjustedPlane(obj.x, obj.y, obj.plane, planeResolver)
+        val skippedReason =
+            when {
+                effectivePlane < 0 -> "plane_underflow"
+                isSkippedObject(obj.x, obj.y, effectivePlane) -> "tarnish_removed_object"
+                else -> null
+            }
+        return CacheCollisionAuditObject(
+            objectId = obj.objectId,
+            x = obj.x,
+            y = obj.y,
+            rawPlane = obj.plane,
+            effectivePlane = effectivePlane,
+            type = obj.type,
+            rotation = obj.rotation,
+            regionId = obj.regionId,
+            skippedReason = skippedReason,
+        )
     }
 
-    private fun applyDiagonalWall(remove: Boolean, x: Int, y: Int, z: Int, direction: CollisionDirection, blockRange: Boolean) {
-        if (remove) {
-            collision.clearWall(x, y, z, direction, blockRange)
-        } else {
-            collision.wall(x, y, z, direction, blockRange)
+    private fun adjustedPlane(x: Int, y: Int, plane: Int, grid: DecodedMapTileGrid?): Int {
+        if (grid == null) {
+            return plane
         }
+        return adjustedPlane(x, y, plane, CollisionPlaneResolver.from(grid))
     }
 
-    private fun applyLargeCorner(remove: Boolean, x: Int, y: Int, z: Int, direction: CollisionDirection, blockRange: Boolean) {
-        if (remove) {
-            collision.clearLargeCornerWall(x, y, z, direction, blockRange)
-        } else {
-            collision.largeCornerWall(x, y, z, direction, blockRange)
+    private fun adjustedPlane(x: Int, y: Int, plane: Int, planeResolver: CollisionPlaneResolver?): Int {
+        if (planeResolver == null) {
+            return plane
         }
+        val localX = Math.floorMod(x, 64)
+        val localY = Math.floorMod(y, 64)
+        return planeResolver.objectPlane(localX, localY, plane)
     }
 
-    private fun applySolid(remove: Boolean, x: Int, y: Int, z: Int, blockRange: Boolean) {
-        if (remove) {
-            collision.clearSolid(x, y, z, blockRange)
-        } else {
-            collision.flagSolid(x, y, z, blockRange)
-        }
-    }
-
-    private fun applyRouteBlocker(remove: Boolean, x: Int, y: Int, z: Int) {
-        if (remove) {
-            collision.clearRouteBlocker(x, y, z)
-        } else {
-            collision.flagRouteBlocker(x, y, z)
-        }
-    }
+    private fun isSkippedObject(x: Int, y: Int, z: Int): Boolean =
+        SkippedObjectRepository.key(x, y, z) in skippedObjectKeys
 
     companion object {
+        private val BLOCK_RANGE_FALSE_OVERRIDES = setOf(
+            // Bank booths — counters that allow talking/projectiles through
+            6083, 6084, 10083, 10355, 10356, 10357,
+            10517, 10518, 10527, 10528, 10583, 10584, 10585,
+            11338, 12798, 12799, 12800, 12801, 14367, 14368,
+            16642, 16643, 16700, 18491, 22819, 25808,
+            28564, 28565, 30389, 30390, 30391, 34138,
+            // Bank tables (behind the counter)
+            590, 591, 2094, 6081, 6082, 15677,
+        )
+
         @JvmField
-        val ignoredObjectIds = setOf(1870, 980, 916, 1540, 1908, 1535, 1905, 1906, 85, 86, 87, 88, 89, 810, 811, 812, 813, 814, 815, 816, 817, 818, 819, 12, 158, 159, 157, 45, 46, 1537, 1538, 1539)
-
-        @Volatile
-        var LIVE_FOOTPRINT_MODE: FootprintMode = FootprintMode.ROTATED
+        val BLOCK_RANGE_FALSE_IDS: Set<Int> = BLOCK_RANGE_FALSE_OVERRIDES
 
         @JvmStatic
-        fun resolveFootprint(type: Int, normalizedRotation: Int, sizeX: Int, sizeY: Int, mode: FootprintMode): Pair<Int, Int> {
-            val swapForRotation = normalizedRotation == 1 || normalizedRotation == 3
-            val swap =
-                when (mode) {
-                    FootprintMode.ROTATED -> swapForRotation
-                    FootprintMode.LUNA_UNROTATED_INTERACTABLE -> swapForRotation && type !in 9..21
+        fun resolveFootprint(normalizedRotation: Int, sizeX: Int, sizeY: Int): Pair<Int, Int> =
+            if (normalizedRotation == 1 || normalizedRotation == 3) sizeY to sizeX else sizeX to sizeY
+
+        @JvmStatic
+        fun isTypeWalkBlocking(type: Int, solid: Boolean, hasActions: Boolean, name: String? = null): Boolean =
+            solid &&
+                when {
+                    type == 22 -> hasActions
+                    type == 10 || type == 11 || type == 9 || type >= 12 -> true
+                    type in 0..3 -> true
+                    else -> false
                 }
-            return if (swap) sizeY to sizeX else sizeX to sizeY
-        }
 
-        @JvmStatic
-        fun isTypeWalkBlocking(type: Int, solid: Boolean, hasActions: Boolean, name: String? = null): Boolean {
-            val isWall = (type in 0..3) || type == 9
-            val isRoof = type in 12..21
-            val isSolidInteractable = (type == 10 || type == 11) && solid
-            val isSolidFloorDecoration = type == 22 && hasActions
-
-            return isWall || isRoof || isSolidInteractable || isSolidFloorDecoration
-        }
-
-        /**
-         * Legacy compatibility shim. New callers should use [isTypeWalkBlocking].
-         */
         @JvmStatic
         fun isTypeUnwalkable(type: Int, solid: Boolean, walkable: Boolean, hasActions: Boolean): Boolean =
             isTypeWalkBlocking(type, solid, hasActions, null)
-
-        @JvmStatic
-        fun shouldApplyRouteBlocking(type: Int, breakRouteFinding: Boolean): Boolean =
-            breakRouteFinding && type in 9..21
-
-        @JvmStatic
-        fun shouldApplyProjectileBlocking(blockRange: Boolean): Boolean = blockRange
 
         @JvmStatic
         fun occupiesTile(
@@ -354,10 +313,9 @@ class CollisionBuildService(
             rotation: Int,
             sizeX: Int,
             sizeY: Int,
-            mode: FootprintMode,
         ): Boolean {
-            val (width, height) = resolveFootprint(type, rotation and 0x3, sizeX, sizeY, mode)
-            return tileX in objectX until (objectX + width) && tileY in objectY until (objectY + height)
+            val (width, length) = resolveFootprint(rotation and 0x3, sizeX, sizeY)
+            return tileX in objectX until (objectX + width) && tileY in objectY until (objectY + length)
         }
     }
 }

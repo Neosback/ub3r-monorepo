@@ -34,6 +34,7 @@ object ContentInteraction {
     const val YANILLE_CHEST: String = PlayerTickThrottleService.YANILLE_CHEST
     const val LEGENDS_CHEST: String = PlayerTickThrottleService.LEGENDS_CHEST
     const val THIEVING_GENERIC: String = PlayerTickThrottleService.THIEVING_GENERIC
+    const val BURY_BONES: String = PlayerTickThrottleService.BURY_BONES
 
     @JvmStatic
     fun tryAcquire(player: Client, key: String, cooldownTicks: Int): Boolean {

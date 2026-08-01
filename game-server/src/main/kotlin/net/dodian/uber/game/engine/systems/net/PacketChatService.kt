@@ -1,19 +1,19 @@
 package net.dodian.uber.game.engine.systems.net
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.widget.ChatMessageEvent
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.netty.codec.PublicChatCodec
 import net.dodian.uber.game.persistence.audit.ChatLog
 
 /**
- * Kotlin service for public-chat packet side-effects (opcode 4).
  *
- * Moves all [Client.setChatText*], [Client.invalidateCachedUpdateBlock] and
- * guard-message sends out of ChatListener, leaving the listener as a
- * pure decode / bounds-check / delegate adapter.
+ * Moves chat-state mutation and guard-message sends out of ChatListener, leaving the listener as
+ * a pure decode / bounds-check / delegate adapter.
  */
 object PacketChatService {
 
@@ -25,10 +25,9 @@ object PacketChatService {
      * @param color    raw color byte from packet
      * @param effects  raw effects byte from packet
      * @param chat     decoded chat string (max 256 chars, null-terminated)
-     * @param chatBytes pre-computed byte representation of [chat]
      */
     @JvmStatic
-    fun handlePublicChat(client: Client, color: Int, effects: Int, chat: String, chatBytes: ByteArray) {
+    fun handlePublicChat(client: Client, color: Int, effects: Int, chat: String) {
         if (!client.validClient) {
             client.send(SendMessage("Please use another client"))
             return
@@ -37,7 +36,7 @@ object PacketChatService {
             client.send(SendMessage("You are currently muted!"))
             return
         }
-        if (!Server.chatOn && client.playerRights == 0) {
+        if (!FeatureStateService.publicChatYell.get() && client.playerRights == 0) {
             client.send(SendMessage("Public chat has been temporarily restricted"))
             return
         }
@@ -45,14 +44,14 @@ object PacketChatService {
         client.chatTextEffects = effects
         client.chatTextColor = color
 
-        val copyLen = minOf(chatBytes.size, client.chatText.size)
+        val encodedChat = PublicChatCodec.encode(chat)
+        val copyLen = minOf(encodedChat.size, client.chatText.size)
         client.chatTextSize = copyLen
         if (copyLen > 0) {
-            System.arraycopy(chatBytes, 0, client.chatText, 0, copyLen)
+            System.arraycopy(encodedChat, 0, client.chatText, 0, copyLen)
         }
         client.chatTextMessage = chat
         GameEventBus.post(ChatMessageEvent(client, chat))
-        client.invalidateCachedUpdateBlock()
         client.updateFlags.setRequired(UpdateFlag.CHAT, true)
         ChatLog.recordPublicChat(client, chat)
     }

@@ -5,7 +5,7 @@ import net.dodian.uber.game.events.GameEvent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 
-/** Fired when a player clicks an option on a world object. [option] is 1-based. */
+
 data class ObjectClickEvent(
     val client: Client,
     val option: Int,
@@ -13,4 +13,3 @@ data class ObjectClickEvent(
     val position: Position,
     val obj: GameObjectData?,
 ) : GameEvent
-

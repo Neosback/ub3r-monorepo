@@ -8,4 +8,3 @@ class GameObjectDef(
     val face: Int,
     val position: Position,
 )
-

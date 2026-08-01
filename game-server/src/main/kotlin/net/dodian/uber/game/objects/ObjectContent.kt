@@ -5,6 +5,8 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.api.content.ContentObjectInteractionPolicy
 
+import net.dodian.uber.game.api.interaction.ObjectInteractionContext
+
 interface ObjectContent {
     val objectIds: IntArray
         get() = intArrayOf()
@@ -15,27 +17,13 @@ interface ObjectContent {
             .map { ObjectBinding(objectId = it) }
     }
 
-    fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean = false
-    fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean = false
-    fun onThirdClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean = false
-    fun onFourthClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean = false
-    fun onFifthClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean = false
-    fun onUseItem(
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        itemId: Int,
-        itemSlot: Int,
-        interfaceId: Int,
-    ): Boolean = false
-    fun onMagic(
-        client: Client,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-        spellId: Int,
-    ): Boolean = false
+    fun onFirstClick(context: ObjectInteractionContext): Boolean = false
+    fun onSecondClick(context: ObjectInteractionContext): Boolean = false
+    fun onThirdClick(context: ObjectInteractionContext): Boolean = false
+    fun onFourthClick(context: ObjectInteractionContext): Boolean = false
+    fun onFifthClick(context: ObjectInteractionContext): Boolean = false
+    fun onUseItem(context: ObjectInteractionContext): Boolean = false
+    fun onMagic(context: ObjectInteractionContext): Boolean = false
 
     fun clickInteractionPolicy(
         option: Int,
@@ -60,5 +48,4 @@ interface ObjectContent {
         spellId: Int,
     ): ContentObjectInteractionPolicy? = null
 }
-
 

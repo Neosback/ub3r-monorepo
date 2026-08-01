@@ -4,7 +4,7 @@ import net.dodian.uber.game.events.GameEvent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.ui.buttons.ButtonClickRequest
 
-/** Fired when a player clicks a button on any interface. */
+
 data class ButtonClickEvent(
     val request: ButtonClickRequest,
 ) : GameEvent {
@@ -14,4 +14,3 @@ data class ButtonClickEvent(
     val buttonId: Int
         get() = request.rawButtonId
 }
-

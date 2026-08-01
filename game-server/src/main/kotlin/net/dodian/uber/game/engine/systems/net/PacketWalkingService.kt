@@ -1,21 +1,27 @@
 package net.dodian.uber.game.engine.systems.net
+import net.dodian.uber.game.api.content.ContentActions
 
-import net.dodian.uber.game.skill.thieving.PyramidPlunder
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
+import net.dodian.uber.skills.thieving.ThievingModule
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService
 import net.dodian.uber.game.events.player.WalkEvent
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.Player
-import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.model.entity.player.RouteDestination
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
+import net.dodian.uber.game.engine.systems.action.PlayerActionController
 import net.dodian.uber.game.engine.systems.follow.FollowService
+import net.dodian.uber.game.engine.systems.interaction.ui.PlayerSocialApproachService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
+import net.dodian.uber.game.engine.systems.interaction.InteractionProcessor
 import net.dodian.uber.game.engine.state.GroundItemIntentStateAdapter
 import net.dodian.uber.game.engine.state.TeleportIntentStateAdapter
+import net.dodian.uber.game.economy.PriceCheckerService
+import net.dodian.uber.game.engine.systems.skills.SkillItemListMenuService
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 
@@ -31,16 +37,20 @@ object PacketWalkingService {
             player.randomed ||
             !player.validClient ||
             !player.pLoaded ||
-            player.isWalkBlocked()
+            player.isWalkBlocked
         ) {
             return
         }
-        if (TeleportIntentStateAdapter.isTeleporting(player) || PyramidPlunder.isLooting(player)) {
+        if (TeleportIntentStateAdapter.isTeleporting(player) || ThievingModule.isLooting(player.asSkillPlayer())) {
             return
         }
-        if (player.isVerticalTransitionActive) {
+        if (net.dodian.uber.game.engine.systems.action.VerticalTransitionService.isActive(player)) {
             player.resetWalkingQueue()
             return
+        }
+
+        if (PriceCheckerService.isOpen(player)) {
+            PriceCheckerService.close(player)
         }
 
         if (request.opcode == 164 || request.opcode == 248) {
@@ -58,10 +68,7 @@ object PacketWalkingService {
             player.antique = false
         }
         player.clearPlayerPotatoState()
-        with(player.farming) {
-            player.updateCompost()
-            player.updateFarmPatch()
-        }
+        player.asSkillPlayer().farmingState.refreshVisuals()
 
         if ((player.getStunTimer() > 0 || player.getSnareTimer() > 0) && request.opcode != 98) {
             player.send(SendMessage(if (player.getSnareTimer() > 0) "You are ensnared!" else "You are currently stunned!"))
@@ -76,52 +83,57 @@ object PacketWalkingService {
             player.checkInv = false
             player.resetItems(3214)
         }
-        if (GroundItemIntentStateAdapter.wantsPickup(player)) {
-            GroundItemIntentStateAdapter.clearPickup(player)
-            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(player)
-        }
-
         val stepCount = request.deltasX.size
-        if (stepCount <= 0 || stepCount > Player.WALKING_QUEUE_SIZE || request.deltasY.size != stepCount) {
+        if (stepCount <= 0 || stepCount > RouteDestination.MAX_WAYPOINTS || request.deltasY.size != stepCount) {
             player.resetWalkingQueue()
             return
         }
 
-        val firstStepX = request.firstStepXAbs - player.mapRegionX * 8
-        val firstStepY = request.firstStepYAbs - player.mapRegionY * 8
-
-        player.newWalkCmdSteps = stepCount
-        player.newWalkCmdIsRunning = request.running
-        player.newWalkCmdX[0] = 0
-        player.newWalkCmdY[0] = 0
-        player.tmpNWCX[0] = 0
-        player.tmpNWCY[0] = 0
-
-        for (i in 1 until stepCount) {
-            player.newWalkCmdX[i] = request.deltasX[i]
-            player.newWalkCmdY[i] = request.deltasY[i]
-            player.tmpNWCX[i] = request.deltasX[i]
-            player.tmpNWCY[i] = request.deltasY[i]
+        val routeDecision =
+            if (WalkingRouteService.isPlainWalkOpcode(request.opcode)) {
+                WalkingRouteService.preparePlainRoute(player, request)
+            } else {
+                WalkingRouteService.RouteDecision(
+                    WalkingRouteService.requestWaypoints(request, player.position.z),
+                    WalkingRouteService.destination(request, player.position.z),
+                )
+            }
+        if (routeDecision == null) {
+            return
         }
-
+        val eventDestination = routeDecision.destination
+        // The client sends the walk-to-item request and the pickup-item request together
+        // from the same click; only treat this as "the player changed their mind and is
+        // walking elsewhere" if the new destination isn't the tile they're already trying
+        // to pick up from — otherwise this walk request (which is what carries them TO the
+        // item) cancels the pickup intent before they ever arrive, forcing a second click.
+        if (GroundItemIntentStateAdapter.wantsPickup(player)) {
+            val pendingTarget = GroundItemIntentStateAdapter.target(player)
+            val walkingTowardPendingTarget = pendingTarget != null &&
+                eventDestination.x == pendingTarget.x &&
+                eventDestination.y == pendingTarget.y
+            if (!walkingTowardPendingTarget) {
+                GroundItemIntentStateAdapter.clearPickup(player)
+                PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(player)
+            }
+        }
+        player.replaceMovementRoute(routeDecision.waypoints, request.running)
         logger.debug(
-            "Walk steps {} firstX {} firstY {} running {}",
-            player.newWalkCmdSteps,
-            firstStepX,
-            firstStepY,
-            player.newWalkCmdIsRunning,
+            "Walk waypoints {} destinationX {} destinationY {} running {}",
+            player.movementRouteSize(),
+            eventDestination.x,
+            eventDestination.y,
+            request.running,
         )
-        for (i in 0 until player.newWalkCmdSteps) {
-            player.newWalkCmdX[i] += firstStepX
-            player.newWalkCmdY[i] += firstStepY
-        }
 
-        if (player.newWalkCmdSteps > 0) {
+        if (player.hasMovementRoute()) {
             DialogueService.closeBlockingDialogue(player, false)
 
-            // Manual click-walk should break follow intent (Luna parity).
+            // Manual click-walk should break follow intent (Luna parity) and object interaction.
             if (request.opcode == 164 || request.opcode == 248) {
                 FollowService.cancelFollowIntent(player)
+                PlayerSocialApproachService.cancel(player)
+                InteractionProcessor.cancel(player)
             }
 
             if (player.inDuel) {
@@ -138,14 +150,19 @@ object PacketWalkingService {
                 player.send(RemoveInterfaces())
             }
             player.rerequestAnim()
-            PlayerActionCancellationService.cancel(
-                player,
-                PlayerActionCancelReason.MOVEMENT,
-                true,
-                false,
-                false,
-                true,
-            )
+            if (request.opcode != 98) {
+                ContentActions.cancel(
+                    player = player,
+                    reason = PlayerActionCancelReason.MOVEMENT,
+                    fullResetAnimation = true,
+                    clearDialogue = false,
+                    closeInterfaces = false,
+                    resetCompatibilityState = true,
+                )
+            } else {
+                PlayerActionController.cancel(player, PlayerActionCancelReason.MOVEMENT)
+                PlayerActionCancellationService.resetCompatibilityState(player, true)
+            }
             player.discord = false
             if (player.checkInv) {
                 player.checkInv = false
@@ -157,7 +174,7 @@ object PacketWalkingService {
         GameEventBus.post(
             WalkEvent(
                 player,
-                Position(request.firstStepXAbs, request.firstStepYAbs, player.position.z),
+                eventDestination,
             ),
         )
 
@@ -171,9 +188,7 @@ object PacketWalkingService {
         if (player.refundSlot != -1) {
             player.refundSlot = -1
         }
-        if (player.herbMaking != -1) {
-            player.herbMaking = -1
-        }
+        SkillItemListMenuService.clear(player)
         if (player.IsBanking) {
             player.IsBanking = false
             player.send(RemoveInterfaces())

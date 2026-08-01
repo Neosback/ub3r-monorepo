@@ -1,0 +1,46 @@
+schema_version = 1
+
+[[bone]]
+key = "bones"
+item_id = 526
+experience = 45
+
+[[bone]]
+key = "bat_bones"
+item_id = 530
+experience = 85
+
+[[bone]]
+key = "big_bones"
+item_id = 532
+experience = 150
+
+[[bone]]
+key = "zogre_bones"
+item_id = 4812
+experience = 265
+
+[[bone]]
+key = "jogre_bones"
+item_id = 3125
+experience = 395
+
+[[bone]]
+key = "raurg_bones"
+item_id = 4832
+experience = 585
+
+[[bone]]
+key = "dragon_bones"
+item_id = 536
+experience = 735
+
+[[bone]]
+key = "dagannoth_bones"
+item_id = 6729
+experience = 1050
+
+[[bone]]
+key = "ourg_bones"
+item_id = 4834
+experience = 1200

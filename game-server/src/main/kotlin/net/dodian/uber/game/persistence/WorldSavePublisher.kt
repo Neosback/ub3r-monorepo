@@ -11,7 +11,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 
-/** Publishes world save snapshots to the DB asynchronously on each maintenance cycle. */
+
 object WorldSavePublisher {
     private val logger = LoggerFactory.getLogger(WorldSavePublisher::class.java)
     private val scope = CoroutineScope(SupervisorJob() + DbDispatchers.worldDispatcher)

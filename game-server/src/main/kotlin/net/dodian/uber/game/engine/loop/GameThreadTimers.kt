@@ -64,10 +64,18 @@ object GameThreadTimers {
     }
 
     @JvmStatic
-    fun clearForTests() {
+    fun clearAll() {
         synchronized(queue) {
             queue.clear()
         }
+    }
+
+    @JvmStatic
+    fun size(): Int = synchronized(queue) { queue.size }
+
+    @JvmStatic
+    fun clearForTests() {
+        clearAll()
     }
 
     data class DrainStats(

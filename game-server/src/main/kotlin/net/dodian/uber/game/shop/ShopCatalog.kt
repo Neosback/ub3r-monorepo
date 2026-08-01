@@ -26,4 +26,3 @@ object ShopCatalog {
     fun find(id: Int): ShopDefinition? = ShopCatalogRegistry.find(id)
 }
 
-

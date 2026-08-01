@@ -5,7 +5,8 @@ import java.util.Date
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Friend
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skill.prayer.PrayerManager
+import net.dodian.uber.game.engine.systems.skills.prayer.PrayerManager
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.persistence.db.DbTables
 
 data class PlayerSaveSnapshot(
@@ -69,17 +70,21 @@ data class PlayerSaveSnapshot(
             }
             for (i in client.bankItems.indices) {
                 if (client.bankItems[i] > 0) {
-                    bank.append(i).append('-').append(client.bankItems[i] - 1).append('-').append(client.bankItemsN[i]).append(' ')
+                    val tab = if (client.bankSlotTabs != null && i < client.bankSlotTabs.size) client.bankSlotTabs[i] else 0
+                    bank.append(i).append('-').append(client.bankItems[i] - 1).append('-').append(client.bankItemsN[i]).append('-').append(tab).append(' ')
                 }
+            }
+            if (client.bankPlaceholdersEnabled) {
+                bank.append("@ph=1 ")
             }
             for (i in client.equipment.indices) {
                 if (client.equipment[i] > 0) {
                     equipment.append(i).append('-').append(client.equipment[i]).append('-').append(client.equipmentN[i]).append(' ')
                 }
             }
-            for (i in client.boss_name.indices) {
-                if (client.boss_amount[i] >= 0) {
-                    bossLog.append(client.boss_name[i]).append(':').append(client.boss_amount[i]).append(' ')
+            for (i in 0 until client.bossKillLogState.size()) {
+                if (client.bossKillLogState.countAt(i) >= 0) {
+                    bossLog.append(client.bossKillLogState.nameAt(i)).append(':').append(client.bossKillLogState.countAt(i)).append(' ')
                 }
             }
             for (i in 0 until client.effects.size) {
@@ -95,7 +100,7 @@ data class PlayerSaveSnapshot(
             }
 
             prayer.append(client.currentPrayer)
-            for (pray in PrayerManager.Prayer.values()) {
+            for (pray in PrayerManager.Prayer.VALUES) {
                 if (client.prayerManager.isPrayerOn(pray)) {
                     prayer.append(':').append(pray.buttonId)
                 }
@@ -129,7 +134,7 @@ data class PlayerSaveSnapshot(
                     ", effects='$effect'" +
                     ", autocast=${client.autocast_spellIndex}" +
                     ", news=${client.latestNews}" +
-                    ", agility = '${client.agilityCourseStage}', height = ${client.position.z}" +
+                    ", agility = '${net.dodian.uber.skills.agility.AgilityModule.encodeProgressForSave(client.asSkillPlayer())}', height = ${client.position.z}" +
                     ", x = ${client.position.x}" +
                     ", y = ${client.position.y}" +
                     ", lastlogin = '${System.currentTimeMillis()}', Monster_Log='$monsterLog'" +
@@ -139,6 +144,7 @@ data class PlayerSaveSnapshot(
                     ", travel='${client.saveTravelAsString()}'" +
                     ", look='${client.look}'" +
                     ", unlocks='${client.saveUnlocksAsString()}'" +
+                    ", quest_data='${client.questProgressState.saveAsJson()}'" +
                     ", prayer='$prayer', boosted='$boosted'$last" +
                     " WHERE id = ${client.dbId}"
 

@@ -5,104 +5,102 @@ import net.dodian.uber.game.api.content.dialogue.DialogueOption
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skill.agility.AgilityTravel
+import net.dodian.uber.game.engine.systems.skills.agility.AgilityTravel
 
-internal object RugMerchant : NpcModule {
-    // Stats: 17: r=60 a=0 d=0 s=0 hp=18 rg=0 mg=0; 22: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0; 20: r=10 a=0 d=0 s=0 hp=99 rg=0 mg=0; 19: r=60 a=0 d=0 s=0 hp=52 rg=0 mg=0
-
-    val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 17, x = 3287, y = 2814, z = 0, face = 0),
-        NpcSpawnDef(npcId = 22, x = 3401, y = 2918, z = 0, face = 0),
-        NpcSpawnDef(npcId = 20, x = 3348, y = 3002, z = 0, face = 0),
-        NpcSpawnDef(npcId = 19, x = 3181, y = 3045, z = 0, face = 0),
-    )
-
-    val npcIds: IntArray = npcIdsFromEntries(entries)
-
-
-    override val definition = legacyNpcDefinition(
-        name = "RugMerchant",
-        entries = entries,
-        onFirstClick = ::onFirstClick,
-        onSecondClick = ::onSecondClick,
-    )
-
-    fun onFirstClick(client: Client, npc: Npc): Boolean {
-        DialogueService.start(client) {
-            npcChat(npc.id, DialogueEmote.NEARLY_CRYING, "Hello there Traveler.", "Do you fancy taking a carpet ride?", "It will cost 5000 coins.")
-            options(
-                title = "Where can your carpet take me to?",
-                DialogueOption("Show destinations") {
-                    val destinations = when (npc.id) {
-                        17 -> arrayOf("Pollnivneach", "Nardah", "Bedabin Camp")
-                        19 -> arrayOf("Pollnivneach", "Nardah", "Sophanem")
-                        20 -> arrayOf("Nardah", "Bedabin Camp", "Sophanem")
-                        22 -> arrayOf("Pollnivneach", "Sophanem", "Bedabin Camp")
-                        else -> arrayOf("Cancel", "Cancel", "Cancel")
-                    }
-                    options(
-                        title = "Carpet rides cost 5k coins.",
-                        DialogueOption(destinations[0]) {
-                            action { c -> travel(c, npc.id, 0) }
-                            finish()
-                        },
-                        DialogueOption(destinations[1]) {
-                            action { c -> travel(c, npc.id, 1) }
-                            finish()
-                        },
-                        DialogueOption(destinations[2]) {
-                            action { c -> travel(c, npc.id, 2) }
-                            finish()
-                        },
-                        DialogueOption("Cancel") { finish() },
-                    )
-                },
-                DialogueOption("No, thank you.") {
-                    playerChat(DialogueEmote.ANGRY1, "No, thank you.")
-                    finish()
-                },
-            )
-        }
-        return true
+internal object RugMerchant : NpcFamily by npcFamily("Rug merchant", 17, block = {
+    definition {
+        examine = "Proud owner of carpet co"
     }
 
-    fun onSecondClick(client: Client, npc: Npc): Boolean {
-        return onFirstClick(client, npc)
+    server {
+        deathAnimation = 2304
+        hitpoints = 18
     }
 
-    private fun travel(client: Client, npcId: Int, choice: Int) {
-        var missing = 5000
-        val amount = client.getInvAmt(995).toLong() + client.getBankAmt(995)
-        if (amount >= 5000L) {
-            if (client.getInvAmt(995) >= missing) {
-                client.deleteItem(995, missing)
-            } else {
-                missing -= client.getInvAmt(995)
-                client.deleteItem(995, client.getInvAmt(995))
-            }
-            if (missing > 0) {
-                client.deleteItemBank(995, missing)
-            }
-            client.checkItemUpdate()
-        } else {
-            DialogueService.start(client) {
-                npcChat(
-                    npcId,
-                    DialogueEmote.EVIL3,
-                    "You do not have enough coins to do this!",
-                    "You are currently missing ${missing - amount} coins.",
-                )
+    options {
+        talkTo(handler = ::handleRugMerchantTalkTo)
+    }
+
+    spawns {
+        spawn(3287, 2814)
+    }
+})
+
+internal fun handleRugMerchantTalkTo(client: Client, npc: Npc): Boolean {
+    DialogueService.start(client) {
+        npcChat(
+            npc.id,
+            DialogueEmote.DEFAULT,
+            "Hello there Traveler.",
+            "Do you fancy taking a carpet ride?",
+            "It will cost 5000 coins.",
+        )
+        options(
+            title = "Carpet rides cost 5k coins.",
+            *rugMerchantOptions(npc.id),
+            DialogueOption("Cancel") {
+                playerChat(DialogueEmote.DEFAULT, "No, thank you.")
                 finish()
-            }
-            return
-        }
+            },
+        )
+    }
+    return true
+}
 
-        val carpet = AgilityTravel(client)
-        when (npcId) {
-            17 -> carpet.sophanem(choice)
-            19 -> carpet.bedabinCamp(choice)
-            20 -> carpet.pollnivneach(choice)
-            22 -> carpet.nardah(choice)
-        }
+private fun rugMerchantOptions(npcId: Int): Array<DialogueOption> =
+    when (npcId) {
+        17 -> arrayOf(
+            DialogueOption("Pollnivneach") { finishThen { chargeAndRide(it, npcId, 0) } },
+            DialogueOption("Nardah") { finishThen { chargeAndRide(it, npcId, 1) } },
+            DialogueOption("Bedabin Camp") { finishThen { chargeAndRide(it, npcId, 2) } },
+        )
+        19 -> arrayOf(
+            DialogueOption("Pollnivneach") { finishThen { chargeAndRide(it, npcId, 0) } },
+            DialogueOption("Nardah") { finishThen { chargeAndRide(it, npcId, 1) } },
+            DialogueOption("Sophanem") { finishThen { chargeAndRide(it, npcId, 2) } },
+        )
+        20 -> arrayOf(
+            DialogueOption("Nardah") { finishThen { chargeAndRide(it, npcId, 0) } },
+            DialogueOption("Bedabin Camp") { finishThen { chargeAndRide(it, npcId, 1) } },
+            DialogueOption("Sophanem") { finishThen { chargeAndRide(it, npcId, 2) } },
+        )
+        22 -> arrayOf(
+            DialogueOption("Pollnivneach") { finishThen { chargeAndRide(it, npcId, 0) } },
+            DialogueOption("Sophanem") { finishThen { chargeAndRide(it, npcId, 1) } },
+            DialogueOption("Bedabin Camp") { finishThen { chargeAndRide(it, npcId, 2) } },
+        )
+        else -> emptyArray()
+    }
+
+private fun chargeAndRide(client: Client, npcId: Int, option: Int) {
+    var missing = 5_000
+    val amount = client.getInvAmt(995).toLong() + client.getBankAmt(995)
+    if (amount < 5_000) {
+        DialogueService.showNpcChat(
+            client,
+            npcId,
+            594,
+            arrayOf("You do not have enough coins to do this!", "You are currently missing ${missing - amount} coins."),
+        )
+        return
+    }
+
+    if (client.getInvAmt(995) >= missing) {
+        client.deleteItem(995, missing)
+    } else {
+        missing -= client.getInvAmt(995)
+        client.deleteItem(995, client.getInvAmt(995))
+    }
+    if (missing > 0) {
+        client.deleteItemBank(995, missing)
+    }
+    client.checkItemUpdate()
+
+    val carpet = AgilityTravel(client)
+    when (npcId) {
+        17 -> carpet.sophanem(option)
+        19 -> carpet.bedabinCamp(option)
+        20 -> carpet.pollnivneach(option)
+        22 -> carpet.nardah(option)
     }
 }

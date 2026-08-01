@@ -7,7 +7,7 @@ import net.dodian.uber.game.combat.getRangedStr
 import net.dodian.uber.game.combat.magicBonusDamage
 import net.dodian.uber.game.combat.meleeMaxHit
 import net.dodian.uber.game.combat.rangedMaxHit
-import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.ui.ExternalUrlService
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
@@ -30,19 +30,19 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
     val command = context.rawCommand
     val cmd = context.parts
     when {
-        context.alias == "request" -> Player.openPage(client, "https://dodian.net/forumdisplay.php?f=83")
-        context.alias == "report" -> Player.openPage(client, "https://dodian.net/forumdisplay.php?f=118")
-        context.alias == "suggest" -> Player.openPage(client, "https://dodian.net/forumdisplay.php?f=4")
-        context.alias == "bug" -> Player.openPage(client, "https://dodian.net/forumdisplay.php?f=120")
-        context.alias == "rules" -> Player.openPage(client, "https://dodian.net/index.php?pageid=rules")
+        context.alias == "request" -> ExternalUrlService.open(client, "https://dodian.net/forumdisplay.php?f=83")
+        context.alias == "report" -> ExternalUrlService.open(client, "https://dodian.net/forumdisplay.php?f=118")
+        context.alias == "suggest" -> ExternalUrlService.open(client, "https://dodian.net/forumdisplay.php?f=4")
+        context.alias == "bug" -> ExternalUrlService.open(client, "https://dodian.net/forumdisplay.php?f=120")
+        context.alias == "rules" -> ExternalUrlService.open(client, "https://dodian.net/index.php?pageid=rules")
         context.alias == "droplist" || (context.alias == "drops" && client.playerRights < 2) ->
-            Player.openPage(client, "https://dodian.net/index.php?pageid=droplist")
-        context.alias == "latestclient" -> Player.openPage(client, "https://dodian.net/client/DodianClient.jar")
-        context.alias == "news" -> Player.openPage(client, "https://dodian.net/showthread.php?t=${client.latestNews}")
+            ExternalUrlService.open(client, "https://dodian.net/index.php?pageid=droplist")
+        context.alias == "latestclient" -> ExternalUrlService.open(client, "https://dodian.net/client/DodianClient.jar")
+        context.alias == "news" -> ExternalUrlService.open(client, "https://dodian.net/showthread.php?t=${client.latestNews}")
     }
     if (context.alias == "thread") {
         return try {
-            Player.openPage(client, "https://dodian.net/showthread.php?t=${cmd[1].toInt()}")
+            ExternalUrlService.open(client, "https://dodian.net/showthread.php?t=${cmd[1].toInt()}")
             true
         } catch (_: Exception) {
             context.usage("Wrong usage.. ::${cmd[0]} page")
@@ -60,7 +60,7 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
                 } else {
                     "https://dodian.net/index.php?pageid=highscores&player1=$firstPerson&player2=$secondPerson"
                 }
-            Player.openPage(client, url)
+            ExternalUrlService.open(client, url)
             true
         } catch (_: Exception) {
             client.sendMessage("Wrong usage.. ::${cmd[0]} or ::${cmd[0]} First_name or")
@@ -95,12 +95,15 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
     }
     if (context.alias == "max") {
         client.sendMessage("<col=FF8000>Melee max hit: ${client.meleeMaxHit()} (MeleeStr: ${client.playerBonus[10]})")
-        client.sendMessage("<col=0B610B>Range max hit: ${client.rangedMaxHit()} (RangeStr: ${client.getRangedStr()})")
+        client.sendMessage(
+            "<col=0B610B>Range max hit: ${client.rangedMaxHit()} " +
+                "(RangeAtk: ${client.playerBonus[4]}, RangeStr: ${client.getRangedStr()})",
+        )
         val magicIncrease = String.format("%3.1f", (client.magicBonusDamage() - 1.0) * 100.0)
         if (client.autocast_spellIndex == -1) {
-            client.sendMessage("<col=292BA3>Magic max hit (smoke rush): ${(client.baseDamage[0] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)")
+            client.sendMessage("<col=292BA3>Magic max hit (smoke rush): ${(net.dodian.uber.game.combat.AncientSpellRegistry.baseDamage()[0] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)")
         } else {
-            client.sendMessage("<col=292BA3>Magic max hit (${client.spellName[client.autocast_spellIndex]}): ${(client.baseDamage[client.autocast_spellIndex] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)")
+            client.sendMessage("<col=292BA3>Magic max hit (${net.dodian.uber.game.combat.AncientSpellRegistry.spellName()[client.autocast_spellIndex]}): ${(net.dodian.uber.game.combat.AncientSpellRegistry.baseDamage()[client.autocast_spellIndex] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)")
         }
         return true
     }
@@ -115,10 +118,10 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
             if (player != null && player.dbId >= 0) {
                 val title =
                     when {
-                        player.playerRights == 1 && player.playerGroup == 5 -> "@blu@Mod "
-                        player.playerRights == 1 && player.playerGroup == 9 -> "@blu@Trial Mod "
-                        player.playerRights == 2 && player.playerGroup == 10 -> "@yel@Developer "
-                        player.playerRights == 2 -> "@yel@Admin "
+                        player.playerGroup == 9 -> "@blu@Trial Mod "
+                        player.playerGroup == 5 || (player.playerRights == 1 && net.dodian.uber.game.engine.config.rankModGroupIds.contains(player.playerGroup)) -> "@blu@Mod "
+                        player.playerGroup == 10 -> "@yel@Developer "
+                        player.playerRights == 2 || net.dodian.uber.game.engine.config.rankAdminGroupIds.contains(player.playerGroup) -> "@yel@Admin "
                         else -> ""
                     }
                 client.sendString("@bla@$title@dbl@${player.playerName} @bla@(Level-${player.determineCombatLevel()}) @bla@is ${player.positionName}", line)

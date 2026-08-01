@@ -30,57 +30,47 @@ private val dataSource: HikariDataSource
     get() = dataSourceLazy.value
 
 private fun createDataSource(): HikariDataSource {
-    logger.info("Initializing MySQL connection pool...")
+    logger.debug("Initializing MariaDB connection pool...")
     validateDatabaseConfig(databaseHost, databaseName, databaseUsername)
     val config = HikariConfig().apply {
         jdbcUrl = databaseJdbcUrl
         username = databaseUsername
         password = databasePassword
-        driverClassName = "com.mysql.cj.jdbc.Driver"
-
-        // Pool configuration
+        driverClassName = "org.mariadb.jdbc.Driver"
         minimumIdle = databasePoolMinSize
         maximumPoolSize = databasePoolMaxSize
         connectionTimeout = databasePoolConnectionTimeout
         idleTimeout = databasePoolIdleTimeout
         maxLifetime = databasePoolMaxLifetime
 
-        // Connection properties
         addDataSourceProperty("autoReconnect", "true")
         addDataSourceProperty("serverTimezone", "UTC")
 
-        // Pool name for monitoring
         poolName = "DodianDB-Pool"
 
-        // Validation
         connectionTestQuery = "SELECT 1"
         validationTimeout = 5000
 
-        // Leak detection (warn after 30 seconds)
-        // This is a key feature. Hikari will log a warning with the stack trace
-        // of where the connection was acquired if it's not closed within this time.
         leakDetectionThreshold = 30000
 
-        // Enable JMX monitoring
         isRegisterMbeans = true
 
-        // Connection init SQL for debugging
         connectionInitSql = "SELECT 1"
     }
 
-    logger.info("Database target: {}", sanitizedJdbcTarget(databaseHost, databasePort, databaseName))
+    logger.debug("Database target: {}", sanitizedJdbcTarget(databaseHost, databasePort, databaseName))
 
     return HikariDataSource(config).also { hikariDataSource ->
-        logger.info("Connection pool initialized:")
-        logger.info("  - Pool name: ${config.poolName}")
-        logger.info("  - Min connections: ${config.minimumIdle}")
-        logger.info("  - Max connections: ${config.maximumPoolSize}")
-        logger.info("  - Connection timeout: ${config.connectionTimeout}ms")
-        logger.info("  - Leak detection: ${config.leakDetectionThreshold}ms (This will show where leaking connections are acquired)")
-        logger.info("  - Connection proxy: disabled")
-        logger.info("  - Database: ${config.jdbcUrl}")
+        logger.info(
+            "database_pool_ready target={} pool={} size={}..{} timeout_ms={} leak_detection_ms={}",
+            sanitizedJdbcTarget(databaseHost, databasePort, databaseName),
+            config.poolName,
+            config.minimumIdle,
+            config.maximumPoolSize,
+            config.connectionTimeout,
+            config.leakDetectionThreshold,
+        )
 
-        // Start pool monitoring
         startPoolMonitoring(hikariDataSource)
     }
 }
@@ -111,13 +101,11 @@ private fun startPoolMonitoring(hikariDataSource: HikariDataSource) {
         try {
             val poolStats = hikariDataSource.hikariPoolMXBean
 
-            // Warn if pool utilization is high
             val utilizationPercent = (poolStats.activeConnections.toDouble() / databasePoolMaxSize) * 100
             if (utilizationPercent > 80) {
                 logger.warn("[Pool Monitor] High pool utilization: ${utilizationPercent.toInt()}% (${poolStats.activeConnections}/${databasePoolMaxSize})")
             }
 
-            // Warn if threads are waiting
             if (poolStats.threadsAwaitingConnection > 0) {
                 logger.warn("[Pool Monitor] ${poolStats.threadsAwaitingConnection} threads waiting for connections!")
             }
@@ -126,7 +114,7 @@ private fun startPoolMonitoring(hikariDataSource: HikariDataSource) {
         }
     }, 30, 30, TimeUnit.SECONDS)
 
-    logger.info("Pool monitoring started - warnings will be emitted only on high utilization or waiting threads")
+    logger.debug("Pool monitoring started; warnings are emitted on high utilization or waiting threads")
 }
 
 fun closeConnectionPool() {
@@ -136,7 +124,6 @@ fun closeConnectionPool() {
 
     logger.info("Shutting down connection pool...")
 
-    // Stop monitoring
     if (schedulerLazy.isInitialized()) {
         val scheduler = schedulerLazy.value
         scheduler.shutdown()
@@ -149,7 +136,6 @@ fun closeConnectionPool() {
         }
     }
 
-    // Close pool
     val dataSource = dataSourceLazy.value
     val poolStats = dataSource.hikariPoolMXBean
     logger.info("Final pool stats - Active: ${poolStats.activeConnections}, Idle: ${poolStats.idleConnections}, Total: ${poolStats.totalConnections}")
@@ -175,6 +161,7 @@ enum class DbTables(val table: String) {
     GAME_LOGS_PLAYER_TRADES("uber3_trades"),
     GAME_LOGS_PLAYER_DUELS("duel_log"),
     GAME_LOGS_ITEMS("uber3_item_log"),
+    GAME_LOGS_SHOP_TRANSACTIONS("shop_transaction_logs"),
     GAME_CHAT_LOGS("uber3_chat_log"),
     GAME_LOGS_STAFF_COMMANDS("uber3_command_log"),
 
@@ -183,9 +170,7 @@ enum class DbTables(val table: String) {
     GAME_CHARACTERS_STATS_PROGRESS("character_stats_progress"),
 
     GAME_DOOR_DEFINITIONS("uber3_doors"),
-    GAME_ITEM_DEFINITIONS("uber3_items"),
     GAME_NPC_DEFINITIONS("uber3_npcs"),
-    GAME_OBJECT_DEFINITIONS("uber3_objects"),
 
     GAME_REFUND_ITEMS("uber3_refunds"),
 

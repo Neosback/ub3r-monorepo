@@ -2,6 +2,7 @@ package net.dodian.uber.game.model.entity.npc;
 
 import kotlin.jvm.functions.Function1;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.engine.systems.combat.CombatReachService;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.engine.event.GameEventScheduler;
 import net.dodian.uber.game.events.combat.NpcDeathEvent;
@@ -23,7 +24,6 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.engine.systems.skills.SkillingRandomEventService;
-import net.dodian.uber.game.skill.slayer.Slayer;
 import net.dodian.uber.game.persistence.audit.ItemLog;
 import net.dodian.uber.game.engine.systems.combat.CombatCancellationReason;
 import net.dodian.uber.game.engine.systems.combat.CombatRuntimeService;
@@ -45,6 +45,7 @@ public class Npc extends Entity {
     private static final boolean COMBAT_TELEMETRY_ENABLED = Boolean.getBoolean("combat.telemetry.enabled");
     public long inFrenzy = -1;
     public boolean hadFrenzy = false;
+    private long lastBlockAnimationCycle = -1L;
     public final int[] poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Player or npc (0 or 1), id, time left in ticks, startDamage, currentDamage, changeDamage.
     public final int[] burnDamage = new int[]{-1, -1, 4, 0, 5}; //Player or npc (0 or 1), id, time left in ticks, damage, stopTime.
     private int id, currentHealth = 10, maxHealth = 10, respawn = 60, combat = 0, lastAttack = 0, maxHit;
@@ -64,15 +65,44 @@ public class Npc extends Entity {
     private final PendingHitBuffer pendingHits = new PendingHitBuffer();
     private int deathEmote;
     public NpcData data;
+    public enum CoordinateState {
+        HOME,
+        AWAY,
+        RETREATING
+    }
+    public CoordinateState coordinateState = CoordinateState.HOME;
+    public int retreatTimer = 0;
+
+    public boolean isAggressive() {
+        return data != null && data.isAggressive();
+    }
+
+    public boolean isAlwaysAggressive() {
+        return data != null && data.isAlwaysAggressive();
+    }
+
+    public boolean fightsBack() {
+        return data == null || data.fightsBack();
+    }
     private boolean fighting = false;
     private final int[] level = new int[7];
     private int spawnWalkRadius = 0;
-    private int spawnAttackRange = 6;
+    public int wanderCooldown;
+    public int wanderTargetX;
+    public int wanderTargetY;
+    public boolean hasWanderTarget;
+    public int wanderStuckTicks;
+    private int spawnAttackRange = 0;
+    private int spawnLeashDistance = 15;
     private boolean spawnAlwaysActive = false;
     private Function1<Client, Boolean> spawnCondition = defaultSpawnCondition();
+    private net.dodian.uber.game.npc.NpcAttackHandler bossAttackHandler;
+    private Integer bossAttackSpeedOverride;
+    private String interactionProfile;
     private int pendingWalkingDirection = -1;
     private boolean walking = false;
-    private Chunk currentChunk;
+    private int currentChunkX = -1;
+    private int currentChunkY = -1;
     private ChunkEntityIndex chunkEntityIndex;
     private volatile GameTaskSet<?> npcTaskSet;
 
@@ -169,12 +199,11 @@ public class Npc extends Entity {
     }
 
     public Client getClient(int index) {
-        return ((Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[index]);
+        return net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(index);
     }
 
     public boolean validClient(int index) {
-        Client p = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[index];
-        return p != null && !p.disconnected && p.dbId > 0;
+        return net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.validClient(index);
     }
 
     public int getId() {
@@ -197,7 +226,7 @@ public class Npc extends Entity {
         faceTarget = -1;
         walking = false;
         getUpdateFlags().clear();
-        if (!hasActiveCombatTargets() && defaultFace >= 0 && defaultFace < Utils.directionDeltaX.length) {
+        if (!hasActiveCombatTargets() && defaultFace >= 0 && defaultFace < Utils.directionDeltaX.length && getWalkRadius() <= 0) {
             setFocus(
                     getPosition().getX() + Utils.directionDeltaX[defaultFace],
                     getPosition().getY() + Utils.directionDeltaY[defaultFace]
@@ -212,6 +241,11 @@ public class Npc extends Entity {
 
     public int getViewY() {
         return this.viewY;
+    }
+
+    @Override
+    public boolean didMove() {
+        return getDirection() != -1;
     }
 
     public int getDirection() {
@@ -248,8 +282,9 @@ public class Npc extends Entity {
             return;
         }
 
-        Chunk newChunk = getPosition().getChunk();
-        if (currentChunk != null && currentChunk.equals(newChunk) && chunkEntityIndex != null) {
+        int newChunkX = getPosition().getChunkX();
+        int newChunkY = getPosition().getChunkY();
+        if (currentChunkX == newChunkX && currentChunkY == newChunkY && chunkEntityIndex != null) {
             return;
         }
 
@@ -257,9 +292,10 @@ public class Npc extends Entity {
             chunkEntityIndex.remove(this);
         }
 
-        ChunkEntityIndex repo = Server.chunkManager.load(newChunk);
+        ChunkEntityIndex repo = Server.chunkManager.load(newChunkX, newChunkY);
         repo.add(this);
-        currentChunk = newChunk;
+        currentChunkX = newChunkX;
+        currentChunkY = newChunkY;
         chunkEntityIndex = repo;
     }
 
@@ -268,7 +304,8 @@ public class Npc extends Entity {
             chunkEntityIndex.remove(this);
         }
         chunkEntityIndex = null;
-        currentChunk = null;
+        currentChunkX = -1;
+        currentChunkY = -1;
     }
 
     public GameTaskSet<?> getNpcTaskSet() {
@@ -291,6 +328,23 @@ public class Npc extends Entity {
     public void setTransformedNpcId(int transformedNpcId) {
         this.transformedNpcId = transformedNpcId;
         getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+    }
+
+    public void transformTo(int npcId) {
+        setTransformedNpcId(npcId);
+    }
+
+    public void clearTransform() {
+        setTransformedNpcId(-1);
+    }
+
+    public void applyDisplayOverrides(Integer headIcon, Integer transformTo) {
+        if (headIcon != null) {
+            setHeadIcon(headIcon);
+        }
+        if (transformTo != null) {
+            transformTo(transformTo);
+        }
     }
 
     public boolean isWalking() {
@@ -379,12 +433,17 @@ public class Npc extends Entity {
     }
 
     public void dealDamage(Client client, int hitDiff, Entity.hitType type) {
+        net.dodian.uber.game.npc.NpcDefenceResult defenceResult =
+                net.dodian.uber.game.npc.NpcCombatRegistry.applyDefence(this, client, hitDiff, type);
+        hitDiff = defenceResult.getDamage();
         if (!alive || currentHealth < 1)
             hitDiff = 0;
         else if (hitDiff > currentHealth)
             hitDiff = currentHealth;
         appendHit(hitDiff, type);
         currentHealth -= hitDiff;
+        if (!defenceResult.getSuppressDefaultReaction())
+            net.dodian.uber.game.engine.systems.combat.CombatDefenderReaction.playBlockAnimation(this, hitDiff, Entity.damageType.MELEE);
         /* Daganoth kings mechanic dodian style! */
         Npc otherNpc = NpcSpawnLocator.dagannothTwinFor(this);
         if (otherNpc != null) {
@@ -396,7 +455,9 @@ public class Npc extends Entity {
                     otherNpc.getDamage().remove(client);
                 }
                 otherNpc.getDamage().put(client, dmg);
-                otherNpc.fighting = true;
+                if (otherNpc.fightsBack()) {
+                    otherNpc.fighting = true;
+                }
             }
         }
         /* Dmg profile! */
@@ -407,7 +468,9 @@ public class Npc extends Entity {
                 getDamage().remove(client);
             }
             getDamage().put(client, dmg);
-            fighting = true;
+            if (fightsBack()) {
+                fighting = true;
+            }
         }
         if (currentHealth < 1) die();
         if (otherNpc != null && otherNpc.currentHealth < 1) //Daganoth kings!
@@ -415,6 +478,12 @@ public class Npc extends Entity {
     }
 
     public void attack() {
+        if (net.dodian.uber.game.npc.NpcCombatRegistry.handleAttack(this))
+            return;
+        if (bossAttackHandler != null) {
+            bossAttackHandler.handleAttack(this);
+            return;
+        }
         CalculateMaxHit(true);
         boolean multiAttack = getId() == 3127 || getId() == 4303 || getId() == 4304 || getId() == 6610;
         if(!multiAttack) {
@@ -506,8 +575,8 @@ public class Npc extends Entity {
                         delayGfx(target, 6240, -1, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                     if(isEligibleNpcAttackTarget(enemy, true)) {
-                        sendArrow(target, -1, 288);
-                        delayGfx(target, 6240, -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
+                        sendArrow(enemy, -1, 288);
+                        delayGfx(enemy, 6240, -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                 }
             } else if(getId() == 4304) { //Kalphite King
@@ -532,8 +601,8 @@ public class Npc extends Entity {
                         delayGfx(target, 6234, 281, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                     if(isEligibleNpcAttackTarget(enemy, true)) {
-                        sendArrow(target, 279, 280);
-                        delayGfx(target, 6234, 281, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
+                        sendArrow(enemy, 279, 280);
+                        delayGfx(enemy, 6234, 281, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                 }
             } else if(getId() == 6610) { //Spider Queen
@@ -598,7 +667,7 @@ public class Npc extends Entity {
         return false;
     }
 
-    private boolean isEligibleNpcAttackTarget(Client player, boolean requireInRange) {
+    public boolean isEligibleNpcAttackTarget(Client player, boolean requireInRange) {
         if (!validClient(player)) {
             return false;
         }
@@ -608,24 +677,32 @@ public class Npc extends Entity {
         if (!requireInRange) {
             return true;
         }
-        return getPosition().withinDistance(player.getPosition(), getEffectiveAttackRange());
+        return gapDistanceTo(player) <= getEffectiveAttackRange();
+    }
+
+    public int gapDistanceTo(Client player) {
+        int npcX1 = getPosition().getX();
+        int npcY1 = getPosition().getY();
+        int size = getSize();
+        int npcX2 = npcX1 + size - 1;
+        int npcY2 = npcY1 + size - 1;
+        int playerX = player.getPosition().getX();
+        int playerY = player.getPosition().getY();
+        int dx = 0;
+        int dy = 0;
+        if (npcX2 < playerX) dx = playerX - npcX2;
+        else if (npcX1 > playerX) dx = npcX1 - playerX;
+        if (npcY2 < playerY) dy = playerY - npcY2;
+        else if (npcY1 > playerY) dy = npcY1 - playerY;
+        return dx + dy;
     }
 
     public void addBossCount(Player p) {
-        for (int i = 0; i < p.boss_name.length; i++) {
-            if (npcName().equalsIgnoreCase(p.boss_name[i].replace("_", " "))) {
-                if (p.boss_amount[i] >= 100000)
-                    return;
-                p.boss_amount[i] += 1;
-            }
-        }
+        p.getBossKillLogState().incrementForNpcName(npcName());
     }
 
     public int killCount(Player p) {
-        for (int i = 0; i < p.boss_name.length; i++)
-            if (npcName().equalsIgnoreCase(p.boss_name[i].replace("_", " ")))
-                return p.boss_amount[i];
-        return 0;
+        return p.getBossKillLogState().countForNpcName(npcName());
     }
 
     public void die() {
@@ -654,28 +731,7 @@ public class Npc extends Entity {
             p.yellAreaKilled("<col=006400>" + yell, miniBoss);
         }
 
-        net.dodian.uber.game.skill.slayer.SlayerTaskDefinition task = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forNpc(id);
-        if (task != null) {
-            if (task.ordinal() == p.getSlayerData().get(1) && p.getSlayerData().get(3) > 0) {
-                p.getSlayerData().set(3, p.getSlayerData().get(3) - 1);
-                ProgressionService.addXp(p, maxHealth * 11, Skill.SLAYER);
-                SkillingRandomEventService.trigger(p, maxHealth * 11);
-                    if(p.getSlayerData().get(3) == 0) { // Finish task!
-                        p.getSlayerData().set(4, p.getSlayerData().get(4) + 1);
-                        /* Bonus slayer experience 1k, 500, 250, 100, 50 and 10 tasks! */
-                        int[] taskStreak = {1000, 500, 250, 100, 50, 10};
-                        int[] experience = {50, 30, 20, 11, 6, 2};
-                        int bonusXp = -1;
-                        p.send(new SendMessage("<col=FF8C00>You have completed your slayer task! <col=FF0000>|</col> Current streak is " + p.getSlayerData().get(4) + "."));
-                        for(int i = 0; i < taskStreak.length && bonusXp == -1; i++)
-                            if(p.getSlayerData().get(4)%taskStreak[i] == 0) {
-                                bonusXp = experience[i] * p.getSlayerData().get(2) * maxHealth;
-                                ProgressionService.addXp(p, bonusXp, Skill.SLAYER);
-                                p.send(new SendMessage("<col=FF8C00>You have gained some bonus experience from finishing your " + taskStreak[i] + " task in a row."));
-                            }
-                    }
-            }
-        }
+        net.dodian.uber.game.engine.systems.skills.SlayerDeathBridge.onNpcDeath(p, id, maxHealth);
     }
 
     public void drop() {
@@ -744,11 +800,15 @@ public class Npc extends Entity {
         hadFrenzy = false;
         inFrenzy = -1;
         setLastAttack(0);
-        getDamage().clear();
+        clearDamageAttribution();
         for(int i = 0; i < boostedStat.length; i++) {
             boostedStatOrig[i] = 0;
             boostedStat[i] = 0;
         }
+        hasWanderTarget = false;
+        wanderCooldown = 0;
+        wanderStuckTicks = 0;
+        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
         /* REset effect! */
         resetPoisonDamage(); //Default
         resetBurnDamage(); //Default
@@ -759,17 +819,26 @@ public class Npc extends Entity {
         Client killer = null;
         if (getDamage().isEmpty())
             return null;
-        for (Entity e : getDamage().keySet()) {
+        for (java.util.Iterator<java.util.Map.Entry<Entity, Integer>> it = getDamage().entrySet().iterator(); it.hasNext();) {
+            java.util.Map.Entry<Entity, Integer> entry = it.next();
+            Entity e = entry.getKey();
             if (e instanceof Player) {
                 Client candidate = (Client) e;
-                if (!isEligibleNpcAttackTarget(candidate, fighting))
+                if (!isEligibleNpcAttackTarget(candidate, fighting)) {
+                    it.remove();
                     continue;
-                int damage = getDamage().get(e);
+                }
+                int damage = entry.getValue();
                 if (damage > highest) {
                     highest = damage == 0 ? -1 : damage;
                     killer = candidate;
                 }
+            } else {
+                it.remove();
             }
+        }
+        if (getDamage().isEmpty()) {
+            this.fighting = false;
         }
         return killer;
     }
@@ -778,17 +847,26 @@ public class Npc extends Entity {
         Client killer = null;
         if (getDamage().isEmpty() || getDamage().size() < 2)
             return null;
-        for (Entity e : getDamage().keySet()) {
+        for (java.util.Iterator<java.util.Map.Entry<Entity, Integer>> it = getDamage().entrySet().iterator(); it.hasNext();) {
+            java.util.Map.Entry<Entity, Integer> entry = it.next();
+            Entity e = entry.getKey();
             if (e instanceof Player) {
                 Client candidate = (Client) e;
-                if (first == e || !isEligibleNpcAttackTarget(candidate, fighting))
+                if (first == e || !isEligibleNpcAttackTarget(candidate, fighting)) {
+                    it.remove();
                     continue;
-                int damage = getDamage().get(e);
+                }
+                int damage = entry.getValue();
                 if (damage > highest) {
                     highest = damage == 0 ? -1 : damage;
                     killer = candidate;
                 }
+            } else {
+                it.remove();
             }
+        }
+        if (getDamage().isEmpty()) {
+            this.fighting = false;
         }
         return killer;
     }
@@ -828,6 +906,14 @@ public class Npc extends Entity {
         return visible;
     }
 
+    public long getLastBlockAnimationCycle() {
+        return lastBlockAnimationCycle;
+    }
+
+    public void setLastBlockAnimationCycle(long lastBlockAnimationCycle) {
+        this.lastBlockAnimationCycle = lastBlockAnimationCycle;
+    }
+
     /**
      * @return the deathtime
      */
@@ -857,6 +943,10 @@ public class Npc extends Entity {
         return fighting;
     }
 
+    public void setFighting(boolean fighting) {
+        this.fighting = fighting;
+    }
+
     public boolean validClient(Client c) {
         return c != null && !c.disconnected && c.dbId > 0;
     }
@@ -868,41 +958,84 @@ public class Npc extends Entity {
         return combat;
     }
 
-    public void applySpawnOverrides(int respawnTicks, int attack, int defence, int strength, int hitpoints, int ranged, int magic) {
-        if (respawnTicks > 0) {
+    public void applySpawnOverrides(Integer respawnTicks, Integer attack, Integer defence, Integer strength, Integer hitpoints, Integer ranged, Integer magic, Integer attackAnim, Integer defenceAnim, Integer deathAnim) {
+        if (attackAnim != null || defenceAnim != null || deathAnim != null || isPositive(respawnTicks) || defence != null || attack != null || strength != null || ranged != null || magic != null || isPositive(hitpoints)) {
+            int[] currentLevels = new int[7];
+            System.arraycopy(data.getLevel(), 0, currentLevels, 0, 7);
+            if (defence != null) currentLevels[0] = defence;
+            if (attack != null) currentLevels[1] = attack;
+            if (strength != null) currentLevels[2] = strength;
+            if (isPositive(hitpoints)) currentLevels[3] = hitpoints;
+            if (ranged != null) currentLevels[4] = ranged;
+            if (magic != null) currentLevels[6] = magic;
+
+            this.data = new NpcData(
+                data.getName(),
+                data.getExamine(),
+                attackAnim != null ? attackAnim : data.getAttackEmote(),
+                defenceAnim != null ? defenceAnim : data.getDefenceEmote(),
+                deathAnim != null ? deathAnim : data.getDeathEmote(),
+                isPositive(respawnTicks) ? respawnTicks : data.getRespawn(),
+                combat,
+                getSize(),
+                currentLevels,
+                data.isAggressive(),
+                data.isAlwaysAggressive(),
+                data.fightsBack()
+            );
+            
+            deathEmote = data.getDeathEmote();
+            respawn = data.getRespawn();
+            combat = data.getCombat();
+        }
+        if (isPositive(respawnTicks)) {
             respawn = respawnTicks;
         }
-        if (defence >= 0) {
+        if (defence != null) {
             level[0] = defence;
         }
-        if (attack >= 0) {
+        if (attack != null) {
             level[1] = attack;
         }
-        if (strength >= 0) {
+        if (strength != null) {
             level[2] = strength;
         }
-        if (ranged >= 0) {
+        if (ranged != null) {
             level[4] = ranged;
         }
-        if (magic >= 0) {
+        if (magic != null) {
             level[6] = magic;
         }
-        if (hitpoints > 0) {
+        if (isPositive(hitpoints)) {
+            level[3] = hitpoints;
             maxHealth = hitpoints;
             currentHealth = hitpoints;
         }
         CalculateMaxHit(true);
     }
 
-    public void applySpawnBehaviorOverrides(int walkRadius, int attackRange, boolean alwaysActive, Function1<? super Client, Boolean> condition) {
+    private boolean isPositive(Integer value) {
+        return value != null && value > 0;
+    }
+
+    public void applySpawnBehaviorOverrides(int walkRadius, int attackRange, int leashDistance, boolean alwaysActive, Function1<? super Client, Boolean> condition) {
         spawnWalkRadius = Math.max(walkRadius, 0);
-        spawnAttackRange = attackRange > 0 ? attackRange : 6;
+        spawnAttackRange = Math.max(attackRange, 0);
+        spawnLeashDistance = leashDistance > 0 ? leashDistance : 15;
         spawnAlwaysActive = alwaysActive;
         if (condition == null) {
             spawnCondition = defaultSpawnCondition();
         } else {
             spawnCondition = client -> Boolean.TRUE.equals(condition.invoke(client));
         }
+    }
+
+    public String getInteractionProfile() {
+        return interactionProfile;
+    }
+
+    public void setInteractionProfile(String interactionProfile) {
+        this.interactionProfile = interactionProfile == null || interactionProfile.isBlank() ? null : interactionProfile;
     }
 
     public boolean canBeSeenBy(Client client) {
@@ -917,7 +1050,12 @@ public class Npc extends Entity {
     }
 
     public int getEffectiveAttackRange() {
-        return spawnAttackRange > 0 ? spawnAttackRange : 6;
+        if (spawnAttackRange > 0) return spawnAttackRange;
+        return spawnWalkRadius > 0 ? 1 : 6;
+    }
+
+    public int getLeashDistance() {
+        return Math.max(spawnLeashDistance, 1);
     }
 
     public int getWalkRadius() {
@@ -926,6 +1064,22 @@ public class Npc extends Entity {
 
     public boolean isSpawnAlwaysActive() {
         return spawnAlwaysActive;
+    }
+
+    public void setBossAttackHandler(net.dodian.uber.game.npc.NpcAttackHandler handler) {
+        this.bossAttackHandler = handler;
+    }
+
+    public net.dodian.uber.game.npc.NpcAttackHandler getBossAttackHandler() {
+        return bossAttackHandler;
+    }
+
+    public void setBossAttackSpeedOverride(Integer speed) {
+        this.bossAttackSpeedOverride = speed;
+    }
+
+    public Integer getBossAttackSpeedOverride() {
+        return bossAttackSpeedOverride;
     }
 
     private static Function1<Client, Boolean> defaultSpawnCondition() {
@@ -951,6 +1105,7 @@ public class Npc extends Entity {
     }
 
     public int getAttackTimer() {
+        if (bossAttackSpeedOverride != null) return bossAttackSpeedOverride;
         return getId() == 2261 && enraged(20000) ? 2 : getId() == 3127 ? 5 : 4;
     }
 
@@ -976,6 +1131,10 @@ public class Npc extends Entity {
 
     public int getRange() {
         return level[4] + boostedStat[4];
+    }
+
+    public int getMaxHit() {
+        return maxHit;
     }
 
     public double getMagic() {
@@ -1067,50 +1226,6 @@ public class Npc extends Entity {
         c.setFocus(c.getPosition().getX(), c.getPosition().getY());
         boolean halfHealth = currentHealth <= maxHealth / 2;
         switch(getId()) {
-            case 799: //Scarab Mage - 66
-            case 794: //Scarab Mage - 93
-                setLastAttack(getAttackTimer());
-                if(!halfHealth) { //Magic attack
-                    hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
-                    sendArrow(c, 87, 88);
-                    delayGfx(c, 708, 89, getDistanceDelay(distance, true), hitDiff, false, this, damageType.MAGIC);
-                    //performAnimation(708, 0);
-                } else { //Melee attack
-                    hitDiff = landHit(c, true) ? Utils.random(maxHit) : 0;
-                    performAnimation(data.getAttackEmote(), 0);
-                    c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.MELEE);
-                }
-                break;
-            case 800: //Locust rider - melee - 68
-            case 795: //Locust rider - melee - 103
-                setLastAttack(getAttackTimer());
-                if(!halfHealth) { //Melee attack
-                    hitDiff = landHit(c, true) ? Utils.random(maxHit) : 0;
-                    performAnimation(data.getAttackEmote(), 0);
-                    c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    //performAnimation(708, 0);
-                } else { //Ranged attack
-                    CalculateMaxHit(false);
-                    hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
-                    sendArrow(c, -1, 276);
-                    delayGfx(c, 5446, -1, getDistanceDelay(distance, false), hitDiff, false, this, damageType.RANGED);
-                }
-                break;
-            case 801: //Locust rider - ranged - 68
-            case 796: //Locust rider - ranged - 98
-                setLastAttack(getAttackTimer());
-                if(!halfHealth) { //Ranged attack
-                    CalculateMaxHit(false);
-                    hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
-                    sendArrow(c, 23, 14);
-                    delayGfx(c, data.getAttackEmote(), -1, getDistanceDelay(distance, false), hitDiff, false, this, damageType.RANGED);
-                    //performAnimation(708, 0);
-                } else { //Magic attack
-                    hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
-                    sendArrow(c, -1, 146);
-                    delayGfx(c, 5446, 147, getDistanceDelay(distance, true), hitDiff, false, this, damageType.MAGIC);
-                }
-                break;
             case 260: //Green dragon
             case 265: //Blue Dragon
             case 247: //Red dragon
@@ -1252,37 +1367,8 @@ public class Npc extends Entity {
                     setLastAttack(getAttackTimer() / 2);
                 } else attack = false;
                 break;
-            case 239: //King black dragon
-                int landChance = Misc.chance(16);
-                if(landChance == 1) { //Fire breath, guarantee hit as crit with 50% reduce dmg as melee
-                    setText("Grrr!");
-                    sendArrow(c, -1, 393);
-                    delayGfx(c, 81, -1, getDistanceDelay(distance, true), (int)(maxHit * 0.5), true, this, damageType.FIRE_BREATH);
-                    setLastAttack(getAttackTimer());
-                } else if(landChance == 5) { //Blue breath, magic dmg
-                    setText("Tsss!");
-                    hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
-                    sendArrow(c, -1, 396);
-                    delayGfx(c, 82, -1, getDistanceDelay(distance, true), hitDiff, false, this, damageType.FIRE_BREATH);
-                    setLastAttack(getAttackTimer());
-                } else if(landChance == 10) { //Green breath, range dmg
-                    setText("Rawr!!");
-                    CalculateMaxHit(false);
-                    hitDiff = Utils.random(maxHit);
-                    sendArrow(c, -1, 394);
-                    delayGfx(c, 83, -1, getDistanceDelay(distance, false), landHit(c, false) ? hitDiff : 0, false, this, damageType.FIRE_BREATH);
-                    setLastAttack(getAttackTimer());
-                } else if(landChance == 16) { //White breath, melee dmg check with 20% increase dmg
-                    setText("Tss rawr!!");
-                    CalculateMaxHit(true);
-                    hitDiff = Utils.random((int)Math.floor(maxHit * 1.2));
-                    sendArrow(c, -1, 395);
-                    delayGfx(c, 84, -1, getDistanceDelay(distance, false), landHit(c, true) ? hitDiff : 0, false, this, damageType.FIRE_BREATH);
-                    setLastAttack(getAttackTimer());
-                } else attack = false;
-            break;
             case 3137: //Vampire effect!
-                int prayerBonus = c.playerBonus[8];
+                int prayerBonus = c.playerBonus[13];
                 if(prayerBonus < 15) {
                     setText("I'll suckie your bloodie!");
                     hitDiff = 15 + Utils.random(25);
@@ -1320,6 +1406,9 @@ public class Npc extends Entity {
     }
 
     public void delayGfx(Client c, int anim, int gfx, int delay, int dmg, boolean crit, Entity npc, damageType type) {
+        if (requiresProjectileLineOfSight(type) && !CombatReachService.hasProjectileLineOfSight(this, c)) {
+            return;
+        }
         performAnimation(anim, 0);
         GameEventScheduler.runLaterMs(delay * 600, () -> {
             if(c.disconnected || c.getCurrentHealth() < 1) {
@@ -1328,12 +1417,15 @@ public class Npc extends Entity {
             if(getId() == 3127) c.stillgfx(gfx, c.getPosition().getY(), c.getPosition().getX());
             else if(getId() >= 794 && getId() <= 802) c.stillgfx(gfx, c.getPosition(), getId() == 794 || getId() == 799 ? 255 : 120);
             else c.stillgfx(gfx, getPosition().getY(), getPosition().getX());
-            c.dealDamage(dmg, crit ? Entity.hitType.CRIT : Entity.hitType.STANDARD, npc, type);
+            c.dealDamageAfterProjectileLaunch(dmg, crit ? Entity.hitType.CRIT : Entity.hitType.STANDARD, npc, type);
             if(getId() != 4303 && getId() != 4304 && getId() != 6610)
                 setLastAttack(getAttackTimer() - delay < 2 ? 1 : getAttackTimer() - delay); //Atleast 1 second delay!
         });
     }
     public void sendArrow(Client target, int startGfx, int flightGfx) {
+        if (!CombatReachService.hasProjectileLineOfSight(this, target)) {
+            return;
+        }
         int y = getId() == 239 ? getPosition().getY() + 2 : getPosition().getY();
         int x = getId() == 239 ? getPosition().getX() + 2 : getPosition().getX();
         int offsetX = (y - target.getPosition().getY()) * -1;
@@ -1343,7 +1435,13 @@ public class Npc extends Entity {
         int height = getId() == 3127 ? 143 : getId() == 796 || getId() == 801 ? 98 : 43;
         int flightHeight = getId() == 3127 ? 143 : getId() == 796 || getId() == 801 ? 43 : height;
         setGfx(startGfx, height);
-        target.arrowNpcGfx(this.getPosition(), offsetY, offsetX, 50, speed, flightGfx, flightHeight, 35, -(target.getSlot() + 1), 51, 16);
+        target.arrowNpcGfx(this.getPosition(), offsetY, offsetX, speed, flightGfx, flightHeight, 35, -(target.getSlot() + 1), 51, 16);
+    }
+
+    private static boolean requiresProjectileLineOfSight(damageType type) {
+        return type == damageType.RANGED || type == damageType.MAGIC ||
+                type == damageType.JAD_RANGED || type == damageType.JAD_MAGIC ||
+                type == damageType.FIRE_BREATH;
     }
 
     public void resetCombatTimer() {

@@ -8,4 +8,3 @@ class CacheObject(
     val type: Int,
     val rotation: Int,
 )
-

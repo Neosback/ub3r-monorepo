@@ -20,16 +20,23 @@ import java.sql.Statement;
 import static net.dodian.uber.game.persistence.db.DatabaseKt.getDbConnection;
 
 public class PlayerInitializer {
+    static final int TARNISH_BRIGHTNESS_VARP = 166;
+    static final int DEFAULT_TARNISH_BRIGHTNESS = 3;
+
     public void initializePlayer(Client client) {
         initializeCriticalLoginState(client);
         initializeDeferredPostLoginState(client);
     }
 
     public void initializeCriticalLoginState(Client client) {
-        client.clearVerticalTravelState();
+        net.dodian.uber.game.engine.systems.action.VerticalTransitionService.clear(client);
         /* Login write settings */
         client.send(new PlayerDetails(client.playerIsMember, client.getSlot()));
         client.send(new CameraReset()); // Resets the camera position
+        // Tarnish builds its software-rendering HSL palette when this varp is applied.
+        // The original server sends it during login; without it, item sprites and
+        // untextured terrain are rendered with an all-zero (black) palette.
+        sendTarnishVisualDefaults(client);
         client.setChatOptions(0, 0, 0);
         client.varbit(287, 1); // SPLIT PRIVATE CHAT ON/OFF
         
@@ -37,7 +44,6 @@ public class PlayerInitializer {
         QuestTabEntry.clearQuestName(client);
         client.questPage = 1;
         client.pmstatus(2);
-        client.setConfigIds();
         client.resetTabs(); // Set tabs!
 
         // Now that interface structure is set up, refresh all skills including HP
@@ -53,9 +59,7 @@ public class PlayerInitializer {
         
 
         client.checkItemUpdate();
-        for (int i = 0; i < Equipment.SIZE; i++) { // Equipment
-            client.setEquipment(client.getEquipment()[i], client.getEquipmentN()[i], i);
-        }
+        client.refreshEquipmentState();
 
         client.loaded = true;
         //TODO everyone is premium for now
@@ -68,6 +72,10 @@ public class PlayerInitializer {
         client.lastProgressSave = now + hourJitterMs;
         PlayerDeferredLifecycleService.schedulePeriodicPersistence(client);
         PlayerDeferredLifecycleService.scheduleDailyResetTrigger(client);
+    }
+
+    static void sendTarnishVisualDefaults(Client client) {
+        client.setVarp(TARNISH_BRIGHTNESS_VARP, DEFAULT_TARNISH_BRIGHTNESS);
     }
 
     public void initializeDeferredPostLoginState(Client client) {

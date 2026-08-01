@@ -8,7 +8,6 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skill.prayer.PrayerManager
 import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.engine.systems.combat.CombatAttackResult
 import net.dodian.uber.game.engine.systems.combat.CombatHitQueueService
@@ -17,8 +16,13 @@ import net.dodian.uber.game.engine.systems.combat.resolveCombatTargetPlayer
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.engine.systems.skills.RuneCostService
 import net.dodian.uber.game.engine.util.Misc
+import net.dodian.uber.game.engine.systems.cache.CacheSpotAnimDefinitions
 import net.dodian.utilities.Utils
+import net.dodian.uber.game.combat.AncientSpellRegistry
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
+import net.dodian.uber.skills.agility.AgilityCombatService
 import kotlin.math.min
+
 
 fun Client.handleMagicAttack(): CombatAttackResult? {
     if (stunTimer > 0 || target == null)
@@ -32,8 +36,8 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         type = autocast_spellIndex%4
     else {
         if(ancients == 1) {
-            for (checkSlot in 0..ancientId.size)
-                if (magicId == ancientId[checkSlot]) {
+            for (checkSlot in AncientSpellRegistry.ancientId().indices)
+                if (magicId == AncientSpellRegistry.ancientId()[checkSlot]) {
                     slot = checkSlot
                     type = checkSlot % 4
                     break
@@ -41,8 +45,8 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         } else return null //Unhandled regular magic!
     }
     /* Checks after known magic cast! */
-    if (getLevel(Skill.MAGIC) < requiredLevel[slot]) {
-        send(SendMessage("You need a magic level of ${requiredLevel[slot]} to cast this spell!"))
+    if (getLevel(Skill.MAGIC) < AncientSpellRegistry.requiredLevel()[slot]) {
+        send(SendMessage("You need a magic level of ${AncientSpellRegistry.requiredLevel()[slot]} to cast this spell!"))
         resetAttack()
         return null
     }
@@ -61,8 +65,7 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
     val hitDelay = getDistanceDelay(distance, true).toLong()
     deleteItem(565, 1)
     checkItemUpdate()
-    PlayerAnimationService.requestAttack(this, 1979)
-    var maxHit = baseDamage[slot] * magicBonusDamage()
+    var maxHit = AncientSpellRegistry.baseDamage()[slot] * magicBonusDamage()
     if (target is Npc) { // Slayer damage!
         val checkNpc = Server.npcManager.getNpc(target.slot)
         if(getSlayerDamage(checkNpc.id, true) == 2)
@@ -71,30 +74,39 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
             val reduceDefence = min(checkNpc.defence / 15, 18)
             val value = (12.0 + Misc.random(reduceDefence)) / 100.0
             maxHit *= 1.0 - value
-            //System.out.println("reduce value: $value and defence $reduceDefence to be new max hit $maxHit")
         }
     }
     var hit = Utils.random(maxHit.toInt())
-    val criticalChance = getLevel(Skill.AGILITY) / 9
+    var criticalChance = AgilityCombatService.criticalChance(asSkillPlayer())
     val extra = getLevel(Skill.MAGIC) * 0.195
-    if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
+    if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance = (criticalChance * 1.5).toInt()
     val landCrit = Math.random() * 100 <= criticalChance
-    /* Magic graphics! */
-    when (type) {
-        0 //Burn effect!
-        -> stillgfx(357, target.position.y, target.position.x)
-        1 //Shadow effect, poison?!
-        -> stillgfx(379, target.position.y, target.position.x)
-        2 //Blood effect
-        -> stillgfx(377, target.position.y, target.position.x)
-        3 //Freeze effect
-        -> stillgfx(369, target.position.y, target.position.x)
-        else //Other ancient effect!
-        -> stillgfx(78, target.position.y, target.position.x)
+
+    val gfx = AncientSpellRegistry.gfx(slot)
+    if (gfx != null) {
+        PlayerAnimationService.requestAttack(this, gfx.castAnim)
+        if (gfx.castGfx != null) {
+            val castGfxId = SpotAnimNames.getId(gfx.castGfx)
+            if (castGfxId != -1) {
+                callGfxMask(castGfxId, 100)
+            }
+        }
+        if (gfx.projectileGfx != null) {
+            this.shoot(gfx.projectileGfx, target)
+        }
+        if (gfx.impactGfx != null) {
+            val impactGfxId = SpotAnimNames.getId(gfx.impactGfx)
+            if (impactGfxId != -1) {
+                stillgfx(impactGfxId, target.position.y, target.position.x)
+            }
+        }
+    } else {
+        PlayerAnimationService.requestAttack(this, 1979)
+        stillgfx(78, target.position.y, target.position.x)
     }
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
-        if (landCrit) hit + Utils.dRandom2(extra).toInt()
+        if (landCrit) hit += Utils.dRandom2(extra).toInt()
         CombatHitQueueService.enqueue(
             currentGameCycle + hitDelay,
             this,
@@ -121,8 +133,8 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         ProgressionService.addXp(this, 13 * hit, Skill.HITPOINTS)
     }
     if (target is Player) {
-        val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(coolDown[type])
-        if (landCrit) hit + Utils.dRandom2(extra).toInt()
+        val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(AncientSpellRegistry.coolDown()[type])
+        if (landCrit) hit += Utils.dRandom2(extra).toInt()
         CombatHitQueueService.enqueue(
             currentGameCycle + hitDelay,
             this,
@@ -151,7 +163,7 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         if(autocast_spellIndex < 0) target = null //Set this as no target if we got no autocast set!
     }
 
-    val nextDelay = coolDown[type]
+    val nextDelay = AncientSpellRegistry.coolDown()[type]
     if (debug) send(SendMessage("hit = $hit, nextDelay = $nextDelay, hitDelay = $hitDelay"))
 
     return CombatAttackResult(nextDelay)

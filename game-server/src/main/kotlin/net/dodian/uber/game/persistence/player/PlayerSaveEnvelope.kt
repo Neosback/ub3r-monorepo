@@ -3,13 +3,15 @@ package net.dodian.uber.game.persistence.player
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Friend
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skill.prayer.PrayerManager
+import net.dodian.uber.game.engine.systems.skills.prayer.PrayerManager
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.persistence.player.PlayerSaveReason
 
 data class ItemSlotEntry(
     val slot: Int,
     val itemId: Int,
     val amount: Int,
+    val tab: Int = 0,
 )
 
 data class NamedCountEntry(
@@ -29,6 +31,20 @@ data class PlayerSaveEnvelope(
     val saveRevisionAtCapture: Long,
     val segments: List<PlayerSaveSegmentSnapshot>,
 ) {
+    fun withInventory(itemIds: IntArray, amounts: IntArray): PlayerSaveEnvelope {
+        require(itemIds.size == amounts.size)
+        val entries = itemIds.indices.mapNotNull { slot ->
+            val rawId = itemIds[slot]
+            val amount = amounts[slot]
+            if (rawId <= 0 || amount <= 0) null
+            else ItemSlotEntry(slot = slot, itemId = rawId - 1, amount = amount)
+        }
+        return copy(
+            dirtyMask = dirtyMask or PlayerSaveSegment.INVENTORY.mask,
+            segments = segments.filterNot { it is InventorySegmentSnapshot } + InventorySegmentSnapshot(entries),
+        )
+    }
+
     companion object {
         private val ENABLED_SKILLS: List<Skill> = Skill.values().filter { it.isEnabled() }
 
@@ -64,7 +80,7 @@ data class PlayerSaveEnvelope(
                 totalXp += experience
             }
             val prayerButtons =
-                PrayerManager.Prayer.values()
+                PrayerManager.Prayer.VALUES
                     .filter { prayer -> client.prayerManager.isPrayerOn(prayer) }
                     .map { it.buttonId }
                     .toIntArray()
@@ -90,10 +106,17 @@ data class PlayerSaveEnvelope(
                     )
             }
             if (has(PlayerSaveSegment.BANK)) {
-                segments +=
-                    BankSegmentSnapshot(
-                        collectSlots(client.bankItems.clone(), client.bankItemsN.clone()) { rawId -> rawId - 1 },
-                    )
+                val bankIds = client.bankItems.clone()
+                val bankAmts = client.bankItemsN.clone()
+                val bankTabs = client.bankSlotTabs
+                val bankEntries = ArrayList<ItemSlotEntry>(bankIds.size)
+                for (slot in bankIds.indices) {
+                    val rawId = bankIds[slot]
+                    if (rawId <= 0) continue
+                    val tab = if (bankTabs != null && slot < bankTabs.size) bankTabs[slot] else 0
+                    bankEntries += ItemSlotEntry(slot = slot, itemId = rawId - 1, amount = bankAmts[slot], tab = tab)
+                }
+                segments += BankSegmentSnapshot(bankEntries, client.bankPlaceholdersEnabled)
             }
             if (has(PlayerSaveSegment.EQUIPMENT)) {
                 segments +=
@@ -138,8 +161,9 @@ data class PlayerSaveEnvelope(
                     )
             }
             if (has(PlayerSaveSegment.META)) {
-                val bossLog =
-                    client.boss_name.indices.map { index -> NamedCountEntry(client.boss_name[index], client.boss_amount[index]) }
+                val bossLog = (0 until client.bossKillLogState.size()).map { index ->
+                    NamedCountEntry(client.bossKillLogState.nameAt(index), client.bossKillLogState.countAt(index))
+                }
                 val monsterLog =
                     client.monsterName.indices.map { index ->
                         NamedCountEntry(client.monsterName[index], client.monsterCount[index])
@@ -147,7 +171,7 @@ data class PlayerSaveEnvelope(
                 segments +=
                     MetaSegmentSnapshot(
                         latestNews = client.latestNews,
-                        agilityCourseStage = client.agilityCourseStage,
+                        agilityCourseStage = net.dodian.uber.skills.agility.AgilityModule.encodeProgressForSave(client.asSkillPlayer()),
                         bossLog = bossLog,
                         monsterLog = monsterLog,
                         loginDurationMs = System.currentTimeMillis() - client.session_start,

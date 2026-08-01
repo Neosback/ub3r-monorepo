@@ -16,11 +16,7 @@ public class SendString implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        ByteMessage message = ByteMessage.message(126, MessageType.VAR_SHORT);
-        message.putString(string);
-        message.putInt(lineId);
-        client.send(message);
-       // System.out.println("SendString: " + string + ", " + lineId);
+        client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.SendString(string, lineId).encode());
     }
 
 }

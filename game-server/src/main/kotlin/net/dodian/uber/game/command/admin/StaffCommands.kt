@@ -3,6 +3,9 @@ package net.dodian.uber.game.command.admin
 import net.dodian.uber.game.engine.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.config.FeatureStateService
+import net.dodian.uber.game.engine.config.serverDebugMode
+import net.dodian.uber.game.engine.config.serverEnv
 import net.dodian.uber.game.persistence.account.Login
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
@@ -11,6 +14,10 @@ import net.dodian.uber.game.netty.listener.out.CameraReset
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendCamera
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.api.content.ContentFaultCircuitBreaker
+import net.dodian.uber.game.api.plugin.ContentPlatformCatalog
+import net.dodian.uber.game.api.plugin.ContentRouteCatalog
+import net.dodian.uber.game.skill.runtime.parity.SkillDoctor
 
 object StaffCommands : CommandContent {
     private val moderationAliases = setOf(
@@ -21,6 +28,82 @@ object StaffCommands : CommandContent {
 
     override fun definitions() =
         commands {
+            command("contentfaults", "reenablecontent") {
+                if (client.playerRights < 2) return@command false
+                if (alias == "contentfaults") {
+                    val disabled = ContentFaultCircuitBreaker.snapshot()["disabledBindings"] as List<*>
+                    client.sendMessage(if (disabled.isEmpty()) "No content bindings are quarantined." else "Quarantined content: ${disabled.joinToString()}")
+                    return@command true
+                }
+                val binding = parts.drop(1).joinToString(" ").trim()
+                if (binding.isBlank()) return@command usage("::reenablecontent <binding-key>")
+                client.sendMessage(
+                    if (ContentFaultCircuitBreaker.reEnable(binding)) "Re-enabled content binding: $binding"
+                    else "Content binding was not quarantined: $binding",
+                )
+                true
+            }
+            command("content") {
+                if (client.playerRights < 2) return@command false
+                when (parts.getOrNull(1)?.lowercase()) {
+                    "modules" -> {
+                        val snapshot = ContentPlatformCatalog.snapshot()
+                        client.sendMessage("Content ${snapshot.enabledCount}/${snapshot.modules.size} enabled; fingerprint=${snapshot.fingerprint.take(12)}")
+                    }
+                    "module" -> {
+                        val id = parts.getOrNull(2) ?: return@command usage("::content module <module-id>")
+                        val module = ContentPlatformCatalog.snapshot().module(id)
+                            ?: run { client.sendMessage("Unknown content module: $id"); return@command true }
+                        val routes = ContentRouteCatalog.byModule(id)
+                        val faults = ContentFaultCircuitBreaker.failuresForModule(id)
+                        client.sendMessage("${module.id} ${module.maturity} owner=${module.owner} v=${module.version} routes=${routes.size} faults=${faults.size}")
+                    }
+                    "routes" -> {
+                        val id = parts.getOrNull(2)?.toIntOrNull() ?: return@command usage("::content routes <id>")
+                        val routes = ContentRouteCatalog.find(id)
+                        client.sendMessage(if (routes.isEmpty()) "No active content routes for id=$id" else routes.take(8).joinToString(" | ") { "${it.moduleId}:${it.routeType}:${it.key}" })
+                    }
+                    "validate" -> {
+                        val report = SkillDoctor.snapshot()
+                        client.sendMessage(if (report.isClean) "Content validation passed." else "Content validation found ${report.findings.size} issue(s); see server log.")
+                    }
+                    else -> client.sendMessage("::content modules | module <id> | routes <id> | validate")
+                }
+                true
+            }
+            command("sync") {
+                if (client.playerRights < 2) return@command false
+                val name = parts.drop(1).joinToString(" ").trim()
+                val target = if (name.isBlank()) client else PlayerRegistry.getPlayer(name) as? Client
+                if (target == null) {
+                    client.sendMessage("Player is not online. Usage: ::sync <player>")
+                    return@command true
+                }
+                val locals =
+                    (0 until target.playerListSize)
+                        .mapNotNull { target.playerList.getOrNull(it) }
+                        .take(12)
+                        .joinToString(",") { "${it.slot}@${it.synchronizationSessionGeneration}" }
+                client.sendMessage(
+                    "Sync ${target.playerName}: slot=${target.slot} session=${target.synchronizationSessionGeneration} " +
+                        "ready=${target.isSynchronizationReady} active=${target.isActive} loaded=${target.loaded} " +
+                        "locals=${target.playerListSize} appearanceRev=${target.appearanceRevision}",
+                )
+                client.sendMessage("Sync locals: ${locals.ifBlank { "none" }}; ${target.connectionHealthSummary()}")
+                true
+            }
+            command("crashserver") {
+                if (!specialRights) return@command false
+                if (serverEnv != "dev" || !serverDebugMode) {
+                    client.sendMessage("Crash testing is available only on a dev server with server.debug=true.")
+                    return@command true
+                }
+
+                recordStaffCommand(client, rawCommand)
+                Server.logError("DEV CRASH TEST requested by ${client.playerName} dbId=${client.dbId}; halting without shutdown hooks.")
+                Runtime.getRuntime().halt(137)
+                false // Unreachable, but required by the command handler's return type.
+            }
             command(
                 "pnpc", "invis", "teleto", "kick", "teletome", "staffzone", "test_area", "busy",
                 "camera", "creset", "slots", "checkbank", "checkinv", "banmac", "tradelock",
@@ -83,7 +166,7 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
                         client.sendMessage("That player is in the wilderness!")
                         return true
                     }
-                    if (client.UsingAgility || other.UsingAgility || System.currentTimeMillis() < client.walkBlock) {
+                    if (client.UsingAgility || other.UsingAgility || client.isWalkBlocked()) {
                         return true
                     }
                     client.transport(other.position.copy())
@@ -130,7 +213,7 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
                         client.sendMessage("Can not teleport someone out of the wilderness! Contact a admin!")
                         return true
                     }
-                    if (client.UsingAgility || other.UsingAgility || System.currentTimeMillis() < client.walkBlock) {
+                    if (client.UsingAgility || other.UsingAgility || client.isWalkBlocked()) {
                         return true
                     }
                     other.transport(client.position.copy())
@@ -181,12 +264,12 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
             return true
         }
         context.alias == "checkbank" -> {
-            client.openUpOtherBank(context.playerNameTail())
+            net.dodian.uber.game.economy.AdminContainerInspectionService.openBank(client, context.playerNameTail())
             recordStaffCommand(client, command)
             return true
         }
         context.alias == "checkinv" -> {
-            client.openUpOtherInventory(context.playerNameTail())
+            net.dodian.uber.game.economy.AdminContainerInspectionService.openInventory(client, context.playerNameTail())
             recordStaffCommand(client, command)
             return true
         }
@@ -264,33 +347,33 @@ private fun handleWorldControl(context: CommandContext): Boolean {
     val toggleCommand = if (context.alias.startsWith("toggle")) context.alias.replace("_", "") else context.alias
     when {
         toggleCommand.equals("toggleyell", true) -> {
-            Server.chatOn = !Server.chatOn
-            client.yell(if (Server.chatOn) "[SERVER]: Yell has been enabled!" else "[SERVER]: Yell has been disabled!")
+            FeatureStateService.publicChatYell.set(!FeatureStateService.publicChatYell.get())
+            client.yell(if (FeatureStateService.publicChatYell.get()) "[SERVER]: Yell has been enabled!" else "[SERVER]: Yell has been disabled!")
         }
         toggleCommand.equals("togglepvp", true) -> {
-            Server.pking = !Server.pking
-            client.yell(if (Server.pking) "[SERVER]: Player Killing has been enabled!" else "[SERVER]: Player Killing  has been disabled!")
+            FeatureStateService.pvp.set(!FeatureStateService.pvp.get())
+            client.yell(if (FeatureStateService.pvp.get()) "[SERVER]: Player Killing has been enabled!" else "[SERVER]: Player Killing  has been disabled!")
         }
         toggleCommand.equals("toggletrade", true) -> {
-            Server.trading = !Server.trading
-            client.yell(if (Server.trading) "[SERVER]: Trading has been enabled!" else "[SERVER]: Trading has been disabled!")
+            FeatureStateService.trading.set(!FeatureStateService.trading.get())
+            client.yell(if (FeatureStateService.trading.get()) "[SERVER]: Trading has been enabled!" else "[SERVER]: Trading has been disabled!")
         }
         toggleCommand.equals("toggleduel", true) -> {
-            Server.dueling = !Server.dueling
-            client.yell(if (Server.dueling) "[SERVER]: Dueling has been enabled!" else "[SERVER]: Dueling has been disabled!")
+            FeatureStateService.dueling.set(!FeatureStateService.dueling.get())
+            client.yell(if (FeatureStateService.dueling.get()) "[SERVER]: Dueling has been enabled!" else "[SERVER]: Dueling has been disabled!")
         }
         toggleCommand.equals("toggledrop", true) -> {
-            Server.dropping = !Server.dropping
-            client.yell(if (Server.dropping) "[SERVER]: Dropping items has been enabled!" else "[SERVER]: Dropping items has been disabled!")
+            FeatureStateService.dropping.set(!FeatureStateService.dropping.get())
+            client.yell(if (FeatureStateService.dropping.get()) "[SERVER]: Dropping items has been enabled!" else "[SERVER]: Dropping items has been disabled!")
         }
         toggleCommand.equals("toggleshop", true) -> {
-            Server.shopping = !Server.shopping
-            client.yell(if (Server.shopping) "[SERVER]: Shops has been enabled!" else "[SERVER]: Shops has been disabled!")
+            FeatureStateService.shopping.set(!FeatureStateService.shopping.get())
+            client.yell(if (FeatureStateService.shopping.get()) "[SERVER]: Shops has been enabled!" else "[SERVER]: Shops has been disabled!")
         }
         toggleCommand.equals("togglebank", true) -> {
-            Server.banking = !Server.banking
-            client.yell(if (Server.banking) "[SERVER]: The Bank has been enabled!" else "[SERVER]: The Bank has been disabled!")
-            if (!Server.banking) {
+            FeatureStateService.banking.set(!FeatureStateService.banking.get())
+            client.yell(if (FeatureStateService.banking.get()) "[SERVER]: The Bank has been enabled!" else "[SERVER]: The Bank has been disabled!")
+            if (!FeatureStateService.banking.get()) {
                 for (player in PlayerRegistry.players) {
                     val other = player as? Client ?: continue
                     if (other.IsBanking) {

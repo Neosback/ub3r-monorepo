@@ -123,15 +123,17 @@ class ChunkEntityIndex(
                 single = element
                 return true
             }
-            if (single != null) {
-                if (Objects.equals(single, element)) {
+            val existingSingle = single
+            if (existingSingle != null) {
+                if (Objects.equals(existingSingle, element)) {
                     return false
                 }
-                small = ArrayList(PROMOTION_THRESHOLD)
-                small!!.add(single!!)
                 single = null
+                val promoted = ArrayList<E>(PROMOTION_THRESHOLD)
+                promoted.add(existingSingle)
+                small = promoted
             }
-            val smallSet = small!!
+            val smallSet = small ?: return false
             if (smallSet.contains(element)) {
                 return false
             }

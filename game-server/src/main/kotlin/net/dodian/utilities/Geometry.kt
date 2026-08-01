@@ -1,7 +1,8 @@
 package net.dodian.utilities
 
 import net.dodian.cache.objects.GameObjectDef
-import net.dodian.uber.game.Server
+import net.dodian.cache.objects.GameObjectData
+import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditStore
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.objects.DoorRegistry
 
@@ -16,8 +17,10 @@ object Geometry {
     ): Boolean {
         val deltaX = objectX - playerX
         val deltaY = objectY - playerY
-        val trueDistance = kotlin.math.sqrt((deltaX * deltaX + deltaY * deltaY).toDouble()).toInt()
-        return trueDistance <= distance
+        // Equivalent to (int) sqrt(deltaX^2 + deltaY^2) <= distance without the sqrt call:
+        // floor(sqrt(sum)) <= distance iff sum < (distance + 1)^2.
+        val bound = distance + 1
+        return deltaX * deltaX + deltaY * deltaY < bound * bound
     }
 
     @JvmStatic
@@ -95,14 +98,25 @@ object Geometry {
         y: Int,
         h: Int,
     ): GameObjectDef? {
+        // Doors are runtime-mutated (opened/closed), so they win over the static cache.
         for (i in DoorRegistry.doorId.indices) {
-            if (DoorRegistry.doorId[i] == objectId && DoorRegistry.doorX[i] == x && DoorRegistry.doorY[i] == y) {
+            val doorId = DoorRegistry.doorId[i]
+            val matches = doorId == objectId || GameObjectData.forId(doorId).childIds?.contains(objectId) == true
+            if (matches && DoorRegistry.doorX[i] == x && DoorRegistry.doorY[i] == y) {
                 return GameObjectDef(objectId, 2, 0, Position(x, y))
             }
         }
-        for (obj in Server.objects) {
-            if (obj.id == objectId && obj.x == x && obj.y == y) {
-                return GameObjectDef(objectId, obj.type, 0, Position(x, y))
+        // Source type + rotation from the decoded cache (matches the client world), not the stale
+        // MySQL game_object_definitions table. The cache carries the real type and rotation/face,
+        // which WorldRouteService reach checks need to compute valid faces.
+        for (obj in CacheCollisionAuditStore.objectsForTile(x, y)) {
+            if (obj.skipped) {
+                continue
+            }
+            val baseId = obj.objectId
+            val matches = baseId == objectId || GameObjectData.forId(baseId).childIds?.contains(objectId) == true
+            if (matches && obj.x == x && obj.y == y && obj.plane == h) {
+                return GameObjectDef(objectId, obj.type, obj.rotation, Position(x, y))
             }
         }
         return null

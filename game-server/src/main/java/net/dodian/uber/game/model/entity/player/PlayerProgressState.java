@@ -10,7 +10,7 @@ final class PlayerProgressState {
     private final ArrayList<Boolean> travelData = new ArrayList<>();
     private final ArrayList<Integer> paid = new ArrayList<>();
     private final ArrayList<Boolean> unlocked = new ArrayList<>();
-    private final boolean[] songUnlocked = new boolean[net.dodian.uber.game.engine.systems.zone.RegionSong.values().length];
+    private final boolean[] songUnlocked = new boolean[net.dodian.uber.game.engine.systems.zone.RegionSong.VALUES.length];
 
     PlayerProgressState(Player owner) {
         this.owner = owner;
@@ -139,11 +139,7 @@ final class PlayerProgressState {
     }
 
     void bossCount(String name, int amount) {
-        for (int i = 0; i < owner.boss_name.length; i++) {
-            if (owner.boss_name[i].equalsIgnoreCase(name)) {
-                owner.boss_amount[i] = amount;
-            }
-        }
+        owner.getBossKillLogState().set(name, amount);
     }
 
     void addMonsterName(String name) {

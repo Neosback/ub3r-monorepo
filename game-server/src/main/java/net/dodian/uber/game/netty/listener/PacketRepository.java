@@ -60,11 +60,10 @@ public final class PacketRepository implements Iterable<PacketListener> {
         }
         
         if (listeners[opcode] != null) {
-            // Only warn if it's actually a different listener instance/class
             if (listeners[opcode] != listener && !listeners[opcode].getClass().equals(listener.getClass())) {
                 duplicateOverwriteCount++;
-                logger.warn("Overwriting existing listener for opcode {}: {} -> {}", 
-                    opcode, listeners[opcode].getClass().getSimpleName(), listener.getClass().getSimpleName());
+                throw new IllegalArgumentException("Conflicting packet listener for opcode " + opcode + ": "
+                        + listeners[opcode].getClass().getName() + " vs " + listener.getClass().getName());
             } else {
                 logger.debug("Re-registering same listener for opcode {}: {}", 
                     opcode, listener.getClass().getSimpleName());
@@ -118,7 +117,7 @@ public final class PacketRepository implements Iterable<PacketListener> {
     public void lock() {
         if (!locked) {
             locked = true;
-            logger.info("Packet repository locked with {} registered listeners", getRegisteredCount());
+            logger.debug("Packet repository locked with {} registered listeners", getRegisteredCount());
         }
     }
 

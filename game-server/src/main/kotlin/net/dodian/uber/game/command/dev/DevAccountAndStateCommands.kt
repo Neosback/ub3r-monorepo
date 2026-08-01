@@ -3,6 +3,7 @@ package net.dodian.uber.game.command.dev
 import net.dodian.uber.game.engine.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.engine.systems.interaction.commands.CommandContent
 import net.dodian.uber.game.engine.systems.interaction.commands.CommandContext
 import net.dodian.uber.game.engine.systems.interaction.commands.commandLogger
@@ -128,8 +129,8 @@ private fun handleDevAccountState(context: CommandContext): Boolean {
             Server.updateSeconds = command.substring(7).toInt() + 1
             Server.updateRunning = true
             Server.updateStartTime = System.currentTimeMillis()
-            Server.trading = false
-            Server.dueling = false
+            FeatureStateService.trading.set(false)
+            FeatureStateService.dueling.set(false)
             return true
         }
         context.alias == "resettask" && context.specialRights -> {

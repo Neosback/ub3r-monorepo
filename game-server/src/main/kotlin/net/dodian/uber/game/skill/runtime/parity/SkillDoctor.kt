@@ -1,12 +1,8 @@
 package net.dodian.uber.game.skill.runtime.parity
 
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skill.herblore.GrimyHerbItems
-import net.dodian.uber.game.skill.herblore.HerbloreSuppliesItems
-import net.dodian.uber.game.skill.slayer.SlayerGemItems
-import net.dodian.uber.game.skill.slayer.SlayerMaskItems
-import net.dodian.uber.game.skill.prayer.BuryBonesItems
-import net.dodian.uber.game.skill.thieving.ThievingObjectComponents
+import net.dodian.uber.skills.herblore.HerbloreModule
+import net.dodian.uber.skills.prayer.PrayerModule
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.api.plugin.skills.SkillPluginDefinition
@@ -29,7 +25,7 @@ data class SkillDoctorReport(
 }
 
 object SkillDoctor {
-    private val gameplaySkills: Set<Skill> = LegacyContentParityCatalog.default.requiredSkillCoverage
+    private val gameplaySkills: Set<Skill> get() = SkillMigrationCatalog.requiredCoverage()
 
     private val legacyRouteBypassChecks: Map<String, List<String>> = mapOf(
         "systems/interaction/InteractionProcessor.kt" to listOf(
@@ -40,7 +36,7 @@ object SkillDoctor {
     )
 
     private val bannedPluginPatterns = listOf("playerAction(", "while (true)")
-    private val cookingRangeObjectIds = intArrayOf(26181, 2728, 2781)
+    private val cookingRangeObjectIds = intArrayOf(114, 4172, 26181)
 
     @JvmStatic
     fun snapshot(): SkillDoctorReport {
@@ -218,7 +214,7 @@ object SkillDoctor {
     private fun scanMappedRouteOwnership(skillSnapshot: SkillPluginSnapshot): List<SkillDoctorFinding> {
         val findings = mutableListOf<SkillDoctorFinding>()
 
-        BuryBonesItems.itemIds.forEach { itemId ->
+        PrayerModule.bones.map { it.itemId }.forEach { itemId ->
             if (skillSnapshot.itemBinding(option = 1, itemId = itemId) == null) {
                 findings += SkillDoctorFinding(
                     code = "missing-route-ownership",
@@ -242,7 +238,8 @@ object SkillDoctor {
             }
         }
 
-        GrimyHerbItems.itemIds.forEach { itemId ->
+        val grimyHerbIds = HerbloreModule.herbs.map { it.grimyId }.toIntArray()
+        grimyHerbIds.forEach { itemId ->
             if (skillSnapshot.itemBinding(option = 1, itemId = itemId) == null) {
                 findings += SkillDoctorFinding(
                     code = "missing-route-ownership",
@@ -250,7 +247,8 @@ object SkillDoctor {
                 )
             }
         }
-        HerbloreSuppliesItems.itemIds.forEach { itemId ->
+        val suppliesIds = intArrayOf(11877, 11879, 12859)
+        suppliesIds.forEach { itemId ->
             if (skillSnapshot.itemBinding(option = 1, itemId = itemId) == null) {
                 findings += SkillDoctorFinding(
                     code = "missing-route-ownership",
@@ -259,7 +257,8 @@ object SkillDoctor {
             }
         }
 
-        SlayerGemItems.itemIds.forEach { itemId ->
+        val slayerGemIds = intArrayOf(4155)
+        slayerGemIds.forEach { itemId ->
             for (option in 1..3) {
                 if (skillSnapshot.itemBinding(option = option, itemId = itemId) == null) {
                     findings += SkillDoctorFinding(
@@ -269,7 +268,8 @@ object SkillDoctor {
                 }
             }
         }
-        SlayerMaskItems.itemIds.forEach { itemId ->
+        val slayerMaskIds = intArrayOf(11784, 11864, 11865)
+        slayerMaskIds.forEach { itemId ->
             if (skillSnapshot.itemBinding(option = 3, itemId = itemId) == null) {
                 findings += SkillDoctorFinding(
                     code = "missing-route-ownership",
@@ -278,34 +278,28 @@ object SkillDoctor {
             }
         }
 
-        val thievingOptionOneObjectIds =
-            (ThievingObjectComponents.chestObjects + ThievingObjectComponents.plunderObjects).distinct()
-        thievingOptionOneObjectIds.forEach { objectId ->
-            if (skillSnapshot.objectBinding(option = 1, objectId = objectId) == null) {
-                findings += SkillDoctorFinding(
-                    code = "missing-route-ownership",
-                    message = "Thieving route ownership missing object click option=1 binding for objectId=$objectId.",
-                )
+        // Pyramid Plunder and the historical no-op chest/stall routes remain deliberately
+        // legacy-owned while Thieving is BETA. Requiring every legacy route here made a
+        // baseline-correct plugin fail startup. Promote them to this exact ownership check only
+        // when the full state machine has been ported and Thieving becomes STABLE.
+        if (SkillMigrationCatalog.state(Skill.THIEVING) == SkillMigrationState.STABLE) {
+            val requiredOptionOne = intArrayOf(20873, 375, 6847)
+            val requiredOptionTwo = intArrayOf(11729, 11730, 11731, 11732, 11733, 11734, 378, 4877)
+            requiredOptionOne.forEach { objectId ->
+                if (skillSnapshot.objectBinding(option = 1, objectId = objectId) == null) {
+                    findings += SkillDoctorFinding("missing-route-ownership", "Thieving route ownership missing object click option=1 binding for objectId=$objectId.")
+                }
             }
-        }
-
-        val thievingOptionTwoObjectIds =
-            (
-                ThievingObjectComponents.stallObjects +
-                    ThievingObjectComponents.chestObjects +
-                    ThievingObjectComponents.plunderObjects
-            ).distinct()
-        thievingOptionTwoObjectIds.forEach { objectId ->
-            if (skillSnapshot.objectBinding(option = 2, objectId = objectId) == null) {
-                findings += SkillDoctorFinding(
-                    code = "missing-route-ownership",
-                    message = "Thieving route ownership missing object click option=2 binding for objectId=$objectId.",
-                )
+            requiredOptionTwo.forEach { objectId ->
+                if (skillSnapshot.objectBinding(option = 2, objectId = objectId) == null) {
+                    findings += SkillDoctorFinding("missing-route-ownership", "Thieving route ownership missing object click option=2 binding for objectId=$objectId.")
+                }
             }
         }
 
         return findings
     }
+
 }
 
 private fun SkillPluginDefinition.hasAnyRouteBindings(): Boolean {

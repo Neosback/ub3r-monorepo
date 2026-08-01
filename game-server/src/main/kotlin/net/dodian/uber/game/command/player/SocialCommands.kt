@@ -3,6 +3,7 @@ package net.dodian.uber.game.command.player
 import net.dodian.uber.game.engine.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.engine.systems.interaction.commands.CommandContent
 import net.dodian.uber.game.engine.systems.interaction.commands.CommandContext
 import net.dodian.uber.game.engine.systems.interaction.commands.commands
@@ -28,7 +29,7 @@ private fun handleSocial(context: CommandContext): Boolean {
             client.sendMessage("Use the Dodian.net Market Forums to post new threads to buy/sell.")
             return true
         }
-        if (!Server.chatOn && client.playerRights < 1) {
+        if (!FeatureStateService.publicChatYell.get() && client.playerRights < 1) {
             client.sendMessage("Yell chat is disabled!")
             return true
         }
