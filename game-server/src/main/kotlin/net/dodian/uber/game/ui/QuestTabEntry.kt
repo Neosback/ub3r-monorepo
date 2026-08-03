@@ -16,8 +16,8 @@ enum class QuestTabEntry(
     private val endRaw: Int,
     private val questName: String,
 ) {
-    PLAGUE_DOCKS(0, 7332, 7332, 5, "Mysterium of the Docks"),
-    EMPTY_1(1, 7333, -1, 5, ""),
+    PLAGUE_DOCKS(0, 7332, 7332, 5, "So it started..."),
+    EMPTY_1(1, 7333, -1, 5, "Mysterium of the Docks"),
     EMPTY_2(2, 7334, -1, 10, ""),
     EMPTY_3(3, 7336, -1, 10, ""),
     EMPTY_4(4, 7383, -1, 10, ""),
@@ -70,7 +70,7 @@ enum class QuestTabEntry(
         @JvmStatic
         fun questInterface(client: Client): QuestTabEntry? {
             client.sendCachedString("Dodian Quests", 640)
-            client.sendCachedString("Premium", 663)
+            client.sendCachedString("", 663)
             client.sendCachedString("Other Stuff", 682)
             for (quest in VALUES) {
                 val stage = client.quests[quest.getId()]
@@ -113,10 +113,14 @@ enum class QuestTabEntry(
 
         @JvmStatic
         fun questMenu(client: Client, button: Int): Boolean {
+            if(button == 21345) {
+                client.questPage = if(client.questPage == 0) 1 else 0
+                return true
+            }
             val quest = getSender(button)
             if (client.questPage == 0 && quest != null) {
                 client.clearQuestInterface()
-                if (quest.getId() == 0) {
+                if (quest.getId() == 1) {
                     val stage = client.quests[quest.getId()]
                     client.sendString("@dre@" + quest.getName(), 8144)
                     if (stage == 0) {
@@ -261,7 +265,7 @@ enum class QuestTabEntry(
                     }
 
                     7342 -> {
-                        if (client.playerRights < 1) {
+                        if (client.playerRights < 2) {
                             client.sendMessage("Tutorial Island is still in development.")
                             return true
                         }
