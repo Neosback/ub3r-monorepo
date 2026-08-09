@@ -80,6 +80,33 @@ public final class TarnishOutboundPackets {
         }
     }
 
+    /**
+     * Opcode 114 - Game message overlay. Client reads: readUnsignedShort id, readUnsignedShort time, readString context.
+     * id=0 renders: context + " " + getFormattedTime(time) in yellow above chatbox. time is in frames (50fps).
+     */
+    public static final class GameMessage {
+        public static final int OPCODE = 114;
+        public static final MessageType TYPE = MessageType.VAR;
+
+        private final int id;
+        private final int time;
+        private final String context;
+
+        public GameMessage(int id, int time, String context) {
+            this.id = id;
+            this.time = time;
+            this.context = context;
+        }
+
+        public ByteMessage encode() {
+            ByteMessage message = ByteMessage.message(OPCODE, TYPE);
+            message.putShort(id);
+            message.putShort(time);
+            message.putString(context);
+            return message;
+        }
+    }
+
     /** Opcode 110 - Send Run Energy. Client: readUnsignedByte energy. */
     public static final class SendRunEnergy {
         public static final int OPCODE = 110;
@@ -832,20 +859,27 @@ public final class TarnishOutboundPackets {
         }
     }
 
-    /** Opcode 187 - Send Enter Name. Client: readString title. */
+    /** Opcode 187 - Send Enter Name. Client: readString title, readUShortA maxLength. */
     public static final class SendEnterName {
         public static final int OPCODE = 187;
-        public static final MessageType TYPE = MessageType.VAR;
+        public static final MessageType TYPE = MessageType.VAR_SHORT;
 
         private final String title;
+        private final int maxLength;
 
         public SendEnterName(String title) {
+            this(title, 12);
+        }
+
+        public SendEnterName(String title, int maxLength) {
             this.title = title;
+            this.maxLength = maxLength;
         }
 
         public ByteMessage encode() {
             ByteMessage message = ByteMessage.message(OPCODE, TYPE);
             message.putString(title);
+            message.putShort(maxLength, ValueType.ADD);
             return message;
         }
     }

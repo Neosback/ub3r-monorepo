@@ -22,6 +22,7 @@ import net.dodian.uber.game.engine.systems.follow.FollowService
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.NetworkConstants
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
+import net.dodian.uber.game.social.WorldAnnouncementService
 import net.dodian.uber.game.engine.lifecycle.PlayerLifecycleTickService
 import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.engine.systems.combat.CombatRuntimeService
@@ -142,9 +143,21 @@ class EntityProcessor : Runnable {
     }
 
     fun runHousekeepingPhase(now: Long) {
-        if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
-            if (PlayerRegistry.getPlayerCount() < 1) {
-                requestControlledShutdown()
+        if (Server.updateRunning) {
+            val endTime = Server.updateStartTime + (Server.updateSeconds * 1000L)
+            val remainingMs = endTime - now
+            if (remainingMs <= 0) {
+                if (PlayerRegistry.getPlayerCount() < 1) {
+                    requestControlledShutdown()
+                }
+            } else {
+                val totalSeconds = (remainingMs / 1000L).toInt()
+                val minutes = totalSeconds / 60
+                val seconds = totalSeconds % 60
+                val label = "System update in: %02d:%02d".format(minutes, seconds)
+                // id=1 renders the context string as-is (no client-side time formatting).
+                // time=90 keeps the overlay visible between 600ms server ticks at any framerate.
+                WorldAnnouncementService.broadcastGameMessage(1, 90, label)
             }
         }
         handleServerCycles()

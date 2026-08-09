@@ -7046,23 +7046,21 @@ public class Client extends GameEngine
 
     private boolean promptUserForInput(RSInterface class9) {
         int j = class9.contentType;
-        if (anInt900 == 2) {
-            if (j == 201) {
-                redrawDialogueBox = true;
-                inputDialogState = 0;
-                messagePromptRaised = true;
-                promptInput = "";
-                friendsListAction = 1;
-                aString1121 = "Enter name of friend to add to list";
-            }
-            if (j == 202) {
-                redrawDialogueBox = true;
-                inputDialogState = 0;
-                messagePromptRaised = true;
-                promptInput = "";
-                friendsListAction = 2;
-                aString1121 = "Enter name of friend to delete from list";
-            }
+        if (j == 201) {
+            redrawDialogueBox = true;
+            inputDialogState = 0;
+            messagePromptRaised = true;
+            promptInput = "";
+            friendsListAction = 1;
+            aString1121 = "Enter name of friend to add to list";
+        }
+        if (j == 202) {
+            redrawDialogueBox = true;
+            inputDialogState = 0;
+            messagePromptRaised = true;
+            promptInput = "";
+            friendsListAction = 2;
+            aString1121 = "Enter name of friend to delete from list";
         }
         if (j == 205) {
             anInt1011 = 250;
@@ -8119,12 +8117,27 @@ public class Client extends GameEngine
         BufferedConnection rsSocket = socketStream;
         loggedIn = false;
         loginFailures = 0;
-        attemptLogin(myUsername, myPassword, true);
+
+        // If the connection was stable for at least 10 seconds, reset the counter.
+        if (lastConnectedAtMillis > 0 && System.currentTimeMillis() - lastConnectedAtMillis > 10_000) {
+            reconnectFailures = 0;
+        }
+        reconnectFailures++;
+
+        if (reconnectFailures <= 3) {
+            attemptLogin(myUsername, myPassword, true);
+        }
+
         console.openConsole = false;
         shiftIsDown = false;
         controlIsDown = false;
         loginRenderer.setScreen(new MainScreen());
         if (!loggedIn) {
+            if (reconnectFailures > 3) {
+                loginMessage1 = "Connection lost.";
+                loginMessage2 = "Please check the server and try again.";
+                reconnectFailures = 0;
+            }
             resetLogout();
         }
         keybindManager.save();
@@ -12067,6 +12080,8 @@ public class Client extends GameEngine
                 sendFrame36(429, 1);
                 setBounds();
                 loggedIn = true;
+                lastConnectedAtMillis = System.currentTimeMillis();
+                reconnectFailures = 0;
                 com.osroyale.login.impl.MainScreen.loginMode.selectExistingAccount();
                 com.osroyale.login.impl.MainScreen.accountCreationStatus = "";
                 com.osroyale.login.impl.MainScreen.loginScreenState = 2;
@@ -13108,7 +13123,7 @@ public class Client extends GameEngine
                 i = MouseHandler.saveClickX - (canvasWidth - 182 + 24);
                 j = MouseHandler.saveClickY - 8;
             }
-            if (inCircle(0, 0, i, j, 76) && mouseMapPosition() && !runHover) {
+            if (inCircle(0, 0, i, j, 76) && mouseMapPosition() && !runHover && !worldHover) {
                 i -= 73;
                 j -= 75;
                 int k = cameraHorizontal + minimapRotation & 0x7ff;
@@ -15263,6 +15278,9 @@ public class Client extends GameEngine
             } else if (anInt1018 == 15264 && isResized()) {
                 drawInterface(RSInterface.interfaceCache[anInt1018], Client.instance.isResized() ? canvasWidth - 700 : canvasWidth - 600, Client.instance.isResized() ? -135 : -70, 0);
 
+            } else if (anInt1018 == 6673 && isResized()) {
+                drawInterface(RSInterface.interfaceCache[anInt1018], (canvasWidth / 2) - 256, 4, 0);
+
             } else {
                 drawInterface(RSInterface.interfaceCache[anInt1018], !isResized() ? 4 : (canvasWidth / 2) - 356, !isResized() ? 4 : (canvasHeight / 2) - 230, 0);
             }
@@ -15349,7 +15367,7 @@ public class Client extends GameEngine
             if (game_message_id == 0) {// Update
                 newRegularFont.drawBasicString(game_message_context + " " + Utility.getFormattedTime(game_message_time), 4, 329 + yOffset, 0xffff00, 50);
             } else if (game_message_id == 1) {// announcement
-                newRegularFont.drawBasicString(game_message_context, 4, yPos + yOffset, 0xffff00, 50);
+                newRegularFont.drawBasicString(game_message_context, 4, 329 + yOffset, 0xffff00, 50);
             } else if (game_message_id == 2) {// icon
                 newRegularFont.drawBasicString("<img=14> " + game_message_context, 4, yPos + yOffset, 0xffff00, 50);
             } else if (game_message_id == 3) {// icon with time
@@ -15700,6 +15718,9 @@ public class Client extends GameEngine
 
         try {
             int ai[] = class9.scripts[j];
+            if (ai == null || ai.length == 0) {
+                return -2;
+            }
             int k = 0;
             int l = 0;
             int i1 = 0;
@@ -18989,11 +19010,9 @@ public class Client extends GameEngine
 
         if (Settings.STATUS_ORB) {
             if (worldHover) {
-                menuActionName[2] = constructionMap ? "Open construction builder" : "Open Teleporation Menu";
-                menuActionID[2] = 850;
-                menuActionName[1] = "Previous Teleport";
-                menuActionID[1] = 851;
-                menuActionRow = 3;
+                menuActionName[1] = constructionMap ? "Open construction builder" : "Open World Map";
+                menuActionID[1] = 850;
+                menuActionRow = 2;
             }
             if (prayHover) {
                 menuActionName[2] = prayClicked ? "Turn quick-prayers off" : "Turn quick-prayers on";
@@ -19650,6 +19669,8 @@ public class Client extends GameEngine
     private int anInt1036;
     private int anInt1037;
     private int loginFailures;
+    private int reconnectFailures;
+    private long lastConnectedAtMillis;
     private int anInt1039;
     private int dialogueId;
     public final int[] maxStats;
